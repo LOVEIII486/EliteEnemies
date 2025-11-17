@@ -62,6 +62,7 @@ namespace EliteEnemies.Settings
             }
             else
             {
+                Debug.LogWarning($"{LogTag} 未找到保存的配置，使用默认值");
                 LoadDefaults();
             }
 
@@ -76,7 +77,7 @@ namespace EliteEnemies.Settings
             MaxAffixCount = builder.GetSavedValue("MaxAffixCount", out int maxCount) ? Mathf.Clamp(maxCount, ConfigRanges.MinAffixCountLimit, ConfigRanges.MaxAffixCountLimit) : 2;
             ShowDetailedHealth = builder.GetSavedValue("ShowDetailedHealth", out bool showHealth) ? showHealth : true;
             DropRateMultiplier = builder.GetSavedValue("DropRateMultiplier", out float dropRate) ? Mathf.Clamp(dropRate, ConfigRanges.MinDropRate, ConfigRanges.MaxDropRate) : 1.0f;
-            ItemQualityBias = builder.GetSavedValue("ItemQualityBias", out float qualityBias) ? Mathf.Clamp(qualityBias, ConfigRanges.MinQualityBias, ConfigRanges.MaxQualityBias) : -0.8f;
+            ItemQualityBias = builder.GetSavedValue("ItemQualityBias", out float qualityBias) ? Mathf.Clamp(qualityBias, ConfigRanges.MinQualityBias, ConfigRanges.MaxQualityBias) : -1f;
             EnableBonusLoot = builder.GetSavedValue("EnableBonusLoot", out bool enableBonus) ? enableBonus : true;
             GlobalHealthMultiplier = builder.GetSavedValue("GlobalHealthMultiplier", out float healthMult) ? Mathf.Clamp(healthMult, ConfigRanges.MinMultiplier, ConfigRanges.MaxMultiplier) : 1.0f;
             GlobalDamageMultiplier = builder.GetSavedValue("GlobalDamageMultiplier", out float damageMult) ? Mathf.Clamp(damageMult, ConfigRanges.MinMultiplier, ConfigRanges.MaxMultiplier) : 1.0f;
@@ -85,7 +86,13 @@ namespace EliteEnemies.Settings
             AffixFootTextFontSize = builder.GetSavedValue("AffixFootTextFontSize", out float fontSize) ? Mathf.Clamp(fontSize, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize) : 35f;
             // 添加新配置项需要修改！！！
             
+            // Debug.Log($"{LogTag} NormalEliteChance: {NormalEliteChance}");
+            // Debug.Log($"{LogTag} DropRateMultiplier: {DropRateMultiplier}");
+            // Debug.Log($"{LogTag} ItemQualityBias: {ItemQualityBias}");
+            // Debug.Log($"{LogTag} EnableBonusLoot: {EnableBonusLoot}");
+            
             LoadAffixStates(builder);
+            SyncConfigToComponents(); // 同步到掉落系统
         }
 
         private static void LoadDefaults()
@@ -96,7 +103,7 @@ namespace EliteEnemies.Settings
             MaxAffixCount = 2;
             ShowDetailedHealth = true;
             DropRateMultiplier = 1.0f;
-            ItemQualityBias = -0.8f;
+            ItemQualityBias = -1.0f;
             EnableBonusLoot = true;
             GlobalHealthMultiplier = 1.0f;
             GlobalDamageMultiplier = 1.0f;
@@ -105,6 +112,7 @@ namespace EliteEnemies.Settings
             AffixFootTextFontSize = 35f;
 
             LoadAffixStates(null);
+            SyncConfigToComponents();
         }
 
         private static void LoadAffixStates(SettingsBuilder builder)
@@ -158,13 +166,16 @@ namespace EliteEnemies.Settings
 
         public static void SetDropRateMultiplier(float value)
         {
+            float oldValue = DropRateMultiplier;
             DropRateMultiplier = Mathf.Clamp(value, ConfigRanges.MinDropRate, ConfigRanges.MaxDropRate);
             EliteLootSystem.GlobalDropRate = DropRateMultiplier;
+            //Debug.Log($"{LogTag} SetDropRateMultiplier: {oldValue} -> {DropRateMultiplier}");
             NotifyConfigChanged();
         }
 
         public static void SetItemQualityBias(float value)
         {
+            float oldValue = ItemQualityBias;
             ItemQualityBias = Mathf.Clamp(value, ConfigRanges.MinQualityBias, ConfigRanges.MaxQualityBias);
             
             if (ModBehaviour.LootHelper != null)
@@ -172,6 +183,7 @@ namespace EliteEnemies.Settings
                 ModBehaviour.LootHelper.qualityBiasPower = ItemQualityBias;
             }
             
+            //Debug.Log($"{LogTag} SetItemQualityBias: {oldValue} -> {ItemQualityBias}");
             NotifyConfigChanged();
         }
 
@@ -262,6 +274,27 @@ namespace EliteEnemies.Settings
                 ShowAffixFootText = ShowAffixFootText,
                 DisabledAffixes = GetDisabledAffixBlacklist()
             };
+        }
+        
+        // 同步配置到运行时组件
+        private static void SyncConfigToComponents()
+        {
+            // 同步掉落率
+            if (EliteLootSystem.GlobalDropRate != DropRateMultiplier)
+            {
+                EliteLootSystem.GlobalDropRate = DropRateMultiplier;
+                Debug.Log($"{LogTag} 同步掉落率: {DropRateMultiplier}");
+            }
+    
+            // 同步品质偏好
+            if (ModBehaviour.LootHelper != null)
+            {
+                if (ModBehaviour.LootHelper.qualityBiasPower != ItemQualityBias)
+                {
+                    ModBehaviour.LootHelper.qualityBiasPower = ItemQualityBias;
+                    Debug.Log($"{LogTag} 同步品质偏好: {ItemQualityBias}");
+                }
+            }
         }
         
         // 同步设置项更新到核心

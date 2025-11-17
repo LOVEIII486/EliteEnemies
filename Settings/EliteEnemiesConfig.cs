@@ -13,7 +13,7 @@ namespace EliteEnemies
         public int MaxAffixCount { get; set; } = 2;
         public bool ShowDetailedHealth { get; set; } = true;
         public float DropRateMultiplier { get; set; } = 1.0f;
-        public float ItemQualityBias { get; set; } = -0.8f;
+        public float ItemQualityBias { get; set; } = -1f;
         public bool EnableBonusLoot { get; set; } = true;
         public float GlobalHealthMultiplier { get; set; } = 1.0f;
         public float GlobalDamageMultiplier { get; set; } = 1.0f;

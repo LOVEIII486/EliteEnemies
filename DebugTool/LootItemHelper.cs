@@ -16,26 +16,26 @@ namespace EliteEnemies.DebugTool
     public class LootItemHelper : MonoBehaviour
     {
         private const string LogTag = "[EliteEnemies.LootItemHelper]";
-        
+
         public bool debugMode = false;
         public float qualityBiasPower = 0f;
 
         // ========== 黑名单配置 ==========
-        private readonly string[] _nameDescriptionBlacklist = 
-        { 
-            "Item_", "Quest_", "BP_", "水族箱", "比特币矿机", "蛋清能源碎片", 
-            "口口头盔", "口口防弹衣", "防空系统密钥" 
+        private readonly string[] _nameDescriptionBlacklist =
+        {
+            "Item_", "Quest_", "BP_", "水族箱", "比特币矿机", "蛋清能源碎片",
+            "口口头盔", "口口防弹衣", "防空系统密钥"
         };
 
-        private readonly string[] _tagBlacklist = 
-        { 
-            "DestroyOnLootBox", "DestroyInBase", "Formula", "Formula_Blueprint", "Quest" 
+        private readonly string[] _tagBlacklist =
+        {
+            "DestroyOnLootBox", "DestroyInBase", "Formula", "Formula_Blueprint", "Quest"
         };
-        
+
         private Dictionary<int, List<int>> _qualityItemCache = new Dictionary<int, List<int>>();
         private bool _isInitialized = false;
         private CharacterMainControl _player;
-        
+
 
         private void Start()
         {
@@ -58,6 +58,10 @@ namespace EliteEnemies.DebugTool
             else if (Input.GetKeyDown(KeyCode.F7))
             {
                 ExportAllItemsToFile();
+            }
+            else if (Input.GetKeyDown(KeyCode.F8))
+            {
+                TestLootDistribution();
             }
         }
 
@@ -253,7 +257,7 @@ namespace EliteEnemies.DebugTool
 
             return items;
         }
-        
+
         /// <summary>
         /// 按品质权重创建物品（支持品质偏好和标签过滤）
         /// 低品质物品权重更高（除非使用正向品质偏好）
@@ -277,6 +281,7 @@ namespace EliteEnemies.DebugTool
                     LogError("品质为 -1 时必须指定标签");
                     return null;
                 }
+
                 return CreateItemWithTagsFromAllQualities(requiredTags);
             }
 
@@ -325,7 +330,7 @@ namespace EliteEnemies.DebugTool
                 // 按权重从有效品质中选择
                 int pickedQuality = PickQualityByWeightFromValidQualities(
                     validItemCountsByQuality.Keys.ToList(), minQuality, maxQuality);
-                
+
                 if (pickedQuality <= 0)
                 {
                     LogError("按权重选择品质失败");
@@ -348,7 +353,7 @@ namespace EliteEnemies.DebugTool
                 return CreateItemFromQuality(pickedQuality);
             }
         }
-        
+
         // ========== 品质偏好 ==========
 
         private int ApplyQualityBias(int baseQuality)
@@ -650,7 +655,148 @@ namespace EliteEnemies.DebugTool
             }
         }
 
-        // ========== 辅助方法 ==========
+        /// <summary>
+        /// 测试掉落分布 - 模拟100次双词条小怪和100次Boss掉落
+        /// </summary>
+        private void TestLootDistribution()
+        {
+            if (!_isInitialized)
+            {
+                LogError("物品缓存未初始化");
+                return;
+            }
+
+            Debug.Log("========================================");
+            Debug.Log($"{LogTag} 开始测试掉落分布");
+            Debug.Log($"{LogTag} 当前品质偏好: {qualityBiasPower}");
+            Debug.Log("========================================");
+
+            // 测试配置
+            const int normalEnemyTests = 100;
+            const int bossTests = 100;
+
+            // 双词条小怪配置 (品质范围 1-4)
+            const int normalMinQuality = 2;
+            const int normalMaxQuality = 5;
+            const int normalAffixCount = 2;
+
+            // Boss配置 (品质范围 3-6)
+            const int bossMinQuality = 3;
+            const int bossMaxQuality = 7;
+            const int bossAffixCount = 2;
+
+            // 测试双词条小怪掉落
+            Debug.Log($"\n【双词条小怪测试】({normalEnemyTests}次)");
+            Debug.Log($"配置: 词条数={normalAffixCount}, 品质区间={normalMinQuality}-{normalMaxQuality}");
+
+            Dictionary<int, int> normalQualityCount = new Dictionary<int, int>();
+            int normalTotalDrops = 0;
+            int normalNoDrop = 0;
+
+            for (int i = 0; i < normalEnemyTests; i++)
+            {
+                // 模拟每个词条 100% 概率掉落1个物品
+                int dropsThisEnemy = 0;
+
+                for (int affix = 0; affix < normalAffixCount; affix++)
+                {
+                    if (UnityEngine.Random.value <= 1f) // 假设理想情况 100% 掉落率
+                    {
+                        Item item = CreateItemWithTagsWeighted(normalMinQuality, normalMaxQuality, null);
+                        if (item != null)
+                        {
+                            int quality = item.Quality;
+
+                            if (!normalQualityCount.ContainsKey(quality))
+                                normalQualityCount[quality] = 0;
+                            normalQualityCount[quality]++;
+
+                            normalTotalDrops++;
+                            dropsThisEnemy++;
+
+                            UnityEngine.Object.Destroy(item.gameObject);
+                        }
+                    }
+                }
+
+                if (dropsThisEnemy == 0)
+                    normalNoDrop++;
+            }
+
+            // 输出小怪统计
+            Debug.Log($"\n小怪统计:");
+            Debug.Log($"  总掉落: {normalTotalDrops} 个物品");
+            Debug.Log($"  平均每只: {(float)normalTotalDrops / normalEnemyTests:F2} 个");
+            Debug.Log($"  无掉落: {normalNoDrop} 只 ({(float)normalNoDrop / normalEnemyTests * 100:F1}%)");
+            Debug.Log($"\n  品质分布:");
+
+            for (int q = normalMinQuality; q <= normalMaxQuality; q++)
+            {
+                int count = normalQualityCount.ContainsKey(q) ? normalQualityCount[q] : 0;
+                float percent = normalTotalDrops > 0 ? (float)count / normalTotalDrops * 100 : 0;
+                Debug.Log($"    品质{q} ({GetQualityName(q)}): {count} ({percent:F1}%)");
+            }
+
+            // 测试Boss掉落
+            Debug.Log($"\n【Boss测试】({bossTests}次)");
+            Debug.Log($"配置: 词条数={bossAffixCount}, 品质区间={bossMinQuality}-{bossMaxQuality}");
+
+            Dictionary<int, int> bossQualityCount = new Dictionary<int, int>();
+            int bossTotalDrops = 0;
+            int bossNoDrop = 0;
+
+            for (int i = 0; i < bossTests; i++)
+            {
+                // 模拟每个词条 100% 概率掉落1个物品
+                int dropsThisBoss = 0;
+
+                for (int affix = 0; affix < bossAffixCount; affix++)
+                {
+                    if (UnityEngine.Random.value <= 1.0f) // 100% 掉落率
+                    {
+                        Item item = CreateItemWithTagsWeighted(bossMinQuality, bossMaxQuality, null);
+                        if (item != null)
+                        {
+                            int quality = item.Quality;
+
+                            if (!bossQualityCount.ContainsKey(quality))
+                                bossQualityCount[quality] = 0;
+                            bossQualityCount[quality]++;
+
+                            bossTotalDrops++;
+                            dropsThisBoss++;
+
+                            UnityEngine.Object.Destroy(item.gameObject);
+                        }
+                    }
+                }
+
+                if (dropsThisBoss == 0)
+                    bossNoDrop++;
+            }
+
+            // Boss统计
+            Debug.Log($"\nBoss统计:");
+            Debug.Log($"  总掉落: {bossTotalDrops} 个物品");
+            Debug.Log($"  平均每只: {(float)bossTotalDrops / bossTests:F2} 个");
+            Debug.Log($"  无掉落: {bossNoDrop} 只 ({(float)bossNoDrop / bossTests * 100:F1}%)");
+            Debug.Log($"\n  品质分布:");
+
+            for (int q = bossMinQuality; q <= bossMaxQuality; q++)
+            {
+                int count = bossQualityCount.ContainsKey(q) ? bossQualityCount[q] : 0;
+                float percent = bossTotalDrops > 0 ? (float)count / bossTotalDrops * 100 : 0;
+                Debug.Log($"    品质{q} ({GetQualityName(q)}): {count} ({percent:F1}%)");
+            }
+            
+            
+            Debug.Log($"\n【算法预期】");
+            Debug.Log($"  品质偏好={qualityBiasPower}:");
+
+            Debug.Log("========================================");
+            Debug.Log($"{LogTag} 掉落分布测试完成");
+            Debug.Log("========================================");
+        }
         // ========== 辅助方法 ==========
 
         private Item CreateItemFromQuality(int quality)
@@ -662,7 +808,7 @@ namespace EliteEnemies.DebugTool
             }
 
             int itemId = pool[UnityEngine.Random.Range(0, pool.Count)];
-            
+
             try
             {
                 Item item = ItemAssetsCollection.InstantiateSync(itemId);
@@ -671,6 +817,7 @@ namespace EliteEnemies.DebugTool
                     item.Initialize();
                     DebugLog($"创建物品: {item.DisplayName} (品质: {quality})");
                 }
+
                 return item;
             }
             catch (Exception ex)
@@ -706,7 +853,7 @@ namespace EliteEnemies.DebugTool
             }
 
             int selectedId = matchingItems[UnityEngine.Random.Range(0, matchingItems.Count)];
-            
+
             try
             {
                 Item item = ItemAssetsCollection.InstantiateSync(selectedId);
@@ -716,6 +863,7 @@ namespace EliteEnemies.DebugTool
                     string tagNames = string.Join(", ", Array.ConvertAll(requiredTags, t => t.name));
                     DebugLog($"创建物品: {item.DisplayName} [标签: {tagNames}] (品质: {quality})");
                 }
+
                 return item;
             }
             catch (Exception ex)
@@ -751,7 +899,7 @@ namespace EliteEnemies.DebugTool
             }
 
             int selectedId = matchingItems[UnityEngine.Random.Range(0, matchingItems.Count)];
-            
+
             try
             {
                 Item item = ItemAssetsCollection.InstantiateSync(selectedId);
@@ -761,6 +909,7 @@ namespace EliteEnemies.DebugTool
                     string tagNames = string.Join(", ", Array.ConvertAll(requiredTags, t => t.name));
                     DebugLog($"创建物品: {item.DisplayName} [标签: {tagNames}] (品质: {item.Quality})");
                 }
+
                 return item;
             }
             catch (Exception ex)
@@ -840,6 +989,7 @@ namespace EliteEnemies.DebugTool
 
             return validQualities[validQualities.Count - 1];
         }
+
         private bool ItemHasAllTags(int itemId, Tag[] requiredTags)
         {
             if (requiredTags == null || requiredTags.Length == 0)
@@ -878,6 +1028,7 @@ namespace EliteEnemies.DebugTool
                 return false;
             }
         }
+
         private string GetQualityName(int quality)
         {
             switch (quality)

@@ -71,6 +71,9 @@ namespace EliteEnemies
                 Debug.LogError($"{LogTag} 配置更新失败: 配置为空");
                 return;
             }
+            // Debug.Log($"{LogTag} DropRateMultiplier: {newConfig.DropRateMultiplier}");
+            // Debug.Log($"{LogTag} ItemQualityBias: {newConfig.ItemQualityBias}");
+            // Debug.Log($"{LogTag} EnableBonusLoot: {newConfig.EnableBonusLoot}");
 
             _config = newConfig;
         }
