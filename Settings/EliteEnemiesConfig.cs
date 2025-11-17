@@ -20,5 +20,6 @@ namespace EliteEnemies
         public float GlobalSpeedMultiplier { get; set; } = 1.0f;
         public bool ShowAffixFootText { get; set; } = true;
         public HashSet<string> DisabledAffixes { get; set; } = new HashSet<string>();
+        public int[] AffixCountWeights { get; set; } = new int[] { 0, 50, 30, 15, 4, 1 };
     }
 }

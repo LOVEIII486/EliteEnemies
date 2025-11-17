@@ -91,3 +91,9 @@ Affix_Stun_Name,震慑,1.7,AffixNames
 Affix_Stun_Description,攻击震慑玩家，枪械控制力下降,1.7,AffixDescription
 Affix_DungEater_Name,食粪者,1.7,AffixNames
 Affix_DungEater_Description,鸭科夫玩家最喜欢的一集？,1.7,AffixDescription
+Settings_AffixWeight1,1个词条的权重（推荐：30-70）,1.8,BasicSettings
+Settings_AffixWeight2,2个词条的权重（推荐：20-50）,1.8,BasicSettings
+Settings_AffixWeight3,3个词条的权重（推荐：10-30）,1.8,BasicSettings
+Settings_AffixWeight4,4个词条的权重（推荐：1-10）,1.8,BasicSettings
+Settings_AffixWeight5,5个词条的权重（推荐：0-5）,1.8,BasicSettings
+Settings_AffixCountWeights_Group,词条数量权重（数值越大越常见）,1.8,Groups

@@ -21,6 +21,7 @@ namespace EliteEnemies.Settings
 
             RegisterBasicSettings(builder);
             RegisterGlobalMultipliers(builder);
+            RegisterAffixCountWeights(builder);
             var affixKeys = RegisterAffixToggles(builder);
             RegisterGroups(builder, affixKeys);
 
@@ -147,7 +148,53 @@ namespace EliteEnemies.Settings
                     characterLimit: 5
                 );
         }
-
+        
+        // 词条数量权重设置
+         private static void RegisterAffixCountWeights(SettingsBuilder builder)
+        {
+            builder
+                .AddSlider(
+                    key: "AffixWeight1",
+                    description: LocalizationManager.GetText("Settings_AffixWeight1", "1个词条的权重（推荐：30-70）"),
+                    defaultValue: GameConfig.AffixWeight1,
+                    minValue: 0,
+                    maxValue: 100,
+                    onValueChange: GameConfig.SetAffixWeight1
+                )
+                .AddSlider(
+                    key: "AffixWeight2",
+                    description: LocalizationManager.GetText("Settings_AffixWeight2", "2个词条的权重（推荐：20-50）"),
+                    defaultValue: GameConfig.AffixWeight2,
+                    minValue: 0,
+                    maxValue: 100,
+                    onValueChange: GameConfig.SetAffixWeight2
+                )
+                .AddSlider(
+                    key: "AffixWeight3",
+                    description: LocalizationManager.GetText("Settings_AffixWeight3", "3个词条的权重（推荐：10-30）"),
+                    defaultValue: GameConfig.AffixWeight3,
+                    minValue: 0,
+                    maxValue: 100,
+                    onValueChange: GameConfig.SetAffixWeight3
+                )
+                .AddSlider(
+                    key: "AffixWeight4",
+                    description: LocalizationManager.GetText("Settings_AffixWeight4", "4个词条的权重（推荐：1-10）"),
+                    defaultValue: GameConfig.AffixWeight4,
+                    minValue: 0,
+                    maxValue: 100,
+                    onValueChange: GameConfig.SetAffixWeight4
+                )
+                .AddSlider(
+                    key: "AffixWeight5",
+                    description: LocalizationManager.GetText("Settings_AffixWeight5", "5个词条的权重（推荐：0-5）"),
+                    defaultValue: GameConfig.AffixWeight5,
+                    minValue: 0,
+                    maxValue: 100,
+                    onValueChange: GameConfig.SetAffixWeight5
+                );
+        }
+         
         // 词缀开关
 
         private static List<string> RegisterAffixToggles(SettingsBuilder builder)
@@ -206,6 +253,21 @@ namespace EliteEnemies.Settings
                         "GlobalHealthMultiplier",
                         "GlobalDamageMultiplier",
                         "GlobalSpeedMultiplier"
+                    },
+                    scale: GroupScale,
+                    topInsert: GroupTopInsert,
+                    open: false
+                )
+                .AddGroup(
+                    key: "AffixCountWeights",
+                    description: LocalizationManager.GetText("Settings_AffixCountWeights_Group", "词条数量权重（数值越大越常见）"),
+                    keys: new List<string>
+                    {
+                        "AffixWeight1",
+                        "AffixWeight2",
+                        "AffixWeight3",
+                        "AffixWeight4",
+                        "AffixWeight5"
                     },
                     scale: GroupScale,
                     topInsert: GroupTopInsert,

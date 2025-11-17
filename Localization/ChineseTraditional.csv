@@ -91,3 +91,9 @@ Affix_Stun_Name,震懾,1.7,AffixNames
 Affix_Stun_Description,攻擊震懾玩家，槍械控制力下降,1.7,AffixDescription
 Affix_DungEater_Name,食糞者,1.7,AffixNames
 Affix_DungEater_Description,鴨科夫玩家最喜歡的一集？,1.7,AffixDescription
+Settings_AffixWeight1,1個詞條的權重（推薦：30-70）,1.8,BasicSettings
+Settings_AffixWeight2,2個詞條的權重（推薦：20-50）,1.8,BasicSettings
+Settings_AffixWeight3,3個詞條的權重（推薦：10-30）,1.8,BasicSettings
+Settings_AffixWeight4,4個詞條的權重（推薦：1-10）,1.8,BasicSettings
+Settings_AffixWeight5,5個詞條的權重（推薦：0-5）,1.8,BasicSettings
+Settings_AffixCountWeights_Group,詞條數量權重（數值越大越常見）,1.8,Groups

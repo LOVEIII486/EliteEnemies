@@ -20,7 +20,7 @@ namespace EliteEnemies
     public static class EliteEnemyCore
     {
         private const string LogTag = "[EliteEnemies.Core]";
-        
+
         private static EliteEnemiesConfig _config = new EliteEnemiesConfig();
         public static EliteEnemiesConfig Config => _config;
 
@@ -114,7 +114,7 @@ namespace EliteEnemies
 
             // 基于权重随机选择
             var selected = new List<string>();
-            int count = Mathf.Clamp(UnityEngine.Random.Range(1, maxCount + 1), 1, available.Count);
+            int count = Mathf.Clamp(SelectWeightedAffixCount(maxCount), 1, available.Count);
 
             for (int i = 0; i < count; i++)
             {
@@ -168,6 +168,43 @@ namespace EliteEnemies
             }
 
             return affixNames[affixNames.Count - 1];
+        }
+
+        private static int SelectWeightedAffixCount(int maxCount)
+        {
+            var weights = Config.AffixCountWeights;
+            
+            if (weights == null || weights.Length < 2)
+            {
+                Debug.LogWarning($"{LogTag} 词条权重配置无效，使用默认均匀分布");
+                return UnityEngine.Random.Range(1, maxCount + 1);
+            }
+            
+            int totalWeight = 0;
+            for (int i = 1; i <= maxCount && i < weights.Length; i++)
+            {
+                totalWeight += Mathf.Max(0, weights[i]);
+            }
+
+            // 如果总权重为0，使用均匀分布
+            if (totalWeight <= 0)
+            {
+                Debug.LogWarning($"{LogTag} 词条权重总和为0，使用默认均匀分布");
+                return UnityEngine.Random.Range(1, maxCount + 1);
+            }
+            
+            int rand = UnityEngine.Random.Range(0, totalWeight);
+            int sum = 0;
+
+            for (int i = 1; i <= maxCount && i < weights.Length; i++)
+            {
+                sum += Mathf.Max(0, weights[i]);
+                if (rand < sum)
+                {
+                    return i;
+                }
+            }
+            return 1;
         }
 
         private static bool IsAffixAllowedForPreset(string affixName, string presetName)

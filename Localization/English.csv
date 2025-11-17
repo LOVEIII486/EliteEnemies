@@ -91,3 +91,9 @@ Affix_Stun_Name,Stun,1.7,AffixNames
 Affix_Stun_Description,Attacks stun the player and reduce weapon control,1.7,AffixDescription
 Affix_DungEater_Name,Dung Eater,1.7,AffixNames
 Affix_DungEater_Description,The most beloved episode among Duckov players ?,1.7,AffixDescription
+Settings_AffixWeight1,Weight for 1 affix (Recommended: 30-70),1.8,BasicSettings
+Settings_AffixWeight2,Weight for 2 affixes (Recommended: 20-50),1.8,BasicSettings
+Settings_AffixWeight3,Weight for 3 affixes (Recommended: 10-30),1.8,BasicSettings
+Settings_AffixWeight4,Weight for 4 affixes (Recommended: 1-10),1.8,BasicSettings
+Settings_AffixWeight5,Weight for 5 affixes (Recommended: 0-5),1.8,BasicSettings
+Settings_AffixCountWeights_Group,Affix Count Weights (Higher = More Common),1.8,Groups
