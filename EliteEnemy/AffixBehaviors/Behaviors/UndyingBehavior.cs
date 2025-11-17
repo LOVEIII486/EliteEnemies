@@ -119,6 +119,8 @@ namespace EliteEnemies.AffixBehaviors
 
             character.PopText(PopLineStart);
             StartInvincibility(character);
+            AIFieldModifier.ModifyImmediate(character,AIFieldModifier.Fields.ShootCanMove,1f);
+            AIFieldModifier.ModifyImmediate(character, AIFieldModifier.Fields.CanDash,1f);
         }
 
         private void StartInvincibility(CharacterMainControl character)

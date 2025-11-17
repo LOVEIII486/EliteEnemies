@@ -172,10 +172,10 @@ namespace EliteEnemies
             ["Berserk"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Berserk_Name", "狂暴"),
-                Description = LocalizationManager.GetText("Affix_Berserk_Description", "攻击力更强但生命略低。掉落：进击图腾、热血针剂"),
+                Description = LocalizationManager.GetText("Affix_Berserk_Description"),
                 Color = new Color(1.0f, 0.298f, 0.298f),
                 HealthMultiplier = 0.8f,
-                DamageMultiplier = 1.3f,
+                DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Common
             }.WithLootGroup(

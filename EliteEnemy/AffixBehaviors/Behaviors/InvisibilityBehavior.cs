@@ -82,6 +82,8 @@ namespace EliteEnemies.AffixBehaviors
                 "你刚才是不是看到我了？|别眨眼，我又消失啦～|嘘……什么都没发生。|幻觉？还是我太快了？|我就在你背后……开玩笑的。"
             );
             InitMessages(raw);
+            AIFieldModifier.ModifyDelayed(character,AIFieldModifier.Fields.ShootCanMove,1f);
+            AIFieldModifier.ModifyDelayed(character, AIFieldModifier.Fields.CanDash,1f);
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
