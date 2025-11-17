@@ -1,236 +1,113 @@
 ﻿using System;
-using System.Reflection;
 using ECM2;
 using UnityEngine;
-using ItemStatsSystem;
-using ItemStatsSystem.Stats;
-using EliteEnemies.AffixBehaviors;
 
 namespace EliteEnemies.AffixBehaviors
 {
     /// <summary>
-    /// 【史莱姆】词缀 - 初始巨大但虚弱,血量降低时体型缩小且伤害增强,并会周期性跳跃
+    /// 【史莱姆】词缀 - 初始巨大但虚弱，血量降低时体型缩小且伤害增强，并会周期性跳跃
     /// </summary>
     public class SlimeBehavior : AffixBehaviorBase, IUpdateableAffixBehavior
     {
         public override string AffixName => "Slime";
 
-        // 体型和属性
-        private static readonly float InitialScale = 3f;          // 初始体型倍率
-        private static readonly float MinScale = 0.5f;            // 最小体型倍率
-        private static readonly float InitialHealthMult = 3f;    // 初始血量倍率
-        private static readonly float InitialDamageMult = 0.4f;  // 初始伤害倍率
-        private static readonly float MaxDamageMult = 1.2f;      // 最大伤害倍率
-        private static readonly float HealthThreshold = 0.05f;    // 5%血量变化才更新
+        // ===== 体型与属性配置 =====
+        private static readonly float InitialScale       = 3f;   // 初始体型倍率
+        private static readonly float MinScale           = 0.5f; // 最小体型倍率
+        private static readonly float InitialHealthMult  = 3f;   // 初始血量倍率
+        private static readonly float InitialDamageMult  = 0.4f; // 初始伤害倍率
+        private static readonly float MaxDamageMult      = 1.2f; // 最大伤害倍率
+        private static readonly float HealthThreshold    = 0.05f; // 血量变化达到 5% 才更新
 
-        // 跳跃
-        private static readonly float JumpIntervalMin = 0.5f;      // 最小跳跃间隔
-        private static readonly float JumpIntervalMax = 1.5f;      // 最大跳跃间隔
-        private static readonly float JumpForce = 5f;             // 跳跃力度
-        private static readonly float GroundPause = 0.3f;         // 地面约束暂停时间
-        private static readonly float MaxJumpHeightCheck = 5f;  // 跳跃前检测上方空间
-        
-        private Vector3 _lastValidPosition;  // 记录最后一个有效位置
-        private Vector3 _lastGroundedPosition;
-        private bool _hasGroundedPosition;
-        
+        // ===== 跳跃相关配置 =====
+        private static readonly float JumpIntervalMin    = 0.5f;  // 最小跳跃间隔
+        private static readonly float JumpIntervalMax    = 1.5f;  // 最大跳跃间隔
+        private static readonly float JumpForce          = 5f;    // 跳跃力度
+        private static readonly float GroundPause        = 0.3f;  // 地面约束暂停时间
+        private static readonly float MaxJumpHeightCheck = 5f;    // 跳跃前检测上方空间高度
+
         private CharacterMainControl _character;
         private Health _health;
         private CharacterMovement _movement;
+
         private Vector3 _originalScale;
-        
-        private float _lastHealthPercent;
+        private Vector3 _lastValidPosition;
+        private Vector3 _lastGroundedPosition;
+        private bool _hasGroundedPosition;
+
+        private float _lastHealthPercent = 1f;
         private float _nextJumpTime;
-        private float _currentDamageMultiplier;
-        
-        // 缓存反射相关对象
-        private object _itemCache;
-        private System.Reflection.MethodInfo _getStatMethod;
-        private object _gunDamageStat;
-        private object _meleeDamageStat;
-        private System.Reflection.MethodInfo _removeModifierMethod;
-        private System.Reflection.MethodInfo _addModifierMethod;
-        
-        private Modifier _currentGunModifier;
-        private Modifier _currentMeleeModifier;
+        private float _currentDamageMultiplier = 1f; // 记录当前已应用的伤害倍率（用于差值更新）
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             if (character == null) return;
 
             _character = character;
-            _health = character.Health;
-            
+            _health    = character.Health;
+
             if (_health == null)
             {
-                Debug.LogError("[SlimeBehavior] 找不到Health组件");
+                Debug.LogError("[SlimeBehavior] 找不到 Health 组件");
                 return;
             }
-
-            // 获取CharacterMovement组件(用于跳跃)
+            
             if (character.movementControl != null)
             {
                 _movement = character.movementControl.GetComponent<CharacterMovement>();
             }
 
-            // 保存原始缩放
-            _originalScale = character.transform.localScale;
-            
-            // 应用初始体型
+            // 记录原始体型 & 位置
+            _originalScale      = character.transform.localScale;
+            _lastValidPosition  = character.transform.position;
+            _lastGroundedPosition = character.transform.position;
+            _hasGroundedPosition  = true;
+
+            // 初始放大体型
             character.transform.localScale = _originalScale * InitialScale;
 
-            // 应用属性修改（血量和初始伤害）
+
             ApplyInitialStats(character);
 
             // 初始化状态
-            _lastHealthPercent = 1f;
-            _currentDamageMultiplier = InitialDamageMult;
-            _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
-            
-            _lastGroundedPosition = character.transform.position;
-            _hasGroundedPosition = true;
-            //Debug.Log($"[SlimeBehavior] {character.name} 史莱姆初始化完成 - 体型:{INITIAL_SCALE}x, 伤害:{INITIAL_DAMAGE_MULT}x");
+            _lastHealthPercent       = 1f;
+            _nextJumpTime            = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
+            // _currentDamageMultiplier 已在 ApplyInitialStats 中设置为 InitialDamageMult
         }
 
+        /// <summary>
+        /// 应用初始血量和伤害倍率
+        /// </summary>
         private void ApplyInitialStats(CharacterMainControl character)
         {
-            try
-            {
-                if (_health == null) return;
+            // 血量：直接乘以倍率并回满
+            AttributeModifier.Quick.ModifyHealth(character, InitialHealthMult, healToFull: true);
 
-                // 通过反射获取item并缓存
-                var itemField = typeof(Health).GetField("item",
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                    
-                _itemCache = itemField?.GetValue(_health);
-                if (_itemCache == null)
-                {
-                    Debug.LogWarning($"[SlimeBehavior] {character.name} 没有有效的item");
-                    return;
-                }
-
-                _getStatMethod = _itemCache.GetType().GetMethod("GetStat", new[] { typeof(string) });
-                if (_getStatMethod == null)
-                {
-                    Debug.LogError("[SlimeBehavior] 找不到GetStat方法");
-                    return;
-                }
-
-                // 获取Stat对象并缓存反射方法
-                _gunDamageStat = _getStatMethod.Invoke(_itemCache, new object[] { "GunDamageMultiplier" });
-                _meleeDamageStat = _getStatMethod.Invoke(_itemCache, new object[] { "MeleeDamageMultiplier" });
-                
-                if (_gunDamageStat != null)
-                {
-                    var statType = _gunDamageStat.GetType();
-                    _removeModifierMethod = statType.GetMethod("RemoveModifier", new[] { typeof(Modifier) });
-                    _addModifierMethod = statType.GetMethod("AddModifier", new[] { typeof(Modifier) });
-                }
-
-                // 添加血量倍率（这个只需要加一次）
-                AddModifierToStat("MaxHealth", InitialHealthMult);
-
-                // 添加初始伤害倍率
-                UpdateDamageModifiers(InitialDamageMult);
-                
-                // 恢复满血
-                _health.SetHealth(_health.MaxHealth);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[SlimeBehavior] 应用初始属性失败: {ex.Message}");
-            }
+            // 伤害：通过“增量倍率”方式更新，
+            // 防止多次调用时重复叠乘，使用 new / old 做差值
+            _currentDamageMultiplier = 1f;
+            ApplyDamageMultiplier(character, InitialDamageMult);
         }
 
-        private void AddModifierToStat(string statName, float multiplier)
+        /// <summary>
+        /// 以“相对当前值”的方式更新伤害倍率：实际乘以 (new / old)
+        /// 这样不会因为多次调用导致无限叠乘。
+        /// </summary>
+        private void ApplyDamageMultiplier(CharacterMainControl character, float newMultiplier)
         {
-            try
-            {
-                var statObj = _getStatMethod.Invoke(_itemCache, new object[] { statName });
-                if (statObj == null) return;
+            if (character == null) return;
+            if (Mathf.Approximately(_currentDamageMultiplier, newMultiplier)) return;
 
-                var addMod = statObj.GetType().GetMethod("AddModifier", new[] { typeof(Modifier) });
-                if (addMod == null) return;
+            // 真实乘上的倍数
+            float ratio = newMultiplier / Mathf.Max(_currentDamageMultiplier, 0.0001f);
 
-                float delta = multiplier - 1f;
-                if (Mathf.Approximately(delta, 0f)) return;
-
-                addMod.Invoke(statObj, new object[] { 
-                    new Modifier(ModifierType.PercentageMultiply, delta, _character) 
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[SlimeBehavior] 添加Modifier失败({statName}): {ex.Message}");
-            }
+            AttributeModifier.Quick.ModifyDamage(character, ratio);
+            _currentDamageMultiplier = newMultiplier;
         }
 
-        private void UpdateDamageModifiers(float newMultiplier)
-        {
-            try
-            {
-                float delta = newMultiplier - 1f;
-
-                // 移除旧的Modifier并添加新的（枪械伤害）
-                if (_gunDamageStat != null && _addModifierMethod != null && _removeModifierMethod != null)
-                {
-                    if (_currentGunModifier != null)
-                    {
-                        _removeModifierMethod.Invoke(_gunDamageStat, new object[] { _currentGunModifier });
-                    }
-                    
-                    _currentGunModifier = new Modifier(ModifierType.PercentageMultiply, delta, _character);
-                    _addModifierMethod.Invoke(_gunDamageStat, new object[] { _currentGunModifier });
-                }
-
-                // 移除旧的Modifier并添加新的（近战伤害）
-                if (_meleeDamageStat != null && _addModifierMethod != null && _removeModifierMethod != null)
-                {
-                    if (_currentMeleeModifier != null)
-                    {
-                        _removeModifierMethod.Invoke(_meleeDamageStat, new object[] { _currentMeleeModifier });
-                    }
-                    
-                    _currentMeleeModifier = new Modifier(ModifierType.PercentageMultiply, delta, _character);
-                    _addModifierMethod.Invoke(_meleeDamageStat, new object[] { _currentMeleeModifier });
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[SlimeBehavior] 更新伤害Modifier失败: {ex.Message}");
-            }
-        }
-        
-        // 在 IsGrounded() 后面添加新方法
-        private bool CanSafelyJump()
-        {
-            if (_movement == null || _character == null) return false;
-    
-            // 检查是否在地面上
-            if (!IsGrounded()) return false;
-    
-            // ⭐ 检查上方是否有足够空间（避免卡天花板）
-            Vector3 rayStart = _character.transform.position + Vector3.up * 0.5f;
-            if (Physics.Raycast(rayStart, Vector3.up, MaxJumpHeightCheck, LayerMask.GetMask("Default", "Terrain")))
-            {
-                // 上方有障碍物，不跳跃
-                return false;
-            }
-    
-            // ⭐ 检查附近是否有墙壁（避免跳出地图）
-            float checkRadius = 2f;
-            Collider[] nearbyColliders = Physics.OverlapSphere(_character.transform.position, checkRadius, LayerMask.GetMask("Default", "Terrain"));
-    
-            // 如果周围障碍物太多，可能在狭窄空间，不跳跃
-            if (nearbyColliders.Length > 5)
-            {
-                return false;
-            }
-    
-            return true;
-        }
-
-        // 5. 在Update中添加边界检查
+        /// <summary>
+        /// 每帧更新 
+        /// </summary>
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
             if (_health == null || _health.IsDead || character == null) return;
@@ -239,77 +116,96 @@ namespace EliteEnemies.AffixBehaviors
             Vector3 currentPos = character.transform.position;
             if (currentPos.y < -50f || currentPos.y > 100f)
             {
-                Debug.LogWarning($"[SlimeBehavior] {character.name} 超出边界，传送回安全位置");
+                Debug.LogWarning($"[SlimeBehavior] {character.characterPreset.nameKey} 超出边界，传送回安全位置");
                 character.movementControl.ForceSetPosition(_lastValidPosition);
                 return;
             }
-    
-            // 更新有效位置
+
+            // 更新最后有效位置
             if (IsGrounded())
             {
                 _lastValidPosition = currentPos;
             }
-
-            // 血量和体型更新
+            
             float currentHealthPercent = _health.CurrentHealth / _health.MaxHealth;
             if (Mathf.Abs(currentHealthPercent - _lastHealthPercent) >= HealthThreshold)
             {
                 UpdateScaleAndDamage(character, currentHealthPercent);
                 _lastHealthPercent = currentHealthPercent;
             }
-
-            // 跳跃
+            
             if (Time.time >= _nextJumpTime && CanSafelyJump())
             {
                 _lastGroundedPosition = character.transform.position;
-                _hasGroundedPosition = true;
+                _hasGroundedPosition  = true;
+
                 PerformJump();
                 _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
             }
         }
-        
-        /// <summary>
-        /// 检测是否超出地图边界
-        /// </summary>
-        private bool IsOutOfBounds(Vector3 position)
-        {
-            // 检查Y轴是否异常（掉落或飞太高）
-            if (position.y < -50f || position.y > 100f)
-                return true;
-    
-            // 检查是否离最后有效位置太远（可能穿墙了）
-            float maxDistance = 20f;
-            if (Vector3.Distance(position, _lastValidPosition) > maxDistance)
-                return true;
-    
-            return false;
-        }
 
+        /// <summary>
+        /// 根据当前血量百分比更新体型和伤害倍率
+        /// </summary>
         private void UpdateScaleAndDamage(CharacterMainControl character, float healthPercent)
         {
-            // 血量从100%到0%: 体型从3倍到0.5倍, 伤害从0.2倍到1.5倍
-            float t = 1f - healthPercent;  // 血量越低t越大(0→1)
-            
-            float newScale = Mathf.Lerp(InitialScale, MinScale, t);
-            _currentDamageMultiplier = Mathf.Lerp(InitialDamageMult, MaxDamageMult, t);
+            // 血量从 100% → 0% ：
+            // 体型从 InitialScale → MinScale
+            // 伤害从 InitialDamageMult → MaxDamageMult
+            float t = 1f - healthPercent;  // 血量越低 t 越大（0→1）
 
-            // 应用新体型
+            float newScale          = Mathf.Lerp(InitialScale, MinScale, t);
+            float newDamageMultiplier = Mathf.Lerp(InitialDamageMult, MaxDamageMult, t);
+
+            // 应用体型
             character.transform.localScale = _originalScale * newScale;
 
-            // 动态更新伤害倍率
-            UpdateDamageModifiers(_currentDamageMultiplier);
+            // 伤害用“差值倍率”更新
+            ApplyDamageMultiplier(character, newDamageMultiplier);
 
-            // Debug.Log($"[SlimeBehavior] {character.name} 血量:{healthPercent:P0}, 体型:{newScale:F2}x, 伤害:{_currentDamageMultiplier:F2}x");
+            // Debug.Log($"[SlimeBehavior] {character.name} HP:{healthPercent:P0}, Scale:{newScale:F2}x, Dmg:{newDamageMultiplier:F2}x");
         }
 
+        /// <summary>
+        /// 是否在地面上
+        /// </summary>
         private bool IsGrounded()
         {
             if (_movement == null) return false;
-            
-            // 检查垂直速度是否接近0(表示在地面)
             return Mathf.Abs(_movement.velocity.y) < 0.1f;
         }
 
+        /// <summary>
+        /// 是否可以安全跳跃
+        /// </summary>
+        private bool CanSafelyJump()
+        {
+            if (_movement == null || _character == null) return false;
+
+            if (!IsGrounded()) return false;
+
+            // 检查上方是否有足够空间
+            Vector3 rayStart = _character.transform.position + Vector3.up * 0.5f;
+            if (Physics.Raycast(rayStart, Vector3.up, MaxJumpHeightCheck,
+                    LayerMask.GetMask("Default", "Terrain")))
+            {
+                return false;
+            }
+
+            // 检查周围是否过于狭窄
+            float   checkRadius      = 2f;
+            var     nearbyColliders  = Physics.OverlapSphere(_character.transform.position, checkRadius,
+                LayerMask.GetMask("Default", "Terrain"));
+
+            if (nearbyColliders.Length > 5)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// 执行一次向上跳跃
+        /// </summary>
         private void PerformJump()
         {
             if (_movement == null || _character == null) return;
@@ -319,12 +215,12 @@ namespace EliteEnemies.AffixBehaviors
                 // 暂停地面约束
                 _movement.PauseGroundConstraint(GroundPause);
 
-                // 设置向上的速度
+                // 设置向上速度
                 Vector3 velocity = _movement.velocity;
-                velocity.y = JumpForce;
+                velocity.y       = JumpForce;
                 _movement.velocity = velocity;
 
-                //Debug.Log($"[SlimeBehavior] {_character.name} 跳跃!");
+                // Debug.Log($"[SlimeBehavior] {_character.name} 跳跃!");
             }
             catch (Exception ex)
             {
@@ -332,21 +228,25 @@ namespace EliteEnemies.AffixBehaviors
             }
         }
 
+        /// <summary>
+        /// 尝试在精英死亡时把位置拉回到地面，避免尸体悬空/跌落
+        /// </summary>
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {
             if (character == null) return;
 
             try
             {
-                Vector3 pos = character.transform.position;
+                Vector3    pos = character.transform.position;
                 RaycastHit hit;
 
-                // 1）优先用射线往下找到地面（避免最后一次落地点刚好在空中平台边缘）
-                if (Physics.Raycast(pos + Vector3.up, Vector3.down, out hit, 50f, LayerMask.GetMask("Default", "Terrain")))
+                // 用射线往下找到地面
+                if (Physics.Raycast(pos + Vector3.up, Vector3.down, out hit, 50f,
+                        LayerMask.GetMask("Default", "Terrain")))
                 {
                     character.transform.position = hit.point;
                 }
-                // 2）找不到地面时，退回到最后一次记录的落地点
+                // 否则退回到最后一次记录的落地点
                 else if (_hasGroundedPosition)
                 {
                     character.transform.position = _lastGroundedPosition;
@@ -360,42 +260,27 @@ namespace EliteEnemies.AffixBehaviors
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            // 清理Modifier
+            // 注意：当前整体框架（包括 Giant/Mini）在清理时都不还原 Stat，
+            // 因为敌人本身通常会被销毁，对象不会复用。
+            // 这里仅恢复体型，并清空引用，避免潜在的复用问题。
             try
             {
-                if (_gunDamageStat != null && _removeModifierMethod != null && _currentGunModifier != null)
+                if (character != null && _originalScale != Vector3.zero)
                 {
-                    _removeModifierMethod.Invoke(_gunDamageStat, new object[] { _currentGunModifier });
-                }
-                
-                if (_meleeDamageStat != null && _removeModifierMethod != null && _currentMeleeModifier != null)
-                {
-                    _removeModifierMethod.Invoke(_meleeDamageStat, new object[] { _currentMeleeModifier });
+                    character.transform.localScale = _originalScale;
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[SlimeBehavior] 清理Modifier失败: {ex.Message}");
+                Debug.LogError($"[SlimeBehavior] OnCleanup 重置体型失败: {ex.Message}");
             }
-            
-            if (character != null && _originalScale != Vector3.zero)
-            {
-                character.transform.localScale = _originalScale;
-            }
-            
-            _character = null;
-            _health = null;
-            _movement = null;
-            _itemCache = null;
-            _getStatMethod = null;
-            _gunDamageStat = null;
-            _meleeDamageStat = null;
-            _removeModifierMethod = null;
-            _addModifierMethod = null;
-            _currentGunModifier = null;
-            _currentMeleeModifier = null;
-            _lastHealthPercent = 0f;
-            _currentDamageMultiplier = InitialDamageMult;
+
+            _character               = null;
+            _health                  = null;
+            _movement                = null;
+            _lastHealthPercent       = 1f;
+            _currentDamageMultiplier = 1f;
+            _hasGroundedPosition     = false;
         }
     }
 }

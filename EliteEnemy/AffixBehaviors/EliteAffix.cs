@@ -24,7 +24,7 @@ namespace EliteEnemies
             {
                 ["Giant"] = new HashSet<string> { "Mini" },
                 ["Undead"] = new HashSet<string> { "Explosive" },
-                ["Regeneration"] = new HashSet<string> { "Tanky", "Giant" },
+                // ["Regeneration"] = new HashSet<string> { "Tanky", "Giant" },
                 ["Split"] = new HashSet<string> { "MimicTear" },
             };
 

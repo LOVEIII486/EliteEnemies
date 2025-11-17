@@ -71,7 +71,6 @@ namespace EliteEnemies.AffixBehaviors
 
         public void OnDamaged(CharacterMainControl character, DamageInfo dmg)
         {
-            /* 不需要 */
         }
 
         public override void OnEliteInitialized(CharacterMainControl c)

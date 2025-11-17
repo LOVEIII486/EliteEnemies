@@ -92,7 +92,7 @@ namespace EliteEnemies.AffixBehaviors
     public static class AffixBehaviorManager
     {
         // 存储词缀名称 -> 行为类型的映射
-        private static readonly Dictionary<string, Type> _behaviorTypes
+        private static readonly Dictionary<string, Type> BehaviorTypes
             = new Dictionary<string, Type>();
 
         /// <summary>
@@ -110,12 +110,12 @@ namespace EliteEnemies.AffixBehaviors
                 return;
             }
 
-            if (_behaviorTypes.ContainsKey(affixName))
+            if (BehaviorTypes.ContainsKey(affixName))
             {
                 Debug.LogWarning($"[AffixBehaviorManager] Behavior '{affixName}' already registered, replacing...");
             }
 
-            _behaviorTypes[affixName] = typeof(T);
+            BehaviorTypes[affixName] = typeof(T);
             //Debug.Log($"[AffixBehaviorManager] Registered behavior type: {affixName} ({typeof(T).Name})");
         }
 
@@ -124,7 +124,7 @@ namespace EliteEnemies.AffixBehaviors
         /// </summary>
         public static IAffixBehavior CreateBehaviorInstance(string affixName)
         {
-            if (!_behaviorTypes.TryGetValue(affixName, out Type behaviorType))
+            if (!BehaviorTypes.TryGetValue(affixName, out Type behaviorType))
             {
                 return null;
             }
@@ -148,7 +148,7 @@ namespace EliteEnemies.AffixBehaviors
         /// </summary>
         public static bool IsRegistered(string affixName)
         {
-            return _behaviorTypes.ContainsKey(affixName);
+            return BehaviorTypes.ContainsKey(affixName);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace EliteEnemies.AffixBehaviors
         /// </summary>
         public static IEnumerable<string> GetAllAffixNames()
         {
-            return _behaviorTypes.Keys;
+            return BehaviorTypes.Keys;
         }
 
         /// <summary>
@@ -164,14 +164,14 @@ namespace EliteEnemies.AffixBehaviors
         /// </summary>
         public static void ClearAll()
         {
-            _behaviorTypes.Clear();
+            BehaviorTypes.Clear();
             Debug.Log("[AffixBehaviorManager] All behavior types cleared");
         }
 
         /// <summary>
         /// 获取已注册的行为数量
         /// </summary>
-        public static int Count => _behaviorTypes.Count;
+        public static int Count => BehaviorTypes.Count;
     }
 
     public static class AffixBehaviorUtils

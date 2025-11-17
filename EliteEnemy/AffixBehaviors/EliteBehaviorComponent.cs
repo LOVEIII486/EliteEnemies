@@ -107,7 +107,7 @@ namespace EliteEnemies.AffixBehaviors
         }
 
         /// <summary>
-        /// 👇 新增：射击事件处理器
+        /// 射击事件处理器
         /// </summary>
         private void OnShootHandlerWrapper(DuckovItemAgent agent)
         {
@@ -130,7 +130,7 @@ namespace EliteEnemies.AffixBehaviors
         }
 
         /// <summary>
-        /// 👇 新增：近战攻击事件处理器
+        /// 近战攻击事件处理器
         /// </summary>
         private void OnMeleeAttackHandlerWrapper(DuckovItemAgent agent)
         {
@@ -221,7 +221,7 @@ namespace EliteEnemies.AffixBehaviors
                 _damageReceiver.OnHurtEvent.RemoveListener(_hurtHandler);
             }
 
-            // 👇 解绑攻击事件
+            // 解绑攻击事件
             if (_character != null)
             {
                 _character.OnShootEvent -= OnShootHandlerWrapper;

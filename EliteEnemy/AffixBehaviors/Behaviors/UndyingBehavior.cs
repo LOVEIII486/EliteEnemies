@@ -1,22 +1,19 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace EliteEnemies.AffixBehaviors
 {
     /// <summary>
     /// 词缀：不死（Undying）
-    /// 首次跌破阈值时：瞬间回血 + 无敌若干秒（仅一次）
+    /// 首次跌破阈值时：瞬间回血 + 无敌2秒（仅一次）
     /// </summary>
     public class UndyingBehavior : AffixBehaviorBase, IUpdateableAffixBehavior
     {
-        private const string LogTag = "[EliteEnemies.UndyingBehavior]";
-        
         public override string AffixName => "Undead";
         
         private static readonly float LowHpThresholdRatio = 0.20f;  // 触发阈值：≤20%
-        private static readonly float HealRatio = 0.50f;             // 回血到 50%
-        private static readonly float InvincibleDuration = 2.0f;    // 无敌 2 秒
+        private static readonly float HealRatio           = 0.50f;  // 回血到 50%
+        private static readonly float InvincibleDuration  = 2.0f;   // 无敌 2 秒
         
         private readonly Lazy<string> _popLineStartLazy = new Lazy<string>(() =>
             LocalizationManager.GetText("Affix_Undead_PopText_1", "还没那么容易倒下！"));
@@ -25,111 +22,95 @@ namespace EliteEnemies.AffixBehaviors
             LocalizationManager.GetText("Affix_Undead_PopText_2", "萎了！"));
         
         private string PopLineStart => _popLineStartLazy.Value;
-        private string PopLineEnd => _popLineEndLazy.Value;
+        private string PopLineEnd   => _popLineEndLazy.Value;
         
-        private bool _triggered = false;           // 是否已触发
-        private bool _isInvincible = false;        // 是否处于无敌状态
-        private bool _wasInvincible = false;       // 触发前的无敌状态
-        private float _invincibleEndTime = 0f;     // 无敌结束时间
-        private float _lastHp = -1f;               // 上一帧血量
         private CharacterMainControl _owner;
-        private UnityAction<DamageInfo> _hurtHandler;
-        
+        private bool  _triggered;              // 是否已触发过（只触发一次）
+        private bool  _isInvincible;           // 当前是否处于无敌状态
+        private bool  _wasInvincible;          // 触发前的无敌状态
+        private float _invincibleEndTime;      // 无敌结束时间
+        private float _lastHp = -1f;           // 上一帧血量
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
-            if (!character || character.Health == null) return;
+            if (!character || character.Health == null)
+                return;
 
-            _owner = character;
+            _owner  = character;
             _lastHp = character.Health.CurrentHealth;
-            _hurtHandler = OnHurtEvent;
-            character.Health.OnHurtEvent.AddListener(_hurtHandler);
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            if (!character || character.Health == null) return;
+            if (!character || character.Health == null)
+                return;
 
             var health = character.Health;
-            if (health.IsDead) return;
-            
+            if (health.IsDead)
+                return;
+
+            // 1. 检查是否需要触发“不死”
             if (!_triggered)
             {
-                CheckTrigger(character);
+                TryTriggerUndying(character, _lastHp, health.CurrentHealth, health.MaxHealth);
             }
-            
+
+            // 2. 更新无敌状态
             if (_isInvincible)
             {
                 UpdateInvincibility(character);
             }
 
+            // 3. 记录上一帧血量
             _lastHp = health.CurrentHealth;
         }
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            if (_hurtHandler != null && character && character.Health != null)
-            {
-                character.Health.OnHurtEvent.RemoveListener(_hurtHandler);
-                _hurtHandler = null;
-            }
-            
             if (_isInvincible && character && character.Health != null)
             {
                 character.Health.SetInvincible(_wasInvincible);
                 _isInvincible = false;
             }
+
+            _owner = null;
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {
             OnCleanup(character);
         }
-        
 
-        private void CheckTrigger(CharacterMainControl character)
+        /// <summary>
+        /// 判断是否从阈值上方“跌破”到阈值以下，如果是则触发一次
+        /// </summary>
+        private void TryTriggerUndying(
+            CharacterMainControl character,
+            float lastHp,
+            float currentHp,
+            float maxHp)
         {
-            var health = character.Health;
-            float maxHp = health.MaxHealth;
+            if (_triggered) return;
             if (maxHp <= 0f) return;
 
-            float currentHp = health.CurrentHealth;
             float threshold = maxHp * LowHpThresholdRatio;
 
-            // 检测是否穿过阈值
-            if (_lastHp > threshold && currentHp <= threshold)
+            // 只在 “上一帧 > 阈值 && 当前 ≤ 阈值” 时触发一次
+            if (lastHp > threshold && currentHp <= threshold)
             {
-                TriggerUndying(character);
+                DoTriggerUndying(character);
             }
         }
 
-        private void OnHurtEvent(DamageInfo damageInfo)
-        {
-            if (_triggered || _owner == null) return;
-
-            var health = _owner.Health;
-            if (health == null || health.IsDead) return;
-
-            float maxHp = health.MaxHealth;
-            if (maxHp <= 0f) return;
-
-            float currentHp = health.CurrentHealth;
-            float threshold = maxHp * LowHpThresholdRatio;
-            
-            if (_lastHp > threshold && currentHp <= threshold)
-            {
-                TriggerUndying(_owner);
-            }
-        }
-
-        private void TriggerUndying(CharacterMainControl character)
+        private void DoTriggerUndying(CharacterMainControl character)
         {
             var health = character.Health;
-            if (health == null || health.IsDead) return;
+            if (health == null || health.IsDead)
+                return;
 
             _triggered = true;
 
-            // 回血到目标比例
+            // 把当前血量拉到指定比例（不改最大生命）
             float targetHp = health.MaxHealth * HealRatio;
             if (health.CurrentHealth < targetHp)
             {
@@ -143,10 +124,11 @@ namespace EliteEnemies.AffixBehaviors
         private void StartInvincibility(CharacterMainControl character)
         {
             var health = character.Health;
-            if (health == null) return;
+            if (health == null)
+                return;
 
-            _wasInvincible = health.Invincible;
-            _isInvincible = true;
+            _wasInvincible     = health.Invincible;
+            _isInvincible      = true;
             _invincibleEndTime = Time.time + InvincibleDuration;
 
             health.SetInvincible(true);
@@ -163,7 +145,8 @@ namespace EliteEnemies.AffixBehaviors
         private void EndInvincibility(CharacterMainControl character)
         {
             var health = character.Health;
-            if (health == null) return;
+            if (health == null)
+                return;
             
             health.SetInvincible(_wasInvincible);
             _isInvincible = false;
