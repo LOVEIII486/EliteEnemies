@@ -3,7 +3,7 @@ using FMOD;
 using ItemStatsSystem;
 using Debug = UnityEngine.Debug;
 
-namespace EliteEnemies.Buffs.Effects
+namespace EliteEnemies.BuffsSystem.Effects
 {
     public class DungEaterEffect : IEliteBuffEffect
     {

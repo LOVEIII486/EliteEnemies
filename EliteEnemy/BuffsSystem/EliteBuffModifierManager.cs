@@ -3,7 +3,7 @@ using ItemStatsSystem;
 using ItemStatsSystem.Stats;
 using UnityEngine;
 
-namespace EliteEnemies.Buffs
+namespace EliteEnemies.BuffsSystem
 {
     /// <summary>
     /// Modifier追踪和管理器

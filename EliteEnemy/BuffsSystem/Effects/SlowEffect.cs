@@ -1,7 +1,7 @@
 ﻿using Duckov.Buffs;
 using ItemStatsSystem.Stats;
 
-namespace EliteEnemies.Buffs.Effects
+namespace EliteEnemies.BuffsSystem.Effects
 {
     public class SlowEffect : IEliteBuffEffect
     {

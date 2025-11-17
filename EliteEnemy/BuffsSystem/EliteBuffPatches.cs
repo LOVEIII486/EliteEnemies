@@ -5,7 +5,7 @@ using Duckov.Buffs;
 using UnityEngine;
 using ItemStatsSystem;
 
-namespace EliteEnemies.Buffs
+namespace EliteEnemies.BuffsSystem
 {
     /// <summary>
     /// 精英Buff的Harmony补丁 - 统一入口

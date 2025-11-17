@@ -7,7 +7,7 @@ using UnityEngine;
 using ItemStatsSystem;
 using ItemStatsSystem.Items;
 
-namespace EliteEnemies.DebugTool
+namespace EliteEnemies
 {
     /// <summary>
     /// 掉落物品辅助工具

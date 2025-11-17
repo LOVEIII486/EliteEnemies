@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Duckov.Modding;
-using EliteEnemies.Buffs;
-using EliteEnemies.Buffs.Effects;
+using EliteEnemies.BuffsSystem;
+using EliteEnemies.BuffsSystem.Effects;
 using EliteEnemies.DebugTool;
 using ModSetting.Api;
 using UnityEngine;
@@ -13,7 +13,7 @@ namespace EliteEnemies
     public class ModBehaviour : Duckov.Modding.ModBehaviour
     {
         public static ModBehaviour Instance { get; private set; }
-        public static DebugTool.LootItemHelper LootHelper => Instance?._lootItemHelper;
+        public static LootItemHelper LootHelper => Instance?._lootItemHelper;
         
         private const string LogTag = "[EliteEnemies]";
         private const bool EnableDevSpawn = false; // 调试刷怪
@@ -24,7 +24,7 @@ namespace EliteEnemies
         
         // ========== 调试工具 ==========
         private GameObject _lootHelperObject;
-        private DebugTool.LootItemHelper _lootItemHelper;
+        private LootItemHelper _lootItemHelper;
         private GameObject _spawnHelperObject;
         
         private bool _isPatched = false;
@@ -123,7 +123,7 @@ namespace EliteEnemies
             if (_lootHelperObject != null) return;
 
             _lootHelperObject = new GameObject("EliteEnemies_LootHelper");
-            _lootItemHelper = _lootHelperObject.AddComponent<DebugTool.LootItemHelper>();
+            _lootItemHelper = _lootHelperObject.AddComponent<LootItemHelper>();
             _lootItemHelper.debugMode = EnableDevLoot;
             DontDestroyOnLoad(_lootHelperObject);
             Debug.Log($"{LogTag}  掉落调试工具已初始化");
@@ -178,8 +178,8 @@ namespace EliteEnemies
 
         private void CleanupBuffFramework()
         {
-            EliteEnemies.Buffs.EliteBuffRegistry.Instance.Clear();
-            EliteEnemies.Buffs.EliteBuffModifierManager.Instance.Clear();
+            EliteEnemies.BuffsSystem.EliteBuffRegistry.Instance.Clear();
+            EliteEnemies.BuffsSystem.EliteBuffModifierManager.Instance.Clear();
             Debug.Log($"{LogTag}  Buff框架已清理");
         }
 

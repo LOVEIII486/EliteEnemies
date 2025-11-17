@@ -34,8 +34,8 @@ namespace EliteEnemies.AffixBehaviors
             ApplySizeChange(character);
             ApplyStatChanges(character);
 
-            //Debug.Log($"[GigantificationBehavior] {character.name} 巨大化完成：" +
-            //          $"体型 {_actualSizeMultiplier:F2}x，血量 {_actualHealthMultiplier:F2}x，速度 {SpeedMultiplier:F2}x");
+            // Debug.Log($"[GigantificationBehavior] {character.name} 巨大化完成：" +
+            //           $"体型 {_actualSizeMultiplier:F2}x，血量 {_actualHealthMultiplier:F2}x，速度 {SpeedMultiplier:F2}x");
         }
         
         private void ApplySizeChange(CharacterMainControl character)
@@ -49,50 +49,8 @@ namespace EliteEnemies.AffixBehaviors
         
         private void ApplyStatChanges(CharacterMainControl character)
         {
-            var health = character.Health;
-            if (health == null) return;
-
-            // 通过反射获取 Item 并修改 Stat
-            var itemField = typeof(Health).GetField("item",
-                System.Reflection.BindingFlags.Instance |
-                System.Reflection.BindingFlags.NonPublic |
-                System.Reflection.BindingFlags.Public);
-
-            var item = itemField?.GetValue(health);
-            if (item == null)
-            {
-                Debug.LogWarning($"[GigantificationBehavior] {character.characterPreset.nameKey} 没有有效的 item，跳过属性修改");
-                return;
-            }
-
-            var getStat = item.GetType().GetMethod("GetStat", new[] { typeof(string) });
-            if (getStat == null)
-            {
-                return;
-            }
-
-            void AddModifierToStat(string statName, float multiplier)
-            {
-                var statObj = getStat.Invoke(item, new object[] { statName });
-                if (statObj == null) return;
-
-                var addMod = statObj.GetType().GetMethod("AddModifier", new[] { typeof(Modifier) });
-                if (addMod == null) return;
-
-                float delta = multiplier - 1f;
-                if (Mathf.Approximately(delta, 0f)) return;
-
-                // 添加百分比倍率 Modifier
-                addMod.Invoke(statObj, new object[]
-                {
-                    new Modifier(ModifierType.PercentageMultiply, delta, character)
-                });
-            }
-
-            AddModifierToStat("MaxHealth", _actualHealthMultiplier);
-            AddModifierToStat("WalkSpeed", SpeedMultiplier);
-            AddModifierToStat("RunSpeed", SpeedMultiplier);
-            health.SetHealth(health.MaxHealth);
+            AttributeModifier.Quick.ModifyHealth(character, _actualHealthMultiplier, healToFull: true);
+            AttributeModifier.Quick.ModifySpeed(character, SpeedMultiplier);
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
