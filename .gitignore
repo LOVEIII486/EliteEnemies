@@ -1,0 +1,35 @@
+﻿# --- 编译产物 ---
+/bin/
+/obj/
+
+# 如果有 Debug/Release 子目录，也可以单独写
+# /Debug/
+# /Release/
+
+# --- Unity 常规 ---
+/Library/
+/Temp/
+/Logs/
+/UserSettings/
+MemoryCaptures/
+
+# --- Rider / JetBrains ---
+/.idea/
+/*.sln.DotSettings.user
+
+# --- VS / Resharper 之类 ---
+/.vs/
+/*.user
+*.userprefs
+
+# --- 备份 / 压缩包 / 历史文件 ---
+*.7z
+*.zip
+*.rar
+*.bak
+
+# --- 其他你不想提交的文件（按需补充） ---
+# ModSettingsApi/ModSetting.dll
+# 0Harmony.dll
+# 这些如果你改成 submodule 或别处提供，可以忽略
+/ModSettingsApi/ModSetting.dll
