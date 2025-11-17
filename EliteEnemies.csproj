@@ -693,6 +693,7 @@
       <Content Include="Localization\English.csv" />
       <Content Include="Localization\LocalizationGuide.md" />
       <Content Include="ModSettingsApi\ModSetting.dll" />
+      <Content Include="README.md" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <PropertyGroup>
