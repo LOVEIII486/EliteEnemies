@@ -658,6 +658,7 @@
         <Compile Include="EliteEnemy\AttributeModifier\AIFieldModifier.cs" />
         <Compile Include="EliteEnemy\AttributeModifier\AttributeModifier.cs" />
         <Compile Include="EliteEnemy\AttributeModifier\StatModifier.cs" />
+        <Compile Include="EliteEnemy\BuffsSystem\EliteBuffFactory.cs" />
         <Compile Include="EliteEnemy\Core\EliteEnemyCorePatches.cs" />
         <Compile Include="EliteEnemy\LootSystem\EliteLootSystem.cs" />
         <Compile Include="EliteEnemy\LootSystem\LootItemHelper.cs" />

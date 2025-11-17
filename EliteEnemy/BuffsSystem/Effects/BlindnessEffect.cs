@@ -13,8 +13,8 @@ namespace EliteEnemies.BuffsSystem.Effects
         private const string LogTag = "[EliteEnemies.BlindnessEffect]";
         public string BuffName => "EliteBuff_Blindness";
 
-        private static readonly float ViewDistanceReduction = -0.9f; // 视野距离
-        private static readonly float ViewAngleReduction = -0.6f; // 视野角度
+        private static readonly float ViewDistanceReduction = -0.9f; // 减少90%
+        private static readonly float ViewAngleReduction = -0.6f;     // 减少60%
         
         public void OnBuffSetup(Buff buff, CharacterMainControl player)
         {
@@ -26,39 +26,35 @@ namespace EliteEnemies.BuffsSystem.Effects
 
             try
             {
-                // 获取视野相关Stat
-                var viewDistanceStat = player.CharacterItem.GetStat("ViewDistance");
-                var viewAngleStat = player.CharacterItem.GetStat("ViewAngle");
+                // AddModifier + 追踪
+                var viewDistanceModifier = StatModifier.AddModifier(
+                    player,
+                    StatModifier.Attributes.ViewDistance,
+                    ViewDistanceReduction,
+                    ModifierType.PercentageMultiply
+                );
 
-                if (viewDistanceStat == null || viewAngleStat == null)
+                var viewAngleModifier = StatModifier.AddModifier(
+                    player,
+                    StatModifier.Attributes.ViewAngle,
+                    ViewAngleReduction,
+                    ModifierType.PercentageMultiply
+                );
+
+                // 检查是否成功添加
+                if (viewDistanceModifier == null || viewAngleModifier == null)
                 {
-                    Debug.LogWarning($"{LogTag} 找不到视野Stat");
+                    Debug.LogWarning($"{LogTag} 添加Modifier失败");
                     return;
                 }
 
-                // 创建Modifier
-                var viewDistanceModifier = new Modifier(
-                    ModifierType.PercentageMultiply,
-                    ViewDistanceReduction,
-                    player
-                );
-
-                var viewAngleModifier = new Modifier(
-                    ModifierType.PercentageMultiply,
-                    ViewAngleReduction,
-                    player
-                );
-
-                // 应用Modifier
-                viewDistanceStat.AddModifier(viewDistanceModifier);
-                viewAngleStat.AddModifier(viewAngleModifier);
-
                 // 追踪Modifier以便后续清理
                 int buffId = buff.GetInstanceID();
+                var viewDistanceStat = player.CharacterItem.GetStat(StatModifier.Attributes.ViewDistance);
+                var viewAngleStat = player.CharacterItem.GetStat(StatModifier.Attributes.ViewAngle);
+                
                 EliteBuffModifierManager.Instance.TrackModifier(buffId, viewDistanceStat, viewDistanceModifier);
                 EliteBuffModifierManager.Instance.TrackModifier(buffId, viewAngleStat, viewAngleModifier);
-
-                //Debug.Log($"{LogTag} 致盲效果已应用 - 视野距离: {viewDistanceStat.Value}, 视野角度: {viewAngleStat.Value}");
             }
             catch (Exception ex)
             {
