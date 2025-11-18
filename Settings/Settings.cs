@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ModSetting.Api;
 using UnityEngine;
 
 namespace EliteEnemies.Settings
@@ -63,11 +62,12 @@ namespace EliteEnemies.Settings
         /// <summary>
         /// 从 ModSetting 加载保存的配置
         /// </summary>
-        public static void Init(SettingsBuilder settingsBuilder)
+        public static void Init()
         {
-            if (settingsBuilder.HasConfig())
+            // ============ 关键修改：使用 ModSettingAPI ============
+            if (ModSettingAPI.HasConfig())
             {
-                LoadFromConfig(settingsBuilder);
+                LoadFromConfig();
             }
             else
             {
@@ -78,48 +78,49 @@ namespace EliteEnemies.Settings
             Debug.Log($"{LogTag} 配置加载完成");
         }
 
-        private static void LoadFromConfig(SettingsBuilder builder)
+        private static void LoadFromConfig()
         {
-            NormalEliteChance = builder.GetSavedValue("NormalEliteChance", out float normal) ? normal : 1.0f;
-            BossEliteChance = builder.GetSavedValue("BossEliteChance", out float boss) ? boss : 0.0f;
-            MerchantEliteChance = builder.GetSavedValue("MerchantEliteChance", out float merchant) ? merchant : 0.0f;
-            MaxAffixCount = builder.GetSavedValue("MaxAffixCount", out int maxCount)
+            // ============ 关键修改：使用 ModSettingAPI.GetSavedValue ============
+            NormalEliteChance = ModSettingAPI.GetSavedValue<float>("NormalEliteChance", out float normal) ? normal : 1.0f;
+            BossEliteChance = ModSettingAPI.GetSavedValue<float>("BossEliteChance", out float boss) ? boss : 0.0f;
+            MerchantEliteChance = ModSettingAPI.GetSavedValue<float>("MerchantEliteChance", out float merchant) ? merchant : 0.0f;
+            MaxAffixCount = ModSettingAPI.GetSavedValue<int>("MaxAffixCount", out int maxCount)
                 ? Mathf.Clamp(maxCount, ConfigRanges.MinAffixCountLimit, ConfigRanges.MaxAffixCountLimit)
                 : 2;
-            ShowDetailedHealth = builder.GetSavedValue("ShowDetailedHealth", out bool showHealth) ? showHealth : true;
-            DropRateMultiplier = builder.GetSavedValue("DropRateMultiplier", out float dropRate)
+            ShowDetailedHealth = ModSettingAPI.GetSavedValue<bool>("ShowDetailedHealth", out bool showHealth) ? showHealth : true;
+            DropRateMultiplier = ModSettingAPI.GetSavedValue<float>("DropRateMultiplier", out float dropRate)
                 ? Mathf.Clamp(dropRate, ConfigRanges.MinDropRate, ConfigRanges.MaxDropRate)
                 : 1.0f;
-            ItemQualityBias = builder.GetSavedValue("ItemQualityBias", out float qualityBias)
+            ItemQualityBias = ModSettingAPI.GetSavedValue<float>("ItemQualityBias", out float qualityBias)
                 ? Mathf.Clamp(qualityBias, ConfigRanges.MinQualityBias, ConfigRanges.MaxQualityBias)
                 : -1f;
-            EnableBonusLoot = builder.GetSavedValue("EnableBonusLoot", out bool enableBonus) ? enableBonus : true;
-            GlobalHealthMultiplier = builder.GetSavedValue("GlobalHealthMultiplier", out float healthMult)
+            EnableBonusLoot = ModSettingAPI.GetSavedValue<bool>("EnableBonusLoot", out bool enableBonus) ? enableBonus : true;
+            GlobalHealthMultiplier = ModSettingAPI.GetSavedValue<float>("GlobalHealthMultiplier", out float healthMult)
                 ? Mathf.Clamp(healthMult, ConfigRanges.MinMultiplier, ConfigRanges.MaxMultiplier)
                 : 1.0f;
-            GlobalDamageMultiplier = builder.GetSavedValue("GlobalDamageMultiplier", out float damageMult)
+            GlobalDamageMultiplier = ModSettingAPI.GetSavedValue<float>("GlobalDamageMultiplier", out float damageMult)
                 ? Mathf.Clamp(damageMult, ConfigRanges.MinMultiplier, ConfigRanges.MaxMultiplier)
                 : 1.0f;
-            GlobalSpeedMultiplier = builder.GetSavedValue("GlobalSpeedMultiplier", out float speedMult)
+            GlobalSpeedMultiplier = ModSettingAPI.GetSavedValue<float>("GlobalSpeedMultiplier", out float speedMult)
                 ? Mathf.Clamp(speedMult, ConfigRanges.MinMultiplier, ConfigRanges.MaxMultiplier)
                 : 1.0f;
-            ShowAffixFootText = builder.GetSavedValue("ShowAffixFootText", out bool footText) ? footText : true;
-            AffixFootTextFontSize = builder.GetSavedValue("AffixFootTextFontSize", out float fontSize)
+            ShowAffixFootText = ModSettingAPI.GetSavedValue<bool>("ShowAffixFootText", out bool footText) ? footText : true;
+            AffixFootTextFontSize = ModSettingAPI.GetSavedValue<float>("AffixFootTextFontSize", out float fontSize)
                 ? Mathf.Clamp(fontSize, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize)
                 : 35f;
-            AffixWeight1 = builder.GetSavedValue("AffixWeight1", out int w1)
+            AffixWeight1 = ModSettingAPI.GetSavedValue<int>("AffixWeight1", out int w1)
                 ? Mathf.Clamp(w1, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 50;
-            AffixWeight2 = builder.GetSavedValue("AffixWeight2", out int w2)
+            AffixWeight2 = ModSettingAPI.GetSavedValue<int>("AffixWeight2", out int w2)
                 ? Mathf.Clamp(w2, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 30;
-            AffixWeight3 = builder.GetSavedValue("AffixWeight3", out int w3)
+            AffixWeight3 = ModSettingAPI.GetSavedValue<int>("AffixWeight3", out int w3)
                 ? Mathf.Clamp(w3, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 15;
-            AffixWeight4 = builder.GetSavedValue("AffixWeight4", out int w4)
+            AffixWeight4 = ModSettingAPI.GetSavedValue<int>("AffixWeight4", out int w4)
                 ? Mathf.Clamp(w4, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 4;
-            AffixWeight5 = builder.GetSavedValue("AffixWeight5", out int w5)
+            AffixWeight5 = ModSettingAPI.GetSavedValue<int>("AffixWeight5", out int w5)
                 ? Mathf.Clamp(w5, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 1;
             // 添加新配置项需要修改！！！
@@ -129,7 +130,7 @@ namespace EliteEnemies.Settings
             // Debug.Log($"{LogTag} ItemQualityBias: {ItemQualityBias}");
             // Debug.Log($"{LogTag} EnableBonusLoot: {EnableBonusLoot}");
 
-            LoadAffixStates(builder);
+            LoadAffixStates();
             SyncConfigToComponents(); // 同步到掉落系统
         }
 
@@ -154,18 +155,19 @@ namespace EliteEnemies.Settings
             AffixWeight4 = 4;
             AffixWeight5 = 1;
 
-            LoadAffixStates(null);
+            LoadAffixStates();
             SyncConfigToComponents();
         }
 
-        private static void LoadAffixStates(SettingsBuilder builder)
+        private static void LoadAffixStates()
         {
             foreach (var kvp in EliteAffixes.Pool)
             {
                 string key = kvp.Key;
                 bool defaultState = !DefaultDisabledAffixes.Contains(key);
 
-                if (builder != null && builder.GetSavedValue(key, out bool saved))
+                // ============ 关键修改：使用 ModSettingAPI.GetSavedValue ============
+                if (ModSettingAPI.GetSavedValue<bool>(key, out bool saved))
                 {
                     _affixStates[key] = saved;
                 }

@@ -4,7 +4,6 @@ using Duckov.Modding;
 using EliteEnemies.BuffsSystem;
 using EliteEnemies.BuffsSystem.Effects;
 using EliteEnemies.DebugTool;
-using ModSetting.Api;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,7 +19,6 @@ namespace EliteEnemies
         private const bool EnableDevLoot = false; // 调试刷物品
         
         private Harmony _harmony;
-        private SettingsBuilder _settingsBuilder;
         
         // ========== 调试工具 ==========
         private GameObject _lootHelperObject;
@@ -144,9 +142,15 @@ namespace EliteEnemies
         {
             if (_settingsInitialized) return;
 
-            _settingsBuilder = SettingsBuilder.Create(info);
-            Settings.GameConfig.Init(_settingsBuilder);
-            Settings.SettingsUIRegistration.RegisterUI(_settingsBuilder);
+            // ============ 关键修改：使用 ModSettingAPI ============
+            if (!ModSettingAPI.Init(info))
+            {
+                Debug.LogError($"{LogTag} ModSettingAPI 初始化失败，可能未安装 ModSetting 或版本不兼容");
+                return;
+            }
+
+            Settings.GameConfig.Init();
+            Settings.SettingsUIRegistration.RegisterUI();
             
             SodaCraft.Localizations.LocalizationManager.OnSetLanguage += OnLanguageChanged;
             EliteEnemyCore.UpdateConfig(Settings.GameConfig.GetConfig());

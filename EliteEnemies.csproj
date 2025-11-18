@@ -167,9 +167,6 @@
         <Reference Include="MiniExcel">
           <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\MiniExcel.dll</HintPath>
         </Reference>
-        <Reference Include="ModSetting">
-          <HintPath>E:\Game\Steam\steamapps\workshop\content\3167020\3595729494\ModSetting.dll</HintPath>
-        </Reference>
         <Reference Include="Mono.Security">
           <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Mono.Security.dll</HintPath>
         </Reference>
@@ -663,6 +660,7 @@
         <Compile Include="EliteEnemy\Core\EliteEnemyCorePatches.cs" />
         <Compile Include="EliteEnemy\LootSystem\EliteLootSystem.cs" />
         <Compile Include="EliteEnemy\LootSystem\LootItemHelper.cs" />
+        <Compile Include="ModSettingsApi\ModSettingAPI.cs" />
         <Compile Include="Settings\EliteEnemiesConfig.cs" />
         <Compile Include="Settings\SettingsUIRegistration.cs" />
         <Compile Include="DebugTool\EliteEnemyTracker.cs" />
@@ -698,7 +696,6 @@
       <Content Include="Localization\ChineseTraditional.csv" />
       <Content Include="Localization\English.csv" />
       <Content Include="Localization\LocalizationGuide.md" />
-      <Content Include="ModSettingsApi\ModSetting.dll" />
       <Content Include="README.md" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
