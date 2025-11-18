@@ -267,7 +267,7 @@ namespace EliteEnemies
 
     /// <summary>
     /// 玩家受伤Hook - 准确触发精英词缀的命中效果
-    /// 修复：方法名是 Hurt 不是 OnHurt
+    /// 方法名是 Hurt 不是 OnHurt
     /// </summary>
     [HarmonyPatch(typeof(DamageReceiver), nameof(DamageReceiver.Hurt))]
     public static class PlayerHitDetectionPatch

@@ -16,10 +16,10 @@ namespace EliteEnemies.AffixBehaviors
         private List<IUpdateableAffixBehavior> _updateableBehaviors = new List<IUpdateableAffixBehavior>();
         private List<ICombatAffixBehavior> _combatBehaviors = new List<ICombatAffixBehavior>();
         private bool _isInitialized = false;
-        
+
         private UnityAction<DamageInfo> _hurtHandler;
         private UnityAction<DamageInfo> _shootHandler;
-        
+
         private Dictionary<string, object> _customData = new Dictionary<string, object>();
 
         public void Initialize(CharacterMainControl character, List<string> affixes)
@@ -35,10 +35,10 @@ namespace EliteEnemies.AffixBehaviors
                 if (behavior != null)
                 {
                     _behaviors.Add(behavior);
-                    
+
                     if (behavior is IUpdateableAffixBehavior updateable)
                         _updateableBehaviors.Add(updateable);
-                    
+
                     if (behavior is ICombatAffixBehavior combat)
                         _combatBehaviors.Add(combat);
                 }
@@ -47,15 +47,21 @@ namespace EliteEnemies.AffixBehaviors
             // 调用初始化
             foreach (var behavior in _behaviors)
             {
-                try { behavior.OnEliteInitialized(_character); }
-                catch (Exception ex) { Debug.LogError($"[EliteBehaviorComponent] Init error: {ex}"); }
+                try
+                {
+                    behavior.OnEliteInitialized(_character);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[EliteBehaviorComponent] Init error: {ex}");
+                }
             }
 
             // 绑定战斗事件
             RegisterCombatEvents();
             _isInitialized = true;
         }
-        
+
         /// <summary>
         /// 注册战斗事件监听
         /// </summary>
@@ -95,14 +101,7 @@ namespace EliteEnemies.AffixBehaviors
 
             foreach (var behavior in _combatBehaviors)
             {
-                try 
-                { 
-                    behavior.OnDamaged(_character, damageInfo); 
-                }
-                catch (Exception ex) 
-                { 
-                    Debug.LogError($"[EliteBehaviorComponent] OnDamaged error: {ex}"); 
-                }
+                behavior.OnDamaged(_character, damageInfo);
             }
         }
 
@@ -115,17 +114,10 @@ namespace EliteEnemies.AffixBehaviors
 
             // 创建伤害信息（射击事件没有直接的DamageInfo，需要构造）
             DamageInfo damageInfo = new DamageInfo(_character);
-            
+
             foreach (var behavior in _combatBehaviors)
             {
-                try 
-                { 
-                    behavior.OnAttack(_character, damageInfo); 
-                }
-                catch (Exception ex) 
-                { 
-                    Debug.LogError($"[EliteBehaviorComponent] OnAttack (Shoot) error: {ex}"); 
-                }
+                behavior.OnAttack(_character, damageInfo);
             }
         }
 
@@ -138,17 +130,10 @@ namespace EliteEnemies.AffixBehaviors
 
             // 创建伤害信息
             DamageInfo damageInfo = new DamageInfo(_character);
-            
+
             foreach (var behavior in _combatBehaviors)
             {
-                try 
-                { 
-                    behavior.OnAttack(_character, damageInfo); 
-                }
-                catch (Exception ex) 
-                { 
-                    Debug.LogError($"[EliteBehaviorComponent] OnAttack (Melee) error: {ex}"); 
-                }
+                behavior.OnAttack(_character, damageInfo);
             }
         }
 
@@ -161,17 +146,10 @@ namespace EliteEnemies.AffixBehaviors
 
             foreach (var behavior in _combatBehaviors)
             {
-                try 
-                { 
-                    behavior.OnAttack(_character, damageInfo); 
-                }
-                catch (Exception ex) 
-                { 
-                    Debug.LogError($"[EliteBehaviorComponent] OnAttack error: {ex}"); 
-                }
+                behavior.OnAttack(_character, damageInfo);
             }
         }
-        
+
         /// <summary>
         /// 触发命中玩家事件（从 Harmony Patch 调用）
         /// </summary>
@@ -179,22 +157,14 @@ namespace EliteEnemies.AffixBehaviors
         {
             if (!_isInitialized || _character == null) return;
 
-            Debug.Log($"[EliteBehaviorComponent] TriggerHitPlayer 调用，攻击者: {attacker?.name}, 战斗词缀数量: {_combatBehaviors.Count}");
+            //Debug.Log($"[EliteBehaviorComponent] TriggerHitPlayer 调用，攻击者: {attacker?.name}, 战斗词缀数量: {_combatBehaviors.Count}");
 
             foreach (var behavior in _combatBehaviors)
             {
-                try 
-                {
-                    Debug.Log($"[EliteBehaviorComponent] 调用词缀 OnHitPlayer: {behavior.AffixName}");
-                    behavior.OnHitPlayer(attacker, damageInfo);
-                }
-                catch (Exception ex) 
-                { 
-                    Debug.LogError($"[EliteBehaviorComponent] OnHitPlayer error [{behavior.AffixName}]: {ex}"); 
-                }
+                behavior.OnHitPlayer(attacker, damageInfo);
             }
         }
-        
+
         private void Update()
         {
             if (!_isInitialized || _character == null || _updateableBehaviors.Count == 0) return;
@@ -223,10 +193,16 @@ namespace EliteEnemies.AffixBehaviors
 
             foreach (var behavior in _behaviors)
             {
-                try { behavior.OnCleanup(_character); }
-                catch (Exception ex) { Debug.LogError($"[EliteBehaviorComponent] OnCleanup error: {ex}"); }
+                try
+                {
+                    behavior.OnCleanup(_character);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[EliteBehaviorComponent] OnCleanup error: {ex}");
+                }
             }
-            
+
             _behaviors.Clear();
             _updateableBehaviors.Clear();
             _combatBehaviors.Clear();
@@ -250,7 +226,7 @@ namespace EliteEnemies.AffixBehaviors
                 _character.OnShootEvent -= OnShootHandlerWrapper;
                 _character.OnAttackEvent -= OnMeleeAttackHandlerWrapper;
             }
-            
+
             //Debug.Log($"[EliteBehaviorComponent] {_character?.name} 已解绑战斗事件");
         }
 
