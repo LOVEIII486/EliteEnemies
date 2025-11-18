@@ -17,7 +17,7 @@ namespace EliteEnemies.AffixBehaviors
     {
         public override string AffixName => "Chaos";
         
-        private static readonly float CooldownSeconds = 3f;
+        private static readonly float CooldownSeconds = 2f;
         // 内置全局冷却，共享
         private static float _lastApplyTime = -999f;
         
@@ -51,6 +51,8 @@ namespace EliteEnemies.AffixBehaviors
         
         public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
         {
+            if (Time.time - _lastApplyTime < CooldownSeconds)
+                return;
             // 从预定义列表中随机挑选一个 Buff
             var pick = NegativeDebuffs[Random.Range(0, NegativeDebuffs.Length)];
             if (!pick) return;
