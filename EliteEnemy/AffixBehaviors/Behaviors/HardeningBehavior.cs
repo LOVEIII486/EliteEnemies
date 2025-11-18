@@ -20,7 +20,7 @@ namespace EliteEnemies.AffixBehaviors
         private float _lastTriggerTime = -999f; // 上次触发时间
 
         private readonly Lazy<string> _hardeningPopTextFmt =
-            new(() => LocalizationManager.GetText("Affix_Hardening_PopText", "硬化 -{0}%"));
+            new(() => LocalizationManager.GetText("Affix_Hardening_PopText_1"));
 
         private string HardeningPopTextFmt => _hardeningPopTextFmt.Value;
 

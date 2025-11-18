@@ -98,3 +98,6 @@ Settings_AffixWeight4,4個詞條的權重（推薦：1-10）,1.8,BasicSettings
 Settings_AffixWeight5,5個詞條的權重（推薦：0-5）,1.8,BasicSettings
 Settings_AffixCountWeights_Group,詞條數量權重（數值越大越常見）,1.8,Groups
 Affix_Berserk_PopText_1,<color=#DC143C>怒了！！！</color>,1.9,AffixBehavior
+Affix_Hardening_Name,硬化,2.0,AffixNames
+Affix_Hardening_Description,受傷時隨機降低 5%-12% 物理傷害，最多可達 50%,2.0,AffixDescription
+Affix_Hardening_PopText_1,<color=#B2B2B2>硬化 +{0}</color>,2.0,AffixBehavior
