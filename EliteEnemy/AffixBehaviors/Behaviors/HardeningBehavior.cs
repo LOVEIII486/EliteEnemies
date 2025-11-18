@@ -73,7 +73,7 @@ namespace EliteEnemies.AffixBehaviors
             // Debug.Log($"[HardeningBehavior] 累计减伤: {(_accumulatedReduction * 100):F1}%, 本次: {percentDisplay}%, 当前倍率: {newFactor:F3}");
         }
 
-        public void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
         {
         }
 
