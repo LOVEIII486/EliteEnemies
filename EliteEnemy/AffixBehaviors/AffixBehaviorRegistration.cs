@@ -27,6 +27,7 @@ namespace EliteEnemies.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<StunBehavior>();
             AffixBehaviorManager.RegisterBehavior<DungEaterBehavior>();
             AffixBehaviorManager.RegisterBehavior<BerserkBehavior>();
+            AffixBehaviorManager.RegisterBehavior<HardeningBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }

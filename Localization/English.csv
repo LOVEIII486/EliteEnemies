@@ -98,3 +98,6 @@ Settings_AffixWeight4,Weight for 4 affixes (Recommended: 1-10),1.8,BasicSettings
 Settings_AffixWeight5,Weight for 5 affixes (Recommended: 0-5),1.8,BasicSettings
 Settings_AffixCountWeights_Group,Affix Count Weights (Higher = More Common),1.8,Groups
 Affix_Berserk_PopText_1,<color=#DC143C>ENRAGED!!!</color>,1.9,AffixBehavior
+Affix_Hardening_Name,Hardening,2.0,AffixNames
+Affix_Hardening_Description,"Reduce 5%-12% physical damage per hit, max 50%, 1.0s cooldown",2.0,AffixDescription
+Affix_Hardening_PopText,Hardened +{0},1.0,AffixBehavior

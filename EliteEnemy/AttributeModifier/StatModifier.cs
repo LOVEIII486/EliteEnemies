@@ -99,7 +99,32 @@ namespace EliteEnemies
                 Debug.LogWarning($"{LogTag} Failed to multiply {statName}: {ex.Message}");
             }
         }
+        
+        /// <summary>
+        /// 增加 Stat 基础值（永久修改，不可逆）
+        /// </summary>
+        public static void Add(CharacterMainControl character, string statName, float value)
+        {
+            if (character?.CharacterItem == null)
+            {
+                Debug.LogWarning($"{LogTag} CharacterItem is null");
+                return;
+            }
 
+            try
+            {
+                var stat = character.CharacterItem.GetStat(statName);
+                if (stat != null)
+                {
+                    stat.BaseValue += value;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"{LogTag} Failed to add to {statName}: {ex.Message}");
+            }
+        }
+        
         /// <summary>
         /// 添加临时 Modifier（可移除，适合 Buff）
         /// </summary>

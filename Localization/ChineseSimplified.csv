@@ -98,3 +98,6 @@ Settings_AffixWeight4,4个词条的权重（推荐：1-10）,1.8,BasicSettings
 Settings_AffixWeight5,5个词条的权重（推荐：0-5）,1.8,BasicSettings
 Settings_AffixCountWeights_Group,词条数量权重（数值越大越常见）,1.8,Groups
 Affix_Berserk_PopText_1,<color=#DC143C>怒了！！！</color>,1.9,AffixBehavior
+Affix_Hardening_Name,硬化,2.0,AffixNames
+Affix_Hardening_Description,受伤时随机降低 5%-12% 物理伤害，上限 50%，冷却 1.0 秒,2.0,AffixDescription
+Affix_Hardening_PopText_1,硬化 +{0},2.0,AffixBehavior

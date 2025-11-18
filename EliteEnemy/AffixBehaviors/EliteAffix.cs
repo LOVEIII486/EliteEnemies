@@ -540,6 +540,16 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
             },
+            ["Hardening"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Hardening_Name", "硬化"),
+                Description = LocalizationManager.GetText("Affix_Hardening_Description", "受伤随机增加护甲值"),
+                Color = new Color(0.7f, 0.7f, 0.7f), // 灰色
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Uncommon
+            }
         };
 
 

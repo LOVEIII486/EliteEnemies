@@ -637,6 +637,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChaosOnHitBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DungEaterBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GigantificationBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\HardeningBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\InvisibilityBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\KnockbackBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MagazineCurseBehavior.cs" />
