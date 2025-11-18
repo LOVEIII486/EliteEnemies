@@ -29,6 +29,14 @@ namespace EliteEnemies.AffixBehaviors
 
         public void OnAttack(CharacterMainControl attacker, DamageInfo dmg)
         {
+        }
+
+        public void OnDamaged(CharacterMainControl character, DamageInfo dmg)
+        {
+        }
+
+        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        {
             // 获取组件数据存储
             var component = attacker.GetComponent<EliteBehaviorComponent>();
             if (component == null)
@@ -52,15 +60,8 @@ namespace EliteEnemies.AffixBehaviors
             var player = CharacterMainControl.Main;
             if (!player) return;
 
-            // 确保击中了玩家
-            if (!AffixBehaviorUtils.IsPlayerHitByAttacker(attacker))
-            {
-                // Debug.LogWarning($"{attacker.characterPreset.DisplayName}攻击未命中");
-                return;
-            }
-
             // 判断攻击类型
-            bool isMelee = IsMeleeAttack(attacker, dmg);
+            bool isMelee = IsMeleeAttack(attacker, damageInfo);
             float lifeStealPercent = isMelee ? MeleeLifeStealPercent : RangedLifeStealPercent;
 
             // 计算回复量（基于最大生命值的百分比）
@@ -78,10 +79,6 @@ namespace EliteEnemies.AffixBehaviors
                 attacker.PopText(popText);
                 component.SetCustomData("VampirismLastHeal", Time.time);
             }
-        }
-
-        public void OnDamaged(CharacterMainControl character, DamageInfo dmg)
-        {
         }
 
         /// <summary>

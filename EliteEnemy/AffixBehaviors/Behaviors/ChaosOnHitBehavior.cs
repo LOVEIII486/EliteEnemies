@@ -47,25 +47,19 @@ namespace EliteEnemies.AffixBehaviors
 
         public void OnAttack(CharacterMainControl attacker, DamageInfo dmg)
         {
-            // 冷却 + 判空
-            if (Time.time - _lastApplyTime < CooldownSeconds) return;
-            var player = CharacterMainControl.Main;
-            if (!player) return;
-            
-            if (!AffixBehaviorUtils.IsPlayerHitByAttacker(attacker)) 
-            {
-                return;
-            }
-
-            // 直接从预定义列表中随机挑选一个 Buff
+        }
+        
+        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        {
+            // 从预定义列表中随机挑选一个 Buff
             var pick = NegativeDebuffs[Random.Range(0, NegativeDebuffs.Length)];
             if (!pick) return;
-
+            
+            var player = CharacterMainControl.Main;
             player.AddBuff(pick, attacker, 0);
-            // 提示
+            
             string text = string.Format(ChaosPopTextFmt, pick.DisplayName);
             attacker.PopText(text);
-
             _lastApplyTime = Time.time;
         }
 

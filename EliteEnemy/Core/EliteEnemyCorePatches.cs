@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using Duckov.Scenes;
 using Duckov.UI;
+using EliteEnemies.AffixBehaviors;
 using EliteEnemies.DebugTool;
 
 namespace EliteEnemies
@@ -261,6 +262,35 @@ namespace EliteEnemies
             {
                 ___nameText.text = $"{prefix}{baseName}";
             }
+        }
+    }
+
+    /// <summary>
+    /// 玩家受伤Hook - 准确触发精英词缀的命中效果
+    /// 修复：方法名是 Hurt 不是 OnHurt
+    /// </summary>
+    [HarmonyPatch(typeof(DamageReceiver), nameof(DamageReceiver.Hurt))]
+    public static class PlayerHitDetectionPatch
+    {
+        static void Postfix(DamageReceiver __instance, DamageInfo damageInfo)
+        {
+            if (damageInfo.fromCharacter == null)
+                return;
+            
+            CharacterMainControl attacker = damageInfo.fromCharacter;
+            
+            var behaviorComponent = attacker.GetComponent<EliteBehaviorComponent>();
+            if (behaviorComponent == null)
+                return; 
+    
+            var receiver = __instance.GetComponentInParent<CharacterMainControl>();
+            if (receiver == null || !receiver.IsMainCharacter)
+                return;
+    
+            if (attacker.Team == receiver.Team)
+                return;
+    
+            behaviorComponent.TriggerHitPlayer(attacker, damageInfo);
         }
     }
 }

@@ -29,14 +29,18 @@ namespace EliteEnemies.AffixBehaviors
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
         {
-            if (AffixBehaviorUtils.IsPlayerHitByAttacker(character))
-            {
-                EliteBuffFactory.TryAddBuffToPlayer(_sharedBuff, character);
-            }
+            // if (AffixBehaviorUtils.IsPlayerHitByAttacker(character))
+            // {
+            //     EliteBuffFactory.TryAddBuffToPlayer(_sharedBuff, character);
+            // }
         }
         
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo) { }
+
+        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        {
+             EliteBuffFactory.TryAddBuffToPlayer(_sharedBuff, attacker);
+        }
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) { }
         public override void OnCleanup(CharacterMainControl character) { }
     }

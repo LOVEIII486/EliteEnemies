@@ -9,6 +9,13 @@ namespace EliteEnemies.AffixBehaviors
     {
         public override string AffixName => "Knockback";
 
+        private static readonly float KnockbackForce = 8f; // 垂直力
+        private static readonly float HorizontalForce = 15f; // 横向力
+        private static readonly float GroundPauseDuration = 0.3f; // 地面约束暂停时间
+        private static readonly float KnockbackCooldown = 5f; // cd
+
+        private static float _globalLastKnockbackTime = -999f;
+        
         private readonly Lazy<string> _enemyPopLineLazy = new(() =>
             LocalizationManager.GetText(
                 "Affix_Knockback_PopText_1",
@@ -17,42 +24,46 @@ namespace EliteEnemies.AffixBehaviors
         );
 
         private string EnemyPopLine => _enemyPopLineLazy.Value;
-
-        private static readonly float KnockbackForce = 8f; // 垂直力
-        private static readonly float HorizontalForce = 15f; // 横向力
-        private static readonly float GroundPauseDuration = 0.3f; // 地面约束暂停时间
-        private static readonly float KnockbackCooldown = 5f; // cd
-
-        private static float _globalLastKnockbackTime = -999f;
-
+        
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
         {
-            if (Time.time - _globalLastKnockbackTime < KnockbackCooldown) return;
-
-            var player = CharacterMainControl.Main;
-            if (player == null) return;
-
-            if (!AffixBehaviorUtils.IsPlayerHitByAttacker(character))
-            {
-                return;
-            }
-
-            PerformKnockback(player, character);
-
-            _globalLastKnockbackTime = Time.time;
         }
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
         }
 
+        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        {
+            if (Time.time - _globalLastKnockbackTime < KnockbackCooldown)
+            {
+                return;
+            }
+
+            var player = CharacterMainControl.Main;
+            if (player == null)
+            {
+                return;
+            }
+
+            PerformKnockback(player, attacker);
+
+            _globalLastKnockbackTime = Time.time;
+        }
+
         private unsafe void PerformKnockback(CharacterMainControl player, CharacterMainControl attacker)
         {
             var movement = player.movementControl;
-            if (movement == null) return;
+            if (movement == null)
+            {
+                return;
+            }
 
             CharacterMovement component = movement.GetComponent<CharacterMovement>();
-            if (component == null) return;
+            if (component == null)
+            {
+                return;
+            }
 
             // 延长地面约束暂停时间
             component.PauseGroundConstraint(GroundPauseDuration);
@@ -74,9 +85,7 @@ namespace EliteEnemies.AffixBehaviors
 
             component.velocity = vector;
 
-            //player.PopText("<color=#FF4500>起飞！</color>");
             attacker.PopText(EnemyPopLine);
-            //Debug.Log($"[KnockbackBehavior] 击飞！速度: {vector}, 距离倍率: {distanceMultiplier:F2}");
         }
 
         public override void OnEliteInitialized(CharacterMainControl character)

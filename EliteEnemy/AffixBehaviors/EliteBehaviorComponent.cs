@@ -171,7 +171,30 @@ namespace EliteEnemies.AffixBehaviors
                 }
             }
         }
+        
+        /// <summary>
+        /// 触发命中玩家事件（从 Harmony Patch 调用）
+        /// </summary>
+        public void TriggerHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        {
+            if (!_isInitialized || _character == null) return;
 
+            Debug.Log($"[EliteBehaviorComponent] TriggerHitPlayer 调用，攻击者: {attacker?.name}, 战斗词缀数量: {_combatBehaviors.Count}");
+
+            foreach (var behavior in _combatBehaviors)
+            {
+                try 
+                {
+                    Debug.Log($"[EliteBehaviorComponent] 调用词缀 OnHitPlayer: {behavior.AffixName}");
+                    behavior.OnHitPlayer(attacker, damageInfo);
+                }
+                catch (Exception ex) 
+                { 
+                    Debug.LogError($"[EliteBehaviorComponent] OnHitPlayer error [{behavior.AffixName}]: {ex}"); 
+                }
+            }
+        }
+        
         private void Update()
         {
             if (!_isInitialized || _character == null || _updateableBehaviors.Count == 0) return;
