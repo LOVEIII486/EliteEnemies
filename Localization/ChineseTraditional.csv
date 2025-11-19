@@ -2,7 +2,7 @@ key,value,version,sheet
 Settings_NormalEliteChance,普通怪物精英概率,1.0,BasicSettings
 Settings_BossEliteChance,Boss精英概率,1.0,BasicSettings
 Settings_MerchantEliteChance,商人精英概率,1.0,BasicSettings
-Settings_ShowDetailedHealth,顯示精英敵人血量,1.0,BasicSettings
+Settings_ShowDetailedHealth,顯示精英敵人血量,2.1,VisualSettings
 Settings_MaxAffixCount,詞條數量上限,1.0,BasicSettings
 Settings_AffixToggles_Group,詞條開關,1.0,Groups
 Settings_BasicSettings_Group,精英敵人設定,1.0,Groups
@@ -75,8 +75,8 @@ Settings_GlobalDamageMultiplier,全局傷害倍率,1.4,BasicSettings
 Settings_GlobalSpeedMultiplier,全局速度倍率,1.4,BasicSettings
 Settings_GlobalMultipliers_Group,全局屬性調整,1.4,Groups
 Settings_EnableBonusLoot,啟用獎勵掉落,1.5,BasicSettings
-Settings_ShowAffixFootText,顯示敵人腳底的詞綴文本,1.6,BasicSettings
-Settings_AffixFootTextFontSize,腳底詞綴字體大小,1.6,BasicSettings
+Settings_ShowAffixFootText,顯示敵人腳底的詞綴文本,2.1,VisualSettings
+Settings_AffixFootTextFontSize,腳底詞綴字體大小,2.1,VisualSettings
 Affix_Slime_Name,史萊姆,1.7,AffixNames
 Affix_Slime_Description,初始巨大但虛弱，隨血量降低逐漸縮小並增強傷害，會週期性跳躍,1.7,AffixDescription
 Affix_Blindness_Name,致盲,1.7,AffixNames
@@ -104,3 +104,5 @@ Affix_Hardening_PopText_1,<color=#B2B2B2>硬化 +{0}</color>,2.0,AffixBehavior
 Affix_ChickenBro_Name,雞哥,2.0,AffixNames
 Affix_ChickenBro_Description,出生時召喚小雞護衛,2.0,AffixDescription
 Affix_ChickenBro_Summon_Name,<color=#FFD600>雞弟</color>,2.0,AffixBehavior
+Settings_ShowEliteName,顯示精英敵人名字,2.1,VisualSettings
+Settings_VisualSettings_Group,視覺效果設置,2.1,Groups

@@ -40,13 +40,15 @@ namespace EliteEnemies.Settings
         public static float BossEliteChance { get; private set; }
         public static float MerchantEliteChance { get; private set; }
         public static int MaxAffixCount { get; private set; }
-        public static bool ShowDetailedHealth { get; private set; }
         public static float DropRateMultiplier { get; private set; }
         public static float ItemQualityBias { get; private set; }
         public static float GlobalHealthMultiplier { get; private set; }
         public static float GlobalDamageMultiplier { get; private set; }
         public static float GlobalSpeedMultiplier { get; private set; }
         public static bool EnableBonusLoot { get; private set; }
+        
+        public static bool ShowEliteName { get; private set; }
+        public static bool ShowDetailedHealth { get; private set; }
         public static bool ShowAffixFootText { get; private set; }
         public static float AffixFootTextFontSize { get; private set; }
 
@@ -87,7 +89,7 @@ namespace EliteEnemies.Settings
             MaxAffixCount = ModSettingAPI.GetSavedValue<int>("MaxAffixCount", out int maxCount)
                 ? Mathf.Clamp(maxCount, ConfigRanges.MinAffixCountLimit, ConfigRanges.MaxAffixCountLimit)
                 : 2;
-            ShowDetailedHealth = ModSettingAPI.GetSavedValue<bool>("ShowDetailedHealth", out bool showHealth) ? showHealth : true;
+            
             DropRateMultiplier = ModSettingAPI.GetSavedValue<float>("DropRateMultiplier", out float dropRate)
                 ? Mathf.Clamp(dropRate, ConfigRanges.MinDropRate, ConfigRanges.MaxDropRate)
                 : 1.0f;
@@ -95,6 +97,7 @@ namespace EliteEnemies.Settings
                 ? Mathf.Clamp(qualityBias, ConfigRanges.MinQualityBias, ConfigRanges.MaxQualityBias)
                 : -1f;
             EnableBonusLoot = ModSettingAPI.GetSavedValue<bool>("EnableBonusLoot", out bool enableBonus) ? enableBonus : true;
+            
             GlobalHealthMultiplier = ModSettingAPI.GetSavedValue<float>("GlobalHealthMultiplier", out float healthMult)
                 ? Mathf.Clamp(healthMult, ConfigRanges.MinMultiplier, ConfigRanges.MaxMultiplier)
                 : 1.0f;
@@ -104,25 +107,17 @@ namespace EliteEnemies.Settings
             GlobalSpeedMultiplier = ModSettingAPI.GetSavedValue<float>("GlobalSpeedMultiplier", out float speedMult)
                 ? Mathf.Clamp(speedMult, ConfigRanges.MinMultiplier, ConfigRanges.MaxMultiplier)
                 : 1.0f;
+            
+            ShowEliteName = ModSettingAPI.GetSavedValue<bool>("ShowEliteName", out bool showName) ? showName : true;
+            ShowDetailedHealth = ModSettingAPI.GetSavedValue<bool>("ShowDetailedHealth", out bool showHealth) ? showHealth : true;
             ShowAffixFootText = ModSettingAPI.GetSavedValue<bool>("ShowAffixFootText", out bool footText) ? footText : true;
-            AffixFootTextFontSize = ModSettingAPI.GetSavedValue<float>("AffixFootTextFontSize", out float fontSize)
-                ? Mathf.Clamp(fontSize, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize)
-                : 35f;
-            AffixWeight1 = ModSettingAPI.GetSavedValue<int>("AffixWeight1", out int w1)
-                ? Mathf.Clamp(w1, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
-                : 50;
-            AffixWeight2 = ModSettingAPI.GetSavedValue<int>("AffixWeight2", out int w2)
-                ? Mathf.Clamp(w2, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
-                : 30;
-            AffixWeight3 = ModSettingAPI.GetSavedValue<int>("AffixWeight3", out int w3)
-                ? Mathf.Clamp(w3, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
-                : 15;
-            AffixWeight4 = ModSettingAPI.GetSavedValue<int>("AffixWeight4", out int w4)
-                ? Mathf.Clamp(w4, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
-                : 4;
-            AffixWeight5 = ModSettingAPI.GetSavedValue<int>("AffixWeight5", out int w5)
-                ? Mathf.Clamp(w5, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
-                : 1;
+            AffixFootTextFontSize = ModSettingAPI.GetSavedValue<float>("AffixFootTextFontSize", out float fontSize) ? Mathf.Clamp(fontSize, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize) : 35f;
+            
+            AffixWeight1 = ModSettingAPI.GetSavedValue<int>("AffixWeight1", out int w1) ? Mathf.Clamp(w1, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight) : 50;
+            AffixWeight2 = ModSettingAPI.GetSavedValue<int>("AffixWeight2", out int w2)? Mathf.Clamp(w2, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight) : 30;
+            AffixWeight3 = ModSettingAPI.GetSavedValue<int>("AffixWeight3", out int w3) ? Mathf.Clamp(w3, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight) : 15;
+            AffixWeight4 = ModSettingAPI.GetSavedValue<int>("AffixWeight4", out int w4) ? Mathf.Clamp(w4, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight) : 4;
+            AffixWeight5 = ModSettingAPI.GetSavedValue<int>("AffixWeight5", out int w5) ? Mathf.Clamp(w5, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight) : 1;
             // 添加新配置项需要修改！！！
 
             // Debug.Log($"{LogTag} NormalEliteChance: {NormalEliteChance}");
@@ -140,15 +135,20 @@ namespace EliteEnemies.Settings
             BossEliteChance = 0.0f;
             MerchantEliteChance = 0.0f;
             MaxAffixCount = 2;
-            ShowDetailedHealth = true;
+ 
             DropRateMultiplier = 1.0f;
             ItemQualityBias = -1.0f;
             EnableBonusLoot = true;
+            
             GlobalHealthMultiplier = 1.0f;
             GlobalDamageMultiplier = 1.0f;
             GlobalSpeedMultiplier = 1.0f;
+            
+            ShowEliteName = true;
+            ShowDetailedHealth = true;
             ShowAffixFootText = true;
             AffixFootTextFontSize = 35f;
+            
             AffixWeight1 = 50;
             AffixWeight2 = 30;
             AffixWeight3 = 15;
@@ -266,9 +266,15 @@ namespace EliteEnemies.Settings
         public static void SetAffixFootTextFontSize(float value)
         {
             AffixFootTextFontSize = Mathf.Clamp(value, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize);
+            NotifyConfigChanged();
         }
 
-        // 👇 新增：词条权重设置方法
+        public static void SetShowEliteName(bool value)
+        {
+            ShowEliteName = value;
+            NotifyConfigChanged();
+        }
+        
         public static void SetAffixWeight1(int value)
         {
             AffixWeight1 = Mathf.Clamp(value, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight);
@@ -340,14 +346,19 @@ namespace EliteEnemies.Settings
                 BossEliteChance = BossEliteChance,
                 MerchantEliteChance = MerchantEliteChance,
                 MaxAffixCount = MaxAffixCount,
-                ShowDetailedHealth = ShowDetailedHealth,
+      
                 DropRateMultiplier = DropRateMultiplier,
                 ItemQualityBias = ItemQualityBias,
                 EnableBonusLoot = EnableBonusLoot,
                 GlobalHealthMultiplier = GlobalHealthMultiplier,
                 GlobalDamageMultiplier = GlobalDamageMultiplier,
                 GlobalSpeedMultiplier = GlobalSpeedMultiplier,
+                
+                ShowEliteName = ShowEliteName,
+                ShowDetailedHealth = ShowDetailedHealth,
                 ShowAffixFootText = ShowAffixFootText,
+                AffixFootTextFontSize = AffixFootTextFontSize,
+                
                 DisabledAffixes = GetDisabledAffixBlacklist(),
                 AffixCountWeights = new int[] { 0, AffixWeight1, AffixWeight2, AffixWeight3, AffixWeight4, AffixWeight5 }
             };

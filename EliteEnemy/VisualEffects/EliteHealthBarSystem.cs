@@ -64,6 +64,16 @@ namespace EliteEnemies.VisualEffects
         private void LateUpdate()
         {
             if (!_ownerBar || !_nameLabel) return;
+            
+            if (!EliteEnemyCore.Config.ShowEliteName)
+            {
+                // 确保不误伤 RandomNpc
+                if (_randomNpcController != null && !_randomNpcController.enabled)
+                {
+                    _randomNpcController.enabled = true;
+                }
+                return;
+            }
 
             // 1. 检查 Target 是否变化 (对象池复用逻辑)
             if (_ownerBar.target != _cachedTarget)

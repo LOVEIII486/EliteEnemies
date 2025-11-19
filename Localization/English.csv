@@ -2,7 +2,7 @@ key,value,version,sheet
 Settings_NormalEliteChance,Normal enemy elite chance,1.0,BasicSettings
 Settings_BossEliteChance,Boss elite chance,1.0,BasicSettings
 Settings_MerchantEliteChance,Merchant elite chance,1.0,BasicSettings
-Settings_ShowDetailedHealth,Show elite enemy health,1.0,BasicSettings
+Settings_ShowDetailedHealth,Show elite enemy health,2.1,VisualSettings
 Settings_MaxAffixCount,Max affix count,1.0,BasicSettings
 Settings_AffixToggles_Group,Affix toggles,1.0,Groups
 Settings_BasicSettings_Group,Elite enemy settings,1.0,Groups
@@ -75,8 +75,8 @@ Settings_GlobalDamageMultiplier,Global Damage Multiplier,1.4,BasicSettings
 Settings_GlobalSpeedMultiplier,Global Speed Multiplier,1.4,BasicSettings
 Settings_GlobalMultipliers_Group,Global Attribute Adjustment,1.4,Groups
 Settings_EnableBonusLoot,Enable Bonus Loot,1.5,BasicSettings
-Settings_ShowAffixFootText,Show affix text under enemies,1.6,BasicSettings
-Settings_AffixFootTextFontSize,Affix foot-text font size,1.6,BasicSettings
+Settings_ShowAffixFootText,Show affix text under enemies,2.1,VisualSettings
+Settings_AffixFootTextFontSize,Affix foot-text font size,2.1,VisualSettings
 Affix_Slime_Name,Slime,1.7,AffixNames
 Affix_Slime_Description,"Starts huge but weak, shrinks and gains damage as health drops",1.7,AffixDescription
 Affix_Blindness_Name,Blindness,1.7,AffixNames
@@ -104,3 +104,5 @@ Affix_Hardening_PopText_1,<color=#B2B2B2>Hardened +{0}</color>,2.0,AffixBehavior
 Affix_ChickenBro_Name,Chicken Bro,2.0,AffixNames
 Affix_ChickenBro_Description,Summons a chicken guard upon spawning.,2.0,AffixDescription
 Affix_ChickenBro_Summon_Name,<color=#FFD600>Little Chick</color>,2.0,AffixBehavior
+Settings_ShowEliteName,Show Elite Enemy Names,2.1,VisualSettings
+Settings_VisualSettings_Group,Global Visual Settings,2.1,Groups

@@ -201,7 +201,7 @@ namespace EliteEnemies
             if (count <= 0) return ParseColor("#FF4D4D");
             if (count == 1) return ParseColor("#A673FF");
             if (count == 2) return ParseColor("#FFD700");
-            return ParseColor("#FF1493");
+            return ParseColor("#00FFFF");
         }
 
         private static Gradient CreateSolidGradient(Color color)

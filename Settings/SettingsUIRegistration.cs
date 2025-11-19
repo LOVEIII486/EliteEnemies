@@ -20,6 +20,7 @@ namespace EliteEnemies.Settings
             }
 
             RegisterBasicSettings();
+            RegisterVisualSettings();
             RegisterGlobalMultipliers();
             RegisterAffixCountWeights();
             var affixKeys = RegisterAffixToggles();
@@ -71,13 +72,6 @@ namespace EliteEnemies.Settings
                 onValueChange: GameConfig.SetMaxAffixCount
             );
             
-            ModSettingAPI.AddToggle(
-                key: "ShowDetailedHealth",
-                description: LocalizationManager.GetText("Settings_ShowDetailedHealth"),
-                enable: GameConfig.ShowDetailedHealth,
-                onValueChange: GameConfig.SetShowDetailedHealth
-            );
-            
             ModSettingAPI.AddSlider(
                 key: "DropRateMultiplier",
                 description: LocalizationManager.GetText("Settings_DropRateMultiplier", "精英掉落倍率"),
@@ -104,17 +98,35 @@ namespace EliteEnemies.Settings
                 enable: GameConfig.EnableBonusLoot,
                 onValueChange: GameConfig.SetEnableBonusLoot
             );
+        }
+
+        
+        private static void RegisterVisualSettings()
+        {
+            ModSettingAPI.AddToggle(
+                key: "ShowEliteName",
+                description: LocalizationManager.GetText("Settings_ShowEliteName"),
+                enable: GameConfig.ShowEliteName,
+                onValueChange: GameConfig.SetShowEliteName
+            );
+            
+            ModSettingAPI.AddToggle(
+                key: "ShowDetailedHealth",
+                description: LocalizationManager.GetText("Settings_ShowDetailedHealth"),
+                enable: GameConfig.ShowDetailedHealth,
+                onValueChange: GameConfig.SetShowDetailedHealth
+            );
             
             ModSettingAPI.AddToggle(
                 key: "ShowAffixFootText",
-                description: LocalizationManager.GetText("Settings_ShowAffixFootText", "显示敌人脚底的词缀文本"),
+                description: LocalizationManager.GetText("Settings_ShowAffixFootText"),
                 enable: GameConfig.ShowAffixFootText,
                 onValueChange: GameConfig.SetShowAffixFootText
             );
             
             ModSettingAPI.AddSlider(
                 key: "AffixFootTextFontSize",
-                description: LocalizationManager.GetText("Settings_AffixFootTextFontSize", "脚底词缀字体大小"),
+                description: LocalizationManager.GetText("Settings_AffixFootTextFontSize"),
                 defaultValue: GameConfig.AffixFootTextFontSize,
                 sliderRange: new Vector2(20f, 80f),
                 onValueChange: GameConfig.SetAffixFootTextFontSize,
@@ -122,7 +134,7 @@ namespace EliteEnemies.Settings
                 characterLimit: 3
             );
         }
-
+        
         // 全局属性调整
         private static void RegisterGlobalMultipliers()
         {
@@ -242,16 +254,28 @@ namespace EliteEnemies.Settings
                     "BossEliteChance",
                     "MerchantEliteChance",
                     "MaxAffixCount",
-                    "ShowDetailedHealth",
                     "DropRateMultiplier",
                     "ItemQualityBias",
                     "EnableBonusLoot",
+                },
+                scale: GroupScale,
+                topInsert: GroupTopInsert,
+                open: true
+            );
+            
+            ModSettingAPI.AddGroup(
+                key: "VisualSettings", 
+                description: LocalizationManager.GetText("Settings_VisualSettings_Group"),
+                keys: new List<string>
+                {
+                    "ShowEliteName",
+                    "ShowDetailedHealth",
                     "ShowAffixFootText",
                     "AffixFootTextFontSize"
                 },
                 scale: GroupScale,
                 topInsert: GroupTopInsert,
-                open: true
+                open: false
             );
             
             ModSettingAPI.AddGroup(
