@@ -8,6 +8,7 @@ using Duckov.Scenes;
 using Duckov.UI;
 using EliteEnemies.AffixBehaviors;
 using EliteEnemies.DebugTool;
+using EliteEnemies.VisualEffects;
 
 namespace EliteEnemies
 {
@@ -200,7 +201,7 @@ namespace EliteEnemies
             if (count <= 0) return ParseColor("#FF4D4D");
             if (count == 1) return ParseColor("#A673FF");
             if (count == 2) return ParseColor("#FFD700");
-            return ParseColor("#FFA500");
+            return ParseColor("#FF1493");
         }
 
         private static Gradient CreateSolidGradient(Color color)
@@ -219,72 +220,18 @@ namespace EliteEnemies
         }
     }
 
-    /// <summary>
-    /// 血条名称补丁
-    /// </summary>
-    [HarmonyPatch(typeof(HealthBar), "LateUpdate")]
-    internal static class HealthBar_EliteName_Patch
+    [HarmonyPatch(typeof(HealthBar), "Awake")]
+    internal static class HealthBar_Awake_Patch
     {
-        static void Prefix(HealthBar __instance, TextMeshProUGUI ___nameText)
+        static void Postfix(HealthBar __instance)
         {
-            var cmc = __instance?.target?.TryGetCharacter();
-            if (!cmc) return;
-
-            var main = LevelManager.Instance?.MainCharacter;
-            if (main && cmc.Team == main.Team) return;
-
-            var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();
-            if (marker == null) return;
-
-            if (cmc.characterPreset != null && !cmc.characterPreset.showName)
+            // 确保组件存在
+            if (__instance.GetComponent<VisualEffects.EliteHealthBarUI>() == null)
             {
-                cmc.characterPreset.showName = true;
-            }
-            
-            if (___nameText == null) return;
-
-            string baseName;
-            if (!string.IsNullOrEmpty(marker.CustomDisplayName))
-            {
-                baseName = marker.CustomDisplayName;  // 优先使用自定义名称
-            }
-            else if (!string.IsNullOrEmpty(marker.BaseName))
-            {
-                baseName = marker.BaseName;
-            }
-            else
-            {
-                baseName = EliteEnemyCore.ResolveBaseName(cmc);
-            }
-            
-            if (baseName.Contains("_"))
-            {
-                baseName = "o?o";
-            }
-
-            string prefix = EliteEnemyCore.BuildColoredPrefix(marker.Affixes);
-
-            if (EliteEnemyCore.Config.ShowDetailedHealth)
-            {
-                var health = cmc.Health;
-                if (health != null)
-                {
-                    int currentHP = Mathf.CeilToInt(health.CurrentHealth);
-                    int maxHP = Mathf.CeilToInt(health.MaxHealth);
-                    ___nameText.text = $"{prefix}{baseName} <color=#FFD700>[{currentHP}/{maxHP}]</color>";
-                }
-                else
-                {
-                    ___nameText.text = $"{prefix}{baseName}";
-                }
-            }
-            else
-            {
-                ___nameText.text = $"{prefix}{baseName}";
+                __instance.gameObject.AddComponent<VisualEffects.EliteHealthBarUI>();
             }
         }
     }
-
     /// <summary>
     /// 玩家受伤Hook - 准确触发精英词缀的命中效果
     /// 方法名是 Hurt 不是 OnHurt

@@ -663,6 +663,7 @@
         <Compile Include="EliteEnemy\Core\EliteEnemyCorePatches.cs" />
         <Compile Include="EliteEnemy\LootSystem\EliteLootSystem.cs" />
         <Compile Include="EliteEnemy\LootSystem\LootItemHelper.cs" />
+        <Compile Include="EliteEnemy\VisualEffects\EliteHealthBarSystem.cs" />
         <Compile Include="ModSettingsApi\ModSettingAPI.cs" />
         <Compile Include="Settings\EliteEnemiesConfig.cs" />
         <Compile Include="Settings\SettingsUIRegistration.cs" />
