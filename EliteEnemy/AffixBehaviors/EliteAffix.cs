@@ -25,7 +25,7 @@ namespace EliteEnemies
                 ["Giant"] = new HashSet<string> { "Mini" },
                 ["Undead"] = new HashSet<string> { "Explosive" },
                 // ["Regeneration"] = new HashSet<string> { "Tanky", "Giant" },
-                ["Split"] = new HashSet<string> { "MimicTear" },
+                ["Split"] = new HashSet<string> { "MimicTear", "ChickenBro" },
             };
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace EliteEnemies
                     MoveSpeedMultiplier = 1.3f,
                     Rarity = AffixRarity.Rare
                 }
-                .WithRandomLoot(-1, 1,1, new[] { "Injector" }),
+                .WithRandomLoot(-1, 1, 1, new[] { "Injector" }),
 
             ["Talkative"] = new AffixData
             {
@@ -489,7 +489,7 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
             }.WithRandomLootRange(1, 4, 1, 0.5f, new[] { "Accessory" }),
-            
+
             ["Slime"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Slime_Name", "史莱姆"),
@@ -549,7 +549,20 @@ namespace EliteEnemies
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon
-            }
+            },
+            ["ChickenBro"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_ChickenBro_Name"),
+                Description = LocalizationManager.GetText("Affix_ChickenBro_Description"),
+                Color = new Color(1.0f, 0.84f, 0.0f), // 金黄色
+                HealthMultiplier = 1.2f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Legendary
+            }.WithLootGroup(
+                new LootEntry(379, 1, 1, 1f), // 背带裤
+                new LootEntry(380, 1, 1, 1f) // 篮球
+            ),
         };
 
 
@@ -572,7 +585,7 @@ namespace EliteEnemies
 
         public static bool TryGetAffix(string name, out AffixData data)
             => Pool.TryGetValue(name, out data);
-        
+
         // —— 添加一个"掉落组"（组内随机 1 个） ——
         private static AffixData WithLootGroup(this AffixData a, params LootEntry[] entries)
         {
@@ -582,7 +595,7 @@ namespace EliteEnemies
             a.LootGroups.Add(group);
             return a;
         }
-        
+
         /// <summary>
         /// 添加随机掉落配置
         /// </summary>
@@ -608,20 +621,20 @@ namespace EliteEnemies
         /// </summary>
         private static AffixData WithRandomLootRange(
             this AffixData a,
-            int minQuality,      // 最小品阶
-            int maxQuality,      // 最大品阶
-            int itemCount,       // 物品数量
-            float dropChance,    // 掉落概率
+            int minQuality, // 最小品阶
+            int maxQuality, // 最大品阶
+            int itemCount, // 物品数量
+            float dropChance, // 掉落概率
             string[] tagNames = null)
         {
             if (a == null) return null;
-            
+
             a.RandomLootConfigs.Add(new RandomLootConfig(
-                quality: maxQuality,           // quality 字段存最大品阶
+                quality: maxQuality, // quality 字段存最大品阶
                 tagNames: tagNames,
                 itemCount: itemCount,
-                minCount: minQuality,          // minCount 存最小品阶
-                maxCount: maxQuality,          // maxCount 存最大品阶
+                minCount: minQuality, // minCount 存最小品阶
+                maxCount: maxQuality, // maxCount 存最大品阶
                 dropChance: dropChance
             ));
             return a;

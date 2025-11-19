@@ -12,7 +12,7 @@ namespace EliteEnemies.Effects
         // ========== 常量配置 ==========
         private const string LogTag = "[EliteEnemies.AuraManager]";
         private const int PoolPrewarmSize = 10;
-        private const int PoolMaxSize = 60;
+        private const int PoolMaxSize = 80;
         private const float CleanupInterval = 5f;
 
         // ========== 单例 ==========

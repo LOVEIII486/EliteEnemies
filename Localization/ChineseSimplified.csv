@@ -101,3 +101,6 @@ Affix_Berserk_PopText_1,<color=#DC143C>怒了！！！</color>,1.9,AffixBehavior
 Affix_Hardening_Name,硬化,2.0,AffixNames
 Affix_Hardening_Description,受伤时随机降低 5%-12% 物理伤害，最多50%,2.0,AffixDescription
 Affix_Hardening_PopText_1,<color=#B2B2B2>硬化 +{0}</color>,2.0,AffixBehavior
+Affix_ChickenBro_Name,鸡哥,2.0,AffixNames
+Affix_ChickenBro_Description,出生时召唤小鸡护卫,2.0,AffixDescription
+Affix_ChickenBro_Summon_Name,<color=#FFD600>鸡弟</color>,2.0,AffixBehavior

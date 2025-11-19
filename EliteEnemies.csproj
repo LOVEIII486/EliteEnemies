@@ -635,6 +635,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BerserkBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BlindnessBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChaosOnHitBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChickenBroBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DungEaterBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GigantificationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\HardeningBehavior.cs" />
@@ -658,6 +659,7 @@
         <Compile Include="EliteEnemy\AttributeModifier\AttributeModifier.cs" />
         <Compile Include="EliteEnemy\AttributeModifier\StatModifier.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\EliteBuffFactory.cs" />
+        <Compile Include="EliteEnemy\Core\EggSpawnHelper.cs" />
         <Compile Include="EliteEnemy\Core\EliteEnemyCorePatches.cs" />
         <Compile Include="EliteEnemy\LootSystem\EliteLootSystem.cs" />
         <Compile Include="EliteEnemy\LootSystem\LootItemHelper.cs" />

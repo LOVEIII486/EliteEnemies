@@ -28,11 +28,16 @@ namespace EliteEnemies
 
                 var main = LevelManager.Instance?.MainCharacter;
                 if (main && cmc.Team == main.Team) return;
-
-                if (cmc.GetComponent<EliteEnemyCore.EliteMarker>() != null) return;
-
+                
                 string presetName = cmc.characterPreset?.nameKey ?? string.Empty;
-
+       
+                // 跳过被标记禁止精英化的敌人
+                if (EliteEnemyCore.HasNonEliteSuffix(presetName))
+                {
+                    EliteEnemyTracker.RecordDecision(presetName, processedFlag: false);
+                    return;
+                }
+                
                 bool isBoss = EliteEnemyCore.BossPresets.Contains(presetName);
                 bool isMerchant = EliteEnemyCore.MerchantPresets.Contains(presetName);
                 bool isNormal = EliteEnemyCore.IsEligiblePreset(presetName);
@@ -235,12 +240,27 @@ namespace EliteEnemies
             {
                 cmc.characterPreset.showName = true;
             }
-
+            
             if (___nameText == null) return;
 
-            string baseName = string.IsNullOrEmpty(marker.BaseName)
-                ? EliteEnemyCore.ResolveBaseName(cmc)
-                : marker.BaseName;
+            string baseName;
+            if (!string.IsNullOrEmpty(marker.CustomDisplayName))
+            {
+                baseName = marker.CustomDisplayName;  // 优先使用自定义名称
+            }
+            else if (!string.IsNullOrEmpty(marker.BaseName))
+            {
+                baseName = marker.BaseName;
+            }
+            else
+            {
+                baseName = EliteEnemyCore.ResolveBaseName(cmc);
+            }
+            
+            if (baseName.Contains("_"))
+            {
+                baseName = "o?o";
+            }
 
             string prefix = EliteEnemyCore.BuildColoredPrefix(marker.Affixes);
 
@@ -276,20 +296,20 @@ namespace EliteEnemies
         {
             if (damageInfo.fromCharacter == null)
                 return;
-            
+
             CharacterMainControl attacker = damageInfo.fromCharacter;
-            
+
             var behaviorComponent = attacker.GetComponent<EliteBehaviorComponent>();
             if (behaviorComponent == null)
-                return; 
-    
+                return;
+
             var receiver = __instance.GetComponentInParent<CharacterMainControl>();
             if (receiver == null || !receiver.IsMainCharacter)
                 return;
-    
+
             if (attacker.Team == receiver.Team)
                 return;
-    
+
             behaviorComponent.TriggerHitPlayer(attacker, damageInfo);
         }
     }

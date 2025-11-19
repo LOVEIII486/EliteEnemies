@@ -16,6 +16,8 @@ namespace EliteEnemies
         private static EliteEnemiesConfig _config = new EliteEnemiesConfig();
         public static EliteEnemiesConfig Config => _config;
 
+        private static readonly string NonEliteSuffix = "__EE_NoElite";
+
         // ========== 预设集合 ==========
 
         internal static readonly HashSet<string> EligiblePresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -24,7 +26,7 @@ namespace EliteEnemies
             "Cname_SpeedyChild", "Cname_RobSpider", "Cname_BALeader_Child", "Cname_Boss_Fly_Child",
             "Cname_Football_1", "Cname_Football_2", "Cname_SchoolBully_Child", "Cname_StormCreature",
             "Cname_StormVirus", "Cname_MonsterClimb", "Cname_Raider", "Cname_LabTestObjective",
-            "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child"
+            "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child", "Cname_Ghost"
         };
 
         internal static readonly HashSet<string> BossPresets = new HashSet<string>
@@ -63,6 +65,7 @@ namespace EliteEnemies
                 Debug.LogError($"{LogTag} 配置更新失败: 配置为空");
                 return;
             }
+
             _config = newConfig;
         }
 
@@ -72,7 +75,7 @@ namespace EliteEnemies
         public static void ForceMakeElite(CharacterMainControl cmc, IReadOnlyList<string> affixes)
         {
             if (!cmc) return;
-            
+
             AccumulateFromAffixes(affixes, out float hp, out float dmg, out float spd);
             AttributeModifier.ApplyEliteMultipliers(
                 cmc,
@@ -170,13 +173,13 @@ namespace EliteEnemies
         private static int SelectWeightedAffixCount(int maxCount)
         {
             var weights = Config.AffixCountWeights;
-            
+
             if (weights == null || weights.Length < 2)
             {
                 Debug.LogWarning($"{LogTag} 词条权重配置无效，使用默认均匀分布");
                 return UnityEngine.Random.Range(1, maxCount + 1);
             }
-            
+
             int totalWeight = 0;
             for (int i = 1; i <= maxCount && i < weights.Length; i++)
             {
@@ -188,7 +191,7 @@ namespace EliteEnemies
                 Debug.LogWarning($"{LogTag} 词条权重总和为0，使用默认均匀分布");
                 return UnityEngine.Random.Range(1, maxCount + 1);
             }
-            
+
             int rand = UnityEngine.Random.Range(0, totalWeight);
             int sum = 0;
 
@@ -200,6 +203,7 @@ namespace EliteEnemies
                     return i;
                 }
             }
+
             return 1;
         }
 
@@ -255,19 +259,13 @@ namespace EliteEnemies
 
         internal static string ResolveBaseName(CharacterMainControl cmc)
         {
-            try
+            var preset = cmc.characterPreset;
+            if (preset != null && !string.IsNullOrEmpty(preset.nameKey))
             {
-                var preset = cmc.characterPreset;
-                if (preset != null && !string.IsNullOrEmpty(preset.nameKey))
-                {
-                    string localized = preset.nameKey.ToPlainText();
-                    if (!string.IsNullOrEmpty(localized)) return localized;
-                }
+                string localized = preset.nameKey.ToPlainText();
+                if (!string.IsNullOrEmpty(localized)) return localized;
             }
-            catch
-            {
-            }
-
+            
             string rawName = cmc.name ?? "未知敌人";
             rawName = rawName.Replace("(Clone)", "").Trim();
 
@@ -280,7 +278,7 @@ namespace EliteEnemies
 
         internal static string BuildColoredPrefix(IReadOnlyList<string> affixes)
         {
-            if (affixes == null || affixes.Count == 0) return "[精英]";
+            if (affixes == null || affixes.Count == 0) return "*";
 
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             foreach (string affixKey in affixes)
@@ -322,12 +320,32 @@ namespace EliteEnemies
             return true;
         }
 
+        // ========== 添加额外标记 ==========
+
+        internal static bool HasNonEliteSuffix(string name)
+        {
+            return !string.IsNullOrEmpty(name)
+                   && name.EndsWith(NonEliteSuffix, StringComparison.OrdinalIgnoreCase);
+        }
+
+        internal static string AddNonEliteSuffix(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return name;
+
+            if (HasNonEliteSuffix(name))
+                return name;
+
+            return name + NonEliteSuffix;
+        }
+
         // ========== 精英标记组件 ==========
 
         public class EliteMarker : MonoBehaviour
         {
             public string BaseName;
             public List<string> Affixes = new List<string>();
+            public string CustomDisplayName { get; set; }
         }
     }
 }

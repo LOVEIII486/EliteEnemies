@@ -15,21 +15,19 @@ namespace EliteEnemies
         public static LootItemHelper LootHelper => Instance?._lootItemHelper;
         
         private const string LogTag = "[EliteEnemies]";
-        private const bool EnableDevSpawn = false; // 调试刷怪
-        private const bool EnableDevLoot = false; // 调试刷物品
+        private const bool EnableDevSpawn = false;
+        private const bool EnableDevLoot = false;
         
         private Harmony _harmony;
         
-        // ========== 调试工具 ==========
         private GameObject _lootHelperObject;
         private LootItemHelper _lootItemHelper;
         private GameObject _spawnHelperObject;
+        private GameObject _eggSpawnHelperObject;
         
         private bool _isPatched = false;
         private bool _settingsInitialized = false;
         private bool _sceneHooksInitialized = false;
-
-        // ==================== Unity 生命周期 ====================
 
         private void OnEnable()
         {
@@ -38,16 +36,15 @@ namespace EliteEnemies
 
             InitializeSceneHooks();
             InitializeHarmonyPatches();
-            // InitializeLocalization(); // 此时info.path还没有准备好
             InitializeAffixBehaviors();
             InitializeBuffFramework();
             InitializeLootHelper();
+            InitializeEggSpawnHelper();
 
             if (EnableDevSpawn)
             {
                 InitializeSpawnHelper();
             }
-
             ModManager.OnModActivated += OnModActivated;
         }
 
@@ -61,6 +58,8 @@ namespace EliteEnemies
             CleanupLocalization();
             CleanupBuffFramework();
             CleanupLootHelper();
+            CleanupEggSpawnHelper();
+            
             CleanupSpawnHelper();
             
             _settingsInitialized = false;
@@ -68,11 +67,9 @@ namespace EliteEnemies
 
         protected override void OnAfterSetup()
         {
-            InitializeLocalization(); // 必须这个时候进行本地化
+            InitializeLocalization();
             InitializeSettings();
         }
-
-        // ==================== 初始化方法 ====================
 
         private void InitializeSceneHooks()
         {
@@ -138,11 +135,20 @@ namespace EliteEnemies
             Debug.Log($"{LogTag}  生成调试工具已初始化（开发模式）");
         }
 
+        private void InitializeEggSpawnHelper()
+        {
+            if (_eggSpawnHelperObject != null) return;
+
+            _eggSpawnHelperObject = new GameObject("EliteEnemies_EggSpawnHelper");
+            _eggSpawnHelperObject.AddComponent<EggSpawnHelper>();
+            DontDestroyOnLoad(_eggSpawnHelperObject);
+            Debug.Log($"{LogTag}  EggSpawnHelper 已初始化");
+        }
+
         private void InitializeSettings()
         {
             if (_settingsInitialized) return;
 
-            // ============ 关键修改：使用 ModSettingAPI ============
             if (!ModSettingAPI.Init(info))
             {
                 Debug.LogError($"{LogTag} ModSettingAPI 初始化失败，可能未安装 ModSetting 或版本不兼容");
@@ -158,8 +164,6 @@ namespace EliteEnemies
             _settingsInitialized = true;
             Debug.Log($"{LogTag}  设置系统已初始化");
         }
-
-        // ==================== 清理方法 ====================
 
         private void CleanupSceneHooks()
         {
@@ -206,13 +210,20 @@ namespace EliteEnemies
             Debug.Log($"{LogTag}  生成调试工具已清理");
         }
 
+        private void CleanupEggSpawnHelper()
+        {
+            if (_eggSpawnHelperObject == null) return;
+
+            Destroy(_eggSpawnHelperObject);
+            _eggSpawnHelperObject = null;
+            Debug.Log($"{LogTag}  EggSpawnHelper 已清理");
+        }
+
         private void CleanupLocalization()
         {
             LocalizationManager.Cleanup();
             Debug.Log($"{LogTag}  本地化系统已清理");
         }
-
-        // ==================== 事件回调 ====================
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
