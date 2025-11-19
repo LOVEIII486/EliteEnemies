@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using HarmonyLib;
 using ItemStatsSystem;
 using UnityEngine;
 
@@ -21,6 +23,9 @@ namespace EliteEnemies.AffixBehaviors
 
         private CharacterMainControl _originalCharacter;
         private bool _hasSplit = false;
+        
+        // 仅仅作为一个标记，不需要任何逻辑
+        public class SplitCloneMarker : UnityEngine.MonoBehaviour {}
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
@@ -83,58 +88,18 @@ namespace EliteEnemies.AffixBehaviors
                 speedMultiplier: SplitSpeedRatio,
                 scaleMultiplier: 1f,
                 preventElite: false,
-                onAllSpawned: (clones) =>  // 直接获取所有分身
+                onAllSpawned: (clones) => 
                 {
-                    if (clones == null || clones.Count == 0)
-                    {
-                        return;
-                    }
+                    if (clones == null) return;
                     foreach (var clone in clones)
                     {
                         if (clone != null)
                         {
-                            clone.BeforeCharacterSpawnLootOnDead += (damageInfo) =>
-                            {
-                                ModBehaviour.Instance?.StartCoroutine(ClearCloneLootBox(clone.transform.position));
-                            };
+                            // 不再注册死亡事件去搜寻箱子，而是直接打上标记
+                            clone.gameObject.AddComponent<SplitCloneMarker>();
                         }
                     }
                 });
-        }
-
-        private IEnumerator ClearCloneLootBox(Vector3 deathPosition)
-        {
-            yield return new WaitForSeconds(0.1f);
-
-            InteractableLootbox lootbox = FindNearbyLootBox(deathPosition);
-            if (lootbox == null || lootbox.Inventory == null) yield break;
-
-            var inv = lootbox.Inventory;
-            var items = new List<Item>();
-            foreach (var it in inv)
-                if (it != null)
-                    items.Add(it);
-
-            if (items.Count <= 1) yield break;
-
-            // 随机保留一件掉落
-            int keepIndex = Random.Range(0, items.Count);
-            for (int i = 0; i < items.Count; i++)
-            {
-                if (i == keepIndex) continue;
-                items[i]?.DestroyTree();
-            }
-        }
-
-        private InteractableLootbox FindNearbyLootBox(Vector3 position)
-        {
-            var allLootBoxes = Object.FindObjectsOfType<InteractableLootbox>();
-            foreach (var lootbox in allLootBoxes)
-            {
-                if (Vector3.Distance(lootbox.transform.position, position) < 2f)
-                    return lootbox;
-            }
-            return null;
         }
 
         public override void OnCleanup(CharacterMainControl character)
@@ -145,6 +110,65 @@ namespace EliteEnemies.AffixBehaviors
             }
             _originalCharacter = null;
             _hasSplit = false;
+        }
+    }
+    
+    [HarmonyPatch(typeof(InteractableLootbox), "CreateFromItem")]
+    public static class SplitLootPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(InteractableLootbox __result, Item item)
+        {
+            if (__result == null || item == null) return;
+
+            CharacterMainControl character = GetCharacterFromItem(item);
+            if (character == null) return;
+            
+            if (character.GetComponent<SplitBehavior.SplitCloneMarker>() != null)
+            {
+                ClearCloneLootBoxInventory(__result);
+            }
+        }
+        
+        private static CharacterMainControl GetCharacterFromItem(Item item)
+        {
+            MethodInfo method = item.GetType().GetMethod("GetCharacterItem");
+            if (method != null)
+            {
+                Item characterItem = method.Invoke(item, null) as Item;
+                if (characterItem?.GetComponent<CharacterMainControl>() is CharacterMainControl c) return c;
+            }
+
+            Transform current = item.transform;
+            int depth = 0;
+            while (current != null && depth < 10)
+            {
+                if (current.GetComponent<CharacterMainControl>() is CharacterMainControl c) return c;
+                current = current.parent;
+                depth++;
+            }
+            return null;
+        }
+
+        private static void ClearCloneLootBoxInventory(InteractableLootbox lootbox)
+        {
+            var inv = lootbox.Inventory;
+            if (inv == null) return;
+
+            var items = new List<Item>();
+            foreach (var it in inv)
+                if (it != null) items.Add(it);
+
+            if (items.Count <= 1) return;
+
+            int keepIndex = Random.Range(0, items.Count);
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (i == keepIndex) continue;
+                items[i]?.DestroyTree();
+            }
+            
+            Debug.Log($"[SplitBehavior] 已清理分身 {lootbox.name} 的掉落物，保留了索引 {keepIndex}");
         }
     }
 }
