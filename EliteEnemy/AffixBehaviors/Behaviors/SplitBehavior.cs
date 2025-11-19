@@ -37,7 +37,14 @@ namespace EliteEnemies.AffixBehaviors
         {
             if (health != _originalCharacter?.Health) return;
             if (_hasSplit) return;
-
+            
+            // 简单限制无限分裂
+            if (health.MaxHealth <= 15)
+            {
+                Debug.LogWarning("[SplitBehavior] 敌人太弱小，无法分裂");
+                return;
+            }
+            
             // 残血时触发分裂
             if (health.CurrentHealth < health.MaxHealth / 3)
             {

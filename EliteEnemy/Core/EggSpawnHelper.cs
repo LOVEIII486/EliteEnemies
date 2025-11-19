@@ -128,7 +128,7 @@ namespace EliteEnemies
                         onSpawned));
                 }
 
-                Debug.Log($"{LogTag} 成功生成克隆敌人: {preset.nameKey}");
+                //Debug.Log($"{LogTag} 成功生成克隆敌人: {preset.nameKey}");
                 return null;
             }
             catch (Exception ex)
@@ -195,7 +195,7 @@ namespace EliteEnemies
                         onSpawned));
                 }
 
-                Debug.Log($"{LogTag} 成功通过预设生成敌人: {preset.nameKey}");
+                //Debug.Log($"{LogTag} 成功通过预设生成敌人: {preset.nameKey}");
                 return null;
             }
             catch (Exception ex)
