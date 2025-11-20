@@ -561,8 +561,19 @@ namespace EliteEnemies
                 Rarity = AffixRarity.Legendary
             }.WithLootGroup(
                 new LootEntry(379, 1, 1, 1f), // 背带裤
-                new LootEntry(380, 1, 1, 1f) // 篮球
+                new LootEntry(380, 1, 1, 1f), // 篮球
+                new LootEntry(395, 1, 1, 1f)  // 黑色针剂
             ),
+            ["Phase"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Phase_Name"),
+                Description = LocalizationManager.GetText("Affix_Phase_Description"),
+                Color = new Color(0.0f, 1.0f, 1.0f), 
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare 
+            },
         };
 
 

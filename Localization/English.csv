@@ -106,3 +106,6 @@ Affix_ChickenBro_Description,Summons a chicken guard upon spawning.,2.0,AffixDes
 Affix_ChickenBro_Summon_Name,<color=#FFD600>Little Chick</color>,2.0,AffixBehavior
 Settings_ShowEliteName,Show Elite Enemy Names,2.1,VisualSettings
 Settings_VisualSettings_Group,Global Visual Settings,2.1,Groups
+Affix_Phase_Name,Phase,2.2,AffixNames
+Affix_Phase_Description,Swaps positions with the player on hit.,2.2,AffixDescription
+Affix_Phase_PopText_1,<color=#00FFFF>Phase Shift!</color>,2.2,AffixBehavior

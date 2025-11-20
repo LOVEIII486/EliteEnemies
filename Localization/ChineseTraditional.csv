@@ -106,3 +106,6 @@ Affix_ChickenBro_Description,出生時召喚小雞護衛,2.0,AffixDescription
 Affix_ChickenBro_Summon_Name,<color=#FFD600>雞弟</color>,2.0,AffixBehavior
 Settings_ShowEliteName,顯示精英敵人名字,2.1,VisualSettings
 Settings_VisualSettings_Group,視覺效果設置,2.1,Groups
+Affix_Phase_Name,相位,2.2,AffixNames
+Affix_Phase_Description,命中玩家時與玩家交換位置,2.2,AffixDescription
+Affix_Phase_PopText_1,<color=#00FFFF>相位移形！</color>,2.2,AffixBehavior

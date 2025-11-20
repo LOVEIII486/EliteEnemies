@@ -644,6 +644,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MagazineCurseBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MimicTearBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MiniaturationBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\PhaseSwapBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RegenerationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SelfDestructBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SlimeBehavior.cs" />

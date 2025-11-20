@@ -29,6 +29,7 @@ namespace EliteEnemies.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<BerserkBehavior>();
             AffixBehaviorManager.RegisterBehavior<HardeningBehavior>();
             AffixBehaviorManager.RegisterBehavior<ChickenBroBehavior>();
+            AffixBehaviorManager.RegisterBehavior<PhaseSwapBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }
