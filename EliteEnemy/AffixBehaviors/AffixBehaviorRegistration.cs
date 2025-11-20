@@ -30,6 +30,7 @@ namespace EliteEnemies.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<HardeningBehavior>();
             AffixBehaviorManager.RegisterBehavior<ChickenBroBehavior>();
             AffixBehaviorManager.RegisterBehavior<PhaseSwapBehavior>();
+            AffixBehaviorManager.RegisterBehavior<MandarinDuckBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }

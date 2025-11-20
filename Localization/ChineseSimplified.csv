@@ -109,3 +109,6 @@ Settings_VisualSettings_Group,视觉效果设置,2.1,Groups
 Affix_Phase_Name,相位,2.2,AffixNames
 Affix_Phase_Description,命中玩家时与玩家交换位置,2.2,AffixDescription
 Affix_Phase_PopText_1,<color=#00FFFF>相位移形！</color>,2.2,AffixBehavior
+Affix_MandarinDuck_Name,鸳鸯,2.2,AffixNames
+Affix_MandarinDuck_Description,真是一对苦命鸳鸯！,2.2,AffixDescription
+Affix_MandarinDuck_MateSuffix,伴侣,2.2,AffixBehavior

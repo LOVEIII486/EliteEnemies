@@ -572,8 +572,18 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare 
+                Rarity = AffixRarity.Epic 
             },
+            ["MandarinDuck"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_MandarinDuck_Name"),
+                Description = LocalizationManager.GetText("Affix_MandarinDuck_Description"),
+                Color = new Color(1.0f, 0.4f, 0.7f), // 粉色
+                HealthMultiplier = 0.8f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Legendary
+            }.WithRandomLoot(-1, 1, 1f, new[] { "Accessory" }),
         };
 
 
