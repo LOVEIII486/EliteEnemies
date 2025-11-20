@@ -1,162 +1,138 @@
 ﻿using System;
 using UnityEngine;
+using ItemStatsSystem; // 确保引用包含 DamageInfo 和 Health 的命名空间
 
 namespace EliteEnemies.AffixBehaviors
 {
     /// <summary>
     /// 词缀：不死（Undying）
-    /// 首次跌破阈值时：瞬间回血 + 无敌2秒（仅一次）
+    /// 效果：当生命值跌破阈值（20%）时，强制锁血并回血至 50%，同时获得 2 秒无敌。
     /// </summary>
     public class UndyingBehavior : AffixBehaviorBase, IUpdateableAffixBehavior
     {
         public override string AffixName => "Undead";
         
-        private static readonly float LowHpThresholdRatio = 0.20f;  // 触发阈值：≤20%
-        private static readonly float HealRatio           = 0.50f;  // 回血到 50%
-        private static readonly float InvincibleDuration  = 2.0f;   // 无敌 2 秒
-        
-        private readonly Lazy<string> _popLineStartLazy = new Lazy<string>(() =>
-            LocalizationManager.GetText("Affix_Undead_PopText_1", "还没那么容易倒下！"));
-        
-        private readonly Lazy<string> _popLineEndLazy = new Lazy<string>(() =>
-            LocalizationManager.GetText("Affix_Undead_PopText_2", "萎了！"));
-        
-        private string PopLineStart => _popLineStartLazy.Value;
-        private string PopLineEnd   => _popLineEndLazy.Value;
+        private static readonly float ThresholdRatio = 0.2f; // 触发阈值 (20%)
+        private static readonly float HealTargetRatio = 0.5f; // 回血目标 (50%)
+        private static readonly float InvincibleDuration = 2.5f; // 无敌时间
         
         private CharacterMainControl _owner;
-        private bool  _triggered;              // 是否已触发过（只触发一次）
-        private bool  _isInvincible;           // 当前是否处于无敌状态
-        private bool  _wasInvincible;          // 触发前的无敌状态
-        private float _invincibleEndTime;      // 无敌结束时间
-        private float _lastHp = -1f;           // 上一帧血量
+        private bool _triggered = false;       // 是否已触发（仅限一次）
+        private bool _isInvincible = false;    // 当前是否处于词条赋予的无敌状态
+        private bool _originalInvincibleState; // 记录触发前的无敌状态（用于还原）
+        private float _invincibleEndTime;      // 无敌结束时间戳
+        
+        private readonly Lazy<string> _popLineStart = new(() => 
+            LocalizationManager.GetText("Affix_Undead_PopText_1"));
+        
+        private readonly Lazy<string> _popLineEnd = new(() => 
+            LocalizationManager.GetText("Affix_Undead_PopText_2"));
 
+        /// <summary>
+        /// 初始化
+        /// </summary>
         public override void OnEliteInitialized(CharacterMainControl character)
         {
-            if (!character || character.Health == null)
-                return;
+            if (character == null || character.Health == null) return;
 
-            _owner  = character;
-            _lastHp = character.Health.CurrentHealth;
-        }
-
-        public void OnUpdate(CharacterMainControl character, float deltaTime)
-        {
-            if (!character || character.Health == null)
-                return;
-
-            var health = character.Health;
-            if (health.IsDead)
-                return;
-
-            // 1. 检查是否需要触发“不死”
-            if (!_triggered)
-            {
-                TryTriggerUndying(character, _lastHp, health.CurrentHealth, health.MaxHealth);
-            }
-
-            // 2. 更新无敌状态
-            if (_isInvincible)
-            {
-                UpdateInvincibility(character);
-            }
-
-            // 3. 记录上一帧血量
-            _lastHp = health.CurrentHealth;
-        }
-
-        public override void OnCleanup(CharacterMainControl character)
-        {
-            if (_isInvincible && character && character.Health != null)
-            {
-                character.Health.SetInvincible(_wasInvincible);
-                _isInvincible = false;
-            }
-
-            _owner = null;
-        }
-
-        public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
-        {
-            OnCleanup(character);
+            _owner = character;
+            _triggered = false;
+            _isInvincible = false;
+            
+            Health.OnHurt += OnGlobalHealthHurt;      
         }
 
         /// <summary>
-        /// 判断是否从阈值上方“跌破”到阈值以下，如果是则触发一次
+        /// 全局受伤事件回调
         /// </summary>
-        private void TryTriggerUndying(
-            CharacterMainControl character,
-            float lastHp,
-            float currentHp,
-            float maxHp)
-        {
-            if (_triggered) return;
-            if (maxHp <= 0f) return;
-
-            float threshold = maxHp * LowHpThresholdRatio;
-
-            // 只在 “上一帧 > 阈值 && 当前 ≤ 阈值” 时触发一次
-            if (lastHp > threshold && currentHp <= threshold)
+        private void OnGlobalHealthHurt(Health health, DamageInfo damageInfo)
+        {           
+            if (_triggered || _owner == null || health != _owner.Health) return;
+            
+            float threshold = health.MaxHealth * ThresholdRatio;
+            
+            if (health.CurrentHealth <= threshold)
             {
-                DoTriggerUndying(character);
+                TriggerUndying(health);
             }
         }
 
-        private void DoTriggerUndying(CharacterMainControl character)
+        /// <summary>
+        /// 触发不死效果
+        /// </summary>
+        private void TriggerUndying(Health health)
         {
-            var health = character.Health;
-            if (health == null || health.IsDead)
-                return;
-
             _triggered = true;
-
-            // 把当前血量拉到指定比例（不改最大生命）
-            float targetHp = health.MaxHealth * HealRatio;
+            
+            float targetHp = health.MaxHealth * HealTargetRatio;
+            
             if (health.CurrentHealth < targetHp)
             {
                 health.SetHealth(targetHp);
             }
-
-            character.PopText(PopLineStart);
-            StartInvincibility(character);
-            AIFieldModifier.ModifyImmediate(character,AIFieldModifier.Fields.ShootCanMove,1f);
-            AIFieldModifier.ModifyImmediate(character, AIFieldModifier.Fields.CanDash,1f);
-        }
-
-        private void StartInvincibility(CharacterMainControl character)
-        {
-            var health = character.Health;
-            if (health == null)
-                return;
-
-            _wasInvincible     = health.Invincible;
-            _isInvincible      = true;
+            
+            _originalInvincibleState = health.Invincible; // 记录原始状态
+            _isInvincible = true;
             _invincibleEndTime = Time.time + InvincibleDuration;
-
             health.SetInvincible(true);
+            
+            _owner.PopText(_popLineStart.Value);
+            
+            AIFieldModifier.ModifyImmediate(_owner, AIFieldModifier.Fields.ShootCanMove, 1f);
+            AIFieldModifier.ModifyImmediate(_owner, AIFieldModifier.Fields.CanDash, 1f);
         }
 
-        private void UpdateInvincibility(CharacterMainControl character)
+        /// <summary>
+        /// 帧更新：处理无敌倒计时
+        /// </summary>
+        public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            if (Time.time >= _invincibleEndTime)
+            if (_isInvincible)
             {
-                EndInvincibility(character);
+                if (Time.time >= _invincibleEndTime)
+                {
+                    EndInvincibility();
+                }
             }
         }
 
-        private void EndInvincibility(CharacterMainControl character)
+        /// <summary>
+        /// 结束无敌状态
+        /// </summary>
+        private void EndInvincibility()
         {
-            var health = character.Health;
-            if (health == null)
-                return;
-            
-            health.SetInvincible(_wasInvincible);
+            if (_owner != null && _owner.Health != null)
+            {
+                _owner.Health.SetInvincible(_originalInvincibleState);
+                if (!_owner.Health.IsDead)
+                {
+                    _owner.PopText(_popLineEnd.Value);
+                }
+            }
             _isInvincible = false;
+        }
+
+        /// <summary>
+        /// 清理资源：注销事件，防止报错和内存泄漏
+        /// </summary>
+        public override void OnCleanup(CharacterMainControl character)
+        {
+            Health.OnHurt -= OnGlobalHealthHurt;
             
-            if (!health.IsDead)
+            if (_isInvincible && character != null && character.Health != null)
             {
-                character.PopText(PopLineEnd);
+                character.Health.SetInvincible(_originalInvincibleState);
             }
+
+            _owner = null;
+            _isInvincible = false;
+            _triggered = false;
+        }
+
+        // 死亡时也调用清理
+        public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
+        {
+            OnCleanup(character);
         }
     }
 }
