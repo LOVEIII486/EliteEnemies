@@ -12,6 +12,21 @@ namespace EliteEnemies
     /// </summary>
     public static class AIFieldModifier
     {
+        /// <summary>
+        /// 辅助组件：用于在对象激活时启动协程
+        /// </summary>
+        private class ModificationApplier : MonoBehaviour
+        {
+            private void Start()
+            {
+                var character = GetComponent<CharacterMainControl>();
+                if (character != null)
+                {
+                    character.StartCoroutine(ApplyPendingModifications(character));
+                }
+                Destroy(this);
+            }
+        }
         private const string LogTag = "[EliteEnemies.AIFieldModifier]";
         
         /// <summary>
@@ -75,7 +90,9 @@ namespace EliteEnemies
         }
 
         // ========== 生成时使用（延迟修改）==========
-
+        
+        private static readonly HashSet<CharacterMainControl> _processingCharacters = new HashSet<CharacterMainControl>();
+        
         public static void ModifyDelayed(CharacterMainControl character, string fieldName, float value, bool multiply = false)
         {
             if (character == null)
@@ -101,9 +118,22 @@ namespace EliteEnemies
                 Multiply = multiply
             });
 
-            if (character.gameObject.activeInHierarchy)
+            // 🔥 修复:只在没有协程运行时才启动新协程
+            if (!_processingCharacters.Contains(character))
             {
-                character.StartCoroutine(ApplyPendingModifications(character));
+                _processingCharacters.Add(character);
+        
+                if (character.gameObject.activeInHierarchy)
+                {
+                    character.StartCoroutine(ApplyPendingModifications(character));
+                }
+                else
+                {
+                    if (character.GetComponent<ModificationApplier>() == null)
+                    {
+                        character.gameObject.AddComponent<ModificationApplier>();
+                    }
+                }
             }
         }
 
@@ -250,26 +280,32 @@ namespace EliteEnemies
 
         private static IEnumerator ApplyPendingModifications(CharacterMainControl character)
         {
-            yield return null;
+            yield return new WaitForEndOfFrame();
 
             if (character == null || !_pendingModifications.ContainsKey(character))
+            {
+                _processingCharacters.Remove(character);
                 yield break;
+            }
 
             var ai = GetAI(character);
             if (ai == null)
             {
                 Debug.LogWarning($"{LogTag} AICharacterController 未找到");
                 _pendingModifications.Remove(character);
+                _processingCharacters.Remove(character);
                 yield break;
             }
 
             var modifications = _pendingModifications[character];
             foreach (var mod in modifications)
             {
+                // Debug.Log($"{LogTag} ApplyModification {character.characterPreset.nameKey} {character.GetHashCode()} ");
                 ApplyModification(ai, mod.FieldName, mod.Value, mod.Multiply);
             }
 
             _pendingModifications.Remove(character);
+            _processingCharacters.Remove(character);  // 🔥 记得清理
         }
 
         // ========== 内部实现：字段反射修改 ==========
@@ -319,6 +355,7 @@ namespace EliteEnemies
                 {
                     Debug.LogWarning($"{LogTag} 不支持的字段类型: {field.FieldType}");
                 }
+                //Debug.LogWarning($"{LogTag} 修改字段成功: {fieldName} | {value} | {multiply}");
             }
             catch (Exception ex)
             {
@@ -366,12 +403,15 @@ namespace EliteEnemies
 
             if (_originalValues.ContainsKey(character))
                 _originalValues.Remove(character);
+            
+            _processingCharacters.Remove(character);
         }
 
         public static void ClearAll()
         {
             _pendingModifications.Clear();
             _originalValues.Clear();
+            _processingCharacters.Clear();
         }
 
         // ========== 可用字段整理 ==========
@@ -405,7 +445,7 @@ namespace EliteEnemies
             public const string ItemSkillCoolTime = "itemSkillCoolTime";
         }
     }
-
+    
     /// <summary>
     /// 条件触发修改组件（挂载到角色上，持续监测）
     /// </summary>

@@ -30,7 +30,6 @@ namespace EliteEnemies.Settings
         // 默认禁用的词缀名单
         private static readonly HashSet<string> DefaultDisabledAffixes = new HashSet<string>
         {
-            "MimicTear",
             "Sticky"
         };
 
