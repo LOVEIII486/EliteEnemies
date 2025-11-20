@@ -121,7 +121,7 @@ namespace EliteEnemies
             _lootItemHelper = _lootHelperObject.AddComponent<LootItemHelper>();
             _lootItemHelper.debugMode = EnableDevLoot;
             DontDestroyOnLoad(_lootHelperObject);
-            Debug.Log($"{LogTag}  掉落调试工具已初始化");
+            Debug.Log($"{LogTag}  掉落工具已初始化");
         }
 
         private void InitializeSpawnHelper()
@@ -198,7 +198,7 @@ namespace EliteEnemies
             Destroy(_lootHelperObject);
             _lootHelperObject = null;
             _lootItemHelper = null;
-            Debug.Log($"{LogTag}  掉落调试工具已清理");
+            Debug.Log($"{LogTag}  掉落工具已清理");
         }
 
         private void CleanupSpawnHelper()
