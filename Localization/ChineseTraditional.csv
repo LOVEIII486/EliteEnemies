@@ -112,3 +112,5 @@ Affix_Phase_PopText_1,<color=#00FFFF>相位移形！</color>,2.2,AffixBehavior
 Affix_MandarinDuck_Name,鴛鴦,2.2,AffixNames
 Affix_MandarinDuck_Description,真是一對苦命鴛鴦！,2.2,AffixDescription
 Affix_MandarinDuck_MateSuffix,伴侶,2.2,AffixBehavior
+Affix_Revenge_Name,報復,2.2,AffixNames
+Affix_Revenge_Description,受傷時會向攻擊者發射子彈進行反擊,2.2,AffixDescription

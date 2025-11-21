@@ -464,8 +464,11 @@ namespace EliteEnemies
                 Description = LocalizationManager.GetText("Affix_Vampirism_Description",
                     "攻击时回复自身生命值"),
                 Color = new Color(0.86f, 0.08f, 0.24f),
-                Rarity = AffixRarity.Epic,
-            }.WithRandomLootRange(1, 4, 1, 0.8f, new[] { "Medic" }),
+                HealthMultiplier = 1.4f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare,
+            }.WithRandomLootRange(1, 4, 1, 1f, new[] { "Medic" }),
 
             ["Collector"] = new AffixData
             {
@@ -578,12 +581,24 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_MandarinDuck_Name"),
                 Description = LocalizationManager.GetText("Affix_MandarinDuck_Description"),
-                Color = new Color(1.0f, 0.4f, 0.7f), // 粉色
+                Color = new Color(1.0f, 0.4f, 0.7f),
                 HealthMultiplier = 0.8f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
             }.WithRandomLoot(-1, 1, 1f, new[] { "Accessory" }),
+            ["Revenge"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Revenge_Name", "报复"),
+                Description = LocalizationManager.GetText("Affix_Revenge_Description", "受伤时发射子弹反击"),
+                Color = new Color(0.75f, 0.25f, 0.25f),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Epic
+            }.WithLootGroup(
+                new LootEntry(326, 1, 1, 0.5f)// 火箭弹
+            ).WithRandomLootRange(3, 5, 2, 1f, new[] { "Bullet" }),
         };
 
 

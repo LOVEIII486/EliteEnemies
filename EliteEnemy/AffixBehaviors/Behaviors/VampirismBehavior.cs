@@ -21,7 +21,7 @@ namespace EliteEnemies.AffixBehaviors
         private static readonly float RangedLifeStealPercent = 0.6f; // 远程：造成伤害的 60%
 
         // 吸血限制
-        private static readonly float MinHealAmount = 8f; // 最小回复量
+        private static readonly float MinHealAmount = 10f; // 最小回复量
         private static readonly float MaxHealAmount = 100f; // 最大回复量
         private static readonly float CooldownSeconds = 0.15f; // 触发冷却
 
