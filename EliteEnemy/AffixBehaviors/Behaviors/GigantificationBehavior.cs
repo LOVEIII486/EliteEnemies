@@ -14,8 +14,8 @@ namespace EliteEnemies.AffixBehaviors
         private static readonly float MinSizeMultiplier = 1.5f; // 最小体型倍率
         private static readonly float MaxSizeMultiplier = 4.0f; // 最大体型倍率
         private static readonly float MinHealthMultiplier = 1.5f; // 最小血量倍率
-        private static readonly float MaxHealthMultiplier = 3.0f; // 最大血量倍率
-        private static readonly float SpeedMultiplier = 0.7f; // 速度减益
+        private static readonly float MaxHealthMultiplier = 3.5f; // 最大血量倍率
+        private static readonly float SpeedMultiplier = 0.8f; // 速度减益
 
         private float _actualSizeMultiplier = 1.0f; // 实际应用的体型倍率
         private float _actualHealthMultiplier = 1.0f; // 实际应用的血量倍率

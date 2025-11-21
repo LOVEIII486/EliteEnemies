@@ -194,7 +194,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.7f,
                 MoveSpeedMultiplier = 1.2f,
                 Rarity = AffixRarity.Common
-            }.WithRandomLootRange(4, 5, 1, 0.8f, new[] { "Bullet" }),
+            }.WithRandomLootRange(4, 5, 1, 0.7f, new[] { "Bullet" }),
             ["Fisherman"] = new AffixData
                 {
                     Name = LocalizationManager.GetText("Affix_Fisherman_Name", "钓鱼佬"),
@@ -372,7 +372,7 @@ namespace EliteEnemies
                 Color = new Color(1.0f, 0.2f, 0.3f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
-                MoveSpeedMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.2f,
                 Rarity = AffixRarity.Epic
             }.WithRandomLoot(-1, 1, 1, new[] { "Explosive" }),
             ["Sticky"] = new AffixData

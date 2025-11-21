@@ -16,8 +16,8 @@ namespace EliteEnemies.AffixBehaviors
         private static readonly string ChickenPresetName = "Cname_Chick";
         private static readonly int ChickenCount = 2;
         private static readonly float SpawnRadius = 2f;
-        private static readonly float ChickenHealthRatio = 0.5f;
-        private static readonly float ChickenDamageRatio = 0.5f;
+        private static readonly float ChickenHealthRatio = 0.8f;
+        private static readonly float ChickenDamageRatio = 0.8f;
         private static readonly float ChickenSpeedRatio = 1.2f;
         
         private readonly Lazy<string> _chickenCustomName =
