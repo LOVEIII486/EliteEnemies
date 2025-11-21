@@ -11,10 +11,10 @@ namespace EliteEnemies.AffixBehaviors
         public override string AffixName => "Hardening";
 
         // 每次触发减少 5%-12% 的物理伤害
-        private const float MinDamageReduction = 0.05f; // 最小减伤
-        private const float MaxDamageReduction = 0.12f; // 最大减伤
-        private const float MaxTotalReduction = 0.50f; // 总减伤上限
-        private const float TriggerCooldown = 1.0f; // 触发CD
+        private static readonly float MinDamageReduction = 0.08f; // 最小减伤
+        private static readonly float MaxDamageReduction = 0.2f; // 最大减伤
+        private static readonly float MaxTotalReduction = 0.60f; // 总减伤上限
+        private static readonly float TriggerCooldown = 0.6f; // 触发CD
 
         private float _accumulatedReduction = 0f; // 累计减伤百分比
         private float _lastTriggerTime = -999f; // 上次触发时间

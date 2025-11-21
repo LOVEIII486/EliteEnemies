@@ -16,7 +16,7 @@ namespace EliteEnemies.AffixBehaviors
 
         private static readonly string BuffName = "EliteBuff_Blindness";
         private static readonly int BuffId = 99901;
-        private static readonly float BuffDuration = 5f;
+        private static readonly float BuffDuration = 7f;
         
         private static readonly EliteBuffFactory.BuffConfig BuffConfig = 
             new (BuffName, BuffId, BuffDuration);

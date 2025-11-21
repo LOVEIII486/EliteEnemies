@@ -8,7 +8,7 @@ namespace EliteEnemies
     public class EliteEnemiesConfig
     {
         public float NormalEliteChance { get; set; } = 1.0f;
-        public float BossEliteChance { get; set; } = 0.0f;
+        public float BossEliteChance { get; set; } = 0.4f;
         public float MerchantEliteChance { get; set; } = 0.0f;
         public int MaxAffixCount { get; set; } = 2;
         public float DropRateMultiplier { get; set; } = 1.0f;
@@ -22,7 +22,7 @@ namespace EliteEnemies
         
         public bool ShowEliteName { get; set; } = true;
         public bool ShowDetailedHealth { get; set; } = true;
-        public bool ShowAffixFootText { get; set; } = true;
+        public bool ShowAffixFootText { get; set; } = false;
         public float AffixFootTextFontSize { get; set; } = 35f;
     }
 }

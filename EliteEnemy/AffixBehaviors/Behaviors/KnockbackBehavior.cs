@@ -9,7 +9,7 @@ namespace EliteEnemies.AffixBehaviors
     {
         public override string AffixName => "Knockback";
 
-        private static readonly float KnockbackForce = 8f; // 垂直力
+        private static readonly float KnockbackForce = 7f; // 垂直力
         private static readonly float HorizontalForce = 15f; // 横向力
         private static readonly float GroundPauseDuration = 0.3f; // 地面约束暂停时间
         private static readonly float KnockbackCooldown = 5f; // cd

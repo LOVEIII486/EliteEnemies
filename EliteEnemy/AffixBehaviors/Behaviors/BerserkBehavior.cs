@@ -21,7 +21,7 @@ namespace EliteEnemies.AffixBehaviors
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
             // 血量低于50%触发狂暴
-            if (character.Health.CurrentHealth < character.Health.MaxHealth * 0.5f && !_berserkTriggered)
+            if (character.Health.CurrentHealth < character.Health.MaxHealth * 0.7f && !_berserkTriggered)
             {
                 _berserkTriggered = true;
                 character.PopText(BerserkPopTextFmt);

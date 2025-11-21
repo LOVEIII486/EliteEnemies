@@ -11,9 +11,9 @@ namespace EliteEnemies.AffixBehaviors
     {
         public override string AffixName => "Revenge";
 
-        private const string LogTag = "[EliteEnemies.Revenge]";
-        private const int ProjectileSourceItemId = 327; // 子弹来源武器ID
-        private const float ShootCooldown = 2f; // 发射冷却时间
+        private static readonly string LogTag = "[EliteEnemies.Revenge]";
+        private static readonly int ProjectileSourceItemId = 327; // 子弹来源武器ID
+        private static readonly float ShootCooldown = 2f; // 发射冷却时间
 
         private CharacterMainControl _owner;
         private float _lastShootTime = -999f;
@@ -123,7 +123,7 @@ namespace EliteEnemies.AffixBehaviors
                     firstFrameCheck = true,
                     firstFrameCheckStartPoint = muzzlePos - direction * 0.5f,
                     direction = direction,
-                    speed = 13f,
+                    speed = 17f,
 
                     // 队伍和来源
                     team = shooter.Team,

@@ -35,7 +35,7 @@ namespace EliteEnemies.Settings
             // ============ 关键修改：使用 ModSettingAPI 静态方法 ============
             ModSettingAPI.AddSlider(
                 key: "NormalEliteChance",
-                description: LocalizationManager.GetText("Settings_NormalEliteChance", "普通怪物精英概率"),
+                description: LocalizationManager.GetText("Settings_NormalEliteChance"),
                 defaultValue: GameConfig.NormalEliteChance,
                 sliderRange: new Vector2(0f, 1f),
                 onValueChange: GameConfig.SetNormalEliteChance,

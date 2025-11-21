@@ -15,7 +15,7 @@ namespace EliteEnemies.AffixBehaviors
 
         private static readonly string BuffName = "EliteBuff_DungEater";
         private static readonly int BuffId = 99904;
-        private static readonly float BuffDuration = 5f;
+        private static readonly float BuffDuration = 2f;
         
         private static readonly EliteBuffFactory.BuffConfig BuffConfig =
             new (BuffName, BuffId, BuffDuration);

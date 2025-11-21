@@ -18,7 +18,7 @@ namespace EliteEnemies.AffixBehaviors
         private static readonly float SpawnRadius = 2f;
         private static readonly float ChickenHealthRatio = 0.5f;
         private static readonly float ChickenDamageRatio = 0.5f;
-        private static readonly float ChickenSpeedRatio = 1.1f;
+        private static readonly float ChickenSpeedRatio = 1.2f;
         
         private readonly Lazy<string> _chickenCustomName =
             new(() => LocalizationManager.GetText("Affix_ChickenBro_Summon_Name")

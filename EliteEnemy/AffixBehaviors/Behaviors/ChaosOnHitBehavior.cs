@@ -17,7 +17,7 @@ namespace EliteEnemies.AffixBehaviors
     {
         public override string AffixName => "Chaos";
         
-        private static readonly float CooldownSeconds = 2f;
+        private static readonly float CooldownSeconds = 0.8f;
         // 内置全局冷却，共享
         private static float _lastApplyTime = -999f;
         

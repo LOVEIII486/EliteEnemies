@@ -85,7 +85,7 @@ namespace EliteEnemies.Settings
             NormalEliteChance = ModSettingAPI.GetSavedValue<float>("NormalEliteChance", out float normal)
                 ? normal
                 : 1.0f;
-            BossEliteChance = ModSettingAPI.GetSavedValue<float>("BossEliteChance", out float boss) ? boss : 0.0f;
+            BossEliteChance = ModSettingAPI.GetSavedValue<float>("BossEliteChance", out float boss) ? boss : 0.4f;
             MerchantEliteChance = ModSettingAPI.GetSavedValue<float>("MerchantEliteChance", out float merchant)
                 ? merchant
                 : 0.0f;
@@ -119,7 +119,7 @@ namespace EliteEnemies.Settings
                 : true;
             ShowAffixFootText = ModSettingAPI.GetSavedValue<bool>("ShowAffixFootText", out bool footText)
                 ? footText
-                : true;
+                : false;
             AffixFootTextFontSize = ModSettingAPI.GetSavedValue<float>("AffixFootTextFontSize", out float fontSize)
                 ? Mathf.Clamp(fontSize, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize)
                 : 35f;
@@ -153,7 +153,7 @@ namespace EliteEnemies.Settings
         private static void LoadDefaults()
         {
             NormalEliteChance = 1.0f;
-            BossEliteChance = 0.0f;
+            BossEliteChance = 0.4f;
             MerchantEliteChance = 0.0f;
             MaxAffixCount = 2;
 
@@ -167,7 +167,7 @@ namespace EliteEnemies.Settings
 
             ShowEliteName = true;
             ShowDetailedHealth = true;
-            ShowAffixFootText = true;
+            ShowAffixFootText = false;
             AffixFootTextFontSize = 35f;
 
             AffixWeight1 = 50;

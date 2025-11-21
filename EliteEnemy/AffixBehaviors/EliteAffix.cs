@@ -25,7 +25,9 @@ namespace EliteEnemies
                 ["Giant"] = new HashSet<string> { "Mini" },
                 ["Undead"] = new HashSet<string> { "Explosive" },
                 // ["Regeneration"] = new HashSet<string> { "Tanky", "Giant" },
-                ["Split"] = new HashSet<string> { "MimicTear", "ChickenBro" },
+                ["Split"] = new HashSet<string> { "MimicTear", "ChickenBro" , "MandarinDuck"},
+                ["Sticky"] = new HashSet<string> { "MagazineCurse" },
+                ["Knockback"] = new HashSet<string> { "Phase" },
             };
 
         /// <summary>
@@ -146,11 +148,10 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 0.7f,
                 Rarity = AffixRarity.Common
             }.WithLootGroup(
-                new LootEntry(1139, 1, 1, 0.15f), // 3级重型防弹衣
-                new LootEntry(1138, 1, 1, 0.07f), // 4级重型防弹衣
-                new LootEntry(1137, 1, 1, 0.02f) // 5级重型防弹衣
+                new LootEntry(1139, 1, 1, 0.4f), // 3级重型防弹衣
+                new LootEntry(1138, 1, 1, 0.2f), // 4级重型防弹衣
+                new LootEntry(1137, 1, 1, 0.07f) // 5级重型防弹衣
             ),
-
             ["Swift"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Swift_Name", "迅捷"),
@@ -165,16 +166,15 @@ namespace EliteEnemies
                 new LootEntry(324, 1, 1, 0.1f), // 轻盈图腾 2
                 new LootEntry(992, 1, 1, 0.05f) // 轻盈图腾 3
             ).WithLootGroup(
-                new LootEntry(137, 1, 2, 0.8f), // 黄针 1-3
+                new LootEntry(137, 1, 2, 0.7f), // 黄针 1-3
                 new LootEntry(398, 1, 2, 0.5f) // 负重针剂 1-2
             ),
-
             ["Berserk"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Berserk_Name", "狂暴"),
                 Description = LocalizationManager.GetText("Affix_Berserk_Description"),
                 Color = new Color(1.0f, 0.298f, 0.298f),
-                HealthMultiplier = 0.8f,
+                HealthMultiplier = 0.9f,
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Common
@@ -185,18 +185,16 @@ namespace EliteEnemies
             ).WithLootGroup(
                 new LootEntry(438, 1, 2, 0.6f) // 热血针剂
             ),
-
             ["GlassCannon"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_GlassCannon_Name", "玻璃大炮"),
                 Description = LocalizationManager.GetText("Affix_GlassCannon_Description", "伤害极高但极其脆弱。掉落：特种穿甲弹"),
                 Color = new Color(1.0f, 0.4f, 0.8f),
-                HealthMultiplier = 0.5f,
+                HealthMultiplier = 0.6f,
                 DamageMultiplier = 1.7f,
                 MoveSpeedMultiplier = 1.2f,
                 Rarity = AffixRarity.Common
-            }.WithRandomLootRange(4, 5, 1, 0.7f, new[] { "Bullet" }),
-
+            }.WithRandomLootRange(4, 5, 1, 0.8f, new[] { "Bullet" }),
             ["Fisherman"] = new AffixData
                 {
                     Name = LocalizationManager.GetText("Affix_Fisherman_Name", "钓鱼佬"),
@@ -224,7 +222,6 @@ namespace EliteEnemies
                     new LootEntry(1095, 1, 1, 0.1f), // 好钓竿
                     new LootEntry(1096, 1, 1, 0.05f) // 厉害钓竿
                 ),
-
             ["Chef"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Chef_Name", "厨子"),
@@ -235,7 +232,6 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon
             }.WithRandomLoot(-1, 1, 1, new[] { "Food" }),
-
             ["Musician"] = new AffixData
                 {
                     Name = LocalizationManager.GetText("Affix_Musician_Name", "音乐家"),
@@ -244,16 +240,15 @@ namespace EliteEnemies
                     HealthMultiplier = 1.0f,
                     DamageMultiplier = 1.0f,
                     MoveSpeedMultiplier = 1.0f,
-                    Rarity = AffixRarity.Uncommon
+                    Rarity = AffixRarity.Rare
                 }
                 .WithLootGroup(
                     new LootEntry(112, 1, 1, 1f), // 麦克风
                     new LootEntry(124, 1, 1, 1f), // 手鼓
-                    new LootEntry(125, 1, 1, 0.5f), // 小号
-                    new LootEntry(126, 1, 1, 0.7f), // 木琴
-                    new LootEntry(1259, 1, 1, 0.4f) // 卡祖笛
+                    new LootEntry(125, 1, 1, 0.6f), // 小号
+                    new LootEntry(126, 1, 1, 0.8f), // 木琴
+                    new LootEntry(1259, 1, 1, 0.6f) // 卡祖笛
                 ),
-
             ["NineDragons"] = new AffixData
                 {
                     Name = LocalizationManager.GetText("Affix_NineDragons_Name", "九龙拉棺"),
@@ -265,7 +260,6 @@ namespace EliteEnemies
                     Rarity = AffixRarity.Rare
                 }
                 .WithRandomLoot(-1, 1, 1, new[] { "Injector" }),
-
             ["Talkative"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Talkative_Name", "话痨"),
@@ -276,7 +270,6 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon
             }.WithRandomLootRange(1, 4, 1, 1, new[] { "Daily" }),
-
             ["Regeneration"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Regeneration_Name", "再生"),
@@ -287,8 +280,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon,
-            }.WithRandomLoot(-1, 1, 0.7f, new[] { "Medic" }),
-
+            }.WithRandomLoot(-1, 1, 1f, new[] { "Medic" }),
             ["Invisible"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Invisible_Name", "隐身"),
@@ -299,9 +291,15 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon
             }.WithLootGroup(
-                new LootEntry(660, 1, 1, 0.8f) // 烟雾弹
+                new LootEntry(660, 1, 1, 1f) // 烟雾弹
+            ).WithLootGroup(
+                new LootEntry(741, 1, 1, 1f), // 黑色眼镜
+                new LootEntry(742, 1, 1, 1f), // 闪光眼镜
+                new LootEntry(973, 1, 1, 0.1f), //蝇蝇眼镜
+                new LootEntry(718, 1, 1, 0.07f), // 夜视仪
+                new LootEntry(719, 1, 1, 0.07f), // 热成像
+                new LootEntry(718, 1, 1, 0.1f) // 蒙眼布
             ),
-
             ["Giant"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Giant_Name", "巨大化"),
@@ -316,8 +314,7 @@ namespace EliteEnemies
                 new LootEntry(995, 1, 1, 0.4f), // 健壮图腾1
                 new LootEntry(994, 1, 1, 0.2f), // 健壮图腾2
                 new LootEntry(325, 1, 1, 0.1f) // 健壮图腾3
-            ),
-
+            ).WithRandomLootRange(1,5,1,0.6f,new[] { "Backpack" }),
             ["Mini"] = new AffixData
                 {
                     Name = LocalizationManager.GetText("Affix_Mini_Name", "迷你"),
@@ -329,12 +326,11 @@ namespace EliteEnemies
                     Rarity = AffixRarity.Rare
                 }
                 .WithLootGroup(
-                    new LootEntry(444, 1, 2, 0.8f), // 红包
-                    new LootEntry(446, 1, 1, 0.07f), // 铜钱串
-                    new LootEntry(447, 1, 1, 0.5f), // 中国结
-                    new LootEntry(448, 1, 1, 0.3f) // 红灯笼
+                    new LootEntry(444, 1, 2, 1f), // 红包
+                    new LootEntry(446, 1, 1, 0.1f), // 铜钱串
+                    new LootEntry(447, 1, 1, 0.8f), // 中国结
+                    new LootEntry(448, 1, 1, 0.5f) // 红灯笼
                 ),
-
             ["Undead"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Undead_Name", "不死"),
@@ -345,11 +341,10 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare
             }.WithLootGroup(
-                new LootEntry(963, 1, 1, 0.4f), // 生命图腾1
-                new LootEntry(961, 1, 1, 0.2f), // 生命图腾2
-                new LootEntry(962, 1, 1, 0.1f) // 生命图腾3
+                new LootEntry(963, 1, 1, 0.6f), // 生命图腾1
+                new LootEntry(961, 1, 1, 0.4f), // 生命图腾2
+                new LootEntry(962, 1, 1, 0.2f) // 生命图腾3
             ),
-
             ["MimicTear"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_MimicTear_Name", "仿身泪滴"),
@@ -360,7 +355,6 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary,
             },
-
             ["Split"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Split_Name", "分裂"),
@@ -370,8 +364,7 @@ namespace EliteEnemies
                 DamageMultiplier = 0.8f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
-            }.WithRandomLoot(-1, 1, 1f, new[] { "Luxury" }),
-
+            }.WithRandomLoot(-1, 1, 1f, new[] { "Totem" }),
             ["Explosive"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Explosive_Name", "自爆"),
@@ -382,7 +375,6 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
             }.WithRandomLoot(-1, 1, 1, new[] { "Explosive" }),
-
             ["Sticky"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Sticky_Name", "粘性"),
@@ -397,7 +389,6 @@ namespace EliteEnemies
                 new LootEntry(833, 1, 1, 1f), // 万能胶A 
                 new LootEntry(834, 1, 1, 1f) // 万能胶B
             ),
-
             ["TimeStop"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_TimeStop_Name", "时停"),
@@ -408,9 +399,10 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
             }.WithLootGroup(
-                new LootEntry(51, 1, 1, 1f) // 钟
+                new LootEntry(51, 1, 1, 1f), // 钟
+                new LootEntry(83, 1, 1, 1f), // 紫色怀表
+                new LootEntry(385, 1, 1, 1f) // 怀表
             ),
-
             ["MagazineCurse"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_MagazineCurse_Name", "弹匣诅咒"),
@@ -430,7 +422,6 @@ namespace EliteEnemies
                 new LootEntry(837, 1, 1, 0.6f), // BR快速弹匣1
                 new LootEntry(838, 1, 1, 0.3f) // BR快速弹匣2
             ),
-
             ["Knockback"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Knockback_Name", "击飞"),
@@ -439,17 +430,16 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Epic
             },
-
             ["Chaos"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Chaos_Name", "混沌"),
                 Description = LocalizationManager.GetText("Affix_Chaos_Description", "攻击随机产生异常效果"),
                 Color = new Color(0.58f, 0.0f, 0.83f),
                 HealthMultiplier = 1.2f,
-                DamageMultiplier = 1.0f,
-                MoveSpeedMultiplier = 1.0f,
+                DamageMultiplier = 1.1f,
+                MoveSpeedMultiplier = 1.1f,
                 Rarity = AffixRarity.Epic,
             }.WithLootGroup(
                 new LootEntry(408, 1, 2, 0.7f), // 电抗性针
@@ -457,7 +447,6 @@ namespace EliteEnemies
                 new LootEntry(1071, 1, 2, 0.7f), // 毒抗针
                 new LootEntry(1072, 1, 2, 0.7f) // 空间抗性针
             ),
-
             ["Vampirism"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Vampirism_Name", "吸血"),
@@ -469,7 +458,6 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare,
             }.WithRandomLootRange(1, 4, 1, 1f, new[] { "Medic" }),
-
             ["Collector"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Collector_Name", "收藏家"),
@@ -479,9 +467,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
-            }.WithRandomLootRange(1, 4, 1, 0.5f, new[] { "Luxury" }),
-
-
+            }.WithRandomLootRange(2, 4, 2, 1f, new[] { "Luxury" }),
             ["Gunsmith"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Gunsmith_Name", "枪匠"),
@@ -491,8 +477,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
-            }.WithRandomLootRange(1, 4, 1, 0.5f, new[] { "Accessory" }),
-
+            }.WithRandomLootRange(2, 4, 1, 1f, new[] { "Accessory" }),
             ["Slime"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Slime_Name", "史莱姆"),
@@ -511,7 +496,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Uncommon
             },
             ["Slow"] = new AffixData
             {
@@ -521,7 +506,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Uncommon
             },
             ["Stun"] = new AffixData
             {
@@ -531,7 +516,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Uncommon
             },
             ["DungEater"] = new AffixData
             {
@@ -541,14 +526,14 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Epic
+                Rarity = AffixRarity.Rare
             },
             ["Hardening"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Hardening_Name", "硬化"),
                 Description = LocalizationManager.GetText("Affix_Hardening_Description", "受伤随机增加护甲值"),
                 Color = new Color(0.7f, 0.7f, 0.7f), // 灰色
-                HealthMultiplier = 1.0f,
+                HealthMultiplier = 1.4f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon

@@ -17,9 +17,9 @@ namespace EliteEnemies.AffixBehaviors
         private static readonly int MinSplitCount = 2;
         private static readonly int MaxSplitCount = 4;
         private static readonly float SplitRadius = 2.0f;
-        private static readonly float SplitHealthRatio = 0.5f;
+        private static readonly float SplitHealthRatio = 0.6f;
         private static readonly float SplitDamageRatio = 0.7f;
-        private static readonly float SplitSpeedRatio = 1.1f;
+        private static readonly float SplitSpeedRatio = 1.15f;
 
         private CharacterMainControl _originalCharacter;
         private bool _hasSplit = false;

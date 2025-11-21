@@ -31,9 +31,7 @@ namespace EliteEnemies
         private static readonly Dictionary<string, (float dropRatePenalty, int qualityDowngrade)> WeakEnemyPenalties =
             new Dictionary<string, (float, int)>
             {
-                { "Cname_Scav", (0.5f, 1) },
-                { "Cname_ScavRage", (0.6f, 1) },
-                { "Cname_Wolf", (0.6f, 1) },
+                { "Cname_Scav", (0.7f, 1) }
             };
 
         /// <summary>
@@ -259,7 +257,7 @@ namespace EliteEnemies
                 // BOSS必定掉落品阶4-7
                 minQuality = 3;
                 maxQuality = 7;
-                dropChance = 0.6f;
+                dropChance = 0.7f;
             }
             else
             {
@@ -276,12 +274,12 @@ namespace EliteEnemies
                     case 2:
                         minQuality = 2;
                         maxQuality = 5;
-                        dropChance = 0.3f;
+                        dropChance = 0.4f;
                         break;
                     default: // 3+
                         minQuality = 2;
                         maxQuality = 6;
-                        dropChance = 0.4f;
+                        dropChance = 0.6f;
                         break;
                 }
             }

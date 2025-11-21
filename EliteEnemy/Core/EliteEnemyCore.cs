@@ -28,7 +28,7 @@ namespace EliteEnemies
             "Cname_StormVirus", "Cname_MonsterClimb", "Cname_Raider", "Cname_LabTestObjective",
             "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child", "Cname_Ghost", "Cname_XING"
         };
-        
+
         // 风暴生物临时移动到 Boss列表
         internal static readonly HashSet<string> BossPresets = new HashSet<string>
         {
@@ -53,7 +53,7 @@ namespace EliteEnemies
             {
                 ["MimicTear"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "Cname_Scav", "Cname_Usec", "Cname_Raider",
+                    "Cname_Scav", "Cname_Usec", "Cname_Raider", "Cname_BALeader_Child", "Cname_3Shot_Child"
                 },
             };
 
@@ -266,7 +266,7 @@ namespace EliteEnemies
                 string localized = preset.nameKey.ToPlainText();
                 if (!string.IsNullOrEmpty(localized)) return localized;
             }
-            
+
             string rawName = cmc.name ?? "未知敌人";
             rawName = rawName.Replace("(Clone)", "").Trim();
 

@@ -12,11 +12,11 @@ namespace EliteEnemies.AffixBehaviors
         public override string AffixName => "Slime";
 
         // ===== 体型与属性配置 =====
-        private static readonly float InitialScale       = 3f;   // 初始体型倍率
+        private static readonly float InitialScale       = 3.5f;   // 初始体型倍率
         private static readonly float MinScale           = 0.5f; // 最小体型倍率
-        private static readonly float InitialHealthMult  = 3f;   // 初始血量倍率
+        private static readonly float InitialHealthMult  = 3.5f;   // 初始血量倍率
         private static readonly float InitialDamageMult  = 0.4f; // 初始伤害倍率
-        private static readonly float MaxDamageMult      = 1.2f; // 最大伤害倍率
+        private static readonly float MaxDamageMult      = 1.6f; // 最大伤害倍率
         private static readonly float HealthThreshold    = 0.05f; // 血量变化达到 5% 才更新
 
         // ===== 跳跃相关配置 =====

@@ -16,7 +16,7 @@ namespace EliteEnemies.AffixBehaviors
         // 都是static函数 要么 const 要么 static readonly
         private static readonly string BuffName = "EliteBuff_Stun";
         private static readonly int BuffId = 99903;
-        private static readonly float BuffDuration = 5f;
+        private static readonly float BuffDuration = 8f;
         private static readonly bool BuffLimitedLifeTime = true;
 
         private static readonly EliteBuffFactory.BuffConfig BuffConfig =

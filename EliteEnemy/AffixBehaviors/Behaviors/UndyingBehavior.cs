@@ -13,7 +13,7 @@ namespace EliteEnemies.AffixBehaviors
         public override string AffixName => "Undead";
         
         private static readonly float ThresholdRatio = 0.2f; // 触发阈值 (20%)
-        private static readonly float HealTargetRatio = 0.5f; // 回血目标 (50%)
+        private static readonly float HealTargetRatio = 0.7f; // 回血目标 (50%)
         private static readonly float InvincibleDuration = 2.5f; // 无敌时间
         
         private CharacterMainControl _owner;
