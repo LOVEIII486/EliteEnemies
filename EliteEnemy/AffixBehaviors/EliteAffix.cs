@@ -6,8 +6,8 @@ namespace EliteEnemies
     public enum AffixRarity
     {
         Common = 100, // 普通 - 权重 100 - 基础词缀
-        Uncommon = 60, // 高级 - 权重 50 - 略强词缀
-        Rare = 40, // 稀有 - 权重 20 - 强力词缀
+        Uncommon = 50, // 高级 - 权重 50 - 略强词缀
+        Rare = 35, // 稀有 - 权重 20 - 强力词缀
         Epic = 20, // 史诗 - 权重 10 - 极强词缀
         Legendary = 10 // 传说 - 权重 5 - 顶级词缀
     }
