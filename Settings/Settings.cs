@@ -24,6 +24,12 @@ namespace EliteEnemies.Settings
             public const int MinAffixWeight = 0;
             public const int MaxAffixWeight = 100;
         }
+        
+        public enum AffixTextDisplayPosition
+        {
+            Overhead,
+            Underfoot
+        }
 
         // 默认禁用的词缀名单
         private static readonly HashSet<string> DefaultDisabledAffixes = new HashSet<string>
@@ -46,6 +52,7 @@ namespace EliteEnemies.Settings
 
         public static bool ShowEliteName { get; private set; }
         public static bool ShowDetailedHealth { get; private set; }
+        public static AffixTextDisplayPosition AffixDisplayPosition { get; private set; } = AffixTextDisplayPosition.Overhead;
 
         // 词条数量权重
         public static int AffixWeight1 { get; private set; }
@@ -61,7 +68,6 @@ namespace EliteEnemies.Settings
         /// </summary>
         public static void Init()
         {
-            // ============ 关键修改：使用 ModSettingAPI ============
             if (ModSettingAPI.HasConfig())
             {
                 LoadFromConfig();
@@ -77,7 +83,6 @@ namespace EliteEnemies.Settings
 
         private static void LoadFromConfig()
         {
-            // ============ 关键修改：使用 ModSettingAPI.GetSavedValue ============
             NormalEliteChance = ModSettingAPI.GetSavedValue<float>("NormalEliteChance", out float normal)
                 ? normal
                 : 1.0f;
@@ -113,6 +118,21 @@ namespace EliteEnemies.Settings
             ShowDetailedHealth = ModSettingAPI.GetSavedValue<bool>("ShowDetailedHealth", out bool showHealth)
                 ? showHealth
                 : true;
+            if (ModSettingAPI.GetSavedValue<string>("AffixDisplayPosition", out string adp))
+            {
+                if (System.Enum.TryParse<AffixTextDisplayPosition>(adp, out var position))
+                {
+                    AffixDisplayPosition = position;
+                }
+                else
+                {
+                    AffixDisplayPosition = AffixTextDisplayPosition.Overhead;
+                }
+            }
+            else
+            {
+                AffixDisplayPosition = AffixTextDisplayPosition.Overhead;
+            }
 
             AffixWeight1 = ModSettingAPI.GetSavedValue<int>("AffixWeight1", out int w1)
                 ? Mathf.Clamp(w1, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
@@ -157,6 +177,7 @@ namespace EliteEnemies.Settings
 
             ShowEliteName = true;
             ShowDetailedHealth = true;
+            AffixDisplayPosition = AffixTextDisplayPosition.Overhead;
 
             AffixWeight1 = 50;
             AffixWeight2 = 30;
@@ -271,6 +292,15 @@ namespace EliteEnemies.Settings
             NotifyConfigChanged();
         }
 
+        public static void SetAffixDisplayPosition(string value)
+        {
+            if (System.Enum.TryParse<AffixTextDisplayPosition>(value, out var position))
+            {
+                AffixDisplayPosition = position;
+                NotifyConfigChanged();
+            }
+        }
+
         public static void SetAffixWeight1(int value)
         {
             AffixWeight1 = Mathf.Clamp(value, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight);
@@ -352,6 +382,7 @@ namespace EliteEnemies.Settings
 
                 ShowEliteName = ShowEliteName,
                 ShowDetailedHealth = ShowDetailedHealth,
+                AffixDisplayPosition = AffixDisplayPosition,
 
                 DisabledAffixes = GetDisabledAffixBlacklist(),
                 AffixCountWeights = new int[]

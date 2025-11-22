@@ -2,6 +2,7 @@
 using UnityEngine;
 using Duckov.UI;
 using Duckov.Utilities;
+using EliteEnemies.Settings;
 using TMPro;
 
 namespace EliteEnemies.VisualEffects
@@ -276,9 +277,13 @@ namespace EliteEnemies.VisualEffects
         /// </summary>
         private void CreateAffixTextObject()
         {
+            // ============ 根据配置决定词缀文本的位置 ============
+            bool showAbove = EliteEnemyCore.Config.AffixDisplayPosition == GameConfig.AffixTextDisplayPosition.Overhead;
+            float yOffset = showAbove ? 55f : -125f;
+
             _affixTextContainer = new GameObject("EliteAffixTextObj");
             _affixTextContainer.transform.SetParent(_ownerBar.transform);
-            _affixTextContainer.transform.localPosition = new Vector3(0f, 55f, 0f);
+            _affixTextContainer.transform.localPosition = new Vector3(0f, yOffset, 0f);
             _affixTextContainer.transform.localScale = Vector3.one;
             _affixTextContainer.transform.localRotation = Quaternion.identity;
 
@@ -292,7 +297,7 @@ namespace EliteEnemies.VisualEffects
     
             _affixLabel.alignment = TextAlignmentOptions.Center;
             _affixLabel.fontSizeMin = 20f;
-            _affixLabel.fontSizeMax = 26f;
+            _affixLabel.fontSizeMax = 24f;
             _affixLabel.enableAutoSizing = true;
             _affixLabel.fontStyle = FontStyles.Bold;
             _affixLabel.enableWordWrapping = false;
@@ -337,8 +342,8 @@ namespace EliteEnemies.VisualEffects
             
             _healthValueLabel.fontWeight = FontWeight.Black;
             _healthValueLabel.fontMaterial.EnableKeyword("OUTLINE_ON");
-            _healthValueLabel.outlineWidth = 0.5f;
-            _healthValueLabel.outlineColor = new Color(0.9f, 0.9f, 1.0f);
+            _healthValueLabel.outlineWidth = 0.4f;
+            _healthValueLabel.outlineColor = new Color(0.1f, 0.1f, 0.1f);
         }
 
         /// <summary>

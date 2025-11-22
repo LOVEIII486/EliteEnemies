@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EliteEnemies.Settings;
 
 namespace EliteEnemies
 {
@@ -22,7 +23,6 @@ namespace EliteEnemies
         
         public bool ShowEliteName { get; set; } = true;
         public bool ShowDetailedHealth { get; set; } = true;
-        public bool ShowAffixFootText { get; set; } = false;
-        public float AffixFootTextFontSize { get; set; } = 35f;
+        public GameConfig.AffixTextDisplayPosition AffixDisplayPosition { get; set; } = GameConfig.AffixTextDisplayPosition.Overhead;
     }
 }

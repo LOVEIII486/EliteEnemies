@@ -114,6 +114,22 @@ namespace EliteEnemies.Settings
                 enable: GameConfig.ShowDetailedHealth,
                 onValueChange: GameConfig.SetShowDetailedHealth
             );
+            
+            var displayPositionOptions = new List<string>
+            {
+                "Overhead",
+                "Underfoot"
+            };
+            
+            string currentPosition = GameConfig.AffixDisplayPosition.ToString();
+            
+            ModSettingAPI.AddDropdownList(
+                key: "AffixDisplayPosition",
+                description: LocalizationManager.GetText("Settings_AffixDisplayPosition"),
+                options: displayPositionOptions,
+                defaultValue: currentPosition,
+                onValueChange: GameConfig.SetAffixDisplayPosition
+            );
         }
         
         // 全局属性调整
@@ -251,6 +267,7 @@ namespace EliteEnemies.Settings
                 {
                     "ShowEliteName",
                     "ShowDetailedHealth",
+                    "AffixDisplayPosition",
                 },
                 scale: GroupScale,
                 topInsert: GroupTopInsert,
