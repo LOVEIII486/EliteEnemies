@@ -289,7 +289,7 @@ namespace EliteEnemies
                 HealthMultiplier = 0.7f,
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Uncommon
+                Rarity = AffixRarity.Rare
             }.WithLootGroup(
                 new LootEntry(660, 1, 1, 1f) // 烟雾弹
             ).WithLootGroup(
