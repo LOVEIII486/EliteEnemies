@@ -3,6 +3,7 @@ using UnityEngine;
 using Duckov.UI;
 using Duckov.Utilities;
 using EliteEnemies.Settings;
+using EliteEnemies.AffixBehaviors;
 using TMPro;
 
 namespace EliteEnemies.VisualEffects
@@ -145,11 +146,20 @@ namespace EliteEnemies.VisualEffects
             {
                 // === 分离前缀和名字 ===
                 
+                bool hasObscurer = _cachedMarker.Affixes != null && _cachedMarker.Affixes.Contains("Obscurer");
+                
                 // 词缀前缀处理
                 _cachedAffixPrefix = "";
                 if (_cachedMarker.Affixes != null && _cachedMarker.Affixes.Count > 0)
                 {
-                    _cachedAffixPrefix = EliteEnemyCore.BuildColoredPrefix(_cachedMarker.Affixes);
+                    if (hasObscurer)
+                    {
+                        _cachedAffixPrefix = "<OBSCURER_PLACEHOLDER>";
+                    }
+                    else
+                    {
+                        _cachedAffixPrefix = EliteEnemyCore.BuildColoredPrefix(_cachedMarker.Affixes);
+                    }
                 }
 
                 // 基础名字解析
@@ -200,16 +210,29 @@ namespace EliteEnemies.VisualEffects
             // === 2. 更新词缀标签 ===
             if (!string.IsNullOrEmpty(_cachedAffixPrefix))
             {
-                // 确保词缀文本对象存在
                 if (_affixTextContainer == null)
                 {
                     CreateAffixTextObject();
                 }
-                
-                if (_affixLabel != null && _lastAffixText != _cachedAffixPrefix)
+    
+                if (_affixLabel != null)
                 {
-                    _affixLabel.text = _cachedAffixPrefix;
-                    _lastAffixText = _cachedAffixPrefix;
+                    string displayText = _cachedAffixPrefix;
+        
+                    // 检查是否是封弊者占位符
+                    if (displayText == "<OBSCURER_PLACEHOLDER>")
+                    {
+                        string garbled = ObscurerBehavior.GetCurrentGarbledText(_cachedCmc);
+                        string color = ObscurerBehavior.GetCurrentRandomColor(_cachedCmc);
+                        displayText = $"<color={color}>[{garbled}]</color>";
+                    }
+        
+                    // 强制每帧更新
+                    if (displayText != _lastAffixText || _cachedAffixPrefix == "<OBSCURER_PLACEHOLDER>")
+                    {
+                        _affixLabel.text = displayText;
+                        _lastAffixText = displayText;
+                    }
                 }
             }
             else
@@ -227,7 +250,6 @@ namespace EliteEnemies.VisualEffects
             // === 3. 处理血量显示 ===
             if (!showDetail)
             {
-                // 不显示详细血量 - 销毁血量文本对象
                 if (_healthTextContainer != null)
                 {
                     Destroy(_healthTextContainer);
@@ -237,10 +259,8 @@ namespace EliteEnemies.VisualEffects
                 return;
             }
 
-            // 显示详细血量 - 动态血量模式
             if (_cachedCmc.Health == null) return;
 
-            // 确保血量文本对象存在
             if (_healthTextContainer == null)
             {
                 CreateHealthTextObject();

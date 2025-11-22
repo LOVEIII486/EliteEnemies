@@ -115,3 +115,5 @@ Affix_MandarinDuck_MateSuffix,Partner,2.2,AffixBehavior
 Affix_Revenge_Name,Revenge,2.2,AffixNames
 Affix_Revenge_Description,When damaged  the enemy retaliates by firing bullets at the attacker.,2.2,AffixBehavior
 Settings_AffixDisplayPosition,Affix Display Position,2.3,VisualSettings
+Affix_Obscurer_Name,Obscurer,2.3,AffixNames
+Affix_Obscurer_Description,Hides all affix names showing garbled text,2.3,AffixDescription

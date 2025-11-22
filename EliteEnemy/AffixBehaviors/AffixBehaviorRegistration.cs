@@ -32,6 +32,7 @@ namespace EliteEnemies.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<PhaseSwapBehavior>();
             AffixBehaviorManager.RegisterBehavior<MandarinDuckBehavior>();
             AffixBehaviorManager.RegisterBehavior<RevengeBehavior>();
+            AffixBehaviorManager.RegisterBehavior<ObscurerBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }

@@ -179,8 +179,8 @@ namespace EliteEnemies
                 new LootEntry(324, 1, 1, 0.1f), // 轻盈图腾 2
                 new LootEntry(992, 1, 1, 0.05f) // 轻盈图腾 3
             ).WithLootGroup(
-                new LootEntry(137, 1, 2, 0.7f), // 黄针 1-3
-                new LootEntry(398, 1, 2, 0.5f) // 负重针剂 1-2
+                new LootEntry(137, 1, 2, 0.6f), // 黄针 1-3
+                new LootEntry(398, 1, 2, 0.4f) // 负重针剂 1-2
             ),
             ["Berserk"] = new AffixData
             {
@@ -195,7 +195,7 @@ namespace EliteEnemies
                 new LootEntry(320, 1, 1, 0.1f), // 进击图腾 2
                 new LootEntry(957, 1, 1, 0.05f) // 进击图腾 3
             ).WithLootGroup(
-                new LootEntry(438, 1, 2, 0.6f) // 热血针剂
+                new LootEntry(438, 1, 2, 0.5f) // 热血针剂
             ),
             ["GlassCannon"] = new AffixData
             {
@@ -317,7 +317,7 @@ namespace EliteEnemies
                 new LootEntry(995, 1, 1, 0.4f), // 健壮图腾1
                 new LootEntry(994, 1, 1, 0.2f), // 健壮图腾2
                 new LootEntry(325, 1, 1, 0.1f) // 健壮图腾3
-            ).WithRandomLootRange(1,5,1,0.6f,new[] { "Backpack" }),
+            ).WithRandomLootRange(1,5,1,0.5f,new[] { "Backpack" }),
             ["Mini"] = new AffixData
                 {
                     Name = LocalizationManager.GetText("Affix_Mini_Name", "迷你"),
@@ -342,9 +342,9 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare
             }.WithLootGroup(
-                new LootEntry(963, 1, 1, 0.6f), // 生命图腾1
-                new LootEntry(961, 1, 1, 0.4f), // 生命图腾2
-                new LootEntry(962, 1, 1, 0.2f) // 生命图腾3
+                new LootEntry(963, 1, 1, 0.4f), // 生命图腾1
+                new LootEntry(961, 1, 1, 0.2f), // 生命图腾2
+                new LootEntry(962, 1, 1, 0.1f) // 生命图腾3
             ),
             ["MimicTear"] = new AffixData
             {
@@ -444,7 +444,7 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Vampirism_Name", "吸血"),
                 Description = LocalizationManager.GetText("Affix_Vampirism_Description"),
-                HealthMultiplier = 1.4f,
+                HealthMultiplier = 1.5f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare,
@@ -554,8 +554,8 @@ namespace EliteEnemies
             }.WithRandomLoot(-1, 1, 1f, new[] { "Accessory" }),
             ["Revenge"] = new AffixData
             {
-                Name = LocalizationManager.GetText("Affix_Revenge_Name", "报复"),
-                Description = LocalizationManager.GetText("Affix_Revenge_Description", "受伤时发射子弹反击"),
+                Name = LocalizationManager.GetText("Affix_Revenge_Name"),
+                Description = LocalizationManager.GetText("Affix_Revenge_Description"),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -563,6 +563,15 @@ namespace EliteEnemies
             }.WithLootGroup(
                 new LootEntry(326, 1, 1, 0.5f)// 火箭弹
             ).WithRandomLootRange(3, 5, 2, 1f, new[] { "Bullet" }),
+            ["Obscurer"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Obscurer_Name"),
+                Description = LocalizationManager.GetText("Affix_Obscurer_Description"),
+                HealthMultiplier = 1.4f,
+                DamageMultiplier = 1.2f,
+                MoveSpeedMultiplier = 1.1f,
+                Rarity = AffixRarity.Epic
+            }.WithRandomLoot(-1, 1, 0.3f, new[] { "MiniGame" }),
         };
 
 

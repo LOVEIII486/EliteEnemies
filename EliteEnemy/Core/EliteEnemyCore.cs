@@ -133,6 +133,42 @@ namespace EliteEnemies
                 selected.Add(chosen);
                 available.Remove(chosen);
             }
+            
+            if (selected.Contains("Obscurer"))
+            {
+                // 确保封弊者不是唯一词条
+                if (selected.Count < maxCount && selected.Count < 5) // 最多5个词条
+                {
+                    // 重新构建可用词条列表
+                    var extraAvailable = new List<string>(EliteAffixes.Pool.Keys);
+                    extraAvailable.RemoveAll(a => selected.Contains(a));
+                    extraAvailable.RemoveAll(n => !IsAffixAllowedForPreset(n, nameKey));
+                    if (_config.DisabledAffixes != null && _config.DisabledAffixes.Count > 0)
+                    {
+                        var disabled = new HashSet<string>(_config.DisabledAffixes, StringComparer.OrdinalIgnoreCase);
+                        extraAvailable.RemoveAll(key => disabled.Contains(key));
+                    }
+                    extraAvailable.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
+            
+                    if (extraAvailable.Count > 0)
+                    {
+                        // 随机添加额外词条
+                        int extraCount = UnityEngine.Random.Range(1, 4);
+                        extraCount = Mathf.Min(extraCount, extraAvailable.Count);
+                        extraCount = Mathf.Min(extraCount, maxCount - selected.Count);
+                
+                        for (int i = 0; i < extraCount; i++)
+                        {
+                            if (extraAvailable.Count == 0) break;
+                            string extra = SelectWeightedRandom(extraAvailable);
+                            selected.Add(extra);
+                            extraAvailable.Remove(extra);
+                            extraAvailable.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
+                        }
+                        Debug.Log($"[EliteEnemies.Core] 封弊者触发，额外添加 {extraCount} 个词条");
+                    }
+                }
+            }
 
             return selected;
         }
