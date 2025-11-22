@@ -351,8 +351,8 @@ namespace EliteEnemies
                 Description = LocalizationManager.GetText("Affix_MimicTear_Description", "复制玩家主手武器与装备（不会掉落）"),
                 Color = new Color(0.2f, 0.7f, 1.0f),
                 HealthMultiplier = 1.5f,
-                DamageMultiplier = 1.0f,
-                MoveSpeedMultiplier = 1.0f,
+                DamageMultiplier = 1.1f,
+                MoveSpeedMultiplier = 1.1f,
                 Rarity = AffixRarity.Legendary,
             },
             ["Split"] = new AffixData

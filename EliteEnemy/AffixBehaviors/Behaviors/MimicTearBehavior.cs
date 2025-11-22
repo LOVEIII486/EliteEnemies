@@ -44,28 +44,32 @@ namespace EliteEnemies.AffixBehaviors
             {
                 enemy.ChangeHoldItem(clonedPrimary);
 
-                if (clonedPrimary.Variables != null)
-                {
-                    clonedPrimary.Variables.SetInt("BulletCount", 9999);
-                }
-
+                // 4.1 获取枪械组件并确保有子弹
                 var gunComponent = clonedPrimary.GetComponent<ItemSetting_Gun>();
                 if (gunComponent != null)
                 {
-                    var field = gunComponent.GetType()
-                        .GetField("_bulletCountCache", BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (field != null)
+                    Item currentBullet = gunComponent.GetCurrentLoadedBullet();
+        
+                    if (currentBullet != null)
                     {
-                        field.SetValue(gunComponent, 9999);
+                        currentBullet.StackCount = 100;
+                        ForceUpdateBulletCount(clonedPrimary, gunComponent);
+                        //Debug.Log($"[MimicTear] 已为 {clonedPrimary.DisplayName} 设置初始弹药 x10，当前: {gunComponent.BulletCount}");
                     }
+                    else
+                    {
+                        EnsureGunHasBullet(clonedPrimary, gunComponent, enemy);
+                    }
+                    enemy.OnShootEvent += _ => RefillAmmoIfNeeded(clonedPrimary, gunComponent);
                 }
             }
 
             // 5 复制玩家模型
             //CopyPlayerModel(enemy);
-            // 6 强化AI
-            EnhanceAIBehavior(enemy); // 快速传送会导致敌人AI来不及加载
             
+            // 6 强化AI
+            EnhanceAIBehavior(enemy);
+                
             // 7 死亡前清空掉落
             _lootHook = delegate(DamageInfo _) { SafeClearAllDrops(_owner); };
             enemy.BeforeCharacterSpawnLootOnDead += _lootHook;
@@ -85,6 +89,215 @@ namespace EliteEnemies.AffixBehaviors
         }
         
         /// <summary>
+        /// 弹药补充方法
+        /// </summary>
+        private void RefillAmmoIfNeeded(Item gunItem, ItemSetting_Gun gunComponent)
+        {
+            try
+            {
+                // 先强制刷新弹药计数
+                int actualCount = gunComponent.GetBulletCount();
+        
+                // 弹匣剩余子弹少于10发时补充
+                if (actualCount < 10)
+                {
+                    int bulletTypeId = gunComponent.TargetBulletID;
+                    if (bulletTypeId <= 0) return;
+            
+                    Item newBullet = ItemAssetsCollection.InstantiateSync(bulletTypeId);
+                    if (newBullet != null)
+                    {
+                        newBullet.Initialize();
+                        newBullet.Inspected = true;
+                        newBullet.StackCount = 100;
+                        gunItem.Inventory.AddAndMerge(newBullet);
+                
+                        // 强制刷新内部缓存
+                        ForceUpdateBulletCount(gunItem, gunComponent);
+                
+                        // Debug.Log($"[MimicTear] 补充弹药成功，当前: {gunComponent.BulletCount}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MimicTear] 补充弹药异常: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 确保枪械有可用的子弹
+        /// </summary>
+        private void EnsureGunHasBullet(Item gunItem, ItemSetting_Gun gunComponent, CharacterMainControl owner)
+        {
+            try
+            {
+                // 检查枪械当前是否有子弹
+                Item currentBullet = gunComponent.GetCurrentLoadedBullet();
+                if (currentBullet != null)
+                {
+                    // 已有子弹，确保堆叠数量足够并刷新计数
+                    if (currentBullet.StackCount < 100)
+                    {
+                        currentBullet.StackCount = 100;
+                    }
+                    ForceUpdateBulletCount(gunItem, gunComponent);
+                    return;
+                }
+
+                // 尝试从枪械预制体获取默认子弹
+                Item bulletToAdd = GetDefaultBulletForGun(gunItem);
+                if (bulletToAdd == null)
+                {
+                    Debug.LogWarning($"[MimicTear] 无法为枪械 {gunItem.DisplayName} 找到合适的子弹");
+                    return;
+                }
+
+                // 添加子弹到枪械的 Inventory
+                bulletToAdd.Inspected = true;
+                bulletToAdd.StackCount = 100;
+                gunItem.Inventory.AddAndMerge(bulletToAdd);
+        
+                // 强制刷新计数
+                ForceUpdateBulletCount(gunItem, gunComponent);
+        
+                // 尝试重新装填
+                owner.TryToReload();
+
+                //Debug.Log($"[MimicTear] 为枪械 {gunItem.DisplayName} 添加了子弹 {bulletToAdd.DisplayName}，当前弹药: {gunComponent.BulletCount}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[MimicTear] 添加子弹失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取枪械的默认子弹
+        /// </summary>
+        private Item GetDefaultBulletForGun(Item gunItem)
+        {
+            try
+            {
+                // 从枪械预制体获取弹道信息
+                Item gunPrefab = ItemAssetsCollection.GetPrefab(gunItem.TypeID);
+                if (gunPrefab == null)
+                {
+                    Debug.LogWarning($"[MimicTear] 无法获取枪械预制体: {gunItem.TypeID}");
+                    return null;
+                }
+
+                ItemSetting_Gun gunSetting = gunPrefab.GetComponent<ItemSetting_Gun>();
+                if (gunSetting == null || gunSetting.bulletPfb == null)
+                {
+                    Debug.LogWarning($"[MimicTear] 枪械预制体没有子弹信息");
+                    return null;
+                }
+
+                // 获取子弹的 TypeID
+                int bulletTypeId = gunSetting.TargetBulletID;
+                
+                if (bulletTypeId <= 0)
+                {
+                    // 如果没有设置目标子弹，尝试从口径信息推断
+                    //Debug.LogWarning($"[MimicTear] 枪械 {gunItem.DisplayName} 没有设置目标子弹类型");
+                    
+                    // 尝试使用一个通用的子弹ID
+                    bulletTypeId = TryGetCommonBulletId(gunSetting);
+                }
+
+                if (bulletTypeId <= 0)
+                {
+                    return null;
+                }
+                
+                Item bulletItem = ItemAssetsCollection.InstantiateSync(bulletTypeId);
+                if (bulletItem != null)
+                {
+                    bulletItem.Initialize();
+                }
+
+                return bulletItem;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[MimicTear] 获取默认子弹失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 尝试根据口径获取通用子弹ID
+        /// </summary>
+        private int TryGetCommonBulletId(ItemSetting_Gun gunSetting)
+        {
+            try
+            {
+                // 获取口径信息
+                int caliberHash = "Caliber".GetHashCode();
+                string caliber = gunSetting.Item.Constants.GetString(caliberHash);
+
+                if (string.IsNullOrEmpty(caliber))
+                {
+                    return -1;
+                }
+
+                // 常见口径的子弹ID
+                var caliberToBulletId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "S", 598 },
+                    { "AR", 607 },
+                    { "SHT", 634 },
+                    { "L", 616 },
+                    { "SNP", 701 },
+                    { "MAG", 709 },
+                    { "PWS", 1162 },
+                };
+
+                if (caliberToBulletId.TryGetValue(caliber, out int bulletId))
+                {
+                    return bulletId;
+                }
+
+                Debug.LogWarning($"[MimicTear] 未找到口径 {caliber} 对应的子弹ID");
+                return -1;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[MimicTear] 获取通用子弹ID失败: {ex.Message}");
+                return -1;
+            }
+        }
+        
+        private void ForceUpdateBulletCount(Item gunItem, ItemSetting_Gun gunComponent)
+        {
+            try
+            {
+                // 1. 从 Inventory 重新计算实际子弹数量
+                int actualCount = gunComponent.GetBulletCount();
+        
+                // 2. 更新 Variables（界面显示用）
+                int bulletCountHash = "BulletCount".GetHashCode();
+                if (gunItem.Variables != null)
+                {
+                    gunItem.Variables.SetInt(bulletCountHash, actualCount);
+                }
+        
+                // 3. 更新内部缓存字段
+                var cacheField = gunComponent.GetType()
+                    .GetField("_bulletCountCache", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (cacheField != null)
+                {
+                    cacheField.SetValue(gunComponent, actualCount);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MimicTear] 更新弹药计数失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
         /// 全面强化 AI 行为
         /// </summary>
         private void EnhanceAIBehavior(CharacterMainControl enemy)
@@ -93,18 +306,29 @@ namespace EliteEnemies.AffixBehaviors
             {
                 [AIFieldModifier.Fields.ReactionTime] = 0.15f,
                 [AIFieldModifier.Fields.ShootDelay] = 0.2f,
+                
                 [AIFieldModifier.Fields.ShootCanMove] = 1f,
                 [AIFieldModifier.Fields.CanDash] = 1f,
+                [AIFieldModifier.Fields.DefaultWeaponOut] = 1f,
+                
                 [AIFieldModifier.Fields.SightDistance] = 1.5f,
                 [AIFieldModifier.Fields.SightAngle] = 1.3f,
                 [AIFieldModifier.Fields.HearingAbility] = 1.5f,
+                [AIFieldModifier.Fields.ForceTracePlayerDistance] = 2f,
                 [AIFieldModifier.Fields.NightReactionTimeFactor] = 0.5f,
+                
+                [AIFieldModifier.Fields.PatrolRange] = 1.3f,
+                [AIFieldModifier.Fields.CombatMoveRange] = 1.5f,
+                [AIFieldModifier.Fields.ForgetTime] = 0.6f,
+                
                 [AIFieldModifier.Fields.PatrolTurnSpeed] = 1.3f,
-                [AIFieldModifier.Fields.CombatTurnSpeed] = 1.5f
+                [AIFieldModifier.Fields.CombatTurnSpeed] = 1.5f,
+                
+                [AIFieldModifier.Fields.ItemSkillChance] = 1.5f,
+                [AIFieldModifier.Fields.ItemSkillCoolTime] = 0.6f,
             };
- 
+
             AIFieldModifier.ModifyDelayedBatch(enemy, aiEnhancements, multiply: true);
-            //Debug.Log($"[MimicTear] 已对 {enemy.characterPreset.nameKey} {enemy.GetHashCode()} 应用全面 AI 强化 (共 {aiEnhancements.Count} 项)");
         }
 
         private static void ClearWeaponSlots(CharacterMainControl c)
