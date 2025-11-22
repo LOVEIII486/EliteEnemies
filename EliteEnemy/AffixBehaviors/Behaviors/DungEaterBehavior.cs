@@ -10,12 +10,11 @@ namespace EliteEnemies.AffixBehaviors
     // 食粪者
     public class DungEaterBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {
-        private const string LogTag = "[EliteEnemies.DungEaterBehavior]";
         public override string AffixName => "DungEater";
 
         private static readonly string BuffName = "EliteBuff_DungEater";
         private static readonly int BuffId = 99904;
-        private static readonly float BuffDuration = 2f;
+        private static readonly float BuffDuration = 3f;
         
         private static readonly EliteBuffFactory.BuffConfig BuffConfig =
             new (BuffName, BuffId, BuffDuration);

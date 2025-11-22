@@ -198,10 +198,11 @@ namespace EliteEnemies
 
         private static Color GetHealthBarColor(int count)
         {
-            if (count <= 0) return ParseColor("#FF4D4D");
-            if (count == 1) return ParseColor("#A673FF");
-            if (count == 2) return ParseColor("#FFD700");
-            return ParseColor("#00FFFF");
+            if (count <= 0) return ParseColor("#FF4D4D");  // 红色
+            if (count == 1) return ParseColor("#A673FF");  // 紫色
+            if (count == 2) return ParseColor("#FFD700");  // 金色
+            if (count == 3) return ParseColor("#FF10F0");  // 霓虹粉
+            return ParseColor("#00FFFF");                   // 青色
         }
 
         private static Gradient CreateSolidGradient(Color color)

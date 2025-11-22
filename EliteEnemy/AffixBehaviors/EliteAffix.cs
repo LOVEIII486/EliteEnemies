@@ -15,6 +15,20 @@ namespace EliteEnemies
     /// <summary>集中管理所有可用词条。</summary>
     public static class EliteAffixes
     {
+        private static readonly Dictionary<AffixRarity, Color> RarityColors = new Dictionary<AffixRarity, Color>
+        {
+            [AffixRarity.Common] = new Color(0.9f, 0.9f, 1.0f),    
+            [AffixRarity.Uncommon] = new Color(0.20f, 1.0f, 0.20f),
+            [AffixRarity.Rare] = new Color(0.25f, 0.71f, 1.0f),  
+            [AffixRarity.Epic] = new Color(0.78f, 0.31f, 1.0f),   
+            [AffixRarity.Legendary] = new Color(1.0f, 0.58f, 0.0f), 
+        };
+        
+        public static Color GetRarityColor(AffixRarity rarity)
+        {
+            return RarityColors.TryGetValue(rarity, out Color color) ? color : Color.white;
+        }
+        
         /// <summary>
         /// 互斥词缀字典：Key = 词缀名，Value = 与该词缀互斥的词缀集合
         /// 注意：互斥关系是双向的，但只需要在其中一个方向定义即可
@@ -120,7 +134,8 @@ namespace EliteEnemies
         {
             public string Name;
             public string Description;
-            public Color Color = Color.white;
+            
+            public Color Color => GetRarityColor(Rarity);
             public string ColorHex => ColorUtility.ToHtmlStringRGB(Color);
             public string ColoredTag => $"<color=#{ColorHex}>[{Name}]</color>";
 
@@ -142,7 +157,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Tanky_Name", "肉盾"),
                 Description = LocalizationManager.GetText("Affix_Tanky_Description", "更耐打但行动迟缓。掉落：重型防弹衣、医疗箱"),
-                Color = new Color(0.902f, 0.494f, 0.133f),
                 HealthMultiplier = 1.8f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 0.7f,
@@ -156,7 +170,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Swift_Name", "迅捷"),
                 Description = LocalizationManager.GetText("Affix_Swift_Description", "移动迅速但较为脆弱。掉落：轻盈图腾、提速针剂"),
-                Color = new Color(0.0f, 0.784f, 1.0f),
                 HealthMultiplier = 0.8f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.5f,
@@ -173,7 +186,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Berserk_Name", "狂暴"),
                 Description = LocalizationManager.GetText("Affix_Berserk_Description"),
-                Color = new Color(1.0f, 0.298f, 0.298f),
                 HealthMultiplier = 0.9f,
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
@@ -189,7 +201,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_GlassCannon_Name", "玻璃大炮"),
                 Description = LocalizationManager.GetText("Affix_GlassCannon_Description", "伤害极高但极其脆弱。掉落：特种穿甲弹"),
-                Color = new Color(1.0f, 0.4f, 0.8f),
                 HealthMultiplier = 0.6f,
                 DamageMultiplier = 1.7f,
                 MoveSpeedMultiplier = 1.2f,
@@ -199,7 +210,6 @@ namespace EliteEnemies
                 {
                     Name = LocalizationManager.GetText("Affix_Fisherman_Name", "钓鱼佬"),
                     Description = LocalizationManager.GetText("Affix_Fisherman_Description", "掉落各种鱼类、鱼饵与鱼竿"),
-                    Color = new Color(0.20f, 0.80f, 0.80f),
                     HealthMultiplier = 1.0f,
                     DamageMultiplier = 1.0f,
                     MoveSpeedMultiplier = 1.0f,
@@ -226,7 +236,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Chef_Name", "厨子"),
                 Description = LocalizationManager.GetText("Affix_Chef_Description", "喜欢美食与饮品，掉落罐头、水、甜点等补给物资"),
-                Color = new Color(0.95f, 0.66f, 0.20f),
                 HealthMultiplier = 1.2f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -236,7 +245,6 @@ namespace EliteEnemies
                 {
                     Name = LocalizationManager.GetText("Affix_Musician_Name", "音乐家"),
                     Description = LocalizationManager.GetText("Affix_Musician_Description", "带着乐器上战场的奇葩，掉落乐器"),
-                    Color = new Color(0.65f, 0.55f, 1.0f),
                     HealthMultiplier = 1.0f,
                     DamageMultiplier = 1.0f,
                     MoveSpeedMultiplier = 1.0f,
@@ -253,7 +261,6 @@ namespace EliteEnemies
                 {
                     Name = LocalizationManager.GetText("Affix_NineDragons_Name", "九龙拉棺"),
                     Description = LocalizationManager.GetText("Affix_NineDragons_Description", "全属性提升 1.3 倍，掉落各种针剂"),
-                    Color = new Color(0.60f, 0.20f, 0.80f),
                     HealthMultiplier = 1.3f,
                     DamageMultiplier = 1.3f,
                     MoveSpeedMultiplier = 1.3f,
@@ -264,7 +271,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Talkative_Name", "话痨"),
                 Description = LocalizationManager.GetText("Affix_Talkative_Description", "战斗中会不断发表随机台词或嘲讽"),
-                Color = new Color(1.0f, 0.412f, 0.706f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -272,10 +278,9 @@ namespace EliteEnemies
             }.WithRandomLootRange(1, 4, 1, 1, new[] { "Daily" }),
             ["Regeneration"] = new AffixData
             {
-                Name = LocalizationManager.GetText("Affix_Regeneration_Name", "再生"),
+                Name = LocalizationManager.GetText("Affix_Regeneration_Name"),
                 Description =
-                    LocalizationManager.GetText("Affix_Regeneration_Description", "持续回复生命，每秒回复约 10 点最大生命值"),
-                Color = new Color(0.2f, 1.0f, 0.3f),
+                    LocalizationManager.GetText("Affix_Regeneration_Description"),
                 HealthMultiplier = 1.5f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -283,9 +288,8 @@ namespace EliteEnemies
             }.WithRandomLoot(-1, 1, 1f, new[] { "Medic" }),
             ["Invisible"] = new AffixData
             {
-                Name = LocalizationManager.GetText("Affix_Invisible_Name", "隐身"),
-                Description = LocalizationManager.GetText("Affix_Invisible_Description", "获得隐身状态，每隔数秒会短暂显形并闪烁几下"),
-                Color = new Color(0.65f, 0.65f, 1.0f),
+                Name = LocalizationManager.GetText("Affix_Invisible_Name"),
+                Description = LocalizationManager.GetText("Affix_Invisible_Description"),
                 HealthMultiplier = 0.7f,
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
@@ -302,9 +306,8 @@ namespace EliteEnemies
             ),
             ["Giant"] = new AffixData
             {
-                Name = LocalizationManager.GetText("Affix_Giant_Name", "巨大化"),
-                Description = LocalizationManager.GetText("Affix_Giant_Description", "敌人变得更大，生命值提升但移动速度降低"),
-                Color = new Color(0.8f, 0.3f, 1.0f),
+                Name = LocalizationManager.GetText("Affix_Giant_Name"),
+                Description = LocalizationManager.GetText("Affix_Giant_Description"),
                 // 血量和速度倍率由行为类动态计算，这里设置为默认值
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
@@ -319,7 +322,6 @@ namespace EliteEnemies
                 {
                     Name = LocalizationManager.GetText("Affix_Mini_Name", "迷你"),
                     Description = LocalizationManager.GetText("Affix_Mini_Description", "敌人变得更小，生命略低但移速略微提升"),
-                    Color = new Color(0.4f, 0.8f, 1.0f),
                     HealthMultiplier = 1.0f,
                     DamageMultiplier = 1.0f,
                     MoveSpeedMultiplier = 1.0f,
@@ -335,7 +337,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Undead_Name", "不死"),
                 Description = LocalizationManager.GetText("Affix_Undead_Description", "残血时短暂无敌 2 s，并恢复至 50% 生命"),
-                Color = new Color(1f, 0.85f, 0.2f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -349,7 +350,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_MimicTear_Name", "仿身泪滴"),
                 Description = LocalizationManager.GetText("Affix_MimicTear_Description", "复制玩家主手武器与装备（不会掉落）"),
-                Color = new Color(0.2f, 0.7f, 1.0f),
                 HealthMultiplier = 1.5f,
                 DamageMultiplier = 1.1f,
                 MoveSpeedMultiplier = 1.1f,
@@ -359,7 +359,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Split_Name", "分裂"),
                 Description = LocalizationManager.GetText("Affix_Split_Description", "敌人残血时召唤数个更弱的分身"),
-                Color = new Color(0.60f, 0.90f, 1.00f),
                 HealthMultiplier = 1.5f,
                 DamageMultiplier = 0.8f,
                 MoveSpeedMultiplier = 1.0f,
@@ -369,7 +368,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Explosive_Name", "自爆"),
                 Description = LocalizationManager.GetText("Affix_Explosive_Description", "死亡后引发小范围爆炸，造成约 20 点伤害"),
-                Color = new Color(1.0f, 0.2f, 0.3f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.2f,
@@ -379,7 +377,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Sticky_Name", "粘性"),
                 Description = LocalizationManager.GetText("Affix_Sticky_Description", "首次受击会使玩家掉落当前装备的武器，击杀掉落胶带与万能胶"),
-                Color = new Color(0.196f, 0.804f, 0.196f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -393,7 +390,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_TimeStop_Name", "时停"),
                 Description = LocalizationManager.GetText("Affix_TimeStop_Description", "受伤时会短暂停止时间约 3 秒"),
-                Color = new Color(1.0f, 0.42f, 0.21f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -407,7 +403,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_MagazineCurse_Name", "弹匣诅咒"),
                 Description = LocalizationManager.GetText("Affix_MagazineCurse_Description", "受伤时强制玩家换弹，掉落各种快速弹匣组件"),
-                Color = new Color(0.608f, 0.349f, 0.714f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -426,7 +421,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Knockback_Name", "击飞"),
                 Description = LocalizationManager.GetText("Affix_Knockback_Description", "攻击产生强力击退"),
-                Color = new Color(0.20f, 0.80f, 0.95f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -436,7 +430,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Chaos_Name", "混沌"),
                 Description = LocalizationManager.GetText("Affix_Chaos_Description", "攻击随机产生异常效果"),
-                Color = new Color(0.58f, 0.0f, 0.83f),
                 HealthMultiplier = 1.2f,
                 DamageMultiplier = 1.1f,
                 MoveSpeedMultiplier = 1.1f,
@@ -450,9 +443,7 @@ namespace EliteEnemies
             ["Vampirism"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Vampirism_Name", "吸血"),
-                Description = LocalizationManager.GetText("Affix_Vampirism_Description",
-                    "攻击时回复自身生命值"),
-                Color = new Color(0.86f, 0.08f, 0.24f),
+                Description = LocalizationManager.GetText("Affix_Vampirism_Description"),
                 HealthMultiplier = 1.4f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -462,7 +453,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Collector_Name", "收藏家"),
                 Description = LocalizationManager.GetText("Affix_Collector_Description", "掉落各种稀有收藏品"),
-                Color = new Color(0.85f, 0.65f, 0.25f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -472,7 +462,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Gunsmith_Name", "枪匠"),
                 Description = LocalizationManager.GetText("Affix_Gunsmith_Description", "掉落高品质枪械配件"),
-                Color = new Color(0.4f, 0.5f, 0.6f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
@@ -482,7 +471,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Slime_Name", "史莱姆"),
                 Description = LocalizationManager.GetText("Affix_Slime_Description", "初始巨大但虚弱，随血量降低逐渐缩小并增强伤害，会周期性跳跃"),
-                Color = new Color(0.4f, 0.8f, 0.4f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -492,7 +480,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Blindness_Name", "致盲"),
                 Description = LocalizationManager.GetText("Affix_Blindness_Description", "攻击使玩家视野受限5秒"),
-                Color = new Color(0.2f, 0.2f, 0.2f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -502,7 +489,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Slow_Name", "缓速"),
                 Description = LocalizationManager.GetText("Affix_Slow_Description"),
-                Color = new Color(0.45f, 0.70f, 0.95f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -512,7 +498,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Stun_Name", "震慑"),
                 Description = LocalizationManager.GetText("Affix_Stun_Description"),
-                Color = new Color(0.95f, 0.85f, 0.30f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -522,7 +507,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_DungEater_Name", "食粪者"),
                 Description = LocalizationManager.GetText("Affix_DungEater_Description"),
-                Color = new Color(0.70f, 0.55f, 0.30f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -532,7 +516,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Hardening_Name", "硬化"),
                 Description = LocalizationManager.GetText("Affix_Hardening_Description", "受伤随机增加护甲值"),
-                Color = new Color(0.7f, 0.7f, 0.7f), // 灰色
                 HealthMultiplier = 1.4f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -542,7 +525,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_ChickenBro_Name"),
                 Description = LocalizationManager.GetText("Affix_ChickenBro_Description"),
-                Color = new Color(1.0f, 0.84f, 0.0f), // 金黄色
                 HealthMultiplier = 1.2f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -556,7 +538,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Phase_Name"),
                 Description = LocalizationManager.GetText("Affix_Phase_Description"),
-                Color = new Color(0.0f, 1.0f, 1.0f), 
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -566,7 +547,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_MandarinDuck_Name"),
                 Description = LocalizationManager.GetText("Affix_MandarinDuck_Description"),
-                Color = new Color(1.0f, 0.4f, 0.7f),
                 HealthMultiplier = 0.8f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
@@ -576,7 +556,6 @@ namespace EliteEnemies
             {
                 Name = LocalizationManager.GetText("Affix_Revenge_Name", "报复"),
                 Description = LocalizationManager.GetText("Affix_Revenge_Description", "受伤时发射子弹反击"),
-                Color = new Color(0.75f, 0.25f, 0.25f),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
