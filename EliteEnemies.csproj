@@ -685,8 +685,6 @@
         <Compile Include="EliteEnemy\BuffsSystem\EliteBuffRegistry.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\IEliteBuffEffect.cs" />
         <Compile Include="EliteEnemy\Core\EliteEnemyCore.cs" />
-        <Compile Include="EliteEnemy\VisualEffects\EliteAuraManager.cs" />
-        <Compile Include="EliteEnemy\VisualEffects\EliteAuraPoolable.cs" />
         <Compile Include="HarmonyLoad.cs" />
         <Compile Include="Localization\LocalizationManager.cs" />
         <Compile Include="ModBehaviour.cs" />

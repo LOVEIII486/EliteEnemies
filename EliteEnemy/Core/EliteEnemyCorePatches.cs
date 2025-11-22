@@ -79,7 +79,6 @@ namespace EliteEnemies
                 EliteEnemyCore.TagAsElite(cmc, affixes, baseName);
 
                 AttachBehaviorComponent(cmc, affixes);
-                CreateEliteAura(cmc, affixes);
 
                 EliteEnemyTracker.RecordDecision(presetName, processedFlag: true);
             }
@@ -109,42 +108,6 @@ namespace EliteEnemies
             component.Initialize(cmc, affixes);
 
             cmc.BeforeCharacterSpawnLootOnDead += (damageInfo) => { component?.OnDeath(damageInfo); };
-        }
-
-        private static void CreateEliteAura(CharacterMainControl cmc, List<string> affixes)
-        {
-            if (cmc == null || affixes == null || affixes.Count == 0) return;
-
-            try
-            {
-                Color auraColor = GetAuraColor(affixes.Count);
-                var aura = Effects.EliteAuraManager.Instance.CreateAura(cmc, auraColor, affixes);
-
-                if (aura != null)
-                {
-                    cmc.BeforeCharacterSpawnLootOnDead += (damageInfo) =>
-                    {
-                        Effects.EliteAuraManager.Instance.ReleaseAura(aura);
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"{LogTag} 创建光环失败: {ex.Message}");
-            }
-        }
-
-        private static Color GetAuraColor(int affixCount)
-        {
-            if (affixCount <= 0) return ParseColor("#FF4D4D");
-            if (affixCount == 1) return ParseColor("#A673FF");
-            if (affixCount == 2) return ParseColor("#FFD700");
-            return ParseColor("#FFA500");
-        }
-
-        private static Color ParseColor(string hex)
-        {
-            return ColorUtility.TryParseHtmlString(hex, out Color color) ? color : Color.white;
         }
     }
 

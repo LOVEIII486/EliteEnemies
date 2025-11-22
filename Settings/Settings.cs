@@ -19,8 +19,6 @@ namespace EliteEnemies.Settings
             public const float MaxQualityBias = 3f;
             public const float MinMultiplier = 1f;
             public const float MaxMultiplier = 10f;
-            public const float MinFontSize = 20f;
-            public const float MaxFontSize = 80f;
             public const int MinAffixCountLimit = 1;
             public const int MaxAffixCountLimit = 5;
             public const int MinAffixWeight = 0;
@@ -48,8 +46,6 @@ namespace EliteEnemies.Settings
 
         public static bool ShowEliteName { get; private set; }
         public static bool ShowDetailedHealth { get; private set; }
-        public static bool ShowAffixFootText { get; private set; }
-        public static float AffixFootTextFontSize { get; private set; }
 
         // 词条数量权重
         public static int AffixWeight1 { get; private set; }
@@ -117,12 +113,6 @@ namespace EliteEnemies.Settings
             ShowDetailedHealth = ModSettingAPI.GetSavedValue<bool>("ShowDetailedHealth", out bool showHealth)
                 ? showHealth
                 : true;
-            ShowAffixFootText = ModSettingAPI.GetSavedValue<bool>("ShowAffixFootText", out bool footText)
-                ? footText
-                : false;
-            AffixFootTextFontSize = ModSettingAPI.GetSavedValue<float>("AffixFootTextFontSize", out float fontSize)
-                ? Mathf.Clamp(fontSize, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize)
-                : 35f;
 
             AffixWeight1 = ModSettingAPI.GetSavedValue<int>("AffixWeight1", out int w1)
                 ? Mathf.Clamp(w1, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
@@ -167,8 +157,6 @@ namespace EliteEnemies.Settings
 
             ShowEliteName = true;
             ShowDetailedHealth = true;
-            ShowAffixFootText = false;
-            AffixFootTextFontSize = 35f;
 
             AffixWeight1 = 50;
             AffixWeight2 = 30;
@@ -187,7 +175,6 @@ namespace EliteEnemies.Settings
                 string key = kvp.Key;
                 bool defaultState = !DefaultDisabledAffixes.Contains(key);
 
-                // ============ 关键修改：使用 ModSettingAPI.GetSavedValue ============
                 if (ModSettingAPI.GetSavedValue<bool>(key, out bool saved))
                 {
                     _affixStates[key] = saved;
@@ -278,18 +265,6 @@ namespace EliteEnemies.Settings
             NotifyConfigChanged();
         }
 
-        public static void SetShowAffixFootText(bool value)
-        {
-            ShowAffixFootText = value;
-            NotifyConfigChanged();
-        }
-
-        public static void SetAffixFootTextFontSize(float value)
-        {
-            AffixFootTextFontSize = Mathf.Clamp(value, ConfigRanges.MinFontSize, ConfigRanges.MaxFontSize);
-            NotifyConfigChanged();
-        }
-
         public static void SetShowEliteName(bool value)
         {
             ShowEliteName = value;
@@ -377,8 +352,6 @@ namespace EliteEnemies.Settings
 
                 ShowEliteName = ShowEliteName,
                 ShowDetailedHealth = ShowDetailedHealth,
-                ShowAffixFootText = ShowAffixFootText,
-                AffixFootTextFontSize = AffixFootTextFontSize,
 
                 DisabledAffixes = GetDisabledAffixBlacklist(),
                 AffixCountWeights = new int[]
@@ -390,11 +363,9 @@ namespace EliteEnemies.Settings
         private static void SyncConfigToComponents()
         {
             EliteLootSystem.GlobalDropRate = DropRateMultiplier;
-            Debug.Log($"{LogTag} 同步掉落率: {DropRateMultiplier}");
             if (ModBehaviour.LootHelper != null)
             {
                 ModBehaviour.LootHelper.qualityBiasPower = ItemQualityBias;
-                Debug.Log($"{LogTag} 同步品质偏好: {ItemQualityBias}");
             }
         }
 

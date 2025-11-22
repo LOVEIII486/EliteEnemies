@@ -12,7 +12,6 @@ namespace EliteEnemies.Settings
         // 注册 ModSetting UI 控件
         public static void RegisterUI()
         {
-            // ============ 关键修改：不再需要 SettingsBuilder 参数 ============
             if (!ModSettingAPI.IsInit)
             {
                 Debug.LogWarning($"{LogTag} ModSettingAPI 未初始化，无法注册UI");
@@ -32,7 +31,6 @@ namespace EliteEnemies.Settings
         // 基础设置
         private static void RegisterBasicSettings()
         {
-            // ============ 关键修改：使用 ModSettingAPI 静态方法 ============
             ModSettingAPI.AddSlider(
                 key: "NormalEliteChance",
                 description: LocalizationManager.GetText("Settings_NormalEliteChance"),
@@ -115,23 +113,6 @@ namespace EliteEnemies.Settings
                 description: LocalizationManager.GetText("Settings_ShowDetailedHealth"),
                 enable: GameConfig.ShowDetailedHealth,
                 onValueChange: GameConfig.SetShowDetailedHealth
-            );
-            
-            ModSettingAPI.AddToggle(
-                key: "ShowAffixFootText",
-                description: LocalizationManager.GetText("Settings_ShowAffixFootText"),
-                enable: GameConfig.ShowAffixFootText,
-                onValueChange: GameConfig.SetShowAffixFootText
-            );
-            
-            ModSettingAPI.AddSlider(
-                key: "AffixFootTextFontSize",
-                description: LocalizationManager.GetText("Settings_AffixFootTextFontSize"),
-                defaultValue: GameConfig.AffixFootTextFontSize,
-                sliderRange: new Vector2(20f, 80f),
-                onValueChange: GameConfig.SetAffixFootTextFontSize,
-                decimalPlaces: 0,
-                characterLimit: 3
             );
         }
         
@@ -270,8 +251,6 @@ namespace EliteEnemies.Settings
                 {
                     "ShowEliteName",
                     "ShowDetailedHealth",
-                    "ShowAffixFootText",
-                    "AffixFootTextFontSize"
                 },
                 scale: GroupScale,
                 topInsert: GroupTopInsert,
