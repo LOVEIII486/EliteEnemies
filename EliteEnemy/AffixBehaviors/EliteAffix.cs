@@ -17,11 +17,11 @@ namespace EliteEnemies
     {
         private static readonly Dictionary<AffixRarity, Color> RarityColors = new Dictionary<AffixRarity, Color>
         {
-            [AffixRarity.Common] = new Color(0.9f, 0.9f, 1.0f),    
-            [AffixRarity.Uncommon] = new Color(0.20f, 1.0f, 0.20f),
-            [AffixRarity.Rare] = new Color(0.25f, 0.71f, 1.0f),  
-            [AffixRarity.Epic] = new Color(0.78f, 0.31f, 1.0f),   
-            [AffixRarity.Legendary] = new Color(1.0f, 0.58f, 0.0f), 
+            [AffixRarity.Common]    = new Color(0.90f, 0.90f, 1.00f),
+            [AffixRarity.Uncommon]  = new Color(0.40f, 0.90f, 0.40f),
+            [AffixRarity.Rare]      = new Color(0.45f, 0.70f, 1.00f),
+            [AffixRarity.Epic]      = new Color(0.78f, 0.31f, 1.00f),
+            [AffixRarity.Legendary] = new Color(1.00f, 0.58f, 0.00f),
         };
         
         public static Color GetRarityColor(AffixRarity rarity)
