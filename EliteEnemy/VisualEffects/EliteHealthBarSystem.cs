@@ -346,24 +346,24 @@ namespace EliteEnemies.VisualEffects
             );
             _healthValueLabel.gameObject.name = "HealthValueText";
             
-            _healthValueLabel.transform.localPosition = Vector3.zero;
-            _healthValueLabel.transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
-            _healthValueLabel.transform.localRotation = Quaternion.identity;
+            // _healthValueLabel.transform.localPosition = Vector3.zero;
+            // _healthValueLabel.transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
+            // _healthValueLabel.transform.localRotation = Quaternion.identity;
             
             _healthValueLabel.alignment = TextAlignmentOptions.Center;
             _healthValueLabel.fontSizeMin = 15f;
-            _healthValueLabel.fontSizeMax = 18f;
+            _healthValueLabel.fontSizeMax = 17f;
             _healthValueLabel.enableAutoSizing = true;
             _healthValueLabel.fontStyle = FontStyles.Bold;
             _healthValueLabel.enableWordWrapping = false;
 
             _healthValueLabel.color = new Color(0.9f, 0.9f, 1.0f);
             _healthValueLabel.overflowMode = TextOverflowModes.Overflow;
-            
-            _healthValueLabel.fontWeight = FontWeight.Black;
-            _healthValueLabel.fontMaterial.EnableKeyword("OUTLINE_ON");
-            _healthValueLabel.outlineWidth = 0.4f;
-            _healthValueLabel.outlineColor = new Color(0.1f, 0.1f, 0.1f);
+
+            // _healthValueLabel.fontWeight = FontWeight.Black;
+            // _healthValueLabel.fontMaterial.EnableKeyword("OUTLINE_ON");
+            // _healthValueLabel.outlineWidth = 0.4f;
+            // _healthValueLabel.outlineColor = new Color(0.1f, 0.1f, 0.1f);
         }
 
         /// <summary>

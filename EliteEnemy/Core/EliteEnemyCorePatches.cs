@@ -110,7 +110,32 @@ namespace EliteEnemies
             cmc.BeforeCharacterSpawnLootOnDead += (damageInfo) => { component?.OnDeath(damageInfo); };
         }
     }
+    /// <summary>
+    /// 强制精英敌人显示血条
+    /// </summary>
+    [HarmonyPatch(typeof(Health), "Start")]
+    internal static class Health_ForceShowEliteHealthBar_Patch
+    {
+        private const string LogTag = "[EliteEnemies.HealthBar]";
 
+        static void Postfix(Health __instance)
+        {
+            var cmc = __instance.TryGetCharacter();
+            if (cmc == null || cmc.IsMainCharacter) return;
+
+            var main = LevelManager.Instance?.MainCharacter;
+            if (main && cmc.Team == main.Team) return;
+
+            var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();
+            if (marker == null) return;
+
+            // 强制显示血条
+            if (!__instance.showHealthBar)
+            {
+                __instance.showHealthBar = true;
+            }
+        }
+    }
     /// <summary>
     /// 血条颜色补丁
     /// </summary>
@@ -120,20 +145,10 @@ namespace EliteEnemies
         private static readonly FieldInfo
             ColorOverAmountField = AccessTools.Field(typeof(HealthBar), "colorOverAmount");
 
-        private static bool _loggedMissing;
-
         [HarmonyPrefix]
-        private static void Postfix(HealthBar __instance)
+        private static void Prefix(HealthBar __instance)
         {
-            if (ColorOverAmountField == null)
-            {
-                if (!_loggedMissing)
-                {
-                    _loggedMissing = true;
-                }
-
-                return;
-            }
+            if (ColorOverAmountField == null) return;
 
             var cmc = __instance?.target?.TryGetCharacter();
             if (cmc == null) return;
@@ -141,7 +156,7 @@ namespace EliteEnemies
             var main = LevelManager.Instance?.MainCharacter;
             if (main && cmc.Team == main.Team) return;
 
-            if (!TryGetEliteAffixCount(cmc, out int affixCount)) return;
+            int affixCount = TryGetEliteAffixCount(cmc);
 
             Color color = GetHealthBarColor(affixCount);
             var gradient = CreateSolidGradient(color);
@@ -149,23 +164,29 @@ namespace EliteEnemies
             ColorOverAmountField.SetValue(__instance, gradient);
         }
 
-        private static bool TryGetEliteAffixCount(Component cmc, out int count)
+        private static int TryGetEliteAffixCount(Component cmc)
         {
-            count = 0;
             var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();
-            if (marker == null) return false;
-
-            count = marker.Affixes?.Count ?? 0;
-            return true;
+            if (marker == null)
+            {
+                return 0;
+            }
+            int count = marker.Affixes?.Count ?? 0;
+            return count;
         }
 
         private static Color GetHealthBarColor(int count)
         {
-            if (count <= 0) return ParseColor("#FF4D4D");  // 红色
-            if (count == 1) return ParseColor("#A673FF");  // 紫色
-            if (count == 2) return ParseColor("#FFD700");  // 金色
-            if (count == 3) return ParseColor("#FF10F0");  // 霓虹粉
-            return ParseColor("#00FFFF");                   // 青色
+            switch (count)
+            {
+                case <= 0: return ParseColor("#FF4D4D"); // 红色
+                case 1:    return ParseColor("#A673FF"); // 紫色
+                case 2:    return ParseColor("#FFD700"); // 金色
+                case 3:    return ParseColor("#FF10F0"); // 霓虹粉
+                case 4:    return ParseColor("#00FFFF"); // 青色
+                case 5:    return ParseColor("#8B0000"); // 血月色
+                default:   return ParseColor("##1A1A1A"); // 6+ 黑色
+            }
         }
 
         private static Gradient CreateSolidGradient(Color color)
@@ -183,7 +204,9 @@ namespace EliteEnemies
             return ColorUtility.TryParseHtmlString(hex, out Color color) ? color : Color.white;
         }
     }
-
+    /// <summary>
+    /// 词缀名称补丁
+    /// </summary>
     [HarmonyPatch(typeof(HealthBar), "Awake")]
     internal static class HealthBar_Awake_Patch
     {
@@ -197,8 +220,7 @@ namespace EliteEnemies
         }
     }
     /// <summary>
-    /// 玩家受伤Hook - 准确触发精英词缀的命中效果
-    /// 方法名是 Hurt 不是 OnHurt
+    /// 玩家受伤Hook
     /// </summary>
     [HarmonyPatch(typeof(DamageReceiver), nameof(DamageReceiver.Hurt))]
     public static class PlayerHitDetectionPatch
