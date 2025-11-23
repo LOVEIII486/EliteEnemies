@@ -117,3 +117,6 @@ Affix_Revenge_Description,When damaged  the enemy retaliates by firing bullets a
 Settings_AffixDisplayPosition,Affix Display Position,2.3,VisualSettings
 Affix_Obscurer_Name,Obscurer,2.3,AffixNames
 Affix_Obscurer_Description,Hides all affix names showing garbled text,2.3,AffixDescription
+Affix_Distortion_Name,Distortion,2.3,AffixNames
+Affix_Distortion_Description,Attacks distort player bullets into curved trajectories,2.3,AffixDescription
+Buff_EliteBuff_Distortion_Name,Distortion,2.3,BuffNames

@@ -572,6 +572,15 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.1f,
                 Rarity = AffixRarity.Epic
             }.WithRandomLoot(-1, 1, 0.3f, new[] { "MiniGame" }),
+            ["Distortion"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Distortion_Name"),
+                Description = LocalizationManager.GetText("Affix_Distortion_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare
+            },
         };
 
 

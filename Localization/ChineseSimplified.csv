@@ -117,3 +117,6 @@ Affix_Revenge_Description,受伤时会向攻击者发射子弹反击,2.2,AffixDe
 Settings_AffixDisplayPosition,"词缀显示位置(Overhead=头顶, Underfoot=脚底)",2.3,VisualSettings
 Affix_Obscurer_Name,封弊者,2.3,AffixNames
 Affix_Obscurer_Description,隐藏所有词条名称显示为乱码,2.3,AffixDescription
+Affix_Distortion_Name,扭曲,2.3,AffixNames
+Affix_Distortion_Description,攻击使玩家子弹偏转形成弧形,2.3,AffixDescription
+Buff_EliteBuff_Distortion_Name,扭曲,2.3,BuffNames
