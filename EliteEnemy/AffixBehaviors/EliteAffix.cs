@@ -37,11 +37,15 @@ namespace EliteEnemies
             new Dictionary<string, HashSet<string>>
             {
                 ["Giant"] = new HashSet<string> { "Mini" },
+                ["Slime"] = new HashSet<string> { "Giant","Mini","Split" },
                 ["Undead"] = new HashSet<string> { "Explosive" },
+                ["Talkative"] = new HashSet<string> { "Invisible" },
                 // ["Regeneration"] = new HashSet<string> { "Tanky", "Giant" },
                 ["Split"] = new HashSet<string> { "MimicTear", "ChickenBro" , "MandarinDuck"},
-                ["Sticky"] = new HashSet<string> { "MagazineCurse" },
+                ["MagazineCurse"] = new HashSet<string> { "DungEater","Sticky" },
                 ["Knockback"] = new HashSet<string> { "Phase" },
+                ["Fisherman"] =  new HashSet<string> { "Chef","Musician" },
+                ["Chef"] =  new HashSet<string> { "Fisherman","Musician" },
             };
 
         /// <summary>
@@ -51,14 +55,12 @@ namespace EliteEnemies
         {
             if (string.IsNullOrEmpty(affix1) || string.IsNullOrEmpty(affix2))
                 return false;
-
-            // 检查双向互斥关系
+            
             if (MutuallyExclusiveAffixes.TryGetValue(affix1, out var exclusions1))
             {
                 if (exclusions1.Contains(affix2))
                     return true;
             }
-
             if (MutuallyExclusiveAffixes.TryGetValue(affix2, out var exclusions2))
             {
                 if (exclusions2.Contains(affix1))
@@ -632,8 +634,7 @@ namespace EliteEnemies
             a.RandomLootConfigs.Add(new RandomLootConfig(quality, tagNames, itemCount, 1, 1, dropChance));
             return a;
         }
-
-        // 支持品阶范围的随机掉落
+        
         /// <summary>
         /// 添加随机掉落配置（支持品阶范围）
         /// </summary>

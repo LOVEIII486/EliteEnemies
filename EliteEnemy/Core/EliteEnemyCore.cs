@@ -26,7 +26,7 @@ namespace EliteEnemies
             "Cname_SpeedyChild", "Cname_RobSpider", "Cname_BALeader_Child", "Cname_Boss_Fly_Child",
             "Cname_Football_1", "Cname_Football_2", "Cname_SchoolBully_Child",
             "Cname_StormVirus", "Cname_MonsterClimb", "Cname_Raider", "Cname_LabTestObjective",
-            "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child", "Cname_Ghost", "Cname_XING"
+            "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child", "Cname_Ghost", "Cname_XINGS"
         };
 
         // 风暴生物临时移动到 Boss列表
@@ -37,7 +37,7 @@ namespace EliteEnemies
             "Cname_BALeader", "Cname_Boss_Shot", "Cname_Boss_Arcade", "Cname_CrazyRob",
             "Cname_SchoolBully", "Cname_RPG", "Cname_Boss_3Shot", "Cname_Roadblock",
             "Cname_StormBoss1", "Cname_StormBoss2", "Cname_StormBoss3", "Cname_StormBoss4",
-            "Cname_StormBoss5", "Cname_Boss_Red", "Cname_StormCreature", "Cname_XINGS",
+            "Cname_StormBoss5", "Cname_Boss_Red", "Cname_StormCreature", "Cname_XING",
         };
 
         internal static readonly HashSet<string> MerchantPresets = new HashSet<string>
@@ -53,7 +53,7 @@ namespace EliteEnemies
             {
                 ["MimicTear"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "Cname_Scav", "Cname_Usec", "Cname_Raider", "Cname_BALeader_Child", "Cname_3Shot_Child"
+                    "Cname_Scav", "Cname_Usec", "Cname_Raider", "Cname_BALeader_Child", "Cname_3Shot_Child","Cname_SpeedyChild"
                 },
             };
 
@@ -98,79 +98,93 @@ namespace EliteEnemies
 
         public static List<string> SelectRandomAffixes(int maxCount, CharacterMainControl cmc)
         {
-            var available = new List<string>(EliteAffixes.Pool.Keys);
-            string nameKey = cmc?.characterPreset?.nameKey ?? string.Empty;
+            // 1. 获取基础有效词缀池，过滤预设白名单和配置黑名单
+            List<string> basePool = GetBaseValidAffixes(cmc);
 
-            // 过滤：预设白名单
-            available.RemoveAll(n => !IsAffixAllowedForPreset(n, nameKey));
+            if (basePool.Count == 0) return new List<string>();
 
-            // 过滤：用户黑名单
-            if (_config.DisabledAffixes != null && _config.DisabledAffixes.Count > 0)
+            // 2. 常规随机选择
+            var selected = new List<string>();
+            var currentAvailable = new List<string>(basePool); 
+            int targetCount = Mathf.Clamp(SelectWeightedAffixCount(maxCount), 1, currentAvailable.Count);
+
+            // 执行选择逻辑
+            SelectAndAppendAffixes(selected, currentAvailable, targetCount);
+
+            // 3. 封弊者特殊处理
+            const string SpecialAffix = "Obscurer";
+            const int MaxTotalAffixes = 5;
+
+            if (selected.Contains(SpecialAffix))
             {
-                var disabled = new HashSet<string>(_config.DisabledAffixes, StringComparer.OrdinalIgnoreCase);
-                available.RemoveAll(key => disabled.Contains(key));
+                if (selected.Count < maxCount && selected.Count < MaxTotalAffixes)
+                {
+                    // 重新构建可用池
+                    var extraAvailable = new List<string>(basePool);
+                    extraAvailable.RemoveAll(a => selected.Contains(a));
+                    extraAvailable.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
+
+                    if (extraAvailable.Count > 0)
+                    {
+                        int extraCount = UnityEngine.Random.Range(1, 4); // 随机 1~3 个
+                        int spaceLeft = Mathf.Min(maxCount, MaxTotalAffixes) - selected.Count;
+                        
+                        // 取最小值：随机数 vs 可用池剩余 vs 剩余空位
+                        int finalExtraCount = Mathf.Min(extraCount, Mathf.Min(extraAvailable.Count, spaceLeft));
+
+                        if (finalExtraCount > 0)
+                        {
+                            Debug.Log($"{LogTag} {SpecialAffix} 触发，额外添加 {finalExtraCount} 个词条");
+                            SelectAndAppendAffixes(selected, extraAvailable, finalExtraCount);
+                        }
+                    }
+                }
             }
 
-            if (available.Count == 0) return new List<string>();
+            return selected;
+        }
 
-            // 基于权重随机选择
-            var selected = new List<string>();
-            int count = Mathf.Clamp(SelectWeightedAffixCount(maxCount), 1, available.Count);
-
+        /// <summary>
+        /// 从 available 中选择 count 个不冲突的词缀加入 selected
+        /// </summary>
+        private static void SelectAndAppendAffixes(List<string> selected, List<string> available, int count)
+        {
             for (int i = 0; i < count; i++)
             {
                 if (available.Count == 0) break;
-
-                // 过滤：互斥词缀
+                
                 if (selected.Count > 0)
                 {
                     available.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
                 }
 
                 if (available.Count == 0) break;
-
+                
                 string chosen = SelectWeightedRandom(available);
                 selected.Add(chosen);
                 available.Remove(chosen);
             }
-            
-            if (selected.Contains("Obscurer"))
+        }
+
+        /// <summary>
+        /// 获取基础词缀池
+        /// </summary>
+        private static List<string> GetBaseValidAffixes(CharacterMainControl cmc)
+        {
+            var pool = new List<string>(EliteAffixes.Pool.Keys);
+            string nameKey = cmc?.characterPreset?.nameKey ?? string.Empty;
+
+            // 1. 过滤预设白名单
+            pool.RemoveAll(n => !IsAffixAllowedForPreset(n, nameKey));
+
+            // 2. 过滤用户黑名单
+            if (_config.DisabledAffixes != null && _config.DisabledAffixes.Count > 0)
             {
-                // 确保封弊者不是唯一词条
-                if (selected.Count < maxCount && selected.Count < 5) // 最多5个词条
-                {
-                    // 重新构建可用词条列表
-                    var extraAvailable = new List<string>(EliteAffixes.Pool.Keys);
-                    extraAvailable.RemoveAll(a => selected.Contains(a));
-                    extraAvailable.RemoveAll(n => !IsAffixAllowedForPreset(n, nameKey));
-                    if (_config.DisabledAffixes != null && _config.DisabledAffixes.Count > 0)
-                    {
-                        var disabled = new HashSet<string>(_config.DisabledAffixes, StringComparer.OrdinalIgnoreCase);
-                        extraAvailable.RemoveAll(key => disabled.Contains(key));
-                    }
-                    extraAvailable.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
-            
-                    if (extraAvailable.Count > 0)
-                    {
-                        // 随机添加额外词条
-                        int extraCount = UnityEngine.Random.Range(1, 4);
-                        extraCount = Mathf.Min(extraCount, extraAvailable.Count);
-                        extraCount = Mathf.Min(extraCount, maxCount - selected.Count);
-                
-                        for (int i = 0; i < extraCount; i++)
-                        {
-                            if (extraAvailable.Count == 0) break;
-                            string extra = SelectWeightedRandom(extraAvailable);
-                            selected.Add(extra);
-                            extraAvailable.Remove(extra);
-                            extraAvailable.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
-                        }
-                        Debug.Log($"[EliteEnemies.Core] 封弊者触发，额外添加 {extraCount} 个词条");
-                    }
-                }
+                var disabled = new HashSet<string>(_config.DisabledAffixes, StringComparer.OrdinalIgnoreCase);
+                pool.RemoveAll(key => disabled.Contains(key));
             }
 
-            return selected;
+            return pool;
         }
 
         private static string SelectWeightedRandom(List<string> affixNames)
@@ -308,7 +322,7 @@ namespace EliteEnemies
 
             if (string.Equals(rawName, "Character", StringComparison.OrdinalIgnoreCase) ||
                 string.IsNullOrEmpty(rawName))
-                rawName = "敌人";
+                rawName = "未知敌人";
 
             return rawName;
         }
