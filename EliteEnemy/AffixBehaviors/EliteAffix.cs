@@ -570,7 +570,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.4f,
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.1f,
-                Rarity = AffixRarity.Epic
+                Rarity = AffixRarity.Legendary
             }.WithRandomLoot(-1, 1, 0.3f, new[] { "MiniGame" }),
             ["Distortion"] = new AffixData
             {
@@ -579,7 +579,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Epic
             },
         };
 

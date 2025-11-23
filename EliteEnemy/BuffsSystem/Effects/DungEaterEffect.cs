@@ -16,7 +16,7 @@ namespace EliteEnemies.BuffsSystem.Effects
             if (item != null)
             {
                 player.UseItem(item);
-                player.PopText("吐了！");
+                player.PopText("<color=#556B2F>吐了！</color>");
             }
         }
 

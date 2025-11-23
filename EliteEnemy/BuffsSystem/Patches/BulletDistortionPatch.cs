@@ -19,7 +19,7 @@ namespace EliteEnemies.BuffsSystem.Patches
         private static bool _fieldInitialized = false;
 
         // 偏转强度
-        private const float DeflectionStrength = 5f; // 度/帧
+        private const float DeflectionStrength = 6f; // 度/帧
         
         [HarmonyPrefix]
         public static void Prefix(Projectile __instance)

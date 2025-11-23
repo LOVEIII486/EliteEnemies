@@ -13,7 +13,7 @@ namespace EliteEnemies.AffixBehaviors
 
         private static readonly string BuffName = "EliteBuff_Distortion";
         private static readonly int BuffId = 99905;
-        private static readonly float BuffDuration = 3.5f;
+        private static readonly float BuffDuration = 3f;
         private static readonly float Cooldown = 10f;
         
         private static readonly EliteBuffFactory.BuffConfig BuffConfig = 

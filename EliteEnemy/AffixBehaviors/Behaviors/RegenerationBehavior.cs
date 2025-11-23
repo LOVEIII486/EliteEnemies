@@ -9,7 +9,7 @@ namespace EliteEnemies.AffixBehaviors
         public override string AffixName => "Regeneration";
         
         private static readonly float RegenInterval = 0.5f;     // 每0.5秒回复一次
-        private static readonly float RegenAmount = 10f;      // 每次回复10点生命
+        private static readonly float RegenAmount = 7f;      // 每次回复10点生命
         
         private float _regenTimer = 0f;        // 每个敌人独立的计时器
 
