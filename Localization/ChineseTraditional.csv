@@ -120,3 +120,5 @@ Affix_Obscurer_Description,隱藏所有詞條名稱顯示為亂碼,2.3,AffixDesc
 Affix_Distortion_Name,扭曲,2.3,AffixNames
 Affix_Distortion_Description,攻擊使玩家子彈偏轉形成弧形,2.3,AffixDescription
 Buff_EliteBuff_Distortion_Name,扭曲,2.3,BuffNames
+Affix_MultiShot_Name,多重射擊,2.3,AffixNames
+Affix_MultiShot_Description,攻擊時額外發射兩枚子彈,2.3,AffixDescription

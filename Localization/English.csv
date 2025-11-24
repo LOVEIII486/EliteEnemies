@@ -120,3 +120,5 @@ Affix_Obscurer_Description,Hides all affix names showing garbled text,2.3,AffixD
 Affix_Distortion_Name,Distortion,2.3,AffixNames
 Affix_Distortion_Description,Attacks distort player bullets into curved trajectories,2.3,AffixDescription
 Buff_EliteBuff_Distortion_Name,Distortion,2.3,BuffNames
+Affix_MultiShot_Name,Multi-Shot,2.3,AffixNames
+Affix_MultiShot_Description,Fires two additional bullets on attack.,2.3,AffixDescription
