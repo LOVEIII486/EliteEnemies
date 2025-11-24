@@ -37,7 +37,7 @@ namespace EliteEnemies
             new Dictionary<string, HashSet<string>>
             {
                 ["Giant"] = new HashSet<string> { "Mini" },
-                ["Slime"] = new HashSet<string> { "Giant","Mini","Split" },
+                ["Slime"] = new HashSet<string> { "Mini","Split" },
                 ["Undead"] = new HashSet<string> { "Explosive" },
                 ["Talkative"] = new HashSet<string> { "Invisible" },
                 // ["Regeneration"] = new HashSet<string> { "Tanky", "Giant" },
@@ -442,7 +442,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
-            }.WithRandomLootRange(2, 4, 2, 1f, new[] { "Luxury" }),
+            }.WithRandomLootRange(3, 6, 2, 1f, new[] { "Luxury" }),
             ["Gunsmith"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Gunsmith_Name", "枪匠"),
@@ -451,7 +451,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
-            }.WithRandomLootRange(2, 4, 2, 1f, new[] { "Accessory" }),
+            }.WithRandomLootRange(3, 6, 2, 1f, new[] { "Accessory" }),
             ["Slime"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Slime_Name", "史莱姆"),
