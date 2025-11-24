@@ -356,7 +356,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.2f,
-                Rarity = AffixRarity.Epic
+                Rarity = AffixRarity.Rare
             }.WithRandomLoot(-1, 1, 1, new[] { "Explosive" }),
             ["Sticky"] = new AffixData
             {
@@ -418,7 +418,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.2f,
                 DamageMultiplier = 1.1f,
                 MoveSpeedMultiplier = 1.1f,
-                Rarity = AffixRarity.Epic,
+                Rarity = AffixRarity.Rare,
             }.WithLootGroup(
                 new LootEntry(408, 1, 2, 0.7f), // 电抗性针
                 new LootEntry(1070, 1, 2, 0.7f), // 火抗针
