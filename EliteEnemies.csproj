@@ -632,6 +632,7 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="DebugTool\LootAlgorithmVerifier.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BerserkBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BlindnessBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChaosOnHitBehavior.cs" />
