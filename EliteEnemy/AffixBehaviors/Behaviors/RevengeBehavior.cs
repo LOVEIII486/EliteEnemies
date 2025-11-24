@@ -80,6 +80,9 @@ namespace EliteEnemies.AffixBehaviors
             {
                 return;
             }
+            
+            if (character == null || !character.gameObject.activeInHierarchy) return;
+            
             if (damageInfo.fromCharacter == null)
             {
                 return;

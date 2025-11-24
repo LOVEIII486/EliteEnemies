@@ -60,22 +60,22 @@ namespace EliteEnemies.AffixBehaviors
                 return;
             }
 
-            // 封装伤害信息
-            var dmgInfo = new DamageInfo(deadCharacter)
+            // 修复：传入 null 作为伤害来源，防止 AI 追溯已销毁的对象
+            // 原代码：var dmgInfo = new DamageInfo(deadCharacter)
+            var dmgInfo = new DamageInfo(null) 
             {
                 damageValue = ExplosionDamage,
                 fromWeaponItemID = WeaponItemID,
                 armorPiercing = ArmorPiercing
             };
 
-            // 创建爆炸
             LevelManager.Instance.ExplosionManager.CreateExplosion(
-                position, // 爆炸中心位置
-                ExplosionRadius, // 爆炸半径
-                dmgInfo, // 伤害信息
-                ExplosionType, // 爆炸特效类型
-                ExplosionForce, // 爆炸冲击力
-                false // 是否伤害自身
+                position, 
+                ExplosionRadius, 
+                dmgInfo, 
+                ExplosionType, 
+                ExplosionForce, 
+                false 
             );
         }
 
