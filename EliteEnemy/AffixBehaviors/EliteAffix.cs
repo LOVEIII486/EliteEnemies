@@ -566,6 +566,15 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
             }.WithRandomLoot(-1, 1, 0.6f, new[] { "JLab" }),
+            ["MultiShot"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_MultiShot_Name"),
+                Description = LocalizationManager.GetText("Affix_MultiShot_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 0.9f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Epic
+            }.WithRandomLootRange(2, 4, 2, 1f, new[] { "Bullet" }),
         };
 
 
