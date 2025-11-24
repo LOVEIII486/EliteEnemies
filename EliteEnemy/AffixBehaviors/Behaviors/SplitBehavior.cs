@@ -46,7 +46,7 @@ namespace EliteEnemies.AffixBehaviors
             // 简单限制无限分裂
             if (health.MaxHealth <= 20)
             {
-                Debug.LogWarning("[SplitBehavior] 敌人太弱小，无法分裂");
+                Debug.LogWarning("[EliteEnemies.SplitBehavior] 敌人太弱小，无法分裂");
                 return;
             }
             
@@ -71,7 +71,7 @@ namespace EliteEnemies.AffixBehaviors
             var helper = EggSpawnHelper.Instance;
             if (helper == null || !helper.IsReady)
             {
-                Debug.LogWarning("[SplitBehavior] EggSpawnHelper 未就绪");
+                Debug.LogWarning("[EliteEnemies.SplitBehavior] EggSpawnHelper 未就绪");
                 return;
             }
 
@@ -168,7 +168,7 @@ namespace EliteEnemies.AffixBehaviors
                 items[i]?.DestroyTree();
             }
             
-            Debug.Log($"[SplitBehavior] 已清理分身 {lootbox.name} 的掉落物，保留了索引 {keepIndex}");
+            // Debug.Log($"[EliteEnemies.SplitBehavior] 已清理分身 {lootbox.name} 的掉落物，保留了索引 {keepIndex}");
         }
     }
 }
