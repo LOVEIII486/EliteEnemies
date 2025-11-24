@@ -15,7 +15,7 @@ namespace EliteEnemies
     [HarmonyPatch(typeof(InteractableLootbox), "CreateFromItem")]
     public static class EliteLootSystem
     {
-        private const string LogTag = "[EliteLoot]";
+        private const string LogTag = "[EliteEnemies.EliteLootSystem]";
         public static bool Verbose = false;
         public static float GlobalDropRate = 1.0f;
 
@@ -73,6 +73,7 @@ namespace EliteEnemies
             {
                 helper.qualityBiasPower = EliteEnemyCore.Config.ItemQualityBias;
             }
+            LootAlgorithmVerifier.RecordAttempt();
             
             string charName = character.characterPreset?.nameKey ?? character.name;
             
@@ -82,7 +83,7 @@ namespace EliteEnemies
             // 预先扩容（防止格子不够）
             PreExpandInventory(lootbox.Inventory, affixes);
 
-            Debug.Log($"{LogTag} >>> 开始处理 [{charName}] 的掉落 (词缀数:{affixes.Count}) | 掉率修正:{dropPenalty:P0} | 全局倍率:{GlobalDropRate:F1} | 品质偏好:{EliteEnemyCore.Config.ItemQualityBias:F1}");
+            if (Verbose) Debug.Log($"{LogTag} >>> 开始处理 [{charName}] 的掉落 (词缀数:{affixes.Count}) | 掉率修正:{dropPenalty:P0} | 全局倍率:{GlobalDropRate:F1} | 品质偏好:{EliteEnemyCore.Config.ItemQualityBias:F1}");
 
             // 阶段 1: 词缀固定掉落
             ProcessFixedLoot(lootbox, affixes, dropPenalty);
@@ -207,7 +208,11 @@ namespace EliteEnemies
             int maxQ = Mathf.Clamp(minQ + UnityEngine.Random.Range(1, 3), minQ, 7);
 
             // BOSS保底修正
-            if (isBoss && qualityDowngrade == 0 && minQ < 4) { minQ = 4; if(maxQ < 4) maxQ = 4; }
+            if (isBoss && qualityDowngrade == 0 && minQ < 3) 
+            { 
+                minQ = 3; 
+                if (maxQ < 3) maxQ = 3; 
+            }
 
             Item item = helper.CreateItemWithTagsWeighted(minQ, maxQ, null);
             if (item != null)
@@ -239,10 +244,12 @@ namespace EliteEnemies
             string itemName = item.DisplayName;
             string qualityStr = item.Quality.ToString();
             
+            LootAlgorithmVerifier.RecordDrop(sourcePool, item.Quality, count);
+            
             // 核心逻辑：添加第一个
             item.Detach();
             lootbox.Inventory.AddAndMerge(item, 0);
-
+            
             // 如果数量 > 1，复制剩余的
             for (int i = 1; i < count; i++)
             {
@@ -254,9 +261,8 @@ namespace EliteEnemies
                     lootbox.Inventory.AddAndMerge(clone, 0);
                 }
             }
-
-            // === 清晰的日志输出 ===
-            Debug.Log($"{LogTag} + [来源:{sourcePool}] 获得: {itemName} (Q{qualityStr}) x{count} [概率:{chance:P0}]");
+            
+            if (Verbose) Debug.Log($"{LogTag} + [来源:{sourcePool}] 获得: {itemName} (Q{qualityStr}) x{count} [概率:{chance:P0}]");
         }
 
         private static float CalculateFinalChance(float baseChance, float penalty)

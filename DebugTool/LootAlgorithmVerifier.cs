@@ -1,105 +1,111 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 
 namespace EliteEnemies.DebugTool
 {
     /// <summary>
-    /// 掉落算法验证器
-    /// 挂载后按 F11 触发模拟
+    /// 掉落算法验证与统计工具
+    /// 负责记录游戏过程中的实际掉落数据，用于平衡性分析
     /// </summary>
-    public class LootAlgorithmVerifier : MonoBehaviour
+    public static class LootAlgorithmVerifier
     {
-        private const string LogTag = "[EliteLootVerifier]";
+        private const string LogTag = "[EliteEnemies.LootStats]";
+        
+        // 统计数据结构： [来源池名称] -> [品质(1-7)] -> 数量
+        // index 0 未使用，1-7 对应品质
+        private static readonly Dictionary<string, int[]> _stats = new Dictionary<string, int[]>();
+        
+        // 总掉落物品数量
+        private static int _totalDrops = 0;
+        
+        // 总尝试次数（即触发掉落逻辑的次数，通常等于精英怪击杀数）
+        private static int _totalAttempts = 0;
 
-        // Unity Update 监听按键
-        private void Update()
+        /// <summary>
+        /// 记录一次掉落尝试 (在处理精英怪掉落开始时调用)
+        /// </summary>
+        public static void RecordAttempt()
         {
-            if (Input.GetKeyDown(KeyCode.F11))
-            {
-                Debug.Log($"{LogTag} [Dev] 手动触发掉落算法模拟...");
-
-                // 1. 强制同步最新配置（这是关键，确保热重载的配置生效）
-                EliteLootSystem.GlobalDropRate = EliteEnemyCore.Config.DropRateMultiplier;
-                
-                // 2. 运行模拟
-                RunSimulation();
-            }
+            _totalAttempts++;
         }
 
         /// <summary>
-        /// 运行 100 次模拟测试，验证算法逻辑
+        /// 记录一次具体的掉落 (在物品添加到箱子时调用)
         /// </summary>
-        public static void RunSimulation()
+        /// <param name="sourcePool">掉落来源 (如: 稀有度奖励, 词缀随机)</param>
+        /// <param name="quality">物品品质 (1-7)</param>
+        /// <param name="count">数量</param>
+        public static void RecordDrop(string sourcePool, int quality, int count)
         {
-            Debug.Log("========== [EliteLoot] 算法验证模拟开始 ==========");
-
-            // 1. 获取当前环境参数
-            float currentDropRate = EliteLootSystem.GlobalDropRate;
-            float currentBias = EliteEnemyCore.Config.ItemQualityBias;
+            if (count <= 0) return;
             
-            // 基础参数
-            float baseChance = 0.30f; 
-            float penalty = 1.0f;     
-
-            Debug.Log($"[环境参数] 全局倍率(GlobalDropRate): {currentDropRate}");
-            Debug.Log($"[环境参数] 品质偏好(QualityBias): {currentBias}");
-            Debug.Log($"[环境参数] 基础概率: {baseChance:P0}, 模拟次数: 100");
-
-            // 统计变量
-            int dropCount = 0;
-            Dictionary<int, int> qualityDistribution = new Dictionary<int, int>();
-            for (int i = 1; i <= 7; i++) qualityDistribution[i] = 0;
-
-            // 2. 模拟 100 次尝试
-            for (int i = 0; i < 100; i++)
+            // 确保该来源的统计槽存在
+            if (!_stats.ContainsKey(sourcePool))
             {
-                float finalChance = Mathf.Clamp01(baseChance * currentDropRate * penalty);
-
-                if (UnityEngine.Random.value <= finalChance)
-                {
-                    dropCount++;
-                    int simulatedQuality = SimulatePickQuality(1, 7, currentBias);
-                    qualityDistribution[simulatedQuality]++;
-                }
+                _stats[sourcePool] = new int[8]; 
             }
 
-            // 3. 输出结果
-            Debug.Log($"========== 模拟结果 ==========");
-            Debug.Log($"总掉落次数: {dropCount}/100 (理论概率: {Mathf.Clamp01(baseChance * currentDropRate):P0})");
-            
-            string distStr = string.Join(", ", qualityDistribution.Where(x => x.Value > 0).Select(x => $"Q{x.Key}:{x.Value}个"));
-            Debug.Log($"品质分布: {distStr}");
-            Debug.Log("✓ 算法逻辑表现符合预期配置。");
-            Debug.Log("==============================================");
+            // 记录数据 (限制品质范围以防数组越界)
+            quality = Mathf.Clamp(quality, 1, 7);
+            _stats[sourcePool][quality] += count;
+            _totalDrops += count;
         }
 
-        private static int SimulatePickQuality(int minQ, int maxQ, float bias)
+        /// <summary>
+        /// 输出本局统计概览 (场景卸载时调用)
+        /// </summary>
+        public static void DumpSessionStats()
         {
-            List<int> validQualities = new List<int>();
-            for (int q = minQ; q <= maxQ; q++) validQualities.Add(q);
+            // 如果没有数据，且没有尝试过，就不输出日志扰民了
+            if (_totalAttempts == 0 && _totalDrops == 0) return;
 
-            if (Mathf.Approximately(bias, 0f)) 
-                return validQualities[UnityEngine.Random.Range(0, validQualities.Count)];
+            // 获取当前配置用于展示（方便截图分析时知道当时的配置）
+            float rate = EliteLootSystem.GlobalDropRate;
+            float bias = EliteEnemyCore.Config.ItemQualityBias;
+            float avgDrops = _totalAttempts > 0 ? (float)_totalDrops / _totalAttempts : 0;
 
-            List<float> weights = new List<float>();
-            float totalWeight = 0f;
-            foreach (int q in validQualities)
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"{LogTag} ========== 本局掉落统计 ==========");
+            sb.AppendLine($"[环境] 精英击杀数: {_totalAttempts} | 总掉落物: {_totalDrops} (平均 {avgDrops:F1}个/只)");
+            sb.AppendLine($"[配置] 全局倍率: {rate:F1} | 品质偏好: {bias:F1}");
+            sb.AppendLine("------------------------------------------------------------");
+
+            // 按来源输出详细统计
+            foreach (var kvp in _stats)
             {
-                int baseVal = (bias < 0) ? (8 - q) : q; 
-                float w = Mathf.Pow(Mathf.Max(1, baseVal), Mathf.Abs(bias));
-                weights.Add(w);
-                totalWeight += w;
-            }
+                string source = kvp.Key;
+                int[] counts = kvp.Value;
+                int sourceTotal = counts.Sum();
+                
+                // 格式化品质分布： Q3:2 Q4:5 ...
+                string dist = "";
+                for (int q = 1; q <= 7; q++)
+                {
+                    if (counts[q] > 0) dist += $"Q{q}:{counts[q]} ";
+                }
+                
+                // 计算触发率/贡献率
+                // 注意：对于固定掉落，这表示平均每个怪掉几个；
+                // 对于概率掉落（如稀有度奖励），这近似于触发概率。
+                float contributionRate = _totalAttempts > 0 ? (float)sourceTotal / _totalAttempts : 0;
 
-            float rnd = UnityEngine.Random.value * totalWeight;
-            float current = 0f;
-            for (int i = 0; i < validQualities.Count; i++)
-            {
-                current += weights[i];
-                if (rnd <= current) return validQualities[i];
+                sb.AppendLine($"   >>> [{source}] 共 {sourceTotal} 个 ({contributionRate:P0}) | 分布: {dist}");
             }
-            return validQualities.Last();
+            sb.AppendLine("============================================================");
+            
+            Debug.Log(sb.ToString());
+        }
+
+        /// <summary>
+        /// 清理数据 (新场景加载时调用)
+        /// </summary>
+        public static void Clear()
+        {
+            _stats.Clear();
+            _totalDrops = 0;
+            _totalAttempts = 0;
         }
     }
 }

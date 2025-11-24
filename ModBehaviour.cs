@@ -17,7 +17,6 @@ namespace EliteEnemies
         private const string LogTag = "[EliteEnemies]";
         private const bool EnableDevSpawn = false;
         private const bool EnableDevLoot = false;
-        private const bool EnableLootAlgorithmCheck = false;
         
         private Harmony _harmony;
         
@@ -26,7 +25,6 @@ namespace EliteEnemies
         private GameObject _eggSpawnHelperObject;
         
         private GameObject _spawnHelperObject;
-        private GameObject _lootVerifierObject;
         
         private bool _isPatched = false;
         private bool _settingsInitialized = false;
@@ -44,11 +42,6 @@ namespace EliteEnemies
             InitializeLootHelper();
             InitializeEggSpawnHelper();
             
-            
-            if (EnableLootAlgorithmCheck)
-            {
-                InitializeLootVerifier();
-            }
             if (EnableDevSpawn)
             {
                 InitializeSpawnHelper();
@@ -68,7 +61,6 @@ namespace EliteEnemies
             CleanupLootHelper();
             CleanupEggSpawnHelper();
             
-            CleanupLootVerifier();
             CleanupSpawnHelper();
             
             _settingsInitialized = false;
@@ -174,24 +166,6 @@ namespace EliteEnemies
             Debug.Log($"{LogTag}  设置系统已初始化");
         }
         
-        private void InitializeLootVerifier()
-        {
-            if (_lootVerifierObject != null) return;
-
-            _lootVerifierObject = new GameObject("EliteEnemies_LootVerifier");
-            _lootVerifierObject.AddComponent<LootAlgorithmVerifier>();
-            DontDestroyOnLoad(_lootVerifierObject);
-        
-            Debug.Log($"{LogTag} 掉落算法验证器已就绪 (按 F11 触发)");
-        }
-
-        private void CleanupLootVerifier()
-        {
-            if (_lootVerifierObject == null) return;
-            Destroy(_lootVerifierObject);
-            _lootVerifierObject = null;
-        }
-        
         private void CleanupSceneHooks()
         {
             if (!_sceneHooksInitialized) return;
@@ -256,12 +230,17 @@ namespace EliteEnemies
         {
             EliteEnemyTracker.Reset();
             EliteLootSystem.ClearCache();
+            LootAlgorithmVerifier.Clear();
             Debug.Log($"{LogTag}  场景已加载: {scene.name}");
         }
 
         private void OnSceneUnloaded(Scene scene)
         {
             EliteEnemyTracker.DumpSummary($"场景卸载: {scene.name}");
+            
+            LootAlgorithmVerifier.DumpSessionStats();
+            LootAlgorithmVerifier.Clear();
+            
             EliteEnemyTracker.Reset();
             EliteLootSystem.ClearCache();
         }
