@@ -230,9 +230,9 @@ namespace EliteEnemies
                 Debug.LogWarning($"{LogTag} ⚠ {characterName} 尝试添加 {attemptCount} 个掉落，但都未通过概率检查或创建失败");
             }
         }
-
+        
         /// <summary>
-        /// 根据敌人词缀稀有度添加奖励物品
+        /// 根据词条稀有度和强度评分计算奖励掉落
         /// </summary>
         private static void AddRarityBonusLoot(
             InteractableLootbox lootbox,
@@ -244,54 +244,51 @@ namespace EliteEnemies
             var helper = GetLootItemHelper();
             if (helper == null) return;
 
-            string characterName = characterPreset.DisplayName;
-            // 判断是否为BOSS
-            bool isBoss = EliteEnemyCore.BossPresets.Contains(characterPreset.nameKey);
-
-            int affixCount = affixes.Count;
-            int minQuality, maxQuality;
-            float dropChance;
-
-            if (isBoss)
+            string characterName = characterPreset.nameKey;
+            bool isBoss = EliteEnemyCore.BossPresets.Contains(characterName);
+            
+            float dropRatePenalty = 1.0f;
+            int qualityDowngrade = 0;
+            if (WeakEnemyPenalties.TryGetValue(characterName, out var penalty))
             {
-                // BOSS必定掉落品阶4-7
-                minQuality = 3;
-                maxQuality = 7;
-                dropChance = 0.7f;
+                dropRatePenalty = penalty.dropRatePenalty;
+                qualityDowngrade = penalty.qualityDowngrade;
             }
-            else
+            
+            float powerScore = isBoss ? 5f : 0f;
+
+            foreach (var affixName in affixes)
             {
-                // 根据词缀数量决定品阶范围和概率
-                switch (affixCount)
+                if (EliteAffixes.TryGetAffix(affixName, out var affixData))
                 {
-                    case 0:
-                        return; // 无词缀不掉落
-                    case 1:
-                        minQuality = 2;
-                        maxQuality = 4;
-                        dropChance = 0.3f;
-                        break;
-                    case 2:
-                        minQuality = 2;
-                        maxQuality = 5;
-                        dropChance = 0.4f;
-                        break;
-                    default: // 3+
-                        minQuality = 2;
-                        maxQuality = 6;
-                        dropChance = 0.6f;
-                        break;
+                    powerScore += GetRarityScore(affixData.Rarity);
+                }
+                else
+                {
+                    powerScore += 1f;
                 }
             }
-
-            // 全局掉率
-            float finalChance = dropChance * GlobalDropRate;
-            if (finalChance > 1f) finalChance = 1f;
-            if (finalChance < 0f) finalChance = 0f;
+            
+            float baseChance = 0.30f + (powerScore * 0.05f);
+            float finalChance = Mathf.Clamp01(baseChance * GlobalDropRate * dropRatePenalty);
 
             if (UnityEngine.Random.value > finalChance)
             {
+                if (Verbose) Debug.Log($"{LogTag} {characterName} (分:{powerScore}) 稀有度奖励未触发 (率:{finalChance:P0})");
                 return;
+            }
+            
+            int calculatedBaseQuality = Mathf.FloorToInt(1.5f + (powerScore / 3.0f));
+            
+            // 应用惩罚
+            int minQuality = Mathf.Clamp(calculatedBaseQuality - qualityDowngrade, 1, 6);
+            int maxQuality = Mathf.Clamp(minQuality + UnityEngine.Random.Range(1, 3), minQuality, 7);
+
+            // BOSS 硬保底
+            if (isBoss && qualityDowngrade == 0 && minQuality < 4) 
+            {
+                minQuality = 4;
+                if (maxQuality < 4) maxQuality = 4;
             }
 
             Item item = helper.CreateItemWithTagsWeighted(minQuality, maxQuality, null);
@@ -300,16 +297,30 @@ namespace EliteEnemies
                 item.Detach();
                 lootbox.Inventory.AddAndMerge(item, 0);
 
-                string bossTag = isBoss ? "[BOSS奖励]" : "[词缀奖励]";
-                Debug.Log(
-                    $"{LogTag} ✓ {characterName} {bossTag} 添加稀有度奖励: [品阶{item.Quality}] {item.DisplayName} (词缀数:{affixCount})");
+                string sourceTag = isBoss ? "[BOSS]" : "[精英]";
+                string penaltyInfo = (dropRatePenalty < 1f || qualityDowngrade > 0) ? $" [惩罚生效]" : "";
+                
+                Debug.Log($"{LogTag} ✓ {characterName} {sourceTag} (分:{powerScore:F1}/率:{finalChance:P0}){penaltyInfo} 掉落: [Q{item.Quality}] {item.DisplayName}");
             }
             else
             {
-                if (Verbose)
-                {
-                    Debug.LogWarning($"{LogTag} 稀有度奖励物品创建失败");
-                }
+                if (Verbose) Debug.LogWarning($"{LogTag} 稀有度奖励生成失败 (Q{minQuality}-Q{maxQuality})");
+            }
+        }
+
+        /// <summary>
+        /// 将词条稀有度转换为强度分
+        /// </summary>
+        private static float GetRarityScore(AffixRarity rarity)
+        {
+            switch (rarity)
+            {
+                case AffixRarity.Common: return 1.0f; // 普通
+                case AffixRarity.Uncommon: return 2.0f; // 高级
+                case AffixRarity.Rare: return 3.0f; // 稀有
+                case AffixRarity.Epic: return 4.0f; // 史诗
+                case AffixRarity.Legendary: return 5.0f; // 传说
+                default: return 1.0f;
             }
         }
 
