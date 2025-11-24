@@ -11,176 +11,98 @@ namespace EliteEnemies
 {
     /// <summary>
     /// 精英敌人掉落系统
-    /// 1. Patch InteractableLootbox.CreateFromItem
-    /// 2. 在战利品箱刚创建时拦截
-    /// 3. 检查是否来自精英敌人
-    /// 4. 如果是，修改战利品箱内容
     /// </summary>
     [HarmonyPatch(typeof(InteractableLootbox), "CreateFromItem")]
     public static class EliteLootSystem
     {
-        private const string LogTag = "[EliteEnemies.EliteLootSystem]";
-        private static bool Verbose = false; // 详细日志
+        private const string LogTag = "[EliteLoot]";
+        public static bool Verbose = false;
+        public static float GlobalDropRate = 1.0f;
 
         private static readonly HashSet<int> ProcessedLootBoxes = new HashSet<int>();
-        public static float GlobalDropRate = 1.0f; // 全局掉率倍率 0-3
-
-
         private static LootItemHelper _lootHelper = null;
 
+        // 弱怪惩罚配置
         private static readonly Dictionary<string, (float dropRatePenalty, int qualityDowngrade)> WeakEnemyPenalties =
             new Dictionary<string, (float, int)>
             {
                 { "Cname_Scav", (0.7f, 1) }
             };
 
-        /// <summary>
-        /// 拦截战利品箱创建
-        /// </summary>
+        #region Harmony Patch & Entry Point
+
         [HarmonyPostfix]
-        private static void Postfix(
-            InteractableLootbox __result, // 刚创建的战利品箱
-            Item item,
-            Vector3 position,
-            Quaternion rotation,
-            bool moveToMainScene,
-            InteractableLootbox prefab,
-            bool filterDontDropOnDead)
+        private static void Postfix(InteractableLootbox __result, Item item, Vector3 position)
         {
             try
             {
-                if (__result == null || item == null)
-                {
-                    if (Verbose) Debug.Log($"{LogTag} 基础检查失败：__result 或 item 为 null");
-                    return;
-                }
+                if (__result == null || item == null) return;
 
+                // 1. 获取角色并校验精英身份
                 CharacterMainControl character = GetCharacterFromItem(item);
-                if (character == null)
-                {
-                    if (Verbose) Debug.Log($"{LogTag} 无法从 item 获取 character");
-                    return;
-                }
+                if (character == null) return;
 
                 var marker = character.GetComponent<EliteEnemyCore.EliteMarker>();
-                if (marker == null || marker.Affixes == null || marker.Affixes.Count == 0)
-                {
-                    if (Verbose) Debug.Log($"{LogTag} {character.name} 不是精英，跳过");
-                    return;
-                }
+                if (marker == null || marker.Affixes == null || marker.Affixes.Count == 0) return;
 
+                // 2. 防止重复处理
                 int hash = position.GetHashCode() ^ item.GetHashCode();
-                if (ProcessedLootBoxes.Contains(hash))
-                {
-                    if (Verbose) Debug.Log($"{LogTag} 战利品箱已处理过，跳过");
-                    return;
-                }
-
+                if (ProcessedLootBoxes.Contains(hash)) return;
                 ProcessedLootBoxes.Add(hash);
 
-                if (Verbose) Debug.Log($"{LogTag} 开始处理精英 {character.name} 的掉落（{marker.Affixes.Count} 个词缀）");
-                AddEliteLootToLootbox(__result, marker.Affixes, character.characterPreset);
+                // 3. 执行掉落逻辑
+                ProcessEliteLoot(__result, character, marker.Affixes);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} Postfix error: {ex.Message}\n{ex.StackTrace}");
+                Debug.LogError($"{LogTag} 处理掉落时发生错误: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        #endregion
+
+        #region Core Logic
+
+        private static void ProcessEliteLoot(InteractableLootbox lootbox, CharacterMainControl character, List<string> affixes)
+        {
+            GlobalDropRate = EliteEnemyCore.Config.DropRateMultiplier;
+
+            // 将配置的品质偏好应用到 Helper 实例
+            var helper = GetLootItemHelper();
+            if (helper != null)
+            {
+                helper.qualityBiasPower = EliteEnemyCore.Config.ItemQualityBias;
+            }
+            
+            string charName = character.characterPreset?.nameKey ?? character.name;
+            
+            // 获取惩罚参数
+            GetEnemyPenalty(charName, out float dropPenalty, out int qualityDowngrade);
+
+            // 预先扩容（防止格子不够）
+            PreExpandInventory(lootbox.Inventory, affixes);
+
+            Debug.Log($"{LogTag} >>> 开始处理 [{charName}] 的掉落 (词缀数:{affixes.Count}) | 掉率修正:{dropPenalty:P0} | 全局倍率:{GlobalDropRate:F1} | 品质偏好:{EliteEnemyCore.Config.ItemQualityBias:F1}");
+
+            // 阶段 1: 词缀固定掉落
+            ProcessFixedLoot(lootbox, affixes, dropPenalty);
+
+            // 阶段 2: 词缀随机配置
+            ProcessRandomConfigLoot(lootbox, affixes, dropPenalty, qualityDowngrade);
+
+            // 阶段 3: 稀有度保底奖励
+            if (EliteEnemyCore.Config.EnableBonusLoot)
+            {
+                ProcessRarityBonusLoot(lootbox, affixes, charName, dropPenalty, qualityDowngrade);
             }
         }
 
         /// <summary>
-        /// 从 Item 获取对应的 CharacterMainControl
+        /// 阶段1: 处理词缀的固定掉落组
         /// </summary>
-        private static CharacterMainControl GetCharacterFromItem(Item item)
+        private static void ProcessFixedLoot(InteractableLootbox lootbox, List<string> affixes, float enemyPenalty)
         {
-            if (item == null) return null;
-
-            MethodInfo method = item.GetType().GetMethod("GetCharacterItem");
-            if (method != null)
-            {
-                Item characterItem = method.Invoke(item, null) as Item;
-                if (characterItem != null)
-                {
-                    // 从 CharacterItem 获取 CharacterMainControl 组件
-                    CharacterMainControl character = characterItem.GetComponent<CharacterMainControl>();
-                    if (character != null)
-                    {
-                        if (Verbose) Debug.Log($"{LogTag} 通过 GetCharacterItem 找到角色：{character.name}");
-                        return character;
-                    }
-                }
-            }
-
-            Transform current = item.transform;
-            int depth = 0;
-            while (current != null && depth < 10)
-            {
-                CharacterMainControl character = current.GetComponent<CharacterMainControl>();
-                if (character != null)
-                {
-                    if (Verbose) Debug.Log($"{LogTag} 通过父对象查找找到角色：{character.name}");
-                    return character;
-                }
-
-                current = current.parent;
-                depth++;
-            }
-
-            Debug.LogWarning($"{LogTag} 无法找到对应的 CharacterMainControl");
-
-            return null;
-        }
-
-        /// <summary>
-        /// 为战利品箱添加精英掉落
-        /// </summary>
-        private static void AddEliteLootToLootbox(
-            InteractableLootbox lootbox,
-            List<string> affixes,
-            CharacterRandomPreset characterPreset)
-        {
-            var inventory = lootbox.Inventory;
-            string characterName = characterPreset.nameKey;
-            if (inventory == null)
-            {
-                Debug.LogError($"{LogTag} Inventory is null for {characterName}");
-                return;
-            }
-
-            // 获取敌人惩罚系数
-            float enemyDropPenalty = 1.0f;
-            int enemyQualityDowngrade = 0;
-            if (WeakEnemyPenalties.TryGetValue(characterName, out var penalty))
-            {
-                enemyDropPenalty = penalty.dropRatePenalty;
-                enemyQualityDowngrade = penalty.qualityDowngrade;
-                // Debug.Log($"{LogTag} {characterName} 应用掉落惩罚: 掉率x{enemyDropPenalty}, 品质-{enemyQualityDowngrade}");
-            }
-
-            // 获取掉落组
             var lootGroups = EliteAffixes.GetLootGroupsForAffixes(affixes);
-
-            int randomLootCount = 0;
-            foreach (var affixName in affixes)
-            {
-                if (EliteAffixes.TryGetAffix(affixName, out var affixData))
-                {
-                    if (affixData.RandomLootConfigs != null)
-                    {
-                        foreach (var config in affixData.RandomLootConfigs)
-                        {
-                            randomLootCount += config.ItemCount;
-                        }
-                    }
-                }
-            }
-
-            // 扩展容量（手动+随机+稀有度奖励）
-            int totalCapacityNeeded = lootGroups.Count + randomLootCount + 1; // +1为稀有度奖励物品
-            ExpandInventoryCapacity(inventory, totalCapacityNeeded);
-
-            int addedCount = 0;
-            int attemptCount = 0;
-
             foreach (var group in lootGroups)
             {
                 if (group == null || group.Count == 0) continue;
@@ -188,373 +110,234 @@ namespace EliteEnemies
                 var pick = group[UnityEngine.Random.Range(0, group.Count)];
                 if (pick == null) continue;
 
-                attemptCount++;
+                float finalChance = CalculateFinalChance(pick.DropChance, enemyPenalty);
 
-                // 全局掉率倍率
-                float finalChance = pick.DropChance * GlobalDropRate * enemyDropPenalty;
-                if (finalChance > 1f) finalChance = 1f;
-                if (finalChance < 0f) finalChance = 0f;
-                // 概率检查
-                if (UnityEngine.Random.value > finalChance)
+                if (UnityEngine.Random.value <= finalChance)
                 {
-                    if (Verbose)
-                    {
-                        Debug.Log(
-                            $"{LogTag} 物品 {pick.ItemID} 未通过概率检查 ({pick.DropChance} x {GlobalDropRate} x {enemyDropPenalty} = {finalChance})");
-                    }
-                    continue;
+                    int count = UnityEngine.Random.Range(pick.MinCount, pick.MaxCount + 1);
+                    AddItemToInventory(lootbox, pick.ItemID, count, "词缀固定", finalChance);
                 }
-
-                // 随机数量
-                int count = UnityEngine.Random.Range(pick.MinCount, pick.MaxCount + 1);
-                AddItemToInventory(lootbox, pick.ItemID, count);
-                addedCount++;
-            }
-
-            // 基于品阶和标签的掉落
-            AddRandomLootToLootbox(lootbox, affixes, characterName, enemyDropPenalty, enemyQualityDowngrade);
-            // 额外稀有度奖励掉落
-            if (EliteEnemyCore.Config.EnableBonusLoot)
-            {
-                AddRarityBonusLoot(lootbox, affixes, characterPreset);
             }
         }
-        
-        /// <summary>
-        /// 根据词条稀有度和强度评分计算奖励掉落
-        /// </summary>
-        private static void AddRarityBonusLoot(
-            InteractableLootbox lootbox,
-            List<string> affixes,
-            CharacterRandomPreset characterPreset)
-        {
-            if (affixes == null || affixes.Count == 0) return;
 
+        /// <summary>
+        /// 阶段2: 处理词缀定义的随机池配置
+        /// </summary>
+        private static void ProcessRandomConfigLoot(InteractableLootbox lootbox, List<string> affixes, float enemyPenalty, int qualityDowngrade)
+        {
             var helper = GetLootItemHelper();
             if (helper == null) return;
 
-            string characterName = characterPreset.nameKey;
-            bool isBoss = EliteEnemyCore.BossPresets.Contains(characterName);
-            
-            float dropRatePenalty = 1.0f;
-            int qualityDowngrade = 0;
-            if (WeakEnemyPenalties.TryGetValue(characterName, out var penalty))
-            {
-                dropRatePenalty = penalty.dropRatePenalty;
-                qualityDowngrade = penalty.qualityDowngrade;
-            }
-            
-            float powerScore = isBoss ? 5f : 0f;
-
             foreach (var affixName in affixes)
             {
-                if (EliteAffixes.TryGetAffix(affixName, out var affixData))
+                if (!EliteAffixes.TryGetAffix(affixName, out var affixData)) continue;
+                if (affixData.RandomLootConfigs == null) continue;
+
+                foreach (var config in affixData.RandomLootConfigs)
                 {
-                    powerScore += GetRarityScore(affixData.Rarity);
-                }
-                else
-                {
-                    powerScore += 1f;
+                    float finalChance = CalculateFinalChance(config.DropChance, enemyPenalty);
+
+                    if (UnityEngine.Random.value > finalChance) continue;
+
+                    // 计算品质降级
+                    int targetQ = Mathf.Max(1, config.Quality - qualityDowngrade);
+                    int minQ = Mathf.Max(1, config.MinCount - qualityDowngrade);
+                    int maxQ = Mathf.Max(1, config.MaxCount - qualityDowngrade);
+
+                    // 解析标签
+                    Tag[] tags = ParseTags(config.TagNames);
+
+                    // 生成并添加
+                    for (int i = 0; i < config.ItemCount; i++)
+                    {
+                        Item item = null;
+                        bool isRange = IsQualityRange(config);
+
+                        if (config.Quality == -1)
+                            item = helper.CreateItemWithTagsWeighted(-1, -1, tags);
+                        else if (isRange)
+                            item = helper.CreateItemWithTagsWeighted(minQ, maxQ, tags);
+                        else
+                            item = helper.CreateItemWithTagsWeighted(targetQ, targetQ, tags);
+
+                        if (item != null)
+                        {
+                            // 如果是范围生成，数量通常为1；如果是固定生成，数量读配置
+                            int stackCount = isRange ? 1 : UnityEngine.Random.Range(config.MinCount, config.MaxCount + 1);
+                            AddItemInstanceToInventory(lootbox, item, stackCount, $"词缀随机({affixName})", finalChance);
+                        }
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// 阶段3: 稀有度积分奖励
+        /// </summary>
+        private static void ProcessRarityBonusLoot(InteractableLootbox lootbox, List<string> affixes, string charName, float enemyPenalty, int qualityDowngrade)
+        {
+            var helper = GetLootItemHelper();
+            if (helper == null) return;
+
+            bool isBoss = EliteEnemyCore.BossPresets.Contains(charName);
             
+            // 计算积分
+            float powerScore = isBoss ? 5f : 0f;
+            foreach (var name in affixes)
+            {
+                if (EliteAffixes.TryGetAffix(name, out var data))
+                    powerScore += GetRarityScore(data.Rarity);
+                else
+                    powerScore += 1f;
+            }
+
+            // 计算概率
             float baseChance = 0.30f + (powerScore * 0.05f);
-            float finalChance = Mathf.Clamp01(baseChance * GlobalDropRate * dropRatePenalty);
+            float finalChance = Mathf.Clamp01(baseChance * GlobalDropRate * enemyPenalty);
 
             if (UnityEngine.Random.value > finalChance)
             {
-                if (Verbose) Debug.Log($"{LogTag} {characterName} (分:{powerScore}) 稀有度奖励未触发 (率:{finalChance:P0})");
+                if (Verbose) Debug.Log($"{LogTag} [稀有度奖励] 未触发 (分:{powerScore:F1}, 率:{finalChance:P0})");
                 return;
             }
-            
-            int calculatedBaseQuality = Mathf.FloorToInt(1.5f + (powerScore / 3.0f));
-            
-            // 应用惩罚
-            int minQuality = Mathf.Clamp(calculatedBaseQuality - qualityDowngrade, 1, 6);
-            int maxQuality = Mathf.Clamp(minQuality + UnityEngine.Random.Range(1, 3), minQuality, 7);
 
-            // BOSS 硬保底
-            if (isBoss && qualityDowngrade == 0 && minQuality < 4) 
-            {
-                minQuality = 4;
-                if (maxQuality < 4) maxQuality = 4;
-            }
+            // 计算品质范围
+            int baseQuality = Mathf.FloorToInt(1.5f + (powerScore / 3.0f));
+            int minQ = Mathf.Clamp(baseQuality - qualityDowngrade, 1, 6);
+            int maxQ = Mathf.Clamp(minQ + UnityEngine.Random.Range(1, 3), minQ, 7);
 
-            Item item = helper.CreateItemWithTagsWeighted(minQuality, maxQuality, null);
+            // BOSS保底修正
+            if (isBoss && qualityDowngrade == 0 && minQ < 4) { minQ = 4; if(maxQ < 4) maxQ = 4; }
+
+            Item item = helper.CreateItemWithTagsWeighted(minQ, maxQ, null);
             if (item != null)
             {
-                item.Detach();
-                lootbox.Inventory.AddAndMerge(item, 0);
+                string sourceLabel = isBoss ? "BOSS奖励" : "稀有度奖励";
+                AddItemInstanceToInventory(lootbox, item, 1, sourceLabel, finalChance);
+            }
+        }
 
-                string sourceTag = isBoss ? "[BOSS]" : "[精英]";
-                string penaltyInfo = (dropRatePenalty < 1f || qualityDowngrade > 0) ? $" [惩罚生效]" : "";
-                
-                Debug.Log($"{LogTag} ✓ {characterName} {sourceTag} (分:{powerScore:F1}/率:{finalChance:P0}){penaltyInfo} 掉落: [Q{item.Quality}] {item.DisplayName}");
+        #endregion
+
+        #region Helper Methods
+
+        private static void AddItemToInventory(InteractableLootbox lootbox, int itemId, int count, string sourcePool, float chance)
+        {
+            if (count <= 0) return;
+            var item = ItemAssetsCollection.InstantiateSync(itemId);
+            if (item != null)
+            {
+                item.Initialize();
+                AddItemInstanceToInventory(lootbox, item, count, sourcePool, chance);
+            }
+        }
+
+        private static void AddItemInstanceToInventory(InteractableLootbox lootbox, Item item, int count, string sourcePool, float chance)
+        {
+            if (item == null || count <= 0) return;
+
+            string itemName = item.DisplayName;
+            string qualityStr = item.Quality.ToString();
+            
+            // 核心逻辑：添加第一个
+            item.Detach();
+            lootbox.Inventory.AddAndMerge(item, 0);
+
+            // 如果数量 > 1，复制剩余的
+            for (int i = 1; i < count; i++)
+            {
+                var clone = ItemAssetsCollection.InstantiateSync(item.TypeID);
+                if (clone != null)
+                {
+                    clone.Initialize();
+                    clone.Detach();
+                    lootbox.Inventory.AddAndMerge(clone, 0);
+                }
+            }
+
+            // === 清晰的日志输出 ===
+            Debug.Log($"{LogTag} + [来源:{sourcePool}] 获得: {itemName} (Q{qualityStr}) x{count} [概率:{chance:P0}]");
+        }
+
+        private static float CalculateFinalChance(float baseChance, float penalty)
+        {
+            return Mathf.Clamp01(baseChance * GlobalDropRate * penalty);
+        }
+
+        private static void GetEnemyPenalty(string charName, out float dropPenalty, out int qualityDowngrade)
+        {
+            if (WeakEnemyPenalties.TryGetValue(charName, out var p))
+            {
+                dropPenalty = p.dropRatePenalty;
+                qualityDowngrade = p.qualityDowngrade;
             }
             else
             {
-                if (Verbose) Debug.LogWarning($"{LogTag} 稀有度奖励生成失败 (Q{minQuality}-Q{maxQuality})");
+                dropPenalty = 1.0f;
+                qualityDowngrade = 0;
             }
         }
 
-        /// <summary>
-        /// 将词条稀有度转换为强度分
-        /// </summary>
-        private static float GetRarityScore(AffixRarity rarity)
+        private static void PreExpandInventory(Inventory inventory, List<string> affixes)
         {
-            switch (rarity)
+            // 估算需要的格子数，避免扩容多次
+            int estimate = 2; // 基础余量 + 奖励
+            foreach(var aff in affixes) estimate += 2; // 假设每个词缀最多贡献2组
+            
+            int newCap = inventory.Capacity + estimate;
+            inventory.SetCapacity(newCap);
+        }
+
+        private static CharacterMainControl GetCharacterFromItem(Item item)
+        {
+            // 尝试从 Item 反射获取
+            MethodInfo method = item.GetType().GetMethod("GetCharacterItem");
+            if (method != null)
             {
-                case AffixRarity.Common: return 1.0f; // 普通
-                case AffixRarity.Uncommon: return 2.0f; // 高级
-                case AffixRarity.Rare: return 3.0f; // 稀有
-                case AffixRarity.Epic: return 4.0f; // 史诗
-                case AffixRarity.Legendary: return 5.0f; // 传说
-                default: return 1.0f;
+                var charItem = method.Invoke(item, null) as Item;
+                if (charItem?.GetComponent<CharacterMainControl>() is CharacterMainControl c) return c;
             }
+            // 尝试从层级获取
+            return item.GetComponentInParent<CharacterMainControl>();
         }
 
-        /// <summary>
-        /// 清空 Inventory 的所有内容
-        /// </summary>
-        private static void ClearInventory(Inventory inventory)
-        {
-            try
-            {
-                inventory.DestroyAllContent();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"{LogTag} ClearInventory failed: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 扩展 Inventory 容量
-        /// </summary>
-        private static void ExpandInventoryCapacity(Inventory inventory, int additional)
-        {
-            var currentCapacity = inventory.Capacity;
-            var newCapacity = inventory.Capacity + additional;
-            inventory.SetCapacity(newCapacity);
-            if (Verbose) Debug.Log($"{LogTag} 扩展容量：{currentCapacity} → {newCapacity}");
-        }
-
-        /// <summary>
-        /// 添加物品到 Inventory
-        /// </summary>
-        private static void AddItemToInventory(InteractableLootbox lootbox, int itemId, int count)
-        {
-            try
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    var item = ItemAssetsCollection.InstantiateSync(itemId);
-                    if (item == null)
-                    {
-                        Debug.LogError($"{LogTag} 物品创建失败：ID={item.TypeID} {item.DisplayName}。请检查资源或物品表。");
-                        continue;
-                    }
-
-                    item.Initialize();
-                    item.Detach();
-                    lootbox.Inventory.AddAndMerge(item, 0);
-                    if (Verbose) Debug.Log($"{LogTag} 添加了1个 {item.DisplayName} 总计需要 {count}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"{LogTag} 向战利品箱添加物品时发生异常：{ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 设置详细日志
-        /// </summary>
-        public static void SetVerbose(bool enabled)
-        {
-            Verbose = enabled;
-            Debug.Log($"{LogTag} 详细日志已{(enabled ? "启用" : "禁用")}");
-        }
-
-        /// <summary>
-        /// 清理缓存
-        /// </summary>
-        public static void ClearCache()
-        {
-            int count = ProcessedLootBoxes.Count;
-            ProcessedLootBoxes.Clear();
-            if (Verbose) Debug.Log($"{LogTag} 已清理 {count} 个缓存记录");
-        }
-
-        /// <summary>
-        /// 获取统计信息
-        /// </summary>
-        public static int GetProcessedCount()
-        {
-            return ProcessedLootBoxes.Count;
-        }
-
-        /// <summary>
-        /// 获取 LootItemHelper 实例
-        /// </summary>
         private static LootItemHelper GetLootItemHelper()
         {
-            if (_lootHelper == null)
-            {
-                _lootHelper = UnityEngine.Object.FindObjectOfType<LootItemHelper>();
-                if (_lootHelper == null)
-                {
-                    Debug.LogWarning($"{LogTag} LootItemHelper 未找到！请确保场景中存在 LootItemHelper 组件。");
-                }
-            }
-
+            if (_lootHelper == null) _lootHelper = UnityEngine.Object.FindObjectOfType<LootItemHelper>();
             return _lootHelper;
         }
 
-        /// <summary>
-        /// 为战利品箱添加随机掉落物品（基于品阶和标签）
-        /// </summary>
-        private static void AddRandomLootToLootbox(
-            InteractableLootbox lootbox,
-            List<string> affixes,
-            string characterName,
-            float enemyDropPenalty = 1.0f,
-            int enemyQualityDowngrade = 0)
+        private static float GetRarityScore(AffixRarity rarity) => rarity switch
         {
-            var helper = GetLootItemHelper();
-            if (helper == null) return;
+            AffixRarity.Common => 1f,
+            AffixRarity.Uncommon => 2f,
+            AffixRarity.Rare => 3f,
+            AffixRarity.Epic => 4f,
+            AffixRarity.Legendary => 5f,
+            _ => 1f
+        };
 
-            var allConfigs = new List<EliteAffixes.RandomLootConfig>();
-            foreach (var affixName in affixes)
-            {
-                if (EliteAffixes.TryGetAffix(affixName, out var affixData))
-                {
-                    if (affixData.RandomLootConfigs != null && affixData.RandomLootConfigs.Count > 0)
-                    {
-                        allConfigs.AddRange(affixData.RandomLootConfigs);
-                    }
-                }
-            }
-
-            if (allConfigs.Count == 0) return;
-
-            int addedCount = 0;
-            int attemptCount = 0;
-
-            foreach (var config in allConfigs)
-            {
-                if (config == null) continue;
-                attemptCount++;
-
-                float finalChance = config.DropChance * GlobalDropRate * enemyDropPenalty;
-                if (finalChance > 1f) finalChance = 1f;
-                if (finalChance < 0f) finalChance = 0f;
-
-                if (UnityEngine.Random.value > finalChance)
-                {
-                    if (Verbose) Debug.Log($"{LogTag} 随机掉落配置未通过概率检查");
-                    continue;
-                }
-
-                // 转换标签
-                Tag[] tags = null;
-                if (config.TagNames != null && config.TagNames.Length > 0)
-                {
-                    List<Tag> tagList = new List<Tag>();
-                    foreach (string tagName in config.TagNames)
-                    {
-                        if (!string.IsNullOrEmpty(tagName))
-                        {
-                            Tag tag = TagUtilities.TagFromString(tagName);
-                            if (tag != null) tagList.Add(tag);
-                        }
-                    }
-
-                    if (tagList.Count > 0) tags = tagList.ToArray();
-                }
-
-                // 判断是品阶范围还是固定品阶
-                bool isQualityRange = (config.MinCount >= 1 && config.MaxCount >= 1 &&
-                                       config.MinCount <= 7 && config.MaxCount <= 7 &&
-                                       config.MinCount <= config.MaxCount);
-
-                for (int i = 0; i < config.ItemCount; i++)
-                {
-                    Item item = null;
-
-                    // 修改：应用品质降级
-                    int adjustedQuality = config.Quality - enemyQualityDowngrade;
-                    int adjustedMinQuality = config.MinCount - enemyQualityDowngrade;
-                    int adjustedMaxQuality = config.MaxCount - enemyQualityDowngrade;
-
-                    // 确保品质不低于1
-                    if (adjustedQuality < 1) adjustedQuality = 1;
-                    if (adjustedMinQuality < 1) adjustedMinQuality = 1;
-                    if (adjustedMaxQuality < 1) adjustedMaxQuality = 1;
-
-                    if (config.Quality == -1)
-                    {
-                        // 品阶为 -1：从所有品阶中按标签筛选
-                        if (tags != null && tags.Length > 0)
-                        {
-                            item = helper.CreateItemWithTagsWeighted(-1, -1, tags);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"{LogTag} 品阶为-1但未指定标签，跳过该配置");
-                            continue;
-                        }
-                    }
-                    else if (config.MinCount > 1 && config.MaxCount > 1 &&
-                             config.MinCount <= 7 && config.MaxCount <= 7)
-                    {
-                        item = helper.CreateItemWithTagsWeighted(adjustedMinQuality, adjustedMaxQuality, tags);
-                    }
-                    else
-                    {
-                        // 普通情况：单一品阶
-                        item = helper.CreateItemWithTagsWeighted(adjustedQuality, adjustedQuality, tags);
-                    }
-
-                    if (item != null)
-                    {
-                        // 数量：品阶范围时固定为1，固定品阶时使用配置的数量
-                        int count = isQualityRange ? 1 : UnityEngine.Random.Range(config.MinCount, config.MaxCount + 1);
-
-                        for (int j = 0; j < count; j++)
-                        {
-                            Item itemInstance;
-                            if (j == 0)
-                            {
-                                itemInstance = item;
-                            }
-                            else
-                            {
-                                itemInstance = ItemAssetsCollection.InstantiateSync(item.TypeID);
-                                if (itemInstance == null) continue;
-                                itemInstance.Initialize();
-                            }
-
-                            itemInstance.Detach();
-                            lootbox.Inventory.AddAndMerge(itemInstance, 0);
-                        }
-
-                        addedCount++;
-
-                        if (Verbose)
-                        {
-                            Debug.Log($"{LogTag} ✓ 添加随机物品: [品阶{item.Quality}] {item.DisplayName} x{count}");
-                        }
-
-                        if (count == 0) UnityEngine.Object.Destroy(item.gameObject);
-                    }
-                }
-            }
-
-            if (addedCount > 0)
-            {
-                Debug.Log($"{LogTag} ✓ {characterName} 成功添加 {addedCount}/{attemptCount} 个基于词条的随机掉落");
-            }
+        private static bool IsQualityRange(EliteAffixes.RandomLootConfig config)
+        {
+            return config.MinCount >= 1 && config.MaxCount >= 1 &&
+                   config.MinCount <= 7 && config.MaxCount <= 7 &&
+                   config.MinCount <= config.MaxCount;
         }
+        
+        private static Tag[] ParseTags(string[] tagNames)
+        {
+            if (tagNames == null || tagNames.Length == 0) return null;
+            var list = new List<Tag>();
+            foreach (var name in tagNames)
+            {
+                var t = TagUtilities.TagFromString(name);
+                if (t != null) list.Add(t);
+            }
+            return list.ToArray();
+        }
+
+        public static void ClearCache() => ProcessedLootBoxes.Clear();
+        
+        #endregion
     }
 }
