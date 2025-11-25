@@ -54,7 +54,7 @@ namespace EliteEnemies.EliteEnemy.Core
             {
                 ["MimicTear"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "Cname_Scav", "Cname_Usec", "Cname_Raider", "Cname_BALeader_Child", "Cname_3Shot_Child","Cname_SpeedyChild"
+                    "Cname_Scav", "Cname_Usec", "Cname_Raider", "Cname_BALeader_Child", "Cname_3Shot_Child", "Cname_SpeedyChild"
                 },
             };
 

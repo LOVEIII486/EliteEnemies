@@ -30,7 +30,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         private static readonly Dictionary<string, (float dropRatePenalty, int qualityDowngrade)> WeakEnemyPenalties =
             new Dictionary<string, (float, int)>
             {
-                { "Cname_Scav", (0.7f, 1) }
+                { "Cname_Scav", (0.6f, 1) },
+                { "Cname_ScavRage", (0.7f, 1) }
             };
 
         #region Harmony Patch & Entry Point
