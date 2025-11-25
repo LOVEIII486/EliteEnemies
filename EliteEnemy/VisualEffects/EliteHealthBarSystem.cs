@@ -36,7 +36,7 @@ namespace EliteEnemies.VisualEffects
     public class EliteHealthBarUI : MonoBehaviour
     {
         private HealthBar _ownerBar;
-        private TextMeshProUGUI _nameLabel;           // 原名字标签，现在只显示基础名字
+        private TextMeshProUGUI _nameLabel;           // 名字标签，只显示基础名字
         private GameObject _affixTextContainer;       // 词缀文本容器
         private TextMeshProUGUI _affixLabel;          // 词缀标签
         private GameObject _healthTextContainer;      // 血量文本容器
@@ -119,7 +119,7 @@ namespace EliteEnemies.VisualEffects
             }
 
             // 3. 是精英怪：禁用 RandomNpc 组件
-            DisableRandomNpcController();
+            // DisableRandomNpcController();
 
             // 4. 更新 UI
             UpdateEliteUI();
@@ -137,15 +137,12 @@ namespace EliteEnemies.VisualEffects
                 _isElite = false;
                 return;
             }
-
-            // 判定条件放宽：只要有词缀 OR 有自定义名字，都算作我们需要接管的对象
+            
             _isElite = _cachedMarker != null && 
                        (_cachedMarker.Affixes.Count > 0 || !string.IsNullOrEmpty(_cachedMarker.CustomDisplayName));
             
             if (_isElite)
             {
-                // === 分离前缀和名字 ===
-                
                 bool hasObscurer = _cachedMarker.Affixes != null && _cachedMarker.Affixes.Contains("Obscurer");
                 
                 // 词缀前缀处理
@@ -217,6 +214,12 @@ namespace EliteEnemies.VisualEffects
     
                 if (_affixLabel != null)
                 {
+                    if (Mathf.Abs(_affixLabel.fontSizeMin - GameConfig.AffixFontSize) > 0.1f)
+                    {
+                        _affixLabel.fontSizeMin = (float)GameConfig.AffixFontSize;
+                        _affixLabel.fontSizeMax = (float)GameConfig.AffixFontSize + 4f;
+                    }
+                    
                     string displayText = _cachedAffixPrefix;
         
                     // 检查是否是封弊者占位符
@@ -297,7 +300,6 @@ namespace EliteEnemies.VisualEffects
         /// </summary>
         private void CreateAffixTextObject()
         {
-            // ============ 根据配置决定词缀文本的位置 ============
             bool showAbove = EliteEnemyCore.Config.AffixDisplayPosition == GameConfig.AffixTextDisplayPosition.Overhead;
             float yOffset = showAbove ? 55f : -125f;
 
@@ -310,14 +312,14 @@ namespace EliteEnemies.VisualEffects
             GameObject textObj = new GameObject("AffixText");
             textObj.transform.SetParent(_affixTextContainer.transform);
             textObj.transform.localPosition = Vector3.zero;
-            textObj.transform.localScale = new Vector3(0.9f, 0.9f, 0.9f);
+            textObj.transform.localScale = new Vector3(1f, 1f, 1f);
             textObj.transform.localRotation = Quaternion.identity;
 
             _affixLabel = textObj.AddComponent<TextMeshProUGUI>();
     
             _affixLabel.alignment = TextAlignmentOptions.Center;
-            _affixLabel.fontSizeMin = 20f;
-            _affixLabel.fontSizeMax = 24f;
+            _affixLabel.fontSizeMin = (float)GameConfig.AffixFontSize;
+            _affixLabel.fontSizeMax = (float)GameConfig.AffixFontSize + 4f;
             _affixLabel.enableAutoSizing = true;
             _affixLabel.fontStyle = FontStyles.Bold;
             _affixLabel.enableWordWrapping = false;

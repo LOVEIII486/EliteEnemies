@@ -126,3 +126,4 @@ Affix_Guardian_Name,守护,2.3,AffixNames
 Affix_Guardian_Description,分身存活期间，本体处于“完全无敌”状态。,2.3,AffixDescription
 Affix_Guardian_MateSuffix,<color=#FFD700>守护核心</color>,2.3,AffixBehavior
 Affix_Guardian_ImmunePop,<color=#FF9900>免疫！</color>,2.3,AffixBehavior
+Settings_AffixFontSize,词缀字体大小,2.3,VisualSettings

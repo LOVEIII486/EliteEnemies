@@ -72,7 +72,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "DropRateMultiplier",
-                description: LocalizationManager.GetText("Settings_DropRateMultiplier", "精英掉落倍率"),
+                description: LocalizationManager.GetText("Settings_DropRateMultiplier"),
                 defaultValue: GameConfig.DropRateMultiplier,
                 sliderRange: new Vector2(0f, 3f),
                 onValueChange: GameConfig.SetDropRateMultiplier,
@@ -82,7 +82,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "ItemQualityBias",
-                description: LocalizationManager.GetText("Settings_ItemQualityBias", "物品品质偏好"),
+                description: LocalizationManager.GetText("Settings_ItemQualityBias"),
                 defaultValue: GameConfig.ItemQualityBias,
                 sliderRange: new Vector2(-3f, 3f),
                 onValueChange: GameConfig.SetItemQualityBias,
@@ -92,7 +92,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddToggle(
                 key: "EnableBonusLoot",
-                description: LocalizationManager.GetText("Settings_EnableBonusLoot", "启用奖励掉落（关闭后仅保留词缀特定掉落）"),
+                description: LocalizationManager.GetText("Settings_EnableBonusLoot"),
                 enable: GameConfig.EnableBonusLoot,
                 onValueChange: GameConfig.SetEnableBonusLoot
             );
@@ -130,6 +130,15 @@ namespace EliteEnemies.Settings
                 defaultValue: currentPosition,
                 onValueChange: GameConfig.SetAffixDisplayPosition
             );
+            
+            ModSettingAPI.AddSlider(
+                key: "AffixFontSize",
+                description: LocalizationManager.GetText("Settings_AffixFontSize"),
+                defaultValue: GameConfig.AffixFontSize,
+                minValue: 20,
+                maxValue: 40,
+                onValueChange: GameConfig.SetAffixFontSize
+            );
         }
         
         // 全局属性调整
@@ -137,7 +146,7 @@ namespace EliteEnemies.Settings
         {
             ModSettingAPI.AddSlider(
                 key: "GlobalHealthMultiplier",
-                description: LocalizationManager.GetText("Settings_GlobalHealthMultiplier", "全局血量倍率"),
+                description: LocalizationManager.GetText("Settings_GlobalHealthMultiplier"),
                 defaultValue: GameConfig.GlobalHealthMultiplier,
                 sliderRange: new Vector2(1f, 10f),
                 onValueChange: GameConfig.SetGlobalHealthMultiplier,
@@ -147,7 +156,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "GlobalDamageMultiplier",
-                description: LocalizationManager.GetText("Settings_GlobalDamageMultiplier", "全局伤害倍率"),
+                description: LocalizationManager.GetText("Settings_GlobalDamageMultiplier"),
                 defaultValue: GameConfig.GlobalDamageMultiplier,
                 sliderRange: new Vector2(1f, 10f),
                 onValueChange: GameConfig.SetGlobalDamageMultiplier,
@@ -157,7 +166,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "GlobalSpeedMultiplier",
-                description: LocalizationManager.GetText("Settings_GlobalSpeedMultiplier", "全局速度倍率"),
+                description: LocalizationManager.GetText("Settings_GlobalSpeedMultiplier"),
                 defaultValue: GameConfig.GlobalSpeedMultiplier,
                 sliderRange: new Vector2(1f, 10f),
                 onValueChange: GameConfig.SetGlobalSpeedMultiplier,
@@ -171,7 +180,7 @@ namespace EliteEnemies.Settings
         {
             ModSettingAPI.AddSlider(
                 key: "AffixWeight1",
-                description: LocalizationManager.GetText("Settings_AffixWeight1", "1个词条的权重（推荐：30-70）"),
+                description: LocalizationManager.GetText("Settings_AffixWeight1"),
                 defaultValue: GameConfig.AffixWeight1,
                 minValue: 0,
                 maxValue: 100,
@@ -180,7 +189,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "AffixWeight2",
-                description: LocalizationManager.GetText("Settings_AffixWeight2", "2个词条的权重（推荐：20-50）"),
+                description: LocalizationManager.GetText("Settings_AffixWeight2"),
                 defaultValue: GameConfig.AffixWeight2,
                 minValue: 0,
                 maxValue: 100,
@@ -189,7 +198,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "AffixWeight3",
-                description: LocalizationManager.GetText("Settings_AffixWeight3", "3个词条的权重（推荐：10-30）"),
+                description: LocalizationManager.GetText("Settings_AffixWeight3"),
                 defaultValue: GameConfig.AffixWeight3,
                 minValue: 0,
                 maxValue: 100,
@@ -198,7 +207,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "AffixWeight4",
-                description: LocalizationManager.GetText("Settings_AffixWeight4", "4个词条的权重（推荐：1-10）"),
+                description: LocalizationManager.GetText("Settings_AffixWeight4"),
                 defaultValue: GameConfig.AffixWeight4,
                 minValue: 0,
                 maxValue: 100,
@@ -207,7 +216,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddSlider(
                 key: "AffixWeight5",
-                description: LocalizationManager.GetText("Settings_AffixWeight5", "5个词条的权重（推荐：0-5）"),
+                description: LocalizationManager.GetText("Settings_AffixWeight5"),
                 defaultValue: GameConfig.AffixWeight5,
                 minValue: 0,
                 maxValue: 100,
@@ -268,6 +277,7 @@ namespace EliteEnemies.Settings
                     "ShowEliteName",
                     "ShowDetailedHealth",
                     "AffixDisplayPosition",
+                    "AffixFontSize"
                 },
                 scale: GroupScale,
                 topInsert: GroupTopInsert,
@@ -276,7 +286,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddGroup(
                 key: "GlobalMultipliers",
-                description: LocalizationManager.GetText("Settings_GlobalMultipliers_Group", "全局属性调整"),
+                description: LocalizationManager.GetText("Settings_GlobalMultipliers_Group"),
                 keys: new List<string>
                 {
                     "GlobalHealthMultiplier",
@@ -290,7 +300,7 @@ namespace EliteEnemies.Settings
             
             ModSettingAPI.AddGroup(
                 key: "AffixCountWeights",
-                description: LocalizationManager.GetText("Settings_AffixCountWeights_Group", "词条数量权重（数值越大越常见）"),
+                description: LocalizationManager.GetText("Settings_AffixCountWeights_Group"),
                 keys: new List<string>
                 {
                     "AffixWeight1",

@@ -53,6 +53,7 @@ namespace EliteEnemies.Settings
         public static bool ShowEliteName { get; private set; }
         public static bool ShowDetailedHealth { get; private set; }
         public static AffixTextDisplayPosition AffixDisplayPosition { get; private set; } = AffixTextDisplayPosition.Overhead;
+        public static int AffixFontSize { get; private set; }
 
         // 词条数量权重
         public static int AffixWeight1 { get; private set; }
@@ -133,7 +134,10 @@ namespace EliteEnemies.Settings
             {
                 AffixDisplayPosition = AffixTextDisplayPosition.Overhead;
             }
-
+            AffixFontSize = ModSettingAPI.GetSavedValue<int>("AffixFontSize", out int fontSize)
+                ? Mathf.Clamp(fontSize, 20, 50)
+                : 20;
+            
             AffixWeight1 = ModSettingAPI.GetSavedValue<int>("AffixWeight1", out int w1)
                 ? Mathf.Clamp(w1, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 50;
@@ -178,6 +182,7 @@ namespace EliteEnemies.Settings
             ShowEliteName = true;
             ShowDetailedHealth = true;
             AffixDisplayPosition = AffixTextDisplayPosition.Overhead;
+            AffixFontSize = 20;
 
             AffixWeight1 = 50;
             AffixWeight2 = 30;
@@ -300,6 +305,11 @@ namespace EliteEnemies.Settings
                 NotifyConfigChanged();
             }
         }
+        public static void SetAffixFontSize(int value)
+        {
+            AffixFontSize = Mathf.Clamp(value, 20, 50);
+            NotifyConfigChanged();
+        }
 
         public static void SetAffixWeight1(int value)
         {
@@ -383,6 +393,7 @@ namespace EliteEnemies.Settings
                 ShowEliteName = ShowEliteName,
                 ShowDetailedHealth = ShowDetailedHealth,
                 AffixDisplayPosition = AffixDisplayPosition,
+                AffixFontSize = AffixFontSize,
 
                 DisabledAffixes = GetDisabledAffixBlacklist(),
                 AffixCountWeights = new int[]

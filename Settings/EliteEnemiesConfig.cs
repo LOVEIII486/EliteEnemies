@@ -24,5 +24,6 @@ namespace EliteEnemies
         public bool ShowEliteName { get; set; } = true;
         public bool ShowDetailedHealth { get; set; } = true;
         public GameConfig.AffixTextDisplayPosition AffixDisplayPosition { get; set; } = GameConfig.AffixTextDisplayPosition.Overhead;
+        public int AffixFontSize { get; set; } = 20;
     }
 }
