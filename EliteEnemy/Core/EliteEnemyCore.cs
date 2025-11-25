@@ -98,7 +98,7 @@ namespace EliteEnemies
 
         public static List<string> SelectRandomAffixes(int maxCount, CharacterMainControl cmc)
         {
-            // 1. 获取基础有效词缀池，过滤预设白名单和配置黑名单
+            // 1. 获取基础有效词缀池
             List<string> basePool = GetBaseValidAffixes(cmc);
 
             if (basePool.Count == 0) return new List<string>();
@@ -108,35 +108,41 @@ namespace EliteEnemies
             var currentAvailable = new List<string>(basePool); 
             int targetCount = Mathf.Clamp(SelectWeightedAffixCount(maxCount), 1, currentAvailable.Count);
 
-            // 执行选择逻辑
+            // 执行常规选择
             SelectAndAppendAffixes(selected, currentAvailable, targetCount);
-
-            // 3. 封弊者特殊处理
+            
+            // 3. 封弊者逻辑
             const string SpecialAffix = "Obscurer";
-            const int MaxTotalAffixes = 5;
+            const int SafetyHardLimit = 10;
 
             if (selected.Contains(SpecialAffix))
             {
-                if (selected.Count < maxCount && selected.Count < MaxTotalAffixes)
+                // 当总数未达到绝对安全熔断值
+                if (selected.Count < SafetyHardLimit)
                 {
-                    // 重新构建可用池
+                    // 重新构建可用池：从基础池中移除 已选词条 和 与已选词条冲突的词条
                     var extraAvailable = new List<string>(basePool);
                     extraAvailable.RemoveAll(a => selected.Contains(a));
                     extraAvailable.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
 
                     if (extraAvailable.Count > 0)
                     {
-                        int extraCount = UnityEngine.Random.Range(1, 4); // 随机 1~3 个
-                        int spaceLeft = Mathf.Min(maxCount, MaxTotalAffixes) - selected.Count;
+                        // 设定额外奖励数量：随机 1 到 3 个
+                        int extraRewardCount = UnityEngine.Random.Range(1, 4);
                         
-                        // 取最小值：随机数 vs 可用池剩余 vs 剩余空位
-                        int finalExtraCount = Mathf.Min(extraCount, Mathf.Min(extraAvailable.Count, spaceLeft));
+                        // 实际可添加数量 = Min(想要奖励的数量, 剩余可用词条数量, 距离熔断值的剩余空间)
+                        int actualAddCount = Mathf.Min(extraRewardCount, extraAvailable.Count);
+                        actualAddCount = Mathf.Min(actualAddCount, SafetyHardLimit - selected.Count);
 
-                        if (finalExtraCount > 0)
+                        if (actualAddCount > 0)
                         {
-                            Debug.Log($"{LogTag} {SpecialAffix} 触发，额外添加 {finalExtraCount} 个词条");
-                            SelectAndAppendAffixes(selected, extraAvailable, finalExtraCount);
+                            Debug.Log($"{LogTag} [封弊者] 生效！突破上限，额外添加 {actualAddCount} 个词条。当前总数: {selected.Count + actualAddCount}");
+                            SelectAndAppendAffixes(selected, extraAvailable, actualAddCount);
                         }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"{LogTag} [封弊者] 触发，但没有更多可用/不冲突的词条可添加。");
                     }
                 }
             }

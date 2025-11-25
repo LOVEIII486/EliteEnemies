@@ -46,6 +46,8 @@ namespace EliteEnemies
                 ["Knockback"] = new HashSet<string> { "Phase" },
                 ["Fisherman"] =  new HashSet<string> { "Chef","Musician" },
                 ["Chef"] =  new HashSet<string> { "Fisherman","Musician" },
+                ["ChickenBro"] =  new HashSet<string> { "MandarinDuck" },
+                ["Guardian"] =  new HashSet<string> { "Undead","Split","ChickenBro","MandarinDuck" },
             };
 
         /// <summary>
@@ -196,7 +198,7 @@ namespace EliteEnemies
                 new LootEntry(320, 1, 1, 0.1f), // 进击图腾 2
                 new LootEntry(957, 1, 1, 0.05f) // 进击图腾 3
             ).WithLootGroup(
-                new LootEntry(438, 1, 2, 0.5f) // 热血针剂
+                new LootEntry(438, 1, 1, 0.5f) // 热血针剂
             ),
             ["GlassCannon"] = new AffixData
             {
@@ -557,7 +559,8 @@ namespace EliteEnemies
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.1f,
                 Rarity = AffixRarity.Legendary
-            }.WithRandomLoot(-1, 1, 0.3f, new[] { "MiniGame" }),
+            }.WithRandomLoot(-1, 1, 1f, new[] { "MiniGame" })
+            .WithRandomLootRange(4, 7, 1, 1f, new[] { "Weapon" }),
             ["Distortion"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Distortion_Name"),
