@@ -21,6 +21,8 @@ namespace EliteEnemies
 
         private static readonly HashSet<int> ProcessedLootBoxes = new HashSet<int>();
         private static LootItemHelper _lootHelper = null;
+        private static MethodInfo _cachedGetCharacterItemMethod;
+        private static bool _hasCachedMethod = false;
 
         // 弱怪惩罚配置
         private static readonly Dictionary<string, (float dropRatePenalty, int qualityDowngrade)> WeakEnemyPenalties =
@@ -296,15 +298,42 @@ namespace EliteEnemies
 
         private static CharacterMainControl GetCharacterFromItem(Item item)
         {
-            // 尝试从 Item 反射获取
-            MethodInfo method = item.GetType().GetMethod("GetCharacterItem");
-            if (method != null)
+            if (item == null) return null;
+
+            if (!_hasCachedMethod)
             {
-                var charItem = method.Invoke(item, null) as Item;
-                if (charItem?.GetComponent<CharacterMainControl>() is CharacterMainControl c) return c;
+                _cachedGetCharacterItemMethod = item.GetType().GetMethod("GetCharacterItem");
+                _hasCachedMethod = true;
             }
-            // 尝试从层级获取
-            return item.GetComponentInParent<CharacterMainControl>();
+
+            if (_cachedGetCharacterItemMethod != null)
+            {
+                try 
+                {
+                    Item characterItem = _cachedGetCharacterItemMethod.Invoke(item, null) as Item;
+                    if (characterItem != null)
+                    {
+                        CharacterMainControl character = characterItem.GetComponent<CharacterMainControl>();
+                        if (character != null) return character;
+                    }
+                }
+                catch (Exception) 
+                { 
+                }
+            }
+
+            Transform current = item.transform;
+            int depth = 0;
+            while (current != null && depth < 10)
+            {
+                CharacterMainControl character = current.GetComponent<CharacterMainControl>();
+                if (character != null) return character;
+                current = current.parent;
+                depth++;
+            }
+
+            // Debug.LogWarning($"{LogTag} 无法找到对应的 CharacterMainControl");
+            return null;
         }
 
         private static LootItemHelper GetLootItemHelper()

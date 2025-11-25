@@ -14,15 +14,22 @@ namespace EliteEnemies
     /// </summary>
     public class LootItemHelper : MonoBehaviour
     {
-        private const string LogTag = "[LootHelper]";
+        private const string LogTag = "[EliteEnemies.LootHelper]";
+        
+        // 调试模式开关
         public bool debugMode = false;
-        public float qualityBiasPower = 0f; // >0 偏向高品质, <0 偏向低品质
+        
+        // 品质偏好：>0 偏向高品质, <0 偏向低品质
+        public float qualityBiasPower = 0f;
 
+        // 存储每个品质对应的可用物品ID列表
         private Dictionary<int, List<int>> _qualityItemCache = new Dictionary<int, List<int>>();
+        // 存储物品ID对应的标签集合，避免运行时实例化查询
+        private Dictionary<int, HashSet<string>> _itemTagCache = new Dictionary<int, HashSet<string>>();
+        
         private bool _isInitialized = false;
 
-        #region Configuration
-
+        // ========== 黑名单配置 ==========
         private readonly string[] _nameDescriptionBlacklist =
         {
             "Item_", "Quest_", "BP_", "水族箱", "比特币矿机", "蛋清能源碎片",
@@ -34,27 +41,28 @@ namespace EliteEnemies
             "DestroyOnLootBox", "DestroyInBase", "Formula", "Formula_Blueprint", "Quest"
         };
 
-        #endregion
-
         private void Start()
         {
             InitializeItemCache();
         }
 
-        #region Initialization
+        // ========== 初始化核心逻辑 ==========
 
         private void InitializeItemCache()
         {
+            DebugLog("开始初始化物品缓存（包含标签预处理）");
             _qualityItemCache.Clear();
+            _itemTagCache.Clear();
+
             try
             {
-                var excludedTags = GetExcludedTags();
                 for (int quality = 1; quality <= 7; quality++)
                 {
+                    // 搜索该品质下的所有物品
                     ItemFilter filter = new ItemFilter
                     {
                         requireTags = new Tag[0],
-                        excludeTags = excludedTags,
+                        excludeTags = new Tag[0], // 不在此处过滤，在处理函数中统一处理
                         minQuality = quality,
                         maxQuality = quality
                     };
@@ -66,212 +74,234 @@ namespace EliteEnemies
                     {
                         foreach (int itemId in itemIds)
                         {
-                            if (IsItemValid(itemId)) validItems.Add(itemId);
+                            // 处理单个物品：检查有效性并缓存标签
+                            if (ProcessItemAndCacheTags(itemId))
+                            {
+                                validItems.Add(itemId);
+                            }
                         }
                     }
 
                     _qualityItemCache[quality] = validItems;
+                    DebugLog($"品阶 {quality}: {validItems.Count} 个可用物品");
                 }
+
                 _isInitialized = true;
-                if (debugMode) Debug.Log($"{LogTag} 初始化完成，共缓存 {_qualityItemCache.Sum(x=>x.Value.Count)} 个物品");
+                DebugLog("物品缓存初始化完成");
             }
             catch (Exception ex)
             {
                 Debug.LogError($"{LogTag} 初始化失败: {ex.Message}");
+                _isInitialized = false;
             }
         }
 
-        private Tag[] GetExcludedTags()
+        /// <summary>
+        /// 处理单个物品：验证黑名单并提取标签缓存
+        /// </summary>
+        private bool ProcessItemAndCacheTags(int itemId)
         {
-            return _tagBlacklist
-                .Select(TagUtilities.TagFromString)
-                .Where(t => t != null)
-                .ToArray();
+            Item item = null;
+            try
+            {
+                item = ItemAssetsCollection.InstantiateSync(itemId);
+                if (item == null) return false;
+                
+                item.Initialize();
+
+                // 1. 检查名称和描述黑名单
+                string name = item.DisplayName ?? "";
+                string desc = item.Description ?? "";
+                
+                foreach (string prefix in _nameDescriptionBlacklist)
+                {
+                    if (name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ||
+                        desc.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        UnityEngine.Object.Destroy(item.gameObject);
+                        return false;
+                    }
+                }
+
+                // 2. 提取标签 & 检查标签黑名单
+                HashSet<string> currentTags = new HashSet<string>();
+                bool isTagBlacklisted = false;
+
+                if (item.Tags?.list != null)
+                {
+                    foreach (var tag in item.Tags.list)
+                    {
+                        if (tag == null || string.IsNullOrEmpty(tag.name)) continue;
+
+                        foreach (string blacklistedTag in _tagBlacklist)
+                        {
+                            if (tag.name.Equals(blacklistedTag, StringComparison.OrdinalIgnoreCase))
+                            {
+                                isTagBlacklisted = true;
+                                break;
+                            }
+                        }
+                        
+                        if (isTagBlacklisted) break;
+
+                        // 记录标签到临时集合
+                        currentTags.Add(tag.name);
+                    }
+                }
+
+                // 如果命中黑名单，销毁并返回无效
+                if (isTagBlacklisted)
+                {
+                    UnityEngine.Object.Destroy(item.gameObject);
+                    return false;
+                }
+
+                // 3. 验证通过，存入缓存
+                _itemTagCache[itemId] = currentTags;
+                
+                UnityEngine.Object.Destroy(item.gameObject);
+                return true;
+            }
+            catch (Exception)
+            {
+                if (item != null) UnityEngine.Object.Destroy(item.gameObject);
+                return false;
+            }
         }
 
-        #endregion
-
-        #region Public API
+        // ========== 查询接口  ==========
 
         /// <summary>
-        /// 按权重创建物品
+        /// 检查物品是否包含所有指定标签 
+        /// </summary>
+        private bool ItemHasAllTags(int itemId, Tag[] requiredTags)
+        {
+            if (requiredTags == null || requiredTags.Length == 0)
+                return true;
+
+            // 直接查缓存
+            if (!_itemTagCache.TryGetValue(itemId, out var itemTags))
+            {
+                return false; // 缓存中没有说明初始化时被过滤或无效
+            }
+
+            foreach (Tag requiredTag in requiredTags)
+            {
+                // 只要有一个标签不在缓存中，就返回 false
+                if (!itemTags.Contains(requiredTag.name))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 按品质权重创建物品（支持品质偏好和标签过滤）
         /// </summary>
         public Item CreateItemWithTagsWeighted(int minQuality = 1, int maxQuality = 7, Tag[] requiredTags = null)
         {
-            if (!_isInitialized) return null;
-
-            // 特殊情况：不限品质
-            if (minQuality == -1 || maxQuality == -1)
+            if (!_isInitialized)
             {
-                if (requiredTags == null || requiredTags.Length == 0)
-                {
-                    Debug.LogError($"{LogTag} 品质为 -1 时必须指定标签");
-                    return null;
-                }
-                return CreateItemFromAllQualities(requiredTags);
+                Debug.LogError($"{LogTag} 物品缓存未初始化");
+                return null;
             }
 
-            // 1. 确定有效品质池
+            // 处理 -1 特殊情况
+            if (minQuality == -1 || maxQuality == -1)
+            {
+                if (requiredTags == null || requiredTags.Length == 0) return null;
+                return CreateItemWithTagsFromAllQualities(requiredTags);
+            }
+
             minQuality = Mathf.Clamp(minQuality, 1, 7);
             maxQuality = Mathf.Clamp(maxQuality, 1, 7);
-            
-            // 如果有标签需求，先筛选哪些品质里有符合标签的物品
-            List<int> validQualities = new List<int>();
+
+            // 如果指定了标签，先统计有效品质
             if (requiredTags != null && requiredTags.Length > 0)
             {
+                List<int> validQualities = new List<int>();
+
                 for (int q = minQuality; q <= maxQuality; q++)
                 {
-                    if (HasAnyItemWithTags(q, requiredTags)) validQualities.Add(q);
+                    if (!_qualityItemCache.TryGetValue(q, out var pool) || pool.Count == 0)
+                        continue;
+
+                    // 使用优化后的方法检查是否有符合条件的物品
+                    foreach (int itemId in pool)
+                    {
+                        if (ItemHasAllTags(itemId, requiredTags))
+                        {
+                            validQualities.Add(q);
+                            break; // 该品质下只要有一个符合条件的即可
+                        }
+                    }
                 }
-                
+
                 if (validQualities.Count == 0) return null;
+
+                // 按权重选择一个品质
+                int pickedQuality = PickQualityByWeightFromValidQualities(validQualities, minQuality, maxQuality);
+                return CreateItemWithTagsFromQuality(pickedQuality, requiredTags);
             }
             else
             {
-                // 无标签，区间内所有品质都视为有效
-                for (int q = minQuality; q <= maxQuality; q++) validQualities.Add(q);
+                // 无标签限制：直接按权重选择品质
+                int pickedQuality = PickQualityByWeight(minQuality, maxQuality);
+                return CreateItemFromQuality(pickedQuality);
             }
-
-            // 2. 按权重选择一个品质
-            int pickedQuality = PickQualityByWeight(validQualities);
-
-            // 3. 从该品质池创建物品
-            return CreateItemFromSpecificQuality(pickedQuality, requiredTags);
         }
 
-        #endregion
+        // ========== 创建物品辅助方法 ==========
 
-        #region Internal Logic
+        private Item CreateItemFromQuality(int quality)
+        {
+            if (!_qualityItemCache.TryGetValue(quality, out var pool) || pool.Count == 0) return null;
+            int itemId = pool[UnityEngine.Random.Range(0, pool.Count)];
+            return InstantiateItem(itemId);
+        }
 
-        private Item CreateItemFromSpecificQuality(int quality, Tag[] requiredTags)
+        private Item CreateItemWithTagsFromQuality(int quality, Tag[] requiredTags)
         {
             if (!_qualityItemCache.TryGetValue(quality, out var pool) || pool.Count == 0) return null;
 
-            // 筛选符合标签的 ID
-            List<int> candidates = pool;
-            if (requiredTags != null && requiredTags.Length > 0)
+            // 筛选符合标签的ID (内存查询，速度极快)
+            List<int> matchingItems = new List<int>();
+            foreach (int itemId in pool)
             {
-                candidates = pool.Where(id => CheckItemTags(id, requiredTags)).ToList();
-            }
-
-            if (candidates.Count == 0) return null;
-
-            int selectedId = candidates[UnityEngine.Random.Range(0, candidates.Count)];
-            return InstantiateItem(selectedId);
-        }
-
-        private Item CreateItemFromAllQualities(Tag[] requiredTags)
-        {
-            // 这是一个较慢的全搜索，仅用于特殊配置
-            List<int> allCandidates = new List<int>();
-            foreach (var kvp in _qualityItemCache)
-            {
-                allCandidates.AddRange(kvp.Value.Where(id => CheckItemTags(id, requiredTags)));
-            }
-
-            if (allCandidates.Count == 0) return null;
-            
-            int selectedId = allCandidates[UnityEngine.Random.Range(0, allCandidates.Count)];
-            return InstantiateItem(selectedId);
-        }
-
-        private int PickQualityByWeight(List<int> validQualities)
-        {
-            if (validQualities.Count == 1) return validQualities[0];
-            if (Mathf.Approximately(qualityBiasPower, 0f)) return validQualities[UnityEngine.Random.Range(0, validQualities.Count)];
-
-            // 计算权重
-            List<float> weights = new List<float>();
-            float totalWeight = 0f;
-            foreach (int q in validQualities)
-            {
-                // 偏好算法：bias>0 偏高品质，bias<0 偏低品质
-                int baseVal = (qualityBiasPower < 0) ? (8 - q) : q;
-                float w = Mathf.Pow(Mathf.Max(1, baseVal), Mathf.Abs(qualityBiasPower));
-                weights.Add(w);
-                totalWeight += w;
-            }
-
-            float rnd = UnityEngine.Random.value * totalWeight;
-            float current = 0f;
-            for (int i = 0; i < validQualities.Count; i++)
-            {
-                current += weights[i];
-                if (rnd <= current) return validQualities[i];
-            }
-            return validQualities.Last();
-        }
-
-        private bool HasAnyItemWithTags(int quality, Tag[] tags)
-        {
-            if (!_qualityItemCache.TryGetValue(quality, out var pool)) return false;
-            // 简单的存在性检查
-            return pool.Any(id => CheckItemTags(id, tags));
-        }
-
-        /// <summary>
-        /// 实例化并校验物品标签
-        /// </summary>
-        private bool CheckItemTags(int itemId, Tag[] requiredTags)
-        {
-            var item = InstantiateItem(itemId);
-            if (item == null) return false;
-
-            bool pass = true;
-            if (item.Tags?.list != null)
-            {
-                foreach (var req in requiredTags)
+                if (ItemHasAllTags(itemId, requiredTags))
                 {
-                    if (!item.Tags.list.Exists(t => t.name == req.name))
-                    {
-                        pass = false;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                pass = false;
-            }
-
-            Destroy(item.gameObject);
-            return pass;
-        }
-
-        private bool IsItemValid(int itemId)
-        {
-            var item = InstantiateItem(itemId);
-            if (item == null) return false;
-
-            string name = item.DisplayName ?? "";
-            string desc = item.Description ?? "";
-            bool valid = true;
-
-            // 检查名字
-            foreach (var black in _nameDescriptionBlacklist)
-            {
-                if (name.StartsWith(black) || desc.StartsWith(black))
-                {
-                    valid = false; 
-                    break;
+                    matchingItems.Add(itemId);
                 }
             }
 
-            // 检查标签
-            if (valid && item.Tags?.list != null)
+            if (matchingItems.Count == 0) return null;
+
+            int selectedId = matchingItems[UnityEngine.Random.Range(0, matchingItems.Count)];
+            return InstantiateItem(selectedId);
+        }
+
+        private Item CreateItemWithTagsFromAllQualities(Tag[] requiredTags)
+        {
+            List<int> matchingItems = new List<int>();
+
+            for (int q = 1; q <= 7; q++)
             {
-                foreach (var t in item.Tags.list)
+                if (!_qualityItemCache.TryGetValue(q, out var pool) || pool.Count == 0) continue;
+
+                foreach (int itemId in pool)
                 {
-                    if (_tagBlacklist.Contains(t.name))
+                    if (ItemHasAllTags(itemId, requiredTags))
                     {
-                        valid = false;
-                        break;
+                        matchingItems.Add(itemId);
                     }
                 }
             }
 
-            Destroy(item.gameObject);
-            return valid;
+            if (matchingItems.Count == 0) return null;
+            int selectedId = matchingItems[UnityEngine.Random.Range(0, matchingItems.Count)];
+            return InstantiateItem(selectedId);
         }
 
         private Item InstantiateItem(int id)
@@ -285,17 +315,73 @@ namespace EliteEnemies
             catch { return null; }
         }
 
-        #endregion
+        // ========== 权重算法 ==========
 
-        #region Debug Tools (F5-F8)
-        // 保留原有的Update测试逻辑，折叠起来以免干扰阅读
-        private void Update()
+        private int PickQualityByWeight(int minQuality, int maxQuality)
         {
-            if (!debugMode) return;
-            if (Input.GetKeyDown(KeyCode.F5)) TestSpawn();
-            // ... 其他测试键位可在此处保留
+            if (Mathf.Approximately(qualityBiasPower, 0f))
+                return UnityEngine.Random.Range(minQuality, maxQuality + 1);
+
+            float totalWeight = 0f;
+            float[] weights = new float[maxQuality - minQuality + 1];
+
+            for (int i = 0; i < weights.Length; i++)
+            {
+                int q = minQuality + i;
+                int baseValue = (qualityBiasPower < 0) ? (8 - q) : q;
+                if (baseValue <= 0) baseValue = 1;
+                weights[i] = Mathf.Pow(baseValue, Mathf.Abs(qualityBiasPower));
+                totalWeight += weights[i];
+            }
+
+            float random = UnityEngine.Random.value * totalWeight;
+            float accumulated = 0f;
+
+            for (int i = 0; i < weights.Length; i++)
+            {
+                accumulated += weights[i];
+                if (random <= accumulated) return minQuality + i;
+            }
+            return maxQuality;
         }
-        private void TestSpawn() { /* ... */ }
-        #endregion
+
+        private int PickQualityByWeightFromValidQualities(List<int> validQualities, int minQuality, int maxQuality)
+        {
+            if (validQualities == null || validQualities.Count == 0) return minQuality;
+            if (Mathf.Approximately(qualityBiasPower, 0f))
+                return validQualities[UnityEngine.Random.Range(0, validQualities.Count)];
+
+            float totalWeight = 0f;
+            float[] weights = new float[validQualities.Count];
+
+            for (int i = 0; i < weights.Length; i++)
+            {
+                int q = validQualities[i];
+                int baseValue = (qualityBiasPower < 0) ? (8 - q) : q;
+                if (baseValue <= 0) baseValue = 1;
+                weights[i] = Mathf.Pow(baseValue, Mathf.Abs(qualityBiasPower));
+                totalWeight += weights[i];
+            }
+
+            float random = UnityEngine.Random.value * totalWeight;
+            float accumulated = 0f;
+
+            for (int i = 0; i < weights.Length; i++)
+            {
+                accumulated += weights[i];
+                if (random <= accumulated) return validQualities[i];
+            }
+            return validQualities.Last();
+        }
+
+        // ========== 工具函数 ==========
+
+        private void DebugLog(string message)
+        {
+            if (debugMode)
+            {
+                Debug.Log($"{LogTag} {message}");
+            }
+        }
     }
 }
