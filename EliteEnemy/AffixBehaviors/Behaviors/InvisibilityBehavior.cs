@@ -79,10 +79,7 @@ namespace EliteEnemies.AffixBehaviors
             
             character.Show();
             
-            string raw = LocalizationManager.GetText(
-                "Affix_Invisible_Messages",
-                "你刚才是不是看到我了？|别眨眼，我又消失啦～|嘘……什么都没发生。|幻觉？还是我太快了？|我就在你背后……开玩笑的。"
-            );
+            string raw = LocalizationManager.GetText("Affix_Invisible_Messages");
             InitMessages(raw);
             EnhanceAIBehavior(character);
         }
@@ -120,48 +117,51 @@ namespace EliteEnemies.AffixBehaviors
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            if (!_isActive || !_hasBeenHit) return; // 未受伤前不更新
+            if (!_isActive || !_hasBeenHit) return;
 
             _timer += deltaTime;
 
-            // 周期显形触发
             if (!_isFlashing && _timer >= VisibleInterval)
             {
-                _timer = 0f;
                 _isFlashing = true;
-                _flashStep = 0;
                 _flashTimer = 0f;
+                _timer = 0f;
                 character.PopText(GetRandomMessage());
             }
 
-            // 闪烁逻辑
+            bool shouldBeVisible = false;
+
             if (_isFlashing)
             {
                 _flashTimer += deltaTime;
+        
+                float totalFlashDuration = FlashCount * 2 * FlashInterval;
 
-                if (_flashTimer >= FlashInterval)
+                if (_flashTimer >= totalFlashDuration)
                 {
-                    _flashTimer = 0f;
-                    _flashStep++;
-
-                    if (_isVisible)
-                    {
-                        character.Hide();
-                        _isVisible = false;
-                    }
-                    else
-                    {
-                        character.Show();
-                        _isVisible = true;
-                    }
-                    if (_flashStep >= FlashCount * 2)
-                    {
-                        _isFlashing = false;
-                        _flashStep = 0;
-                        character.Hide();
-                        _isVisible = false;
-                    }
+                    _isFlashing = false;
+                    shouldBeVisible = false; // 结束时必须隐身
                 }
+                else
+                {
+                    int step = Mathf.FloorToInt(_flashTimer / FlashInterval);
+                    shouldBeVisible = (step % 2 == 0); 
+                }
+            }
+
+    
+            if (shouldBeVisible)
+            {
+                if (!_isVisible)
+                {
+                    character.Show();
+                    _isVisible = true;
+                }
+            }
+            else
+            {
+                character.Hide();
+                _isVisible = false;
             }
         }
 
