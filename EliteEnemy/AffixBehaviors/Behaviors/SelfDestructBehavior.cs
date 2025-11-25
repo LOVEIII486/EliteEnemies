@@ -47,9 +47,10 @@ namespace EliteEnemies.AffixBehaviors
         {
             if (character == null) return;
             var deathPosition = character.transform.position;
+ 
             CreateExplosion(deathPosition, character);
         }
-
+        
         /// <summary>
         /// 创建爆炸效果
         /// </summary>
@@ -60,22 +61,25 @@ namespace EliteEnemies.AffixBehaviors
                 return;
             }
 
-            // 修复：传入 null 作为伤害来源，防止 AI 追溯已销毁的对象
-            // 原代码：var dmgInfo = new DamageInfo(deadCharacter)
-            var dmgInfo = new DamageInfo(null) 
+            // var player = CharacterMainControl.Main; 
+            //
+            //
+            // var source = player != null ? player : null;
+
+            var dmgInfo = new DamageInfo(deadCharacter)
             {
                 damageValue = ExplosionDamage,
                 fromWeaponItemID = WeaponItemID,
                 armorPiercing = ArmorPiercing
             };
-
+            
             LevelManager.Instance.ExplosionManager.CreateExplosion(
                 position, 
                 ExplosionRadius, 
                 dmgInfo, 
                 ExplosionType, 
                 ExplosionForce, 
-                false 
+                true 
             );
         }
 
