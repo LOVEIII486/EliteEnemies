@@ -42,7 +42,7 @@ Affix_MimicTear_Description,复制玩家主手武器与装备（不会掉落）,
 Affix_Mini_Description,敌人变得更小，生命略低但移速略微提升,1.0,AffixDescription
 Affix_Musician_Description,带着乐器上战场的奇葩，掉落乐器,1.0,AffixDescription
 Affix_NineDragons_Description,全属性提升 1.3 倍，掉落各种针剂,1.0,AffixDescription
-Affix_Regeneration_Description,持续回复生命，每秒回复约 10 点最大生命值,1.0,AffixDescription
+Affix_Regeneration_Description,持续回复生命，每秒回复约 10 点生命值,1.0,AffixDescription
 Affix_Split_Description,敌人残血时召唤数个更弱的分身,1.0,AffixDescription
 Affix_Sticky_Description,首次受击会使玩家掉落当前装备的武器，击杀掉落胶带与万能胶,1.0,AffixDescription
 Affix_Swift_Description,移动迅速但较为脆弱。掉落：轻盈图腾、提速针剂,1.0,AffixDescription
@@ -73,8 +73,8 @@ Settings_ItemQualityBias,物品品质偏好（影响掉落品质，建议在-0.8
 Settings_GlobalHealthMultiplier,全局血量倍率,1.4,BasicSettings
 Settings_GlobalDamageMultiplier,全局伤害倍率,1.4,BasicSettings
 Settings_GlobalSpeedMultiplier,全局速度倍率,1.4,BasicSettings
-Settings_GlobalMultipliers_Group,全局属性调整,1.4,Groups
-Settings_EnableBonusLoot,启用奖励掉落,1.5,BasicSettings
+Settings_GlobalMultipliers_Group,全局属性调整（仅对精英怪生效）,1.4,Groups
+Settings_EnableBonusLoot,启用奖励掉落（由词条数量、稀有度、怪物类型加权决定）,1.5,BasicSettings
 Settings_ShowAffixFootText,显示敌人脚底的词缀文本,2.1,VisualSettings
 Settings_AffixFootTextFontSize,脚底词缀字体大小,2.1,VisualSettings
 Affix_Slime_Name,史莱姆,1.7,AffixNames
@@ -104,16 +104,16 @@ Affix_Hardening_PopText_1,<color=#B2B2B2>硬化 +{0}</color>,2.0,AffixBehavior
 Affix_ChickenBro_Name,鸡哥,2.0,AffixNames
 Affix_ChickenBro_Description,出生时召唤小鸡护卫,2.0,AffixDescription
 Affix_ChickenBro_Summon_Name,<color=#FFD600>鸡弟</color>,2.0,AffixBehavior
-Settings_ShowEliteName,显示精英敌人名字,2.1,VisualSettings
+Settings_ShowEliteName,显示精英敌人词缀,2.1,VisualSettings
 Settings_VisualSettings_Group,视觉效果设置,2.1,Groups
 Affix_Phase_Name,相位,2.2,AffixNames
 Affix_Phase_Description,命中玩家时与玩家交换位置,2.2,AffixDescription
 Affix_Phase_PopText_1,<color=#00FFFF>相位移形！</color>,2.2,AffixBehavior
 Affix_MandarinDuck_Name,鸳鸯,2.2,AffixNames
 Affix_MandarinDuck_Description,真是一对苦命鸳鸯！,2.2,AffixDescription
-Affix_MandarinDuck_MateSuffix,伴侣,2.2,AffixBehavior
+Affix_MandarinDuck_MateSuffix,<color=#F08080>伴侣</color>,2.2,AffixBehavior
 Affix_Revenge_Name,报复,2.2,AffixNames
-Affix_Revenge_Description,受伤时会向攻击者发射子弹反击,2.2,AffixDescription
+Affix_Revenge_Description,受伤时会向攻击者发射火箭弹反击,2.2,AffixDescription
 Settings_AffixDisplayPosition,"词缀显示位置(Overhead=头顶, Underfoot=脚底)",2.3,VisualSettings
 Affix_Obscurer_Name,封弊者,2.3,AffixNames
 Affix_Obscurer_Description,隐藏所有词条名称显示为乱码,2.3,AffixDescription
@@ -122,3 +122,7 @@ Affix_Distortion_Description,攻击使玩家子弹偏转形成弧形,2.3,AffixDe
 Buff_EliteBuff_Distortion_Name,扭曲,2.3,BuffNames
 Affix_MultiShot_Name,多重射击,2.3,AffixNames
 Affix_MultiShot_Description,攻击时额外发射两枚子弹,2.3,AffixDescription
+Affix_Guardian_Name,守护,2.3,AffixNames
+Affix_Guardian_Description,分身存活期间，本体处于“完全无敌”状态。,2.3,AffixDescription
+Affix_Guardian_MateSuffix,<color=#FFD700>守护核心</color>,2.3,AffixBehavior
+Affix_Guardian_ImmunePop,<color=#FF9900>免疫！</color>,2.3,AffixBehavior

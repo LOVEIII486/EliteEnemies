@@ -35,6 +35,7 @@ namespace EliteEnemies.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<ObscurerBehavior>();
             AffixBehaviorManager.RegisterBehavior<DistortionBehavior>();
             AffixBehaviorManager.RegisterBehavior<MultiShotBehavior>();
+            AffixBehaviorManager.RegisterBehavior<GuardianBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }

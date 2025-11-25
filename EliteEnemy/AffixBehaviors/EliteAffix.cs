@@ -167,7 +167,7 @@ namespace EliteEnemies
                 new LootEntry(1139, 1, 1, 0.4f), // 3级重型防弹衣
                 new LootEntry(1138, 1, 1, 0.2f), // 4级重型防弹衣
                 new LootEntry(1137, 1, 1, 0.05f) // 5级重型防弹衣
-            ),
+            ).WithRandomLootRange(1, 3, 1, 0.7f, new[] { "Bullet" }),
             ["Swift"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Swift_Name", "迅捷"),
@@ -348,7 +348,8 @@ namespace EliteEnemies
                 DamageMultiplier = 0.9f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
-            }.WithRandomLoot(-1, 1, 1f, new[] { "Totem" }),
+            }.WithRandomLoot(-1, 1, 1f, new[] { "Totem" })
+            .WithRandomLootRange(3, 5, 2, 1f, new[] { "Bullet" }),
             ["Explosive"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Explosive_Name", "自爆"),
@@ -460,7 +461,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
-            },
+            }.WithRandomLootRange(3, 4, 2, 1f, new[] { "Bullet" }),
             ["Blindness"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Blindness_Name", "致盲"),
@@ -496,7 +497,7 @@ namespace EliteEnemies
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare
-            },
+            }.WithRandomLootRange(3, 4, 2, 1f, new[] { "Bullet" }),
             ["Hardening"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Hardening_Name", "硬化"),
@@ -575,6 +576,15 @@ namespace EliteEnemies
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
             }.WithRandomLootRange(2, 4, 2, 1f, new[] { "Bullet" }),
+            ["Guardian"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Guardian_Name"),
+                Description = LocalizationManager.GetText("Affix_Guardian_Description"),
+                HealthMultiplier = 1.0f, 
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Epic 
+            }
         };
 
 

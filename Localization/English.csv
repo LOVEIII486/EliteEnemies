@@ -122,3 +122,7 @@ Affix_Distortion_Description,Attacks distort player bullets into curved trajecto
 Buff_EliteBuff_Distortion_Name,Distortion,2.3,BuffNames
 Affix_MultiShot_Name,Multi-Shot,2.3,AffixNames
 Affix_MultiShot_Description,Fires two additional bullets on attack.,2.3,AffixDescription
+Affix_Guardian_Name,Guardian,2.3,AffixNames
+Affix_Guardian_Description,The main body is completely invincible while the clone is alive.,2.3,AffixDescription
+Affix_Guardian_MateSuffix,<color=#FFD700>Guardian Core</color>,2.3,AffixBehavior
+Affix_Guardian_ImmunePop,<color=#FF9900>IMMUNE!</color>,2.3,AffixBehavior

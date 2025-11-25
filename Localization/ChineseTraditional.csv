@@ -122,3 +122,7 @@ Affix_Distortion_Description,攻擊使玩家子彈偏轉形成弧形,2.3,AffixDe
 Buff_EliteBuff_Distortion_Name,扭曲,2.3,BuffNames
 Affix_MultiShot_Name,多重射擊,2.3,AffixNames
 Affix_MultiShot_Description,攻擊時額外發射兩枚子彈,2.3,AffixDescription
+Affix_Guardian_Name,守護,2.3,AffixNames
+Affix_Guardian_Description,分身存活期間，本體處於「完全無敵」狀態。,2.3,AffixDescription
+Affix_Guardian_MateSuffix,<color=#FFD700>守護核心</color>,2.3,AffixBehavior
+Affix_Guardian_ImmunePop,<color=#FF9900>免疫！</color>,2.3,AffixBehavior
