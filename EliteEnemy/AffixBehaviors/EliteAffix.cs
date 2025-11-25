@@ -183,7 +183,7 @@ namespace EliteEnemies
                 new LootEntry(324, 1, 1, 0.1f), // 轻盈图腾 2
                 new LootEntry(992, 1, 1, 0.05f) // 轻盈图腾 3
             ).WithLootGroup(
-                new LootEntry(137, 1, 2, 0.6f) // 黄针 1-3
+                new LootEntry(137, 1, 1, 0.5f) // 黄针 1-3
             ),
             ["Berserk"] = new AffixData
             {
@@ -359,7 +359,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.2f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Epic
             }.WithRandomLoot(-1, 1, 1, new[] { "Explosive" }),
             ["Sticky"] = new AffixData
             {
@@ -568,7 +568,7 @@ namespace EliteEnemies
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Epic
+                Rarity = AffixRarity.Rare
             }.WithRandomLoot(-1, 1, 0.6f, new[] { "JLab" }),
             ["MultiShot"] = new AffixData
             {
