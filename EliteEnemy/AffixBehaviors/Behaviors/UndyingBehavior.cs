@@ -1,8 +1,11 @@
 ﻿using System;
+using EliteEnemies.EliteEnemy.AttributeModifier;
+using EliteEnemies.Localization;
 using UnityEngine;
-using ItemStatsSystem; // 确保引用包含 DamageInfo 和 Health 的命名空间
 
-namespace EliteEnemies.AffixBehaviors
+// 确保引用包含 DamageInfo 和 Health 的命名空间
+
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：不死（Undying）

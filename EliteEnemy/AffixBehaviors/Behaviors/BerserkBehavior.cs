@@ -1,6 +1,8 @@
 ﻿using System;
+using EliteEnemies.EliteEnemy.AttributeModifier;
+using EliteEnemies.Localization;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     public class BerserkBehavior : AffixBehaviorBase, IUpdateableAffixBehavior
     {

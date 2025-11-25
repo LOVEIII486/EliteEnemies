@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Duckov.Utilities;
-using HarmonyLib;
-using UnityEngine;
-using ItemStatsSystem;
 using EliteEnemies.DebugTool;
+using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.EliteEnemy.Core;
+using HarmonyLib;
+using ItemStatsSystem;
+using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.LootSystem
 {
     /// <summary>
     /// 精英敌人掉落系统

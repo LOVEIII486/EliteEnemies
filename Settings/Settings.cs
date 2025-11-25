@@ -1,4 +1,8 @@
 using System.Collections.Generic;
+using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.EliteEnemy.Core;
+using EliteEnemies.EliteEnemy.LootSystem;
+using EliteEnemies.ModSettingsApi;
 using UnityEngine;
 
 namespace EliteEnemies.Settings

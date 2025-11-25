@@ -1,9 +1,10 @@
 ﻿using System;
-using UnityEngine;
 using Duckov.Buffs;
+using EliteEnemies.EliteEnemy.AttributeModifier;
 using ItemStatsSystem.Stats;
+using UnityEngine;
 
-namespace EliteEnemies.BuffsSystem.Effects
+namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
 {
     /// <summary>
     /// 致盲效果实现

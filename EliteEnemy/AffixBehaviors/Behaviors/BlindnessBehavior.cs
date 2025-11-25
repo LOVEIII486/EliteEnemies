@@ -1,11 +1,7 @@
-﻿using System;
-using System.Reflection;
-using UnityEngine;
-using Duckov.Buffs;
-using Duckov.Utilities;
-using EliteEnemies.BuffsSystem;
+﻿using Duckov.Buffs;
+using EliteEnemies.EliteEnemy.BuffsSystem;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【致盲】词缀 - 攻击命中玩家时使其视野受限

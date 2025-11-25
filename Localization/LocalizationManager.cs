@@ -2,30 +2,27 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using SodaCraft.Localizations;
 
-namespace EliteEnemies
+namespace EliteEnemies.Localization
 {
     /// <summary>
-    /// 精英敌人模组本地化管理器
-    /// 自动加载并管理多语言CSV文件
+    /// 本地化管理器
     /// </summary>
     public static class LocalizationManager
     {
         private const string LogTag = "[EliteEnemies.Localization]";
         private const string LocalizationFolderName = "Localization";
-        private const string CsvFilePattern = "*.csv";
         
-        private static readonly Dictionary<SystemLanguage, CSVFileLocalizor> _providers = new Dictionary<SystemLanguage, CSVFileLocalizor>();
+        // 缓存已加载的语言提供者，避免重复IO
+        private static readonly Dictionary<SystemLanguage, CSVFileLocalizor> LoadedProviders = new Dictionary<SystemLanguage, CSVFileLocalizor>();
+        
         private static SystemLanguage _currentLanguage;
         private static CSVFileLocalizor _currentProvider;
+        private static string _modDirectory; // 缓存模组路径供Refresh使用
         private static bool _isInitialized = false;
 
         // ==================== 初始化 ====================
 
-        /// <summary>
-        /// 初始化本地化系统
-        /// </summary>
         public static void Initialize(string modDirectory)
         {
             if (_isInitialized)
@@ -34,11 +31,27 @@ namespace EliteEnemies
                 return;
             }
 
+            _modDirectory = modDirectory;
+
             try
             {
                 DetermineCurrentLanguage();
-                LoadLanguageFiles(modDirectory);
-                SetCurrentProvider(_currentLanguage);
+                
+                // 尝试加载当前语言，如果失败则执行后备逻辑
+                if (!LoadAndSetLanguage(_currentLanguage))
+                {
+                    Debug.LogWarning($"{LogTag} 无法加载语言 {_currentLanguage}，尝试后备语言...");
+                    
+                    // 简体中文 -> 英文
+                    if (!LoadAndSetLanguage(SystemLanguage.Chinese) && 
+                        !LoadAndSetLanguage(SystemLanguage.ChineseSimplified))
+                    {
+                        if (!LoadAndSetLanguage(SystemLanguage.English))
+                        {
+                            Debug.LogError($"{LogTag} 严重错误：无法加载任何语言文件！");
+                        }
+                    }
+                }
 
                 _isInitialized = true;
             }
@@ -49,26 +62,37 @@ namespace EliteEnemies
         }
 
         /// <summary>
-        /// 刷新本地化数据（语言切换时调用）
+        /// 刷新本地化数据
         /// </summary>
         public static void Refresh()
         {
-            if (!_isInitialized)
-            {
-                Debug.LogWarning($"{LogTag} 尚未初始化，跳过刷新");
-                return;
-            }
+            if (!_isInitialized) return;
 
             try
             {
+                var oldLanguage = _currentLanguage;
                 DetermineCurrentLanguage();
-                SetCurrentProvider(_currentLanguage);
 
-                if (_currentProvider != null)
+                // 只有语言确实改变了，或者当前没有Provider时才重新加载
+                if (_currentLanguage != oldLanguage || _currentProvider == null)
                 {
-                    _currentProvider.BuildDictionary();
-                    Debug.Log($"{LogTag} 语言已切换: {_currentLanguage}");
+                    if (LoadAndSetLanguage(_currentLanguage))
+                    {
+                        Debug.Log($"{LogTag} 语言已刷新: {_currentLanguage}");
+                    }
+                    else
+                    {
+                        // 如果新语言加载失败，保持旧的Provider或尝试后备
+                        Debug.LogWarning($"{LogTag} 切换到 {_currentLanguage} 失败，尝试使用后备语言");
+                        if (_currentProvider == null)
+                        {
+                            LoadAndSetLanguage(SystemLanguage.English);
+                        }
+                    }
                 }
+                
+                // 重建字典
+                _currentProvider?.BuildDictionary();
             }
             catch (Exception ex)
             {
@@ -76,32 +100,19 @@ namespace EliteEnemies
             }
         }
 
-        /// <summary>
-        /// 清理资源
-        /// </summary>
         public static void Cleanup()
         {
-            _providers.Clear();
+            LoadedProviders.Clear();
             _currentProvider = null;
+            _modDirectory = null;
             _isInitialized = false;
         }
 
         // ==================== 公共接口 ====================
 
-        /// <summary>
-        /// 获取本地化文本
-        /// </summary>
-        /// <param name="key">文本键</param>
-        /// <param name="fallback">找不到时返回的默认值</param>
         public static string GetText(string key, string fallback = null)
         {
-            if (!_isInitialized)
-            {
-                Debug.LogWarning($"{LogTag} 尚未初始化，返回默认值: {key}");
-                return fallback ?? key;
-            }
-
-            if (_currentProvider == null)
+            if (!_isInitialized || _currentProvider == null)
             {
                 return fallback ?? key;
             }
@@ -113,19 +124,16 @@ namespace EliteEnemies
                     return _currentProvider.Get(key);
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.LogError($"{LogTag} 获取文本失败 (key={key}): {ex.Message}");
+                // 忽略频繁的查找错误，避免刷屏
             }
 
             return fallback ?? key;
         }
 
-        // ==================== 内部方法 ====================
+        // ==================== 内部逻辑 ====================
 
-        /// <summary>
-        /// 确定当前语言
-        /// </summary>
         private static void DetermineCurrentLanguage()
         {
             _currentLanguage = SodaCraft.Localizations.LocalizationManager.Initialized
@@ -134,98 +142,82 @@ namespace EliteEnemies
         }
 
         /// <summary>
-        /// 加载目录下所有语言文件
+        /// 尝试加载并设置指定的语言
         /// </summary>
-        private static void LoadLanguageFiles(string modDirectory)
+        /// <returns>是否成功设置了Provider</returns>
+        private static bool LoadAndSetLanguage(SystemLanguage language)
         {
-            string localizationPath = Path.Combine(modDirectory, LocalizationFolderName);
-
-            if (!Directory.Exists(localizationPath))
+            // 1. 检查缓存
+            if (LoadedProviders.TryGetValue(language, out var cachedProvider))
             {
-                Debug.LogError($"{LogTag} 本地化目录不存在: {localizationPath}");
-                return;
+                _currentProvider = cachedProvider;
+                return true;
             }
 
-            var csvFiles = Directory.GetFiles(localizationPath, CsvFilePattern);
+            // 2. 检查文件是否存在
+            string fileName = GetLanguageFileName(language);
+            string filePath = Path.Combine(_modDirectory, LocalizationFolderName, fileName);
 
-            if (csvFiles.Length == 0)
+            if (!File.Exists(filePath))
             {
-                Debug.LogWarning($"{LogTag} 在 {localizationPath} 中未找到任何CSV文件");
-                return;
-            }
-
-            foreach (var filePath in csvFiles)
-            {
-                LoadLanguageFile(filePath);
-            }
-
-            if (_providers.Count == 0)
-            {
-                Debug.LogWarning($"{LogTag} 未加载任何有效的语言文件");
-            }
-            else
-            {
-                Debug.Log($"{LogTag} 已加载 {_providers.Count} 个语言文件");
-            }
-        }
-
-        /// <summary>
-        /// 加载单个语言文件
-        /// </summary>
-        private static void LoadLanguageFile(string filePath)
-        {
-            try
-            {
-                var provider = new CSVFileLocalizor(filePath);
-
-                if (provider.Language != SystemLanguage.Unknown)
+                // 针对中文的特殊处理：如果请求的是Chinese但没找到，尝试ChineseSimplified
+                if (language == SystemLanguage.Chinese)
                 {
-                    _providers[provider.Language] = provider;
-                    Debug.Log($"{LogTag} 已加载: {Path.GetFileName(filePath)} ({provider.Language})");
+                    string simPath = Path.Combine(_modDirectory, LocalizationFolderName, "ChineseSimplified.csv");
+                    if (File.Exists(simPath))
+                    {
+                        filePath = simPath;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 else
                 {
-                    Debug.LogWarning($"{LogTag} 跳过未知语言文件: {Path.GetFileName(filePath)}");
+                    return false;
                 }
+            }
+
+            // 3. 加载文件
+            try
+            {
+                var provider = new CSVFileLocalizor(filePath);
+                LoadedProviders[language] = provider;
+                _currentProvider = provider;
+                
+                Debug.Log($"{LogTag} 已加载并切换语言: {fileName}");
+                return true;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 加载文件失败 {Path.GetFileName(filePath)}: {ex.Message}");
+                Debug.LogError($"{LogTag} 加载文件失败 {fileName}: {ex.Message}");
+                return false;
             }
         }
 
         /// <summary>
-        /// 设置当前语言提供者
+        /// 将系统语言映射到文件名
         /// </summary>
-        private static void SetCurrentProvider(SystemLanguage language)
+        private static string GetLanguageFileName(SystemLanguage language)
         {
-            if (_providers.TryGetValue(language, out var provider))
+            switch (language)
             {
-                _currentProvider = provider;
-                Debug.Log($"{LogTag} 使用语言: {language}");
-            }
-            else if (_providers.TryGetValue(SystemLanguage.Chinese, out var chineseFallback))
-            {
-                _currentProvider = chineseFallback;
-                Debug.LogWarning($"{LogTag} 语言 {language} 不可用，使用中文作为后备");
-            }
-            else if (_providers.TryGetValue(SystemLanguage.English, out var englishFallback))
-            {
-                _currentProvider = englishFallback;
-                Debug.LogWarning($"{LogTag} 语言 {language} 不可用，使用英文作为后备");
-            }
-            else if (_providers.Count > 0)
-            {
-                foreach (var kvp in _providers)
-                {
-                    _currentProvider = kvp.Value;
-                    Debug.LogWarning($"{LogTag} 语言 {language} 不可用，使用 {kvp.Key} 作为后备");
-                    break;
-                }
-            }
-            else
-            {
-                Debug.LogError($"{LogTag} 没有可用的语言提供者");
+                case SystemLanguage.Chinese:
+                case SystemLanguage.ChineseSimplified:
+                    return "ChineseSimplified.csv";
+                case SystemLanguage.ChineseTraditional:
+                    return "ChineseTraditional.csv";
+                case SystemLanguage.English:
+                    return "English.csv";
+                case SystemLanguage.Japanese:
+                    return "Japanese.csv";
+                case SystemLanguage.Korean:
+                    return "Korean.csv";
+                case SystemLanguage.Russian:
+                    return "Russian.csv";
+                default:
+                    return $"{language}.csv";
             }
         }
     }

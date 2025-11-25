@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EliteEnemies.Localization;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【话痨】词缀 - 定期在敌人头顶显示随机台词（本地化聚合字段）

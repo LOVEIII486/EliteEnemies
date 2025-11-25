@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.AttributeModifier
 {
     /// <summary>
     /// 统一属性修改器

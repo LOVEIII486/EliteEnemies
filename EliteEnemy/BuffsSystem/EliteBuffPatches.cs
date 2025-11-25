@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using HarmonyLib;
 using Duckov.Buffs;
-using UnityEngine;
+using EliteEnemies.Localization;
+using HarmonyLib;
 using ItemStatsSystem;
+using UnityEngine;
 
-namespace EliteEnemies.BuffsSystem
+namespace EliteEnemies.EliteEnemy.BuffsSystem
 {
     /// <summary>
     /// 精英Buff的Harmony补丁 - 统一入口

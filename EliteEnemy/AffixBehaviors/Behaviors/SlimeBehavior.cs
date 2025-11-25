@@ -2,7 +2,7 @@
 using ECM2;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【史莱姆】词缀 - 初始巨大但虚弱，血量降低时体型缩小且伤害增强，并会周期性跳跃
@@ -81,7 +81,7 @@ namespace EliteEnemies.AffixBehaviors
         private void ApplyInitialStats(CharacterMainControl character)
         {
             // 血量：直接乘以倍率并回满
-            AttributeModifier.Quick.ModifyHealth(character, InitialHealthMult, healToFull: true);
+            AttributeModifier.AttributeModifier.Quick.ModifyHealth(character, InitialHealthMult, healToFull: true);
 
             // 伤害：通过“增量倍率”方式更新，
             // 防止多次调用时重复叠乘，使用 new / old 做差值
@@ -101,7 +101,7 @@ namespace EliteEnemies.AffixBehaviors
             // 真实乘上的倍数
             float ratio = newMultiplier / Mathf.Max(_currentDamageMultiplier, 0.0001f);
 
-            AttributeModifier.Quick.ModifyDamage(character, ratio);
+            AttributeModifier.AttributeModifier.Quick.ModifyDamage(character, ratio);
             _currentDamageMultiplier = newMultiplier;
         }
 

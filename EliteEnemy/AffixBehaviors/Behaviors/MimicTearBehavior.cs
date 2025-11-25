@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Duckov.Utilities;
-using UnityEngine;
+using EliteEnemies.EliteEnemy.AttributeModifier;
 using ItemStatsSystem;
 using ItemStatsSystem.Items;
+using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：仿生泪滴

@@ -1,5 +1,5 @@
 ﻿
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 持续回复词缀 - 每隔一段时间回复生命值

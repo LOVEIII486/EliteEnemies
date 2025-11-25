@@ -1,9 +1,9 @@
 ﻿using System;
 using ECM2;
+using EliteEnemies.Localization;
 using UnityEngine;
-using EliteEnemies.AffixBehaviors;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     public class KnockbackBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {

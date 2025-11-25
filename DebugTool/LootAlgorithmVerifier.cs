@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using EliteEnemies.EliteEnemy.Core;
+using EliteEnemies.EliteEnemy.LootSystem;
 using UnityEngine;
 
 namespace EliteEnemies.DebugTool

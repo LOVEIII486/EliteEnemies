@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using EliteEnemies.Settings;
 
-namespace EliteEnemies
+namespace EliteEnemies.Settings
 {
     /// <summary>
     /// 精英敌人配置数据类

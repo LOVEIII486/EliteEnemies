@@ -1,8 +1,6 @@
-﻿using System;
-using UnityEngine;
-using ItemStatsSystem;
+﻿using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【多重射击】词缀 - 攻击时额外发射两枚偏转子弹

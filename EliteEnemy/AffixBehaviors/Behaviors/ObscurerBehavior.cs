@@ -1,8 +1,9 @@
 ﻿// EliteEnemies/AffixBehaviors/ObscurerBehavior.cs
+
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 封弊者 - 隐藏其他词条名称显示为动态变化的乱码

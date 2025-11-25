@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.AttributeModifier
 {
     /// <summary>
     /// AI 字段修改器 

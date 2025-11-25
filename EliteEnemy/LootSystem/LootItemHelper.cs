@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Duckov.Utilities;
 using EliteEnemies.Settings;
-using UnityEngine;
 using ItemStatsSystem;
-using NodeCanvas.Tasks.Actions;
+using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.LootSystem
 {
     /// <summary>
     /// 掉落物品辅助工具

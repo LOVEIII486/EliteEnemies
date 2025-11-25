@@ -1,12 +1,13 @@
 ﻿using System.Text;
-using UnityEngine;
 using Duckov.UI;
 using Duckov.Utilities;
+using EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors;
+using EliteEnemies.EliteEnemy.Core;
 using EliteEnemies.Settings;
-using EliteEnemies.AffixBehaviors;
 using TMPro;
+using UnityEngine;
 
-namespace EliteEnemies.VisualEffects
+namespace EliteEnemies.EliteEnemy.VisualEffects
 {
     /// <summary>
     /// 精英血条管理器

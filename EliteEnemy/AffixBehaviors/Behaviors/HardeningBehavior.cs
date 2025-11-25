@@ -1,7 +1,9 @@
 using System;
+using EliteEnemies.EliteEnemy.AttributeModifier;
+using EliteEnemies.Localization;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 硬化词条 - 受伤时随机降低物理伤害

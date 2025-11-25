@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections; // 需要引入这个命名空间来使用协程
+using System.Collections;
+using EliteEnemies.Localization;
 using UnityEngine;
-using Duckov; 
-using Duckov.Utilities;
+// 需要引入这个命名空间来使用协程
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：相位（Phase）

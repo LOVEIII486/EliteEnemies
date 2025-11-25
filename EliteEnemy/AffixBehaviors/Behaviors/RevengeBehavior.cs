@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
-using UnityEngine;
 using ItemStatsSystem;
+using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【报复】词缀 - 敌人受伤时发射子弹弹反击

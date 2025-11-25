@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using HarmonyLib;
-using TMPro;
-using UnityEngine;
-using Duckov.Scenes;
 using Duckov.UI;
-using EliteEnemies.AffixBehaviors;
 using EliteEnemies.DebugTool;
-using EliteEnemies.VisualEffects;
+using EliteEnemies.EliteEnemy.AffixBehaviors;
+using HarmonyLib;
+using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.Core
 {
     /// <summary>
     /// AI 角色初始化时应用精英效果

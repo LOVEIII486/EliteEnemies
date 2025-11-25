@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using EliteEnemies.BuffsSystem.Effects;
+﻿using System.Collections.Generic;
+using EliteEnemies.EliteEnemy.BuffsSystem.Effects;
 using UnityEngine;
 
-namespace EliteEnemies.BuffsSystem
+namespace EliteEnemies.EliteEnemy.BuffsSystem
 {
     /// <summary>
     /// 精英 Buff 注册中心

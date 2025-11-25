@@ -3,9 +3,10 @@
 // 敌人攻击命中玩家时，根据实际造成的伤害回复自身生命值
 
 using System;
+using EliteEnemies.Localization;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：吸血

@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using EliteEnemies.Localization;
 using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.AffixBehaviors
 {
     public enum AffixRarity
     {

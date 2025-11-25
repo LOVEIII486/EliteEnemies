@@ -1,10 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using SodaCraft.Localizations;
 using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.Core
 {
     /// <summary>
     /// 敌人生成辅助工具

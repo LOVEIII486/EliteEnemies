@@ -1,8 +1,7 @@
 ﻿using System;
-using UnityEngine;
-using UnityEngine.Events;
+using EliteEnemies.Localization;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：弹匣诅咒（Magazine Curse）

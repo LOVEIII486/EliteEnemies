@@ -1,10 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ItemStatsSystem;
+using EliteEnemies.EliteEnemy.Core;
+using EliteEnemies.Localization;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【鸡哥】词缀 - 出生时召唤 4 只小鸡护卫

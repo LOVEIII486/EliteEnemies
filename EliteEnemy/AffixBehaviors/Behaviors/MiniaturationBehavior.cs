@@ -1,10 +1,7 @@
-using System.Reflection;
-using UnityEngine;
-using ItemStatsSystem;
-using EliteEnemies.AffixBehaviors;
 using ItemStatsSystem.Stats;
+using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【迷你化】词缀 - 敌人体型随机缩小，血量略微降低但速度不变

@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-using ItemStatsSystem;
 using ItemStatsSystem.Stats;
+using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.AttributeModifier
 {
     /// <summary>
     /// Stat 修改器 - 通过 Item Stats 修改属性

@@ -1,8 +1,6 @@
 using UnityEngine;
-using ItemStatsSystem;
-using ItemStatsSystem.Stats;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【巨大化】词缀 - 敌人体型随机放大，获得血量加成但速度减半
@@ -49,8 +47,8 @@ namespace EliteEnemies.AffixBehaviors
         
         private void ApplyStatChanges(CharacterMainControl character)
         {
-            AttributeModifier.Quick.ModifyHealth(character, _actualHealthMultiplier, healToFull: true);
-            AttributeModifier.Quick.ModifySpeed(character, SpeedMultiplier);
+            AttributeModifier.AttributeModifier.Quick.ModifyHealth(character, _actualHealthMultiplier, healToFull: true);
+            AttributeModifier.AttributeModifier.Quick.ModifySpeed(character, SpeedMultiplier);
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)

@@ -1,11 +1,11 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
+using EliteEnemies.EliteEnemy.Core;
 using HarmonyLib;
 using ItemStatsSystem;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【分裂】词缀 - 敌人残血时分裂成多个较弱的小怪

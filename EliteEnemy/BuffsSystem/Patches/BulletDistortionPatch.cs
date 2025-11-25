@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reflection;
-using EliteEnemies.BuffsSystem.Effects;
+using EliteEnemies.EliteEnemy.BuffsSystem.Effects;
 using HarmonyLib;
 using UnityEngine;
 
-namespace EliteEnemies.BuffsSystem.Patches
+namespace EliteEnemies.EliteEnemy.BuffsSystem.Patches
 {
     /// <summary>
     /// 子弹扭曲补丁 - 使受扭曲影响的玩家的子弹产生弧形偏转

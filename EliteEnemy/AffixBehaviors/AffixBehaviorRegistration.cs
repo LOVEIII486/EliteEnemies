@@ -1,6 +1,7 @@
+using EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors
 {
     public static class AffixBehaviorRegistration
     {

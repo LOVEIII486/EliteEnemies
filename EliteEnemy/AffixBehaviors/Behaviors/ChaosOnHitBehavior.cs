@@ -1,14 +1,13 @@
 ﻿// ChaosOnHitBehavior.cs
 
 using System;
-using System.Collections.Generic;
-using UnityEngine;
-using Duckov;
 using Duckov.Buffs;
 using Duckov.Utilities;
+using EliteEnemies.Localization;
+using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：混沌（Chaos On Hit）

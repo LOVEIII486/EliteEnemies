@@ -1,4 +1,4 @@
-﻿namespace EliteEnemies.BuffsSystem
+﻿namespace EliteEnemies.EliteEnemy.BuffsSystem
 {
     /// <summary>
     /// 精英Buff效果接口

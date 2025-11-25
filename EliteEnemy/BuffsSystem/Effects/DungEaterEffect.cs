@@ -1,9 +1,7 @@
 ﻿using Duckov.Buffs;
-using FMOD;
 using ItemStatsSystem;
-using Debug = UnityEngine.Debug;
 
-namespace EliteEnemies.BuffsSystem.Effects
+namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
 {
     public class DungEaterEffect : IEliteBuffEffect
     {

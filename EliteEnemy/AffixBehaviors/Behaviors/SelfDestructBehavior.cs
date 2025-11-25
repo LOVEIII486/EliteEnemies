@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【自爆】词缀 - 敌人死亡时在死亡位置产生爆炸

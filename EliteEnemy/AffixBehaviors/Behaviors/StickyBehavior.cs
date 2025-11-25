@@ -1,7 +1,8 @@
 ﻿using System;
+using EliteEnemies.Localization;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：粘性（Sticky）

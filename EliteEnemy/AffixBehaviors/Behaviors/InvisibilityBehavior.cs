@@ -1,10 +1,13 @@
 ﻿// InvisibilityBehavior.cs
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EliteEnemies.EliteEnemy.AttributeModifier;
+using EliteEnemies.Localization;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 隐身词缀 - 受伤后触发隐身，然后周期性闪烁

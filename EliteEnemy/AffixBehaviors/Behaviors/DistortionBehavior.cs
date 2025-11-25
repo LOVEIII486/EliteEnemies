@@ -1,8 +1,8 @@
 ﻿using Duckov.Buffs;
-using EliteEnemies.BuffsSystem;
+using EliteEnemies.EliteEnemy.BuffsSystem;
 using UnityEngine;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【扭曲】词缀 - 攻击使玩家子弹偏转形成弧形

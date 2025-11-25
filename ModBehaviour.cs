@@ -1,9 +1,13 @@
 using System.Collections.Generic;
 using HarmonyLib;
 using Duckov.Modding;
-using EliteEnemies.BuffsSystem;
-using EliteEnemies.BuffsSystem.Effects;
 using EliteEnemies.DebugTool;
+using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.EliteEnemy.BuffsSystem;
+using EliteEnemies.EliteEnemy.Core;
+using EliteEnemies.EliteEnemy.LootSystem;
+using EliteEnemies.Localization;
+using EliteEnemies.ModSettingsApi;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -97,7 +101,7 @@ namespace EliteEnemies
 
         private void InitializeAffixBehaviors()
         {
-            AffixBehaviors.AffixBehaviorRegistration.RegisterAllBehaviors();
+            AffixBehaviorRegistration.RegisterAllBehaviors();
             Debug.Log($"{LogTag}  词缀行为已注册");
         }
 
@@ -185,8 +189,8 @@ namespace EliteEnemies
 
         private void CleanupBuffFramework()
         {
-            EliteEnemies.BuffsSystem.EliteBuffRegistry.Instance.Clear();
-            EliteEnemies.BuffsSystem.EliteBuffModifierManager.Instance.Clear();
+            EliteBuffRegistry.Instance.Clear();
+            EliteBuffModifierManager.Instance.Clear();
             Debug.Log($"{LogTag}  Buff框架已清理");
         }
 

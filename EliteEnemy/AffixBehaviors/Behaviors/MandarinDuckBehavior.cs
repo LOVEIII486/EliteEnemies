@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
+using EliteEnemies.EliteEnemy.Core;
+using EliteEnemies.Localization;
 using UnityEngine;
-using UnityEngine.AI;
-using ItemStatsSystem;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【鸳鸯】词缀

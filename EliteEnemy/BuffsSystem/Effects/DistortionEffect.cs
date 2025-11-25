@@ -1,9 +1,9 @@
 ﻿using System;
-using UnityEngine;
 using Duckov.Buffs;
 using ItemStatsSystem.Stats;
+using UnityEngine;
 
-namespace EliteEnemies.BuffsSystem.Effects
+namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
 {
     /// <summary>
     /// 扭曲效果实现 - 降低子弹速度并使其偏转

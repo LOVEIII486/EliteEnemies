@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
+using EliteEnemies.Localization;
 using UnityEngine;
-using EliteEnemies.AffixBehaviors;
 
-namespace EliteEnemies.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【时停】词缀 - 敌人受到玩家伤害且在感知范围内时触发3秒时停效果

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using ItemStatsSystem;
 using ItemStatsSystem.Stats;
-using UnityEngine;
 
-namespace EliteEnemies.BuffsSystem
+namespace EliteEnemies.EliteEnemy.BuffsSystem
 {
     /// <summary>
     /// Modifier追踪和管理器

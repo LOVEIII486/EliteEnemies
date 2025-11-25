@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
 using Duckov.Buffs;
 using Duckov.Utilities;
+using UnityEngine;
 
-namespace EliteEnemies.BuffsSystem
+namespace EliteEnemies.EliteEnemy.BuffsSystem
 {
     /// <summary>
     /// 精英 Buff 工厂 - 统一创建和管理精英专用 Buff

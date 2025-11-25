@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
-using Duckov.Scenes;
+using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.Settings;
 using SodaCraft.Localizations;
+using UnityEngine;
 
-namespace EliteEnemies
+namespace EliteEnemies.EliteEnemy.Core
 {
     /// <summary>
     /// 精英敌人核心系统 
@@ -78,7 +79,7 @@ namespace EliteEnemies
             if (!cmc) return;
 
             AccumulateFromAffixes(affixes, out float hp, out float dmg, out float spd);
-            AttributeModifier.ApplyEliteMultipliers(
+            AttributeModifier.AttributeModifier.ApplyEliteMultipliers(
                 cmc,
                 healthMult: hp,
                 damageMult: dmg,
