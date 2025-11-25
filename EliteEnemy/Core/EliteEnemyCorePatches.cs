@@ -29,8 +29,8 @@ namespace EliteEnemies.EliteEnemy.Core
                 
                 string presetName = cmc.characterPreset?.nameKey ?? string.Empty;
        
-                // 跳过被标记禁止精英化的敌人
-                if (EliteEnemyCore.HasNonEliteSuffix(presetName))
+                // [修改点]：检查是否被标记忽略（组件标记 或 预设注册标记）
+                if (EliteEnemyCore.IsIgnored(cmc.gameObject) || EliteEnemyCore.IsIgnoredPreset(cmc.characterPreset))
                 {
                     EliteEnemyTracker.RecordDecision(presetName, processedFlag: false);
                     return;

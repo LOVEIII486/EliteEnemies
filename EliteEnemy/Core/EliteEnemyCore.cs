@@ -8,6 +8,11 @@ using UnityEngine;
 namespace EliteEnemies.EliteEnemy.Core
 {
     /// <summary>
+    /// 标记组件：挂载此组件的物体将被精英怪系统忽略
+    /// </summary>
+    public class EliteIgnoredTag : MonoBehaviour { }
+
+    /// <summary>
     /// 精英敌人核心系统 
     /// </summary>
     public static class EliteEnemyCore
@@ -17,7 +22,53 @@ namespace EliteEnemies.EliteEnemy.Core
         private static EliteEnemiesConfig _config = new EliteEnemiesConfig();
         public static EliteEnemiesConfig Config => _config;
 
-        private static readonly string NonEliteSuffix = "__EE_NoElite";
+        // [修改] 移除了 NonEliteSuffix
+
+        // ========== 忽略逻辑 (新增) ==========
+
+        // 用于存储由生成器创建的临时预设实例ID，这些实例对应的敌人不应精英化
+        // 使用 InstanceID 避免内存泄漏
+        private static readonly HashSet<int> IgnoredPresetInstanceIDs = new HashSet<int>();
+
+        /// <summary>
+        /// 注册一个预设实例为“忽略精英化”
+        /// 用于 EggSpawnHelper 生成的临时预设
+        /// </summary>
+        public static void RegisterIgnoredPreset(ScriptableObject preset)
+        {
+            if (preset == null) return;
+            IgnoredPresetInstanceIDs.Add(preset.GetInstanceID());
+        }
+
+        /// <summary>
+        /// 检查预设是否在忽略名单中
+        /// </summary>
+        public static bool IsIgnoredPreset(ScriptableObject preset)
+        {
+            if (preset == null) return false;
+            return IgnoredPresetInstanceIDs.Contains(preset.GetInstanceID());
+        }
+
+        /// <summary>
+        /// 检查对象是否被标记为忽略（不生成精英）
+        /// </summary>
+        public static bool IsIgnored(GameObject target)
+        {
+            if (target == null) return true;
+            return target.GetComponent<EliteIgnoredTag>() != null;
+        }
+
+        /// <summary>
+        /// 将对象标记为忽略（不会变成精英怪）
+        /// </summary>
+        public static void MarkAsIgnored(GameObject target)
+        {
+            if (target == null) return;
+            if (target.GetComponent<EliteIgnoredTag>() == null)
+            {
+                target.AddComponent<EliteIgnoredTag>();
+            }
+        }
 
         // ========== 预设集合 ==========
 
@@ -377,25 +428,7 @@ namespace EliteEnemies.EliteEnemy.Core
             if (presetName.StartsWith("Player", StringComparison.OrdinalIgnoreCase)) return false;
             return true;
         }
-
-        // ========== 添加额外标记 ==========
-
-        internal static bool HasNonEliteSuffix(string name)
-        {
-            return !string.IsNullOrEmpty(name)
-                   && name.EndsWith(NonEliteSuffix, StringComparison.OrdinalIgnoreCase);
-        }
-
-        internal static string AddNonEliteSuffix(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return name;
-
-            if (HasNonEliteSuffix(name))
-                return name;
-
-            return name + NonEliteSuffix;
-        }
+        
 
         // ========== 精英标记组件 ==========
 

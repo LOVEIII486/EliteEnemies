@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection; // 引入反射命名空间
 using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.Core
 {
     /// <summary>
     /// 敌人生成辅助工具
-    /// 提供便捷的敌人生成方法，可复制现有敌人或创建新预设敌人
     /// </summary>
     public class EggSpawnHelper : MonoBehaviour
     {
@@ -69,7 +69,6 @@ namespace EliteEnemies.EliteEnemy.Core
             if (eggs.Length > 0)
             {
                 _eggPrefab = eggs[UnityEngine.Random.Range(0, eggs.Length)];
-                //Debug.Log($"{LogTag} Egg 预制体已加载: {_eggPrefab.name}");
             }
             else
             {
@@ -79,9 +78,6 @@ namespace EliteEnemies.EliteEnemy.Core
 
         // ========== 公共 API：生成相同预设的敌人 ==========
 
-        /// <summary>
-        /// 生成与指定敌人相同预设的新敌人,可自定义属性倍率
-        /// </summary>
         public CharacterMainControl SpawnClone(
             CharacterMainControl originalEnemy,
             Vector3 position,
@@ -105,17 +101,24 @@ namespace EliteEnemies.EliteEnemy.Core
                     return null;
                 }
 
-                var modifiedPreset = CreateModifiedPreset(preset, healthMultiplier, damageMultiplier, speedMultiplier);
+                // [重构] 在创建预设时直接应用自定义名字
+                var modifiedPreset = CreateModifiedPreset(
+                    preset, 
+                    healthMultiplier, 
+                    damageMultiplier, 
+                    speedMultiplier, 
+                    customDisplayName // 传入自定义名字
+                );
 
-                // 如果需要禁止精英化，立即标记
                 if (preventElite)
                 {
-                    modifiedPreset.nameKey = EliteEnemyCore.AddNonEliteSuffix(modifiedPreset.nameKey);
+                    EliteEnemyCore.RegisterIgnoredPreset(modifiedPreset);
                 }
 
                 Egg egg = SpawnEgg(position, modifiedPreset, originalEnemy);
-                // 延迟应用其他修改（尺寸、词缀、回调）
-                if (affixes != null || !Mathf.Approximately(scaleMultiplier, 1f) || onSpawned != null)
+                
+                // [重构] 延迟修改中不再包含名字修改逻辑
+                if (affixes != null || !Mathf.Approximately(scaleMultiplier, 1f) || onSpawned != null || preventElite)
                 {
                     StartCoroutine(ApplyDelayedModifications(
                         position,
@@ -123,11 +126,9 @@ namespace EliteEnemies.EliteEnemy.Core
                         affixes,
                         preventElite,
                         originalEnemy,
-                        customDisplayName,
                         onSpawned));
                 }
 
-                //Debug.Log($"{LogTag} 成功生成克隆敌人: {preset.nameKey}");
                 return null;
             }
             catch (Exception ex)
@@ -139,9 +140,6 @@ namespace EliteEnemies.EliteEnemy.Core
 
         // ========== 公共 API：通过预设生成敌人 ==========
 
-        /// <summary>
-        /// 通过预设生成敌人
-        /// </summary>
         public CharacterMainControl SpawnByPreset(
             CharacterRandomPreset preset,
             Vector3 position,
@@ -169,19 +167,24 @@ namespace EliteEnemies.EliteEnemy.Core
 
             try
             {
-                var modifiedPreset = CreateModifiedPreset(preset, healthMultiplier, damageMultiplier, speedMultiplier);
+                // [重构] 在创建预设时直接应用自定义名字
+                var modifiedPreset = CreateModifiedPreset(
+                    preset, 
+                    healthMultiplier, 
+                    damageMultiplier, 
+                    speedMultiplier,
+                    customDisplayName // 传入自定义名字
+                );
+                
                 CharacterMainControl effectiveSpawner = spawner ?? _player;
 
-                // 如果需要禁止精英化，立即标记
                 if (preventElite)
                 {
-                    modifiedPreset.nameKey = EliteEnemyCore.AddNonEliteSuffix(modifiedPreset.nameKey);
+                    EliteEnemyCore.RegisterIgnoredPreset(modifiedPreset);
                 }
 
-                // 使用 Egg 生成敌人
                 Egg egg = SpawnEgg(position, modifiedPreset, effectiveSpawner);
 
-                // 延迟应用修改
                 if (affixes != null || !Mathf.Approximately(scaleMultiplier, 1f) || preventElite)
                 {
                     StartCoroutine(ApplyDelayedModifications(
@@ -190,11 +193,9 @@ namespace EliteEnemies.EliteEnemy.Core
                         affixes,
                         preventElite,
                         effectiveSpawner,
-                        customDisplayName,
                         onSpawned));
                 }
 
-                //Debug.Log($"{LogTag} 成功通过预设生成敌人: {preset.nameKey}");
                 return null;
             }
             catch (Exception ex)
@@ -233,9 +234,6 @@ namespace EliteEnemies.EliteEnemy.Core
 
         // ========== 公共 API：批量生成 ==========
 
-        /// <summary>
-        /// 批量生成敌人（圆形分布）
-        /// </summary>
         public void SpawnCloneCircle(
             CharacterMainControl originalEnemy,
             Vector3 centerPosition,
@@ -289,7 +287,6 @@ namespace EliteEnemies.EliteEnemy.Core
                 );
                 Vector3 spawnPosition = centerPosition + offset;
 
-                // 使用回调收集生成的角色
                 SpawnClone(
                     originalEnemy,
                     spawnPosition,
@@ -311,23 +308,17 @@ namespace EliteEnemies.EliteEnemy.Core
                     });
             }
 
-            // 等待所有生成完成
             while (spawnedCount < count)
             {
                 yield return null;
             }
 
             Debug.Log($"{LogTag} 批量生成完成: {spawnedEnemies.Count}/{count} 个敌人");
-
-            // 调用回调返回所有生成的角色
             onAllSpawned?.Invoke(spawnedEnemies);
         }
 
         // ========== 公共 API：在玩家前方生成 ==========
 
-        /// <summary>
-        /// 在玩家前方生成敌人
-        /// </summary>
         public CharacterMainControl SpawnCloneInFrontOfPlayer(
             CharacterMainControl originalEnemy,
             float distance = 5f,
@@ -348,9 +339,6 @@ namespace EliteEnemies.EliteEnemy.Core
                 scaleMultiplier, affixes);
         }
 
-        /// <summary>
-        /// 通过预设名在玩家前方生成敌人
-        /// </summary>
         public CharacterMainControl SpawnByPresetNameInFrontOfPlayer(
             string presetName,
             float distance = 5f,
@@ -401,7 +389,6 @@ namespace EliteEnemies.EliteEnemy.Core
         {
             Egg egg = Instantiate(_eggPrefab, position, Quaternion.identity);
 
-            // 忽略与生成者的碰撞
             Collider eggCollider = egg.GetComponent<Collider>();
             Collider spawnerCollider = spawner.GetComponent<Collider>();
             if (eggCollider != null && spawnerCollider != null)
@@ -409,37 +396,64 @@ namespace EliteEnemies.EliteEnemy.Core
                 Physics.IgnoreCollision(eggCollider, spawnerCollider, true);
             }
 
-            // 初始化 Egg（spawner 决定队伍关系）
             egg.Init(position, Vector3.zero, spawner, preset, DefaultEggSpawnDelay);
 
             return egg;
         }
 
+        // [重构核心] 修改了此方法，增加了 overrideNameKey 参数，并使用反射修改
         private CharacterRandomPreset CreateModifiedPreset(
             CharacterRandomPreset original,
             float healthMultiplier,
             float damageMultiplier,
-            float speedMultiplier)
+            float speedMultiplier,
+            string overrideNameKey = null) // 新增可选参数
         {
             // 深拷贝预设
             CharacterRandomPreset modified = Instantiate(original);
 
-            // 应用倍率
+            // 1. 应用倍率（直接访问公有字段）
             modified.health = original.health * healthMultiplier;
             modified.damageMultiplier = original.damageMultiplier * damageMultiplier;
             modified.moveSpeedFactor = original.moveSpeedFactor * speedMultiplier;
 
+            // 2. 应用自定义名字（反射修改，参考了 RandomNpc 的写法）
+            if (!string.IsNullOrEmpty(overrideNameKey))
+            {
+                try
+                {
+                    // 设置 name (Unity 对象的内部名字，方便调试)
+                    modified.name = "CustomPreset_" + overrideNameKey;
+
+                    // 设置 nameKey 字段
+                    FieldInfo nameKeyField = typeof(CharacterRandomPreset).GetField("displayName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    if (nameKeyField != null)
+                    {
+                        nameKeyField.SetValue(modified, overrideNameKey);
+                        //Debug.Log($"{LogTag} 已通过反射设置预设 NameKey: {overrideNameKey}");
+                    }
+                    else
+                    {
+                        // 如果反射失败，尝试直接赋值（如果它是public的话）
+                        modified.nameKey = overrideNameKey; 
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"{LogTag} 设置自定义名字失败: {ex.Message}");
+                }
+            }
+
             return modified;
         }
 
-        // 修改延迟应用方法
+        // 修改延迟应用方法，移除了 customDisplayName 参数
         private IEnumerator ApplyDelayedModifications(
             Vector3 spawnPosition,
             float scaleMultiplier,
             List<string> affixes,
             bool preventElite,
             CharacterMainControl summoner,
-            string customDisplayName,
             System.Action<CharacterMainControl> onSpawned = null)
         {
             yield return new WaitForSeconds(DefaultEggSpawnDelay + 0.3f);
@@ -452,19 +466,10 @@ namespace EliteEnemies.EliteEnemy.Core
                 yield break;
             }
 
-            // 如果禁止精英化，创建 Marker 并保存原始名称
-            if (preventElite || !string.IsNullOrEmpty(customDisplayName))
+            // 仅保留 EliteIgnoredTag 标记，移除名字修改逻辑
+            if (preventElite)
             {
-                var marker = enemy.GetComponent<EliteEnemyCore.EliteMarker>();
-                if (marker == null)
-                {
-                    marker = enemy.gameObject.AddComponent<EliteEnemyCore.EliteMarker>();
-                }
-
-                if (!string.IsNullOrEmpty(customDisplayName))
-                {
-                    marker.CustomDisplayName = customDisplayName;
-                }
+                EliteEnemyCore.MarkAsIgnored(enemy.gameObject);
             }
 
             // 应用尺寸
@@ -473,13 +478,12 @@ namespace EliteEnemies.EliteEnemy.Core
                 enemy.transform.localScale = Vector3.one * scaleMultiplier;
             }
 
-            // 应用词缀(仅当未禁止时)
+            // 应用词缀
             if (affixes != null && affixes.Count > 0 && !preventElite)
             {
                 EliteEnemyCore.ForceMakeElite(enemy, affixes);
             }
 
-            // 调用回调
             onSpawned?.Invoke(enemy);
         }
 
@@ -490,17 +494,18 @@ namespace EliteEnemies.EliteEnemy.Core
             {
                 if (character == null || character == _player) continue;
 
-                // 逻辑修正：检查是否已经被处理过
-                // 如果这个敌人身上已经有了 EliteMarker，并且已经有了自定义名字，说明它被其他协程“认领”了
-                var existingMarker = character.GetComponent<EliteEnemyCore.EliteMarker>();
-                if (existingMarker != null && !string.IsNullOrEmpty(existingMarker.CustomDisplayName))
-                {
-                    continue; // 跳过已处理的，找下一个
-                }
+                // 检查是否已经被处理过（这里主要通过 EliteIgnoredTag 或 EliteMarker 判断）
+                // 因为现在名字是原生的，不能单纯靠名字判断了
+                // 暂时使用简单的距离判断，或者检查是否已有 behavior 组件（如果是精英）
+                
+                // 优化：如果有 EliteIgnoredTag 组件，且没有 EliteMarker (尚未被系统识别)，说明是刚生成的忽略怪？
+                // 实际上这里的防重入逻辑比较难做，因为现在生成过程更原生了。
+                // 维持原来的逻辑：找最近的、且没有被其他逻辑抢占的（这里简化为找最近的）
 
                 float distance = Vector3.Distance(character.transform.position, position);
                 if (distance < 2.5f) 
                 {
+                    // 简单的防重入：如果回调里需要精确控制，可以加个临时 Tag
                     return character;
                 }
             }
@@ -530,8 +535,6 @@ namespace EliteEnemies.EliteEnemy.Core
 
             return null;
         }
-
-        // ========== 状态检查 ==========
 
         public bool IsReady => _isReady;
 

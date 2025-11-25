@@ -32,27 +32,30 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
 
     /// <summary>
     /// 挂载在 HealthBar 游戏对象上的控制器
+    /// 只负责显示额外的词缀和血量数值，绝不修改原版名字
     /// </summary>
     [DefaultExecutionOrder(100)]
     public class EliteHealthBarUI : MonoBehaviour
     {
         private HealthBar _ownerBar;
-        private TextMeshProUGUI _nameLabel;           // 名字标签，只显示基础名字
-        private GameObject _affixTextContainer;       // 词缀文本容器
-        private TextMeshProUGUI _affixLabel;          // 词缀标签
-        private GameObject _healthTextContainer;      // 血量文本容器
-        private TextMeshProUGUI _healthValueLabel;    // 血量数值标签
-        private MonoBehaviour _randomNpcController; 
+        // [移除] 移除对原版名字Label的引用，防止覆盖
+        // private TextMeshProUGUI _nameLabel; 
+        
+        private GameObject _affixTextContainer;       // 词缀文本容器 (自己创建的)
+        private TextMeshProUGUI _affixLabel;          // 词缀标签 (自己创建的)
+        private GameObject _healthTextContainer;      // 血量文本容器 (自己创建的)
+        private TextMeshProUGUI _healthValueLabel;    // 血量数值标签 (自己创建的)
         
         private Health _cachedTarget;
         private CharacterMainControl _cachedCmc;
         private EliteEnemyCore.EliteMarker _cachedMarker;
         
-        private string _cachedBaseName = null;        // 只保存基础名字
+        // [移除] 不再需要缓存基础名字，因为我们不改名字了
+        // private string _cachedBaseName = null;
         private string _cachedAffixPrefix = null;     // 保存词缀前缀
         private int _lastHp = -1;
         private int _lastMaxHp = -1;
-        private string _lastNameText = null;          // 名字文本缓存
+        
         private string _lastAffixText = null;         // 词缀文本缓存
         private string _lastHealthText = null;        // 血量文本缓存
         private bool _isElite = false;
@@ -62,13 +65,12 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
         private void Awake()
         {
             _ownerBar = GetComponent<HealthBar>();
-            _nameLabel = GetComponentInChildren<TextMeshProUGUI>(true);
+            // [移除] 不要获取 NameLabel
+            // _nameLabel = GetComponentInChildren<TextMeshProUGUI>(true);
         }
 
         private void OnEnable()
         {
-            // 每次激活时强制刷新一次状态，防止对象池复用导致的脏数据
-            _lastNameText = null;
             _lastAffixText = null;
             _lastHealthText = null; 
             _cachedTarget = null;
@@ -76,28 +78,21 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
 
         private void LateUpdate()
         {
-            if (!_ownerBar || !_nameLabel) return;
+            if (!_ownerBar) return;
             
             if (!EliteEnemyCore.Config.ShowEliteName)
             {
-                // 清理所有自定义文本对象
                 CleanupCustomTextObjects();
-                
-                // 确保不误伤 RandomNpc
-                if (_randomNpcController != null && !_randomNpcController.enabled)
-                {
-                    _randomNpcController.enabled = true;
-                }
                 return;
             }
 
-            // 1. 检查 Target 是否变化 (对象池复用逻辑)
+            // 1. 检查 Target 是否变化
             if (_ownerBar.target != _cachedTarget)
             {
                 RefreshTarget(_ownerBar.target);
             }
 
-            // 如果当前认为不是精英，再次尝试获取组件
+            // 二次检查逻辑
             if (!_isElite && _cachedCmc)
             {
                 var marker = _cachedCmc.GetComponent<EliteEnemyCore.EliteMarker>();
@@ -107,22 +102,14 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
                 }
             }
 
-            // 2. 如果不是精英怪，清理并归还控制权
+            // 2. 如果不是精英怪，清理掉我们添加的UI，然后什么都不做
             if (!_isElite)
             {
                 CleanupCustomTextObjects();
-                
-                if (_randomNpcController != null && !_randomNpcController.enabled)
-                {
-                    _randomNpcController.enabled = true;
-                }
                 return;
             }
 
-            // 3. 是精英怪：禁用 RandomNpc 组件
-            DisableRandomNpcController();
-
-            // 4. 更新 UI
+            // 3. 更新我们自己的UI
             UpdateEliteUI();
         }
 
@@ -132,7 +119,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             _cachedCmc = newTarget ? newTarget.TryGetCharacter() : null;
             _cachedMarker = _cachedCmc ? _cachedCmc.GetComponent<EliteEnemyCore.EliteMarker>() : null;
             
-            // 排除玩家自己
             if (_cachedCmc && LevelManager.Instance?.MainCharacter && _cachedCmc.Team == LevelManager.Instance.MainCharacter.Team)
             {
                 _isElite = false;
@@ -160,36 +146,12 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
                     }
                 }
 
-                // 基础名字解析
-                string baseName;
-                if (!string.IsNullOrEmpty(_cachedMarker.CustomDisplayName))
-                {
-                    baseName = _cachedMarker.CustomDisplayName;
-                }
-                else if (!string.IsNullOrEmpty(_cachedMarker.BaseName))
-                {
-                    baseName = _cachedMarker.BaseName;
-                }
-                else
-                {
-                    baseName = EliteEnemyCore.ResolveBaseName(_cachedCmc);
-                }
-
-                if (baseName.Contains("_")) baseName = "???";
-
-                _cachedBaseName = baseName;
-                
-                // 强制开启名字显示
-                if (_cachedCmc.characterPreset != null)
-                {
-                    _cachedCmc.characterPreset.showName = true;
-                    _cachedCmc.characterPreset.showHealthBar = true;
-                }
+                // [修改] 移除了对 nameKey 的解析和修改逻辑
+                // [修改] 移除了强制设置 preset.showName = true 的逻辑，避免干扰原版显示逻辑
             }
 
             // 重置显示状态
             _lastHp = -1;
-            _lastNameText = null;
             _lastAffixText = null;
             _lastHealthText = null;
         }
@@ -198,14 +160,9 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
         {
             bool showDetail = EliteEnemyCore.Config.ShowDetailedHealth;
             
-            // === 1. 更新名字标签（只显示基础名字） ===
-            if (_nameLabel.text != _cachedBaseName)
-            {
-                _nameLabel.text = _cachedBaseName;
-                _lastNameText = _cachedBaseName;
-            }
+            // [移除] 移除了 Step 1: 更新名字标签的代码
             
-            // === 2. 更新词缀标签 ===
+            // === 2. 更新词缀标签 (这是我们自己添加的，不影响别人) ===
             if (!string.IsNullOrEmpty(_cachedAffixPrefix))
             {
                 if (_affixTextContainer == null)
@@ -223,7 +180,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
                     
                     string displayText = _cachedAffixPrefix;
         
-                    // 检查是否是封弊者占位符
                     if (displayText == "<OBSCURER_PLACEHOLDER>")
                     {
                         string garbled = ObscurerBehavior.GetCurrentGarbledText(_cachedCmc);
@@ -231,7 +187,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
                         displayText = $"<color={color}>[{garbled}]</color>";
                     }
         
-                    // 强制每帧更新
                     if (displayText != _lastAffixText || _cachedAffixPrefix == "<OBSCURER_PLACEHOLDER>")
                     {
                         _affixLabel.text = displayText;
@@ -241,7 +196,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             }
             else
             {
-                // 没有词缀时清理词缀文本对象
                 if (_affixTextContainer != null)
                 {
                     Destroy(_affixTextContainer);
@@ -251,7 +205,7 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
                 }
             }
             
-            // === 3. 处理血量显示 ===
+            // === 3. 处理血量显示 (这是我们自己添加的，不影响别人) ===
             if (!showDetail)
             {
                 if (_healthTextContainer != null)
@@ -275,7 +229,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             int currentHp = Mathf.CeilToInt(_cachedCmc.Health.CurrentHealth);
             int maxHp = Mathf.CeilToInt(_cachedCmc.Health.MaxHealth);
 
-            // 只在血量变化时更新
             if (currentHp != _lastHp || maxHp != _lastMaxHp)
             {
                 _lastHp = currentHp;
@@ -349,10 +302,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             );
             _healthValueLabel.gameObject.name = "HealthValueText";
             
-            // _healthValueLabel.transform.localPosition = Vector3.zero;
-            // _healthValueLabel.transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
-            // _healthValueLabel.transform.localRotation = Quaternion.identity;
-            
             _healthValueLabel.alignment = TextAlignmentOptions.Center;
             _healthValueLabel.fontSizeMin = 15f;
             _healthValueLabel.fontSizeMax = 17f;
@@ -362,11 +311,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
 
             _healthValueLabel.color = new Color(0.9f, 0.9f, 1.0f);
             _healthValueLabel.overflowMode = TextOverflowModes.Overflow;
-
-            // _healthValueLabel.fontWeight = FontWeight.Black;
-            // _healthValueLabel.fontMaterial.EnableKeyword("OUTLINE_ON");
-            // _healthValueLabel.outlineWidth = 0.4f;
-            // _healthValueLabel.outlineColor = new Color(0.1f, 0.1f, 0.1f);
         }
 
         /// <summary>
@@ -386,27 +330,6 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
                 Destroy(_healthTextContainer);
                 _healthTextContainer = null;
                 _healthValueLabel = null;
-            }
-        }
-
-        private void DisableRandomNpcController()
-        {
-            if (_randomNpcController == null)
-            {
-                Component[] components = GetComponents<MonoBehaviour>();
-                foreach (var comp in components)
-                {
-                    if (comp.GetType().FullName.Contains("HealthBarNameController"))
-                    {
-                        _randomNpcController = (MonoBehaviour)comp;
-                        break;
-                    }
-                }
-            }
-
-            if (_randomNpcController != null && _randomNpcController.enabled)
-            {
-                _randomNpcController.enabled = false;
             }
         }
 
