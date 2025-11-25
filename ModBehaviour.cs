@@ -16,7 +16,6 @@ namespace EliteEnemies
         
         private const string LogTag = "[EliteEnemies]";
         private const bool EnableDevSpawn = false;
-        private const bool EnableDevLoot = false;
         
         private Harmony _harmony;
         
@@ -120,7 +119,6 @@ namespace EliteEnemies
 
             _lootHelperObject = new GameObject("EliteEnemies_LootHelper");
             _lootItemHelper = _lootHelperObject.AddComponent<LootItemHelper>();
-            _lootItemHelper.debugMode = EnableDevLoot;
             DontDestroyOnLoad(_lootHelperObject);
             Debug.Log($"{LogTag}  掉落工具已初始化");
         }

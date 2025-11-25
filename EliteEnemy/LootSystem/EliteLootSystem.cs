@@ -16,7 +16,7 @@ namespace EliteEnemies
     public static class EliteLootSystem
     {
         private const string LogTag = "[EliteEnemies.EliteLootSystem]";
-        public static bool Verbose = false;
+        private static bool Verbose = false;
         public static float GlobalDropRate = 1.0f;
 
         private static readonly HashSet<int> ProcessedLootBoxes = new HashSet<int>();
@@ -85,7 +85,7 @@ namespace EliteEnemies
             // 预先扩容（防止格子不够）
             PreExpandInventory(lootbox.Inventory, affixes);
 
-            if (Verbose) Debug.Log($"{LogTag} >>> 开始处理 [{charName}] 的掉落 (词缀数:{affixes.Count}) | 掉率修正:{dropPenalty:P0} | 全局倍率:{GlobalDropRate:F1} | 品质偏好:{EliteEnemyCore.Config.ItemQualityBias:F1}");
+            if (Verbose) Debug.Log($"{LogTag} >>> 开始处理 [{charName}] 的掉落 (词缀数:{affixes.Count}) | 掉率修正:{dropPenalty:P0} | 全局倍率:{GlobalDropRate:F1} | 品质偏好:{helper.qualityBiasPower:F1}");
 
             // 阶段 1: 词缀固定掉落
             ProcessFixedLoot(lootbox, affixes, dropPenalty);

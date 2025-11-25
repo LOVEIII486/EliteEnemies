@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Duckov.Utilities;
+using EliteEnemies.Settings;
 using UnityEngine;
 using ItemStatsSystem;
-using ItemStatsSystem.Items;
+using NodeCanvas.Tasks.Actions;
 
 namespace EliteEnemies
 {
@@ -16,10 +17,10 @@ namespace EliteEnemies
     {
         private const string LogTag = "[EliteEnemies.LootHelper]";
         
-        // 调试模式开关
-        public bool debugMode = false;
+        private static bool Verbose = false;
         
         // 品质偏好：>0 偏向高品质, <0 偏向低品质
+        // 由EliteLootSystem主导更新，不需要手动更新
         public float qualityBiasPower = 0f;
 
         // 存储每个品质对应的可用物品ID列表
@@ -27,6 +28,7 @@ namespace EliteEnemies
         // 存储物品ID对应的标签集合，避免运行时实例化查询
         private Dictionary<int, HashSet<string>> _itemTagCache = new Dictionary<int, HashSet<string>>();
         
+        // 标记是否初始化完成
         private bool _isInitialized = false;
 
         // ========== 黑名单配置 ==========
@@ -41,24 +43,50 @@ namespace EliteEnemies
             "DestroyOnLootBox", "DestroyInBase", "Formula", "Formula_Blueprint", "Quest"
         };
 
+        // 确保切换场景不销毁，防止协程中断和数据丢失
+        private void Awake()
+        {
+            var others = FindObjectsOfType<LootItemHelper>();
+            if (others.Length > 1)
+            {
+                Destroy(this.gameObject);
+                return;
+            }
+            DontDestroyOnLoad(this.gameObject);
+            qualityBiasPower = GameConfig.ItemQualityBias; 
+        }
+
         private void Start()
         {
-            InitializeItemCache();
+            StartCoroutine(InitializeItemCacheAsync());
+        }
+
+        // 监控销毁情况
+        private void OnDestroy()
+        {
+            if (Verbose) Debug.Log($"{LogTag} LootItemHelper 被销毁");
         }
 
         // ========== 初始化核心逻辑 ==========
-
-        private void InitializeItemCache()
+        
+        private IEnumerator InitializeItemCacheAsync()
         {
-            DebugLog("开始初始化物品缓存（包含标签预处理）");
+            if (Verbose) Debug.Log($"{LogTag} 开始初始化物品缓存（异步模式）");
+            
             _qualityItemCache.Clear();
             _itemTagCache.Clear();
 
-            try
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+            
+            float maxMillisecondsPerFrame = 5f; 
+
+            for (int quality = 1; quality <= 7; quality++)
             {
-                for (int quality = 1; quality <= 7; quality++)
+                int[] itemIds = null;
+
+                try
                 {
-                    // 搜索该品质下的所有物品
                     ItemFilter filter = new ItemFilter
                     {
                         requireTags = new Tag[0],
@@ -66,34 +94,45 @@ namespace EliteEnemies
                         minQuality = quality,
                         maxQuality = quality
                     };
-
-                    int[] itemIds = ItemAssetsCollection.Search(filter);
-                    List<int> validItems = new List<int>();
-
-                    if (itemIds != null)
-                    {
-                        foreach (int itemId in itemIds)
-                        {
-                            // 处理单个物品：检查有效性并缓存标签
-                            if (ProcessItemAndCacheTags(itemId))
-                            {
-                                validItems.Add(itemId);
-                            }
-                        }
-                    }
-
-                    _qualityItemCache[quality] = validItems;
-                    DebugLog($"品阶 {quality}: {validItems.Count} 个可用物品");
+                    itemIds = ItemAssetsCollection.Search(filter);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"{LogTag} 搜索品质 {quality} 物品时出错: {ex.Message}");
+                    continue;
                 }
 
-                _isInitialized = true;
-                DebugLog("物品缓存初始化完成");
+                List<int> validItems = new List<int>();
+
+                if (itemIds != null)
+                {
+                    int processedCount = 0;
+                    foreach (int itemId in itemIds)
+                    {
+                        // 处理单个物品：检查有效性并缓存标签
+                        if (ProcessItemAndCacheTags(itemId))
+                        {
+                            validItems.Add(itemId);
+                        }
+                        
+                        processedCount++;
+                        
+                        if (processedCount % 10 == 0 && stopwatch.Elapsed.TotalMilliseconds > maxMillisecondsPerFrame)
+                        {
+                            stopwatch.Reset();
+                            stopwatch.Start();
+                            yield return null; 
+                        }
+                    }
+                }
+
+                _qualityItemCache[quality] = validItems;
+                if (Verbose) Debug.Log($"{LogTag} 品阶 {quality}: {validItems.Count} 个可用物品");
+                yield return null;
             }
-            catch (Exception ex)
-            {
-                Debug.LogError($"{LogTag} 初始化失败: {ex.Message}");
-                _isInitialized = false;
-            }
+
+            _isInitialized = true;
+            if (Verbose) Debug.Log($"{LogTag} 物品缓存初始化完成");
         }
 
         /// <summary>
@@ -204,7 +243,7 @@ namespace EliteEnemies
         {
             if (!_isInitialized)
             {
-                Debug.LogError($"{LogTag} 物品缓存未初始化");
+                // Debug.LogWarning($"{LogTag} 正在初始化缓存，暂时无法生成掉落...");
                 return null;
             }
 
@@ -217,7 +256,7 @@ namespace EliteEnemies
 
             minQuality = Mathf.Clamp(minQuality, 1, 7);
             maxQuality = Mathf.Clamp(maxQuality, 1, 7);
-
+            
             // 如果指定了标签，先统计有效品质
             if (requiredTags != null && requiredTags.Length > 0)
             {
@@ -240,15 +279,17 @@ namespace EliteEnemies
                 }
 
                 if (validQualities.Count == 0) return null;
-
+                
                 // 按权重选择一个品质
                 int pickedQuality = PickQualityByWeightFromValidQualities(validQualities, minQuality, maxQuality);
+                //Debug.Log($"elite quality {qualityBiasPower} -》 {pickedQuality}");
                 return CreateItemWithTagsFromQuality(pickedQuality, requiredTags);
             }
             else
             {
                 // 无标签限制：直接按权重选择品质
                 int pickedQuality = PickQualityByWeight(minQuality, maxQuality);
+                //Debug.Log($"elite quality non limit {qualityBiasPower} -》 {pickedQuality}");
                 return CreateItemFromQuality(pickedQuality);
             }
         }
@@ -319,6 +360,7 @@ namespace EliteEnemies
 
         private int PickQualityByWeight(int minQuality, int maxQuality)
         {
+            //qualityBiasPower = GameConfig.ItemQualityBias;
             if (Mathf.Approximately(qualityBiasPower, 0f))
                 return UnityEngine.Random.Range(minQuality, maxQuality + 1);
 
@@ -347,6 +389,7 @@ namespace EliteEnemies
 
         private int PickQualityByWeightFromValidQualities(List<int> validQualities, int minQuality, int maxQuality)
         {
+            //qualityBiasPower = GameConfig.ItemQualityBias;
             if (validQualities == null || validQualities.Count == 0) return minQuality;
             if (Mathf.Approximately(qualityBiasPower, 0f))
                 return validQualities[UnityEngine.Random.Range(0, validQualities.Count)];
@@ -372,16 +415,6 @@ namespace EliteEnemies
                 if (random <= accumulated) return validQualities[i];
             }
             return validQualities.Last();
-        }
-
-        // ========== 工具函数 ==========
-
-        private void DebugLog(string message)
-        {
-            if (debugMode)
-            {
-                Debug.Log($"{LogTag} {message}");
-            }
         }
     }
 }
