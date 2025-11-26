@@ -28,9 +28,10 @@ namespace EliteEnemies.EliteEnemy.Core
                 if (main && cmc.Team == main.Team) return;
                 
                 string presetName = cmc.characterPreset?.nameKey ?? string.Empty;
-       
-                // [修改点]：检查是否被标记忽略（组件标记 或 预设注册标记）
-                if (EliteEnemyCore.IsIgnored(cmc.gameObject) || EliteEnemyCore.IsIgnoredPreset(cmc.characterPreset))
+                
+                if (EliteEnemyCore.IsIgnored(cmc.gameObject) || 
+                    EliteEnemyCore.IsIgnoredPreset(cmc.characterPreset) ||
+                    presetName.IndexOf("NonElite", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     EliteEnemyTracker.RecordDecision(presetName, processedFlag: false);
                     return;
