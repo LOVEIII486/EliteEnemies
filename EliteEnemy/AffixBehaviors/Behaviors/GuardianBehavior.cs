@@ -9,11 +9,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
     /// <summary>
     /// 【守护】词缀
     /// 效果：出生时召唤一个分身。分身存活期间，本体处于【完全无敌】状态。
-    /// 只有在受到攻击时，本体才会闪烁金光并提示免疫，提供受击反馈。
     /// 
-    /// 健壮性增强：
-    /// 1. 增加受击次数上限（默认75次），超过次数强制解除无敌。
+    /// 1. 增加受击次数上限（默认50次），超过次数强制解除无敌。
     /// 2. 增强对分身状态的每一帧检测，防止分身失效但无敌未解除。
+    /// 3. 新增：距离完整性检测。如果分身因物理/地形原因被卡住导致距离过远，自动解除无敌。
     /// </summary>
     public class GuardianBehavior : AffixBehaviorBase, IUpdateableAffixBehavior, ICombatAffixBehavior
     {
@@ -27,8 +26,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly float PartnerDamageRatio = 0.5f;
         private static readonly float PartnerScaleRatio = 0.8f;
 
-        // 保底机制：最大无敌受击次数
-        private const int MaxInvincibleHits = 75; 
+        // 最大无敌受击次数
+        private const int MaxInvincibleHits = 50; 
+
+        // 距离检测参数
+        private const float MaxSeparationDeviation = 8.0f; // 允许的额外偏离距离
+        private const float MaxSeparationTime = 3.0f;      // 持续处于异常距离的时间阈值
+        private float _separationTimer = 0f;
         
         private Renderer[] _cachedRenderers; 
         private MaterialPropertyBlock _propBlock;
@@ -37,7 +41,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private readonly Color _shieldColor = new Color(1.0f, 0.6f, 0.0f); 
         
         private float _flashIntensity = 0f;
-        private bool _isGlowing = false; // 标记当前是否正在发光，优化性能用
+        private bool _isGlowing = false; 
         
         private float _lastPopTime = -999f;
         private const float PopCooldown = 0.5f;
@@ -48,7 +52,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private bool _hasSpawned = false;
         private bool _isInvincible = false;
 
-        // 运行时状态
         private int _currentHitCount = 0;
         private bool _isForceBroken = false;
 
@@ -74,9 +77,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _flashIntensity = 0f;
             _isGlowing = false;
             
-            // 重置保底计数器
             _currentHitCount = 0;
             _isForceBroken = false;
+            _separationTimer = 0f;
 
             _emissionColorId = Shader.PropertyToID("_EmissionColor");
             _propBlock = new MaterialPropertyBlock();
@@ -138,25 +141,53 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             UpdateFlashDecay(deltaTime);
 
-            // 如果已经强制破盾，或者分身无效，则确保无敌关闭并停止逻辑
+            // 基础有效性检查
             if (_isForceBroken || !IsPartnerValid())
             {
                 if (_isInvincible) SetInvincibleState(false);
                 return;
             }
 
+            // 1. 距离完整性检查 (CheckSeparation)
+            CheckSeparation(character, deltaTime);
+            if (_isForceBroken) return;
+
+            // 2. 更新轨道位置
             UpdateOrbit(deltaTime);
         }
 
         /// <summary>
-        /// 增强的有效性检测
+        /// 检查分身是否距离本体过远
         /// </summary>
+        private void CheckSeparation(CharacterMainControl character, float deltaTime)
+        {
+            if (_self == null || _partner == null) return;
+
+            float dist = Vector3.Distance(_self.transform.position, _partner.transform.position);
+            
+            // 判定阈值：标准半径 + 允许的最大偏差
+            // 如果分身被卡墙角，虽然代码强制设置位置，但物理引擎可能会把它挤出去
+            if (dist > OrbitRadius + MaxSeparationDeviation)
+            {
+                _separationTimer += deltaTime;
+                if (_separationTimer > MaxSeparationTime)
+                {
+                    // 超过容忍时间，判定为严重卡死，强制破盾
+                    Debug.LogWarning($"[GuardianBehavior] Partner stuck detected. Dist: {dist:F1}. Force breaking shield.");
+                    ForceBreakShield(character);
+                }
+            }
+            else
+            {
+                // 距离恢复正常，重置计时器
+                _separationTimer = 0f;
+            }
+        }
+
         private bool IsPartnerValid()
         {
             if (_partner == null) return false;
             if (_partner.Health == null || _partner.Health.CurrentHealth <= 0) return false;
-            
-            // 增加检测：如果分身被禁用（例如被回收或脚本禁用），视为失效
             if (!_partner.gameObject.activeInHierarchy) return false;
 
             return true;
@@ -168,22 +199,18 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             if (character != _self || !_isInvincible) return;
             
-            // 如果已经强制破盾，不再处理
             if (_isForceBroken) return;
             
             _flashIntensity = 2.0f; 
-            
-            // 累计受击次数
             _currentHitCount++;
 
-            // 检测是否达到保底阈值
+            // 受击次数保底
             if (_currentHitCount >= MaxInvincibleHits)
             {
                 ForceBreakShield(character);
                 return;
             }
 
-            // 常规免疫提示
             if (Time.time - _lastPopTime >= PopCooldown)
             {
                 if (damageInfo.fromCharacter != null)
@@ -195,7 +222,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         }
 
         /// <summary>
-        /// 强制击碎护盾（保底触发）
+        /// 强制击碎护盾
         /// </summary>
         private void ForceBreakShield(CharacterMainControl character)
         {
@@ -203,17 +230,22 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             SetInvincibleState(false);
             character.PopText(BrokenText);
 
-            // 尝试清理可能卡住的分身
-            if (_partner != null && _partner.Health.CurrentHealth > 0)
+            // 销毁分身
+            if (_partner != null)
             {
-                _partner.DestroyCharacter();
+                if (_partner.Health != null && _partner.Health.CurrentHealth > 0)
+                {
+                    _partner.DestroyCharacter();
+                }
+
+                if (_partner != null && _partner.gameObject != null)
+                {
+                    UnityEngine.Object.Destroy(_partner.gameObject, 0.1f);
+                }
             }
             _partner = null;
         }
 
-        /// <summary>
-        /// 每一帧更新闪烁衰减
-        /// </summary>
         private void UpdateFlashDecay(float deltaTime)
         {
             if (_cachedRenderers == null) return;
@@ -243,9 +275,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
         }
 
-        /// <summary>
-        /// 强制关闭特效
-        /// </summary>
         private void ResetVisualEffects()
         {
             if (_cachedRenderers == null) return;
@@ -263,7 +292,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private void UpdateOrbit(float deltaTime)
         {
-            // 虽然已经在OnUpdate开头检查过有效性，这里作为双重保险
             if (_partner == null) return;
 
             _currentAngle += RotationSpeed * deltaTime;
@@ -294,7 +322,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             SetInvincibleState(false);
             
-            // 只有当不是强制破盾导致的分身被清理时，才恢复分身AI（虽然此时通常也应该随之死亡）
+            // 只有当不是强制破盾导致的分身被清理时，才恢复分身AI
             if (!_isForceBroken && _partner != null && _partner.Health.CurrentHealth > 0)
             {
                 var agent = _partner.GetComponent<UnityEngine.AI.NavMeshAgent>();
