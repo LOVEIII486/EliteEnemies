@@ -9,7 +9,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
     /// <summary>
     /// 【报复】词缀 - 敌人受伤时发射子弹弹反击
     /// </summary>
-    public class RevengeBehavior : AffixBehaviorBase, ICombatAffixBehavior
+    public class RevengeBehavior : AffixBehaviorBase, ICombatAffixBehavior, IUpdateableAffixBehavior
     {
         public override string AffixName => "Revenge";
 
@@ -32,6 +32,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             _owner = character;
+            if (!_prefabInitialized)
+            {
+                InitializeProjectilePrefab();
+            }
             _glowController = new EliteGlowController(character);
         }
 
@@ -47,7 +51,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             _glowController.TriggerFlash(GlowColor, FlashDuration);
 
-            // 发射反击子弹 (这里也可以用 EliteBehaviorHelper 封装，或者保留原逻辑)
             ShootBullet(character, damageInfo.fromCharacter);
             _lastShootTime = Time.time;
         }
@@ -111,7 +114,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     firstFrameCheck = true,
                     firstFrameCheckStartPoint = muzzlePos - direction * 0.5f,
                     direction = direction,
-                    speed = 19f,
+                    speed = 20f,
                     team = shooter.Team,
                     fromCharacter = shooter,
                     fromWeaponItemID = ProjectileSourceItemId,
@@ -129,7 +132,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     element_Electricity = 0f,
                     element_Space = 0f,
                     explosionRange = 2f,
-                    explosionDamage = 15f,
+                    explosionDamage = 18f,
                     buffChance = 0f,
                     buff = null,
                     bleedChance = 0.5f,
