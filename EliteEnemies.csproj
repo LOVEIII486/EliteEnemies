@@ -640,6 +640,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DistortionBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DungEaterBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GigantificationBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\Grenadier.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GuardianBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\HardeningBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\InvisibilityBehavior.cs" />
@@ -663,6 +664,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\TimeStopBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\UndyingBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\VampirismBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\EliteBehaviorHelper.cs" />
         <Compile Include="EliteEnemy\AttributeModifier\AIFieldModifier.cs" />
         <Compile Include="EliteEnemy\AttributeModifier\AttributeModifier.cs" />
         <Compile Include="EliteEnemy\AttributeModifier\StatModifier.cs" />

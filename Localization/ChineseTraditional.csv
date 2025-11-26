@@ -126,3 +126,5 @@ Affix_MandarinDuck_Description,真是一對苦命鴛鴦！,2.3,AffixDescription
 Affix_MandarinDuck_MateSuffix,<color=#F08080>伴侶</color>,2.3,AffixBehavior
 Affix_Obscurer_Name,封弊者,2.3,AffixNames
 Affix_Obscurer_Description,隱藏所有詞條名稱顯示為亂碼,2.3,AffixDescription
+Affix_Grenadier_Name,擲彈手,2.3,AffixNames
+Affix_Grenadier_Description,攻擊命中時會向目標投擲手雷,2.3,AffixDescription

@@ -126,3 +126,5 @@ Affix_MandarinDuck_Description,What a pair of ill-fated lovers!,2.3,AffixDescrip
 Affix_MandarinDuck_MateSuffix,<color=#F08080>Partner</color>,2.3,AffixBehavior
 Affix_Obscurer_Name,Obscurer,2.3,AffixNames
 Affix_Obscurer_Description,Hides all affix names showing garbled text.,2.3,AffixDescription
+Affix_Grenadier_Name,Grenadier,2.3,AffixNames
+Affix_Grenadier_Description,Throws a grenade at the target on hit.,2.3,AffixDescription

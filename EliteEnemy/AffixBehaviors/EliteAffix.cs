@@ -588,7 +588,16 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic 
-            }
+            },
+            ["Grenadier"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Grenadier_Name"),
+                Description = LocalizationManager.GetText("Affix_Grenadier_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare
+            },
         };
 
 
