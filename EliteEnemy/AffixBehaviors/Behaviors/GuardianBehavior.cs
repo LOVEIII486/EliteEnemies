@@ -39,6 +39,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private EliteGlowController _glowController;
         private readonly Color _shieldColor = new Color(1.0f, 0.6f, 0.0f); 
         private float _flashIntensity = 0f;
+        private bool _isGlowing = false;
         
         private float _lastPopTime = -999f;
         private const float PopCooldown = 0.5f;
@@ -72,7 +73,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _isInvincible = false;
             _lastPopTime = -999f;
             _flashIntensity = 0f;
-            
+            _isGlowing = false;
             _currentHitCount = 0;
             _isForceBroken = false;
             _separationTimer = 0f;
@@ -245,17 +246,16 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             if (_flashIntensity > 0f)
             {
+                _isGlowing = true; // 标记正在发光
                 _flashIntensity -= deltaTime * 4f; 
                 if (_flashIntensity < 0f) _flashIntensity = 0f;
 
                 Color finalColor = _shieldColor * _flashIntensity;
-                
-                // 使用工具类设置颜色
                 _glowController?.SetEmissionColor(finalColor);
             }
-            else
+            else if (_isGlowing)
             {
-                // 无高亮时重置为不发光
+                _isGlowing = false;
                 _glowController?.Reset();
             }
         }
