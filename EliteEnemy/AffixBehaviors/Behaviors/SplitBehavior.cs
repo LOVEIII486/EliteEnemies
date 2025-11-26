@@ -4,6 +4,7 @@ using EliteEnemies.EliteEnemy.Core;
 using HarmonyLib;
 using ItemStatsSystem;
 using UnityEngine;
+using SodaCraft.Localizations; // [新增] 用于获取本地化文本
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
@@ -78,6 +79,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             Vector3 deathPosition = character.transform.position;
             int splitCount = Random.Range(MinSplitCount, MaxSplitCount + 1);
     
+            // [修改] 获取母体的本地化名称 (例如 "拾荒者")
+            // 这样生成的克隆体也会显示为 "拾荒者"，而不是 "???"
+            string originalName = character.characterPreset.nameKey.ToPlainText();
+
             helper.SpawnCloneCircle(
                 originalEnemy: character,
                 centerPosition: deathPosition,
@@ -87,7 +92,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 damageMultiplier: SplitDamageRatio,
                 speedMultiplier: SplitSpeedRatio,
                 scaleMultiplier: 1f,
-                preventElite: false,
+                preventElite: false, // 分裂体默认不禁止再次精英化（除非配置限制）
+                customDisplayName: originalName, // [修改] 传入母体名字
                 onAllSpawned: (clones) => 
                 {
                     if (clones == null) return;
@@ -95,7 +101,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     {
                         if (clone != null)
                         {
-                            // 不再注册死亡事件去搜寻箱子，而是直接打上标记
                             clone.gameObject.AddComponent<SplitCloneMarker>();
                         }
                     }
@@ -167,8 +172,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 if (i == keepIndex) continue;
                 items[i]?.DestroyTree();
             }
-            
-            // Debug.Log($"[EliteEnemies.SplitBehavior] 已清理分身 {lootbox.name} 的掉落物，保留了索引 {keepIndex}");
         }
     }
 }

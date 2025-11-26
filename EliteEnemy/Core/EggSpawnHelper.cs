@@ -1,8 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection; // 引入反射命名空间
 using UnityEngine;
+using SodaCraft.Localizations; 
 
 namespace EliteEnemies.EliteEnemy.Core
 {
@@ -30,7 +30,6 @@ namespace EliteEnemies.EliteEnemy.Core
                 Destroy(gameObject);
                 return;
             }
-
             _instance = this;
         }
 
@@ -46,25 +45,19 @@ namespace EliteEnemies.EliteEnemy.Core
             {
                 yield return new WaitForSeconds(0.5f);
             }
-
             _player = CharacterMainControl.Main;
             _isReady = true;
-
             Debug.Log($"{LogTag} 初始化完成");
         }
 
         private void OnDestroy()
         {
-            if (_instance == this)
-            {
-                _instance = null;
-            }
+            if (_instance == this) _instance = null;
         }
 
         private static void InitializeEggPrefab()
         {
             if (_eggPrefab != null) return;
-
             Egg[] eggs = Resources.FindObjectsOfTypeAll<Egg>();
             if (eggs.Length > 0)
             {
@@ -87,7 +80,8 @@ namespace EliteEnemies.EliteEnemy.Core
             float scaleMultiplier = 1f,
             List<string> affixes = null,
             bool preventElite = true,
-            string customDisplayName = null,
+            string customKeySuffix = null,   // 用于构建唯一Key的后缀
+            string customDisplayName = null, // 用于显示的中文名
             System.Action<CharacterMainControl> onSpawned = null)
         {
             if (!ValidateSpawnConditions(originalEnemy)) return null;
@@ -101,13 +95,13 @@ namespace EliteEnemies.EliteEnemy.Core
                     return null;
                 }
 
-                // [重构] 在创建预设时直接应用自定义名字
                 var modifiedPreset = CreateModifiedPreset(
                     preset, 
                     healthMultiplier, 
                     damageMultiplier, 
                     speedMultiplier, 
-                    customDisplayName // 传入自定义名字
+                    customKeySuffix,
+                    customDisplayName
                 );
 
                 if (preventElite)
@@ -117,7 +111,6 @@ namespace EliteEnemies.EliteEnemy.Core
 
                 Egg egg = SpawnEgg(position, modifiedPreset, originalEnemy);
                 
-                // [重构] 延迟修改中不再包含名字修改逻辑
                 if (affixes != null || !Mathf.Approximately(scaleMultiplier, 1f) || onSpawned != null || preventElite)
                 {
                     StartCoroutine(ApplyDelayedModifications(
@@ -150,7 +143,8 @@ namespace EliteEnemies.EliteEnemy.Core
             float scaleMultiplier = 1f,
             List<string> affixes = null,
             bool preventElite = true,
-            string customDisplayName = null,
+            string customKeySuffix = null,   
+            string customDisplayName = null, 
             System.Action<CharacterMainControl> onSpawned = null)
         {
             if (!_isReady || preset == null)
@@ -167,13 +161,13 @@ namespace EliteEnemies.EliteEnemy.Core
 
             try
             {
-                // [重构] 在创建预设时直接应用自定义名字
                 var modifiedPreset = CreateModifiedPreset(
                     preset, 
                     healthMultiplier, 
                     damageMultiplier, 
                     speedMultiplier,
-                    customDisplayName // 传入自定义名字
+                    customKeySuffix,
+                    customDisplayName
                 );
                 
                 CharacterMainControl effectiveSpawner = spawner ?? _player;
@@ -218,7 +212,8 @@ namespace EliteEnemies.EliteEnemy.Core
             float scaleMultiplier = 1f,
             List<string> affixes = null,
             bool preventElite = true,
-            string customDisplayName = null,
+            string customKeySuffix = null,   
+            string customDisplayName = null, 
             System.Action<CharacterMainControl> onSpawned = null)
         {
             var preset = FindPreset(presetName);
@@ -229,7 +224,7 @@ namespace EliteEnemies.EliteEnemy.Core
             }
 
             return SpawnByPreset(preset, position, spawner, healthMultiplier, damageMultiplier, speedMultiplier,
-                scaleMultiplier, affixes, preventElite, customDisplayName, onSpawned);
+                scaleMultiplier, affixes, preventElite, customKeySuffix, customDisplayName, onSpawned);
         }
 
         // ========== 公共 API：批量生成 ==========
@@ -244,6 +239,7 @@ namespace EliteEnemies.EliteEnemy.Core
             float speedMultiplier = 1f,
             float scaleMultiplier = 1f,
             bool preventElite = true,
+            string customKeySuffixPrefix = null, 
             string customDisplayName = null,
             System.Action<List<CharacterMainControl>> onAllSpawned = null)
         {
@@ -257,7 +253,7 @@ namespace EliteEnemies.EliteEnemy.Core
             StartCoroutine(SpawnCloneCircleCoroutine(
                 originalEnemy, centerPosition, count, radius,
                 healthMultiplier, damageMultiplier, speedMultiplier, scaleMultiplier,
-                preventElite, customDisplayName, onAllSpawned));
+                preventElite, customKeySuffixPrefix, customDisplayName, onAllSpawned));
         }
 
         private IEnumerator SpawnCloneCircleCoroutine(
@@ -270,12 +266,16 @@ namespace EliteEnemies.EliteEnemy.Core
             float speedMultiplier,
             float scaleMultiplier,
             bool preventElite,
+            string customKeySuffixPrefix,
             string customDisplayName,
             System.Action<List<CharacterMainControl>> onAllSpawned)
         {
             float angleStep = 360f / count;
             List<CharacterMainControl> spawnedEnemies = new List<CharacterMainControl>();
             int spawnedCount = 0;
+            
+            // [修改] 如果没有指定后缀，默认使用 "EE_NonSuffix"
+            string baseSuffix = !string.IsNullOrEmpty(customKeySuffixPrefix) ? customKeySuffixPrefix : "EE_NonSuffix";
 
             for (int i = 0; i < count; i++)
             {
@@ -287,6 +287,10 @@ namespace EliteEnemies.EliteEnemy.Core
                 );
                 Vector3 spawnPosition = centerPosition + offset;
 
+                // [修改] 直接传入 baseSuffix，不再添加 _{i} 数字序号
+                // 这样这批敌人共享同一个 Key，避免冗余
+                string instanceSuffix = baseSuffix;
+
                 SpawnClone(
                     originalEnemy,
                     spawnPosition,
@@ -296,7 +300,8 @@ namespace EliteEnemies.EliteEnemy.Core
                     scaleMultiplier,
                     null,
                     preventElite,
-                    customDisplayName,
+                    instanceSuffix,    
+                    customDisplayName, 
                     (spawnedEnemy) =>
                     {
                         if (spawnedEnemy != null)
@@ -326,7 +331,9 @@ namespace EliteEnemies.EliteEnemy.Core
             float damageMultiplier = 1f,
             float speedMultiplier = 1f,
             float scaleMultiplier = 1f,
-            List<string> affixes = null)
+            List<string> affixes = null,
+            string customKeySuffix = null,   
+            string customDisplayName = null) 
         {
             if (!_isReady || _player == null)
             {
@@ -336,7 +343,7 @@ namespace EliteEnemies.EliteEnemy.Core
 
             Vector3 spawnPosition = _player.transform.position + _player.transform.forward * distance;
             return SpawnClone(originalEnemy, spawnPosition, healthMultiplier, damageMultiplier, speedMultiplier,
-                scaleMultiplier, affixes);
+                scaleMultiplier, affixes, true, customKeySuffix, customDisplayName);
         }
 
         public CharacterMainControl SpawnByPresetNameInFrontOfPlayer(
@@ -347,7 +354,9 @@ namespace EliteEnemies.EliteEnemy.Core
             float speedMultiplier = 1f,
             float scaleMultiplier = 1f,
             List<string> affixes = null,
-            bool preventElite = true)
+            bool preventElite = true,
+            string customKeySuffix = null,   
+            string customDisplayName = null) 
         {
             if (!_isReady || _player == null)
             {
@@ -357,7 +366,7 @@ namespace EliteEnemies.EliteEnemy.Core
 
             Vector3 spawnPosition = _player.transform.position + _player.transform.forward * distance;
             return SpawnByPresetName(presetName, spawnPosition, null, healthMultiplier, damageMultiplier,
-                speedMultiplier, scaleMultiplier, affixes, preventElite);
+                speedMultiplier, scaleMultiplier, affixes, preventElite, customKeySuffix, customDisplayName);
         }
 
         // ========== 内部方法 ==========
@@ -401,53 +410,72 @@ namespace EliteEnemies.EliteEnemy.Core
             return egg;
         }
 
-        // [重构核心] 修改了此方法，增加了 overrideNameKey 参数，并使用反射修改
+        // [核心重构] 
         private CharacterRandomPreset CreateModifiedPreset(
             CharacterRandomPreset original,
             float healthMultiplier,
             float damageMultiplier,
             float speedMultiplier,
-            string overrideNameKey = null) // 新增可选参数
+            string customKeySuffix = null,    
+            string customDisplayName = null)  
         {
-            // 深拷贝预设
             CharacterRandomPreset modified = Instantiate(original);
 
-            // 1. 应用倍率（直接访问公有字段）
+            // [修改] 你建议不修改 Unity 内部名，保持注释状态
+            // modified.name = $"Preset_{uniqueKey}";
+
+            // 1. 确定 Key 后缀
+            // 默认使用统一的 "EE_NonSuffix" 以减少 Key 的多样性
+            string suffix = !string.IsNullOrEmpty(customKeySuffix) ? customKeySuffix : "EE_NonSuffix";
+
+            // 2. 设置 nameKey (关键逻辑：防递归 & 兜底显示)
+            // 检查原始 Key 是否已经包含了这个后缀，如果是，就不再追加，防止 "Key_Suffix_Suffix"
+            string finalKey;
+            if (original.nameKey.EndsWith($"_{suffix}"))
+            {
+                // 已经有了，直接复用
+                finalKey = original.nameKey;
+            }
+            else
+            {
+                // 没有，追加后缀
+                finalKey = $"{original.nameKey}_{suffix}";
+            }
+            
+            modified.nameKey = finalKey;
+
+            // 3. 应用属性倍率
             modified.health = original.health * healthMultiplier;
             modified.damageMultiplier = original.damageMultiplier * damageMultiplier;
             modified.moveSpeedFactor = original.moveSpeedFactor * speedMultiplier;
 
-            // 2. 应用自定义名字（反射修改，参考了 RandomNpc 的写法）
-            if (!string.IsNullOrEmpty(overrideNameKey))
-            {
-                try
-                {
-                    // 设置 name (Unity 对象的内部名字，方便调试)
-                    modified.name = "CustomPreset_" + overrideNameKey;
+            // 4. 处理显示名称 (Localiztion Override)
+            // 如果没有提供自定义名字，默认使用 "???"
+            string finalDisplayName = !string.IsNullOrEmpty(customDisplayName) ? customDisplayName : "???";
 
-                    // 设置 nameKey 字段
-                    FieldInfo nameKeyField = typeof(CharacterRandomPreset).GetField("displayName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (nameKeyField != null)
-                    {
-                        nameKeyField.SetValue(modified, overrideNameKey);
-                        //Debug.Log($"{LogTag} 已通过反射设置预设 NameKey: {overrideNameKey}");
-                    }
-                    else
-                    {
-                        // 如果反射失败，尝试直接赋值（如果它是public的话）
-                        modified.nameKey = overrideNameKey; 
-                    }
-                }
-                catch (Exception ex)
+            try
+            {
+                // 只要有后缀改动，我们就需要确保这个 Key 能显示出东西
+                // 强制开启名字显示
+                modified.showName = true;
+                modified.showHealthBar = true;
+
+                // 注册到游戏原生字典
+                if (SodaCraft.Localizations.LocalizationManager.overrideTexts != null)
                 {
-                    Debug.LogWarning($"{LogTag} 设置自定义名字失败: {ex.Message}");
+                    // 注册映射关系：finalKey -> finalDisplayName
+                    // 注意：如果 finalKey 已经存在且 value 相同，赋值也是安全的
+                    SodaCraft.Localizations.LocalizationManager.overrideTexts[finalKey] = finalDisplayName;
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"{LogTag} 注册本地化文本失败: {ex.Message}");
             }
 
             return modified;
         }
 
-        // 修改延迟应用方法，移除了 customDisplayName 参数
         private IEnumerator ApplyDelayedModifications(
             Vector3 spawnPosition,
             float scaleMultiplier,
@@ -466,19 +494,16 @@ namespace EliteEnemies.EliteEnemy.Core
                 yield break;
             }
 
-            // 仅保留 EliteIgnoredTag 标记，移除名字修改逻辑
             if (preventElite)
             {
                 EliteEnemyCore.MarkAsIgnored(enemy.gameObject);
             }
 
-            // 应用尺寸
             if (!Mathf.Approximately(scaleMultiplier, 1f))
             {
                 enemy.transform.localScale = Vector3.one * scaleMultiplier;
             }
 
-            // 应用词缀
             if (affixes != null && affixes.Count > 0 && !preventElite)
             {
                 EliteEnemyCore.ForceMakeElite(enemy, affixes);
@@ -494,22 +519,12 @@ namespace EliteEnemies.EliteEnemy.Core
             {
                 if (character == null || character == _player) continue;
 
-                // 检查是否已经被处理过（这里主要通过 EliteIgnoredTag 或 EliteMarker 判断）
-                // 因为现在名字是原生的，不能单纯靠名字判断了
-                // 暂时使用简单的距离判断，或者检查是否已有 behavior 组件（如果是精英）
-                
-                // 优化：如果有 EliteIgnoredTag 组件，且没有 EliteMarker (尚未被系统识别)，说明是刚生成的忽略怪？
-                // 实际上这里的防重入逻辑比较难做，因为现在生成过程更原生了。
-                // 维持原来的逻辑：找最近的、且没有被其他逻辑抢占的（这里简化为找最近的）
-
                 float distance = Vector3.Distance(character.transform.position, position);
                 if (distance < 2.5f) 
                 {
-                    // 简单的防重入：如果回调里需要精确控制，可以加个临时 Tag
                     return character;
                 }
             }
-
             return null;
         }
 
@@ -532,12 +547,10 @@ namespace EliteEnemies.EliteEnemy.Core
             {
                 Debug.LogError($"{LogTag} 查找预设异常: {ex.Message}");
             }
-
             return null;
         }
 
         public bool IsReady => _isReady;
-
         public CharacterMainControl GetPlayer() => _player;
     }
 }

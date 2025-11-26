@@ -70,6 +70,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 scaleMultiplier: PartnerScaleRatio,
                 affixes: null,
                 preventElite: true, 
+                customKeySuffix:"EE_MandarinDuckPartner_NonElite",
                 customDisplayName: $"{_self.characterPreset.DisplayName} {PartnerName}",
                 onSpawned: OnPartnerSpawned
             );

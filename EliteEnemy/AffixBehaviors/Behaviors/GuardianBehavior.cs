@@ -94,6 +94,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 scaleMultiplier: PartnerScaleRatio,
                 affixes: null,
                 preventElite: true, 
+                customKeySuffix: "EE_GuardianCore_NonElite",
                 customDisplayName: $"{_self.characterPreset.DisplayName} {PartnerName}",
                 onSpawned: OnPartnerSpawned
             );
@@ -120,10 +121,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             if (_partner == null || _partner.Health.CurrentHealth <= 0)
             {
-                if (_isInvincible)
-                {
-                    SetInvincibleState(false);
-                }
+                SetInvincibleState(false);
                 return;
             }
 

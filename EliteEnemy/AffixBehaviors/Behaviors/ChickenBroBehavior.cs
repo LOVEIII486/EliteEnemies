@@ -75,6 +75,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     scaleMultiplier: 1f,
                     affixes: null,
                     preventElite: true,
+                    customKeySuffix: "EE_Chick_NonElite",
                     customDisplayName: ChickenCustomName,  // 自定义名称
                     onSpawned: (chicken) => {
                         if (chicken != null) _chickens.Add(chicken);
