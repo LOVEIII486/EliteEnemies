@@ -1,5 +1,5 @@
 ﻿using System;
-using UnityEngine; // 必须引用，用于 Time.time
+using UnityEngine;
 using EliteEnemies.Localization;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
