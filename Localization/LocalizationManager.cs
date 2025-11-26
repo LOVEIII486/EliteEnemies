@@ -42,13 +42,14 @@ namespace EliteEnemies.Localization
                 {
                     Debug.LogWarning($"{LogTag} 无法加载语言 {_currentLanguage}，尝试后备语言...");
                     
-                    // 简体中文 -> 英文
-                    if (!LoadAndSetLanguage(SystemLanguage.Chinese) && 
-                        !LoadAndSetLanguage(SystemLanguage.ChineseSimplified))
+                    // 优先使用英文作为后备
+                    if (!LoadAndSetLanguage(SystemLanguage.English))
                     {
-                        if (!LoadAndSetLanguage(SystemLanguage.English))
+                        // 英文也失败了，尝试中文作为最后的保底
+                        if (!LoadAndSetLanguage(SystemLanguage.ChineseSimplified) &&
+                            !LoadAndSetLanguage(SystemLanguage.Chinese))
                         {
-                            Debug.LogError($"{LogTag} 严重错误：无法加载任何语言文件！");
+                            Debug.LogError($"{LogTag} 严重错误：无法加载任何语言文件（English/Chinese）！");
                         }
                     }
                 }
