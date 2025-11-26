@@ -127,3 +127,4 @@ Affix_Guardian_Description,The main body is completely invincible while the clon
 Affix_Guardian_MateSuffix,<color=#FFD700>Guardian Core</color>,2.3,AffixBehavior
 Affix_Guardian_ImmunePop,<color=#FF9900>IMMUNE!</color>,2.3,AffixBehavior
 Settings_AffixFontSize,Affix Font Size,2.3,VisualSettings
+Affix_Guardian_ShieldBroken,SHIELD BROKEN!,2.3,AffixBehavior

@@ -127,3 +127,4 @@ Affix_Guardian_Description,分身存活期間，本體處於「完全無敵」�
 Affix_Guardian_MateSuffix,<color=#FFD700>守護核心</color>,2.3,AffixBehavior
 Affix_Guardian_ImmunePop,<color=#FF9900>免疫！</color>,2.3,AffixBehavior
 Settings_AffixFontSize,詞綴字體大小,2.3,VisualSettings
+Affix_Guardian_ShieldBroken,護盾破碎！,2.3,AffixBehavior

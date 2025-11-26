@@ -38,7 +38,7 @@ namespace EliteEnemies.Settings
         // 默认禁用的词缀名单
         private static readonly HashSet<string> DefaultDisabledAffixes = new HashSet<string>
         {
-            "Sticky" , "Guardian"
+            "Sticky"
         };
 
         private static Dictionary<string, bool> _affixStates = new Dictionary<string, bool>();
