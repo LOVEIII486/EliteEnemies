@@ -360,7 +360,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.2f,
-                Rarity = AffixRarity.Epic
+                Rarity = AffixRarity.Rare
             }.WithRandomLoot(-1, 1, 1, new[] { "Explosive" }),
             ["Sticky"] = new AffixData
             {
@@ -413,7 +413,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Epic
+                Rarity = AffixRarity.Rare
             },
             ["Chaos"] = new AffixData
             {
@@ -596,7 +596,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Epic
             },
         };
 
