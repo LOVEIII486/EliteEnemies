@@ -9,9 +9,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override string AffixName => "Berserk";
         private bool _berserkTriggered = false;
 
-        private readonly Lazy<string> _berserkPopTextFmt =
-            new(() => LocalizationManager.GetText("Affix_Berserk_PopText_1")
-            );
+        private readonly Lazy<string> _berserkPopTextFmt = new(() => LocalizationManager.GetText("Affix_Berserk_PopText_1"));
 
         private string BerserkPopTextFmt => _berserkPopTextFmt.Value;
 

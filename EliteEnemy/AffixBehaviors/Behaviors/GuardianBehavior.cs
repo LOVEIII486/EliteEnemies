@@ -24,7 +24,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         
         private static readonly float PartnerHealthRatio = 0.6f;
         private static readonly float PartnerDamageRatio = 0.5f;
-        private static readonly float PartnerScaleRatio = 0.8f;
+        private static readonly float PartnerScaleRatio = 0.7f;
 
         // 最大无敌受击次数
         private const int MaxInvincibleHits = 50; 

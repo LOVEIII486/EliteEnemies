@@ -259,7 +259,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     firstFrameCheck = true,
                     firstFrameCheckStartPoint = muzzlePos - direction * 0.5f,
                     direction = direction,
-                    speed = 18f,
+                    speed = 19f,
 
                     // 队伍和来源
                     team = shooter.Team,
@@ -294,7 +294,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     buff = null,
 
                     // 其他
-                    bleedChance = 0.2f,
+                    bleedChance = 0.5f,
                     ignoreHalfObsticle = true,
                     gravity = 0f
                 };

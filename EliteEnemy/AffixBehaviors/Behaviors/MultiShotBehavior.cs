@@ -91,15 +91,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 fromCharacter = shooter,
                 fromWeaponItemID = weaponId,
 
-                speed = 25f,
-                damage = 8f,
+                speed = 28f,
+                damage = 10f,
 
                 distance = 50f,
                 halfDamageDistance = 25f,
                 penetrate = 0,
                 critRate = 0f,
                 critDamageFactor = 1f,
-                armorPiercing = 4f,
+                armorPiercing = 5f,
                 ignoreHalfObsticle = false,
 
                 element_Physics = 1f,
