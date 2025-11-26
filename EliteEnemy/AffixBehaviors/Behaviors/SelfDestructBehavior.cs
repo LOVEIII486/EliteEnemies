@@ -1,3 +1,4 @@
+using EliteEnemies.EliteEnemy.VisualEffects;
 using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
@@ -19,23 +20,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly ExplosionFxTypes ExplosionType = ExplosionFxTypes.normal; // 爆炸效果类型
         private static readonly int WeaponItemID = 24; // 武器ID（用于伤害来源标识）
         
-        private Renderer[] _cachedRenderers; 
-        private MaterialPropertyBlock _propBlock;
-        private int _emissionColorId;
+        private EliteGlowController _glowController;
         
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             base.OnEliteInitialized(character);
     
-            // 1. 获取 Shader 属性 ID
-            _emissionColorId = Shader.PropertyToID("_EmissionColor");
-    
-            // 2. 初始化属性块
-            _propBlock = new MaterialPropertyBlock();
-    
-            // 3. 获取所有子物体的渲染器
-            _cachedRenderers = character.GetComponentsInChildren<Renderer>();
+            _glowController = new EliteGlowController(character);
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
@@ -85,37 +77,20 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private void UpdateInstabilityEffect(CharacterMainControl character)
         {
-            if (character == null) return;
-
-            // --- 缩放效果  ---
-            float pulseSpeed = 15f; 
-            float jitterAmount = 0.08f;
-            float pulse = Mathf.Sin(Time.time * pulseSpeed) * 0.05f;
-            float noise = UnityEngine.Random.Range(-jitterAmount, jitterAmount);
+            float pulse = Mathf.Sin(Time.time * 15f) * 0.05f;
+            float noise = UnityEngine.Random.Range(-0.08f, 0.08f);
             character.transform.localScale = Vector3.one * (1f + pulse + noise);
 
-            // --- 颜色闪烁效果 ---
-            if (_cachedRenderers != null && _cachedRenderers.Length > 0)
-            {
-                // 计算颜色
-                float emissionStrength = Mathf.PingPong(Time.time * 5f, 1f); 
-                Color targetColor = Color.red * emissionStrength * 2f;
-
-                // 遍历所有部件
-                foreach (var renderer in _cachedRenderers)
-                {
-                    if (renderer != null)
-                    {
-                        renderer.GetPropertyBlock(_propBlock);
-                        _propBlock.SetColor(_emissionColorId, targetColor);
-                        renderer.SetPropertyBlock(_propBlock);
-                    }
-                }
-            }
+            // 颜色闪烁
+            float emissionStrength = Mathf.PingPong(Time.time * 5f, 1f); 
+            Color targetColor = Color.red * emissionStrength * 2f;
+            
+            _glowController.SetEmissionColor(targetColor);
         }
         
         public override void OnCleanup(CharacterMainControl character)
         {
+            _glowController?.Reset();
         }
     }
 }

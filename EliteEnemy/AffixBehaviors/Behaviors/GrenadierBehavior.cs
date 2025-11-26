@@ -20,7 +20,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         /// 100	3	精良	捕兽陷阱	Item_Trap
         /// 23	1	普通	管状炸弹	Item_Dynamite
         /// </summary>
-        private static readonly int[] GrenadePool = { 66, 67, 660, 933, 941, 942, 24, 23, 100 };
+        private static readonly int[] GrenadePool = { 66, 67, 933, 941, 942, 24, 23 };
         private static readonly float CooldownTime = 3.0f;
         private float _lastTriggerTime = -999f;
 
@@ -35,7 +35,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             _lastTriggerTime = Time.time;
             
-            Debug.Log($"[Grenadier] 投掷了手雷 ID: {randomItemId}");
+            // Debug.Log($"[Grenadier] 投掷了手雷 ID: {randomItemId}");
         }
         
         public override void OnEliteInitialized(CharacterMainControl character) { }

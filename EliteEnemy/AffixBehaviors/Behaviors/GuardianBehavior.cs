@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections;
-using EliteEnemies.EliteEnemy.Core;
-using EliteEnemies.Localization;
 using UnityEngine;
+using EliteEnemies.EliteEnemy.Core;
+using EliteEnemies.EliteEnemy.VisualEffects;
+using EliteEnemies.Localization;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
@@ -12,7 +13,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
     /// 
     /// 1. 增加受击次数上限（默认50次），超过次数强制解除无敌。
     /// 2. 增强对分身状态的每一帧检测，防止分身失效但无敌未解除。
-    /// 3. 新增：距离完整性检测。如果分身因物理/地形原因被卡住导致距离过远，自动解除无敌。
+    /// 3. 距离完整性检测。如果分身因物理/地形原因被卡住导致距离过远，自动解除无敌。
     /// </summary>
     public class GuardianBehavior : AffixBehaviorBase, IUpdateableAffixBehavior, ICombatAffixBehavior
     {
@@ -27,21 +28,17 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly float PartnerScaleRatio = 0.7f;
 
         // 最大无敌受击次数
-        private const int MaxInvincibleHits = 50; 
+        private static readonly int MaxInvincibleHits = 50; 
 
         // 距离检测参数
-        private const float MaxSeparationDeviation = 8.0f; // 允许的额外偏离距离
-        private const float MaxSeparationTime = 3.0f;      // 持续处于异常距离的时间阈值
+        private static readonly float MaxSeparationDeviation = 8.0f; // 允许的额外偏离距离
+        private static readonly float MaxSeparationTime = 3.0f;      // 持续处于异常距离的时间阈值
         private float _separationTimer = 0f;
         
-        private Renderer[] _cachedRenderers; 
-        private MaterialPropertyBlock _propBlock;
-        private int _emissionColorId;
-        
+        // 发光控制器
+        private EliteGlowController _glowController;
         private readonly Color _shieldColor = new Color(1.0f, 0.6f, 0.0f); 
-        
         private float _flashIntensity = 0f;
-        private bool _isGlowing = false; 
         
         private float _lastPopTime = -999f;
         private const float PopCooldown = 0.5f;
@@ -75,15 +72,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _isInvincible = false;
             _lastPopTime = -999f;
             _flashIntensity = 0f;
-            _isGlowing = false;
             
             _currentHitCount = 0;
             _isForceBroken = false;
             _separationTimer = 0f;
 
-            _emissionColorId = Shader.PropertyToID("_EmissionColor");
-            _propBlock = new MaterialPropertyBlock();
-            _cachedRenderers = character.GetComponentsInChildren<Renderer>(true);
+            // 初始化发光控制器
+            _glowController = new EliteGlowController(character);
 
             ModBehaviour.Instance?.StartCoroutine(SpawnPartnerDelayed());
         }
@@ -248,45 +243,20 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private void UpdateFlashDecay(float deltaTime)
         {
-            if (_cachedRenderers == null) return;
-            
             if (_flashIntensity > 0f)
             {
-                _isGlowing = true;
                 _flashIntensity -= deltaTime * 4f; 
                 if (_flashIntensity < 0f) _flashIntensity = 0f;
 
                 Color finalColor = _shieldColor * _flashIntensity;
-
-                foreach (var renderer in _cachedRenderers)
-                {
-                    if (renderer != null)
-                    {
-                        renderer.GetPropertyBlock(_propBlock);
-                        _propBlock.SetColor(_emissionColorId, finalColor);
-                        renderer.SetPropertyBlock(_propBlock);
-                    }
-                }
+                
+                // 使用工具类设置颜色
+                _glowController?.SetEmissionColor(finalColor);
             }
-            else if (_isGlowing)
+            else
             {
-                ResetVisualEffects();
-                _isGlowing = false;
-            }
-        }
-
-        private void ResetVisualEffects()
-        {
-            if (_cachedRenderers == null) return;
-
-            foreach (var renderer in _cachedRenderers)
-            {
-                if (renderer != null)
-                {
-                    renderer.GetPropertyBlock(_propBlock);
-                    _propBlock.SetColor(_emissionColorId, Color.black);
-                    renderer.SetPropertyBlock(_propBlock);
-                }
+                // 无高亮时重置为不发光
+                _glowController?.Reset();
             }
         }
 
@@ -314,7 +284,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             if (!isInvincible)
             {
                 _flashIntensity = 0f;
-                ResetVisualEffects();
+                // 破盾时关闭发光
+                _glowController?.Reset();
             }
         }
 
@@ -332,12 +303,11 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            ResetVisualEffects();
+            _glowController?.Reset();
             SetInvincibleState(false);
             
             _self = null;
             _partner = null;
-            _cachedRenderers = null;
         }
     }
 }
