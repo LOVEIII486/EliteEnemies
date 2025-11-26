@@ -163,12 +163,17 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             foreach (var it in inv)
                 if (it != null) items.Add(it);
 
-            if (items.Count <= 1) return;
+            if (items.Count <= 2) return;
 
-            int keepIndex = Random.Range(0, items.Count);
+            HashSet<int> keepIndices = new HashSet<int>();
+            while (keepIndices.Count < 2)
+            {
+                keepIndices.Add(Random.Range(0, items.Count));
+            }
+
             for (int i = 0; i < items.Count; i++)
             {
-                if (i == keepIndex) continue;
+                if (keepIndices.Contains(i)) continue;
                 items[i]?.DestroyTree();
             }
         }
