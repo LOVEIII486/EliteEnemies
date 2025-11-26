@@ -4,7 +4,7 @@ using EliteEnemies.EliteEnemy.Core;
 using HarmonyLib;
 using ItemStatsSystem;
 using UnityEngine;
-using SodaCraft.Localizations; // [新增] 用于获取本地化文本
+using SodaCraft.Localizations;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
@@ -79,8 +79,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             Vector3 deathPosition = character.transform.position;
             int splitCount = Random.Range(MinSplitCount, MaxSplitCount + 1);
     
-            // [修改] 获取母体的本地化名称 (例如 "拾荒者")
-            // 这样生成的克隆体也会显示为 "拾荒者"，而不是 "???"
+            // 获取母体的本地化名称
             string originalName = character.characterPreset.nameKey.ToPlainText();
 
             helper.SpawnCloneCircle(
@@ -92,8 +91,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 damageMultiplier: SplitDamageRatio,
                 speedMultiplier: SplitSpeedRatio,
                 scaleMultiplier: 1f,
-                preventElite: false, // 分裂体默认不禁止再次精英化（除非配置限制）
-                customDisplayName: originalName, // [修改] 传入母体名字
+                preventElite: false, // 分裂体默认不禁止再次精英化
+                customDisplayName: originalName, // 传入母体名字
                 onAllSpawned: (clones) => 
                 {
                     if (clones == null) return;

@@ -1,124 +1,103 @@
 key,value,version,sheet
-Settings_NormalEliteChance,Normal enemy elite chance,1.0,BasicSettings
-Settings_BossEliteChance,Boss elite chance,1.0,BasicSettings
-Settings_MerchantEliteChance,Merchant elite chance,1.0,BasicSettings
-Settings_ShowDetailedHealth,Show elite enemy health,2.1,VisualSettings
-Settings_MaxAffixCount,Max affix count,1.0,BasicSettings
-Settings_AffixToggles_Group,Affix toggles,1.0,Groups
-Settings_BasicSettings_Group,Elite enemy settings,1.0,Groups
-Affix_Berserk_Name,Berserk,1.0,AffixNames
-Affix_Chaos_Name,Chaos,1.0,AffixNames
-Affix_Chef_Name,Chef,1.0,AffixNames
-Affix_Explosive_Name,Explosive,1.0,AffixNames
-Affix_Fisherman_Name,Fisherman,1.0,AffixNames
-Affix_Giant_Name,Giant,1.0,AffixNames
-Affix_GlassCannon_Name,Glass Cannon,1.0,AffixNames
-Affix_Invisible_Name,Invisible,1.0,AffixNames
-Affix_Knockback_Name,Knockback,1.0,AffixNames
-Affix_MagazineCurse_Name,Magazine Curse,1.0,AffixNames
-Affix_MimicTear_Name,Mimic Tear,1.0,AffixNames
-Affix_Mini_Name,Mini,1.0,AffixNames
-Affix_Musician_Name,Musician,1.0,AffixNames
-Affix_NineDragons_Name,Nine Dragons,1.0,AffixNames
-Affix_Regeneration_Name,Regeneration,1.0,AffixNames
-Affix_Split_Name,Split,1.0,AffixNames
-Affix_Sticky_Name,Sticky,1.0,AffixNames
-Affix_Swift_Name,Swift,1.0,AffixNames
-Affix_Talkative_Name,Talkative,1.0,AffixNames
-Affix_Tanky_Name,Tanky,1.0,AffixNames
-Affix_TimeStop_Name,Time Stop,1.0,AffixNames
-Affix_Undead_Name,Undead,1.0,AffixNames
-Affix_Berserk_Description,"Stronger attacks but slightly lower health. Drops: Assault Totem, Adrenaline Injector",1.0,AffixDescription
-Affix_Chaos_Description,Attacks inflict random abnormal effects.,1.0,AffixDescription
-Affix_Chef_Description,"Loves food and drinks; drops canned goods, water, sweets and other supplies.",1.0,AffixDescription
-Affix_Explosive_Description,"Explodes in a small radius on death, dealing ~20 damage.",1.0,AffixDescription
-Affix_Fisherman_Description,"Drops various fish, bait, and fishing rods.",1.0,AffixDescription
-Affix_Giant_Description,Becomes larger; max HP increases but movement speed decreases.,1.0,AffixDescription
-Affix_GlassCannon_Description,Extremely high damage but very fragile. Drops: Special AP rounds.,1.0,AffixDescription
-Affix_Invisible_Description,Turns invisible; briefly reveals and flickers every few seconds.,1.0,AffixDescription
-Affix_Knockback_Description,Attacks apply strong knockback.,1.0,AffixDescription
-Affix_MagazineCurse_Description,Forces the player to reload when hit; drops various fast magazine attachments.,1.0,AffixDescription
-Affix_MimicTear_Description,Copies the player's main-hand weapon and gear (will not drop).,1.0,AffixDescription
-Affix_Mini_Description,Becomes smaller; slightly lower HP but slightly higher movement speed.,1.0,AffixDescription
-Affix_Musician_Description,A weirdo who brings instruments to battle; drops instruments.,1.0,AffixDescription
-Affix_NineDragons_Description,All attributes ×1.3; drops various injectors.,1.0,AffixDescription
-Affix_Regeneration_Description,"Continuously regenerates HP, about 10 per second.",1.0,AffixDescription
-Affix_Split_Description,"When low, summons several weaker clones.",1.0,AffixDescription
-Affix_Sticky_Description,"On first hit, makes the player drop the currently equipped weapon; drops tape and universal glue on death.",1.0,AffixDescription
-Affix_Swift_Description,"Moves quickly but is fragile. Drops: Agility Totem, Speed Injector.",1.0,AffixDescription
-Affix_Talkative_Description,Constantly shouts random lines or taunts during combat.,1.0,AffixDescription
-Affix_Tanky_Description,Tougher but slower. Drops: Heavy armor and medkits.,1.0,AffixDescription
-Affix_TimeStop_Description,Briefly stops time (~3 s) when hit.,1.0,AffixDescription
-Affix_Undead_Description,"On low HP, becomes invulnerable for 2 s and restores to 50% HP.",1.0,AffixDescription
-Affix_Chaos_PopText_1,<color=#9400D3>Chaos Corruption! {0}</color>,1.0,AffixBehavior
-Affix_Sticky_PopText_1,Got stuck!,1.0,AffixBehavior
-Affix_Sticky_PopText_2,My weapon got glued...,1.0,AffixBehavior
-Affix_Talkative_Messages,I'm elite!|You call that aim?|Ha! You almost had me!|I could do this all day!|Your bullets tickle!|Let’s make this interesting!|Is that fear I see?|Not bad... but not enough!|Another one bites the dust!,1.0,AffixBehavior
-Affix_TimeStop_PopText_1,<color=#FFD700>Za Warudo!</color>,1.0,AffixBehavior
-Affix_Undead_PopText_1,Not going down that easily!,1.0,AffixBehavior
-Affix_Undead_PopText_2,Weakened... but not dead!,1.0,AffixBehavior
-Affix_MagazineCurse_PopText_1,<color=#9B59B6>Magazine Curse!</color>,1.0,AffixBehavior
-Affix_MagazineCurse_PopText_2,<color=#9B59B6>Forced Reload!</color>,1.0,AffixBehavior
-Affix_Knockback_PopText_1,<color=#FF4500>Show off? Let me send you flying!</color>,1.0,AffixBehavior
-Affix_Invisible_Messages,Did you just see me?|Don't blink — I'm gone again!|Shh... nothing happened.|Illusion? Or am I just that fast?|I'm right behind you... just kidding!,1.0,AffixBehavior
-Affix_Vampirism_Name,Vampirism,1.1,AffixNames
-Affix_Vampirism_Description,Heals when attacking,1.1,AffixDescription
-Affix_Vampirism_PopText_1,<color=#DC143C>Life Steal! +{0}</color>,1.1,AffixBehavior
-Settings_DropRateMultiplier,Elite drop rate multiplier (affects overall drop chance),1.2,BasicSettings
-Affix_Collector_Name,Collector,1.3,AffixNames
-Affix_Collector_Description,Drops collectibles,1.3,AffixDescription
-Affix_Gunsmith_Name,Gunsmith,1.3,AffixNames
-Affix_Gunsmith_Description,Drops firearm accessories,1.3,AffixDescription
-Settings_ItemQualityBias,Item quality bias (affects quality weighting recommended -0.8 to +1.5),1.3,BasicSettings
-Settings_GlobalHealthMultiplier,Global Health Multiplier,1.4,BasicSettings
-Settings_GlobalDamageMultiplier,Global Damage Multiplier,1.4,BasicSettings
-Settings_GlobalSpeedMultiplier,Global Speed Multiplier,1.4,BasicSettings
-Settings_GlobalMultipliers_Group,Global Attribute Adjustment,1.4,Groups
-Settings_EnableBonusLoot,Enable Bonus Loot,1.5,BasicSettings
-Settings_ShowAffixFootText,Show affix text under enemies,2.1,VisualSettings
-Settings_AffixFootTextFontSize,Affix foot-text font size,2.1,VisualSettings
-Affix_Slime_Name,Slime,1.7,AffixNames
-Affix_Slime_Description,"Starts huge but weak, shrinks and gains damage as health drops",1.7,AffixDescription
-Affix_Blindness_Name,Blindness,1.7,AffixNames
-Affix_Blindness_Description,Attacks limit player vision for 5 seconds,1.7,AffixDescription
-Buff_EliteBuff_Blindness_Name,Blindness,1.7,BuffNames
-Buff_EliteBuff_Slow_Name,Slowness,1.7,BuffNames
-Buff_EliteBuff_Stun_Name,Stun,1.7,BuffNames
-Buff_EliteBuff_DungEater_Name,Dung Eater,1.7,BuffNames
-Affix_Slow_Name,Slowness,1.7,AffixNames
-Affix_Slow_Description,Attacks apply a slowing effect,1.7,AffixDescription
-Affix_Stun_Name,Stun,1.7,AffixNames
-Affix_Stun_Description,Attacks stun the player and reduce weapon control,1.7,AffixDescription
-Affix_DungEater_Name,Dung Eater,1.7,AffixNames
-Affix_DungEater_Description,The most beloved episode among Duckov players ?,1.7,AffixDescription
-Settings_AffixWeight1,Weight for 1 affix (Recommended: 30-70),1.8,BasicSettings
-Settings_AffixWeight2,Weight for 2 affixes (Recommended: 20-50),1.8,BasicSettings
-Settings_AffixWeight3,Weight for 3 affixes (Recommended: 10-30),1.8,BasicSettings
-Settings_AffixWeight4,Weight for 4 affixes (Recommended: 1-10),1.8,BasicSettings
-Settings_AffixWeight5,Weight for 5 affixes (Recommended: 0-5),1.8,BasicSettings
-Settings_AffixCountWeights_Group,Affix Count Weights (Higher = More Common),1.8,Groups
-Affix_Berserk_PopText_1,<color=#DC143C>ENRAGED!!!</color>,1.9,AffixBehavior
-Affix_Hardening_Name,Hardening,2.0,AffixNames
-Affix_Hardening_Description,"Reduce 5%-12% physical damage per hit, max 50%, 1.0s cooldown",2.0,AffixDescription
-Affix_Hardening_PopText_1,<color=#B2B2B2>Hardened +{0}</color>,2.0,AffixBehavior
-Affix_ChickenBro_Name,Chicken Bro,2.0,AffixNames
-Affix_ChickenBro_Description,Summons a chicken guard upon spawning.,2.0,AffixDescription
-Affix_ChickenBro_Summon_Name,<color=#FFD600>Little Chick</color>,2.0,AffixBehavior
-Settings_ShowEliteName,Show Elite Enemy Names,2.1,VisualSettings
-Settings_VisualSettings_Group,Global Visual Settings,2.1,Groups
-Affix_Phase_Name,Phase,2.2,AffixNames
-Affix_Phase_Description,Swaps positions with the player on hit.,2.2,AffixDescription
-Affix_Phase_PopText_1,<color=#00FFFF>Phase Shift!</color>,2.2,AffixBehavior
-Affix_MandarinDuck_Name,Mandarin Duck,2.2,AffixNames
-Affix_MandarinDuck_Description,What a pair of ill-fated lovers!,2.2,AffixDescription
-Affix_MandarinDuck_MateSuffix,Partner,2.2,AffixBehavior
-Affix_Revenge_Name,Revenge,2.2,AffixNames
-Affix_Revenge_Description,When damaged  the enemy retaliates by firing bullets at the attacker.,2.2,AffixBehavior
+Settings_BasicSettings_Group,Elite enemy settings,2.3,Groups
+Settings_NormalEliteChance,Normal enemy elite chance,2.3,BasicSettings
+Settings_BossEliteChance,Boss elite chance,2.3,BasicSettings
+Settings_MerchantEliteChance,Merchant elite chance,2.3,BasicSettings
+Settings_MaxAffixCount,Max affix count,2.3,BasicSettings
+Settings_DropRateMultiplier,Elite drop rate multiplier (affects overall drop chance),2.3,BasicSettings
+Settings_ItemQualityBias,"Item quality bias (affects quality weighting, recommended -0.8 to +1.5)",2.3,BasicSettings
+Settings_GlobalMultipliers_Group,Global Attribute Adjustment,2.3,Groups
+Settings_GlobalHealthMultiplier,Global Health Multiplier,2.3,BasicSettings
+Settings_GlobalDamageMultiplier,Global Damage Multiplier,2.3,BasicSettings
+Settings_GlobalSpeedMultiplier,Global Speed Multiplier,2.3,BasicSettings
+Settings_EnableBonusLoot,Enable Bonus Loot,2.3,BasicSettings
+Settings_VisualSettings_Group,Global Visual Settings,2.3,Groups
+Settings_ShowEliteName,Show Elite Enemy Names,2.3,VisualSettings
+Settings_ShowDetailedHealth,Show elite enemy health,2.3,VisualSettings
 Settings_AffixDisplayPosition,Affix Display Position,2.3,VisualSettings
-Affix_Obscurer_Name,Obscurer,2.3,AffixNames
-Affix_Obscurer_Description,Hides all affix names showing garbled text,2.3,AffixDescription
+Settings_AffixFontSize,Affix Font Size,2.3,VisualSettings
+Settings_AffixCountWeights_Group,Affix Count Weights (Higher = More Common),2.3,Groups
+Settings_AffixWeight1,Weight for 1 affix (Recommended: 30-70),2.3,BasicSettings
+Settings_AffixWeight2,Weight for 2 affixes (Recommended: 20-50),2.3,BasicSettings
+Settings_AffixWeight3,Weight for 3 affixes (Recommended: 10-30),2.3,BasicSettings
+Settings_AffixWeight4,Weight for 4 affixes (Recommended: 1-10),2.3,BasicSettings
+Settings_AffixWeight5,Weight for 5 affixes (Recommended: 0-5),2.3,BasicSettings
+Settings_AffixToggles_Group,Affix toggles,2.3,Groups
+Affix_Tanky_Name,Tanky,2.3,AffixNames
+Affix_Tanky_Description,Tougher but slower. Drops: Heavy armor and medkits.,2.3,AffixDescription
+Affix_Swift_Name,Swift,2.3,AffixNames
+Affix_Swift_Description,"Moves quickly but is fragile. Drops: Agility Totem, Speed Injector.",2.3,AffixDescription
+Affix_Berserk_Name,Berserk,2.3,AffixNames
+Affix_Berserk_Description,"Stronger attacks but slightly lower health. Drops: Assault Totem, Adrenaline Injector",2.3,AffixDescription
+Affix_Berserk_PopText_1,<color=#DC143C>ENRAGED!!!</color>,2.3,AffixBehavior
+Affix_GlassCannon_Name,Glass Cannon,2.3,AffixNames
+Affix_GlassCannon_Description,Extremely high damage but very fragile. Drops: Special AP rounds.,2.3,AffixDescription
+Affix_Fisherman_Name,Fisherman,2.3,AffixNames
+Affix_Fisherman_Description,"Drops various fish, bait, and fishing rods.",2.3,AffixDescription
+Affix_Chef_Name,Chef,2.3,AffixNames
+Affix_Chef_Description,"Loves food and drinks; drops canned goods, water, sweets and other supplies.",2.3,AffixDescription
+Affix_Talkative_Name,Talkative,2.3,AffixNames
+Affix_Talkative_Description,Constantly shouts random lines or taunts during combat.,2.3,AffixDescription
+Affix_Talkative_Messages,I'm elite!|You call that aim?|Ha! You almost had me!|I could do this all day!|Your bullets tickle!|Let’s make this interesting!|Is that fear I see?|Not bad... but not enough!|Another one bites the dust!,2.3,AffixBehavior
+Affix_Regeneration_Name,Regeneration,2.3,AffixNames
+Affix_Regeneration_Description,"Continuously regenerates HP, about 10 per second.",2.3,AffixDescription
+Affix_Hardening_Name,Hardening,2.3,AffixNames
+Affix_Hardening_Description,"Reduce 5%-12% physical damage per hit, max 50%.",2.3,AffixDescription
+Affix_Hardening_PopText_1,<color=#B2B2B2>Hardened +{0}</color>,2.3,AffixBehavior
+Affix_Blindness_Name,Blindness,2.3,AffixNames
+Affix_Blindness_Description,Attacks limit player vision for 5 seconds.,2.3,AffixDescription
+Buff_EliteBuff_Blindness_Name,Blindness,2.3,BuffNames
+Affix_Slow_Name,Slowness,2.3,AffixNames
+Affix_Slow_Description,Attacks apply a slowing effect.,2.3,AffixDescription
+Buff_EliteBuff_Slow_Name,Slowness,2.3,BuffNames
+Affix_Stun_Name,Stun,2.3,AffixNames
+Affix_Stun_Description,Attacks stun the player and reduce weapon control.,2.3,AffixDescription
+Buff_EliteBuff_Stun_Name,Stun,2.3,BuffNames
+Affix_Invisible_Name,Invisible,2.3,AffixNames
+Affix_Invisible_Description,Turns invisible; briefly reveals and flickers every few seconds.,2.3,AffixDescription
+Affix_Invisible_Messages,Did you just see me?|Don't blink — I'm gone again!|Shh... nothing happened.|Illusion? Or am I just that fast?|I'm right behind you... just kidding!,2.3,AffixBehavior
+Affix_Musician_Name,Musician,2.3,AffixNames
+Affix_Musician_Description,A weirdo who brings instruments to battle; drops instruments.,2.3,AffixDescription
+Affix_NineDragons_Name,Nine Dragons,2.3,AffixNames
+Affix_NineDragons_Description,All attributes ×1.3; drops various injectors.,2.3,AffixDescription
+Affix_Giant_Name,Giant,2.3,AffixNames
+Affix_Giant_Description,Becomes larger; max HP increases but movement speed decreases.,2.3,AffixDescription
+Affix_Mini_Name,Mini,2.3,AffixNames
+Affix_Mini_Description,Becomes smaller; slightly lower HP but slightly higher movement speed.,2.3,AffixDescription
+Affix_Undead_Name,Undead,2.3,AffixNames
+Affix_Undead_Description,"On low HP, becomes invulnerable for 2 s and restores to 50% HP.",2.3,AffixDescription
+Affix_Undead_PopText_1,Not going down that easily!,2.3,AffixBehavior
+Affix_Undead_PopText_2,Weakened... but not dead!,2.3,AffixBehavior
+Affix_Vampirism_Name,Vampirism,2.3,AffixNames
+Affix_Vampirism_Description,Heals when attacking.,2.3,AffixDescription
+Affix_Vampirism_PopText_1,<color=#DC143C>Life Steal! +{0}</color>,2.3,AffixBehavior
+Affix_DungEater_Name,Dung Eater,2.3,AffixNames
+Affix_DungEater_Description,The most beloved episode among Duckov players ?,2.3,AffixDescription
+Buff_EliteBuff_DungEater_Name,Dung Eater,2.3,BuffNames
+Affix_Chaos_Name,Chaos,2.3,AffixNames
+Affix_Chaos_Description,Attacks inflict random abnormal effects.,2.3,AffixDescription
+Affix_Chaos_PopText_1,<color=#9400D3>Chaos Corruption! {0}</color>,2.3,AffixBehavior
+Affix_Split_Name,Split,2.3,AffixNames
+Affix_Split_Description,"When low, summons several weaker clones.",2.3,AffixDescription
+Affix_Explosive_Name,Explosive,2.3,AffixNames
+Affix_Explosive_Description,"Explodes in a small radius on death, dealing ~20 damage.",2.3,AffixDescription
+Affix_TimeStop_Name,Time Stop,2.3,AffixNames
+Affix_TimeStop_Description,Briefly stops time (~3 s) when hit.,2.3,AffixDescription
+Affix_TimeStop_PopText_1,<color=#FFD700>Za Warudo!</color>,2.3,AffixBehavior
+Affix_MagazineCurse_Name,Magazine Curse,2.3,AffixNames
+Affix_MagazineCurse_Description,Forces the player to reload when hit; drops various fast magazine attachments.,2.3,AffixDescription
+Affix_MagazineCurse_PopText_1,<color=#9B59B6>Magazine Curse!</color>,2.3,AffixBehavior
+Affix_MagazineCurse_PopText_2,<color=#9B59B6>Forced Reload!</color>,2.3,AffixBehavior
+Affix_Knockback_Name,Knockback,2.3,AffixNames
+Affix_Knockback_Description,Attacks apply strong knockback.,2.3,AffixDescription
+Affix_Knockback_PopText_1,<color=#FF4500>Show off? Let me send you flying!</color>,2.3,AffixBehavior
+Affix_Phase_Name,Phase,2.3,AffixNames
+Affix_Phase_Description,Swaps positions with the player on hit.,2.3,AffixDescription
+Affix_Phase_PopText_1,<color=#00FFFF>Phase Shift!</color>,2.3,AffixBehavior
+Affix_Revenge_Name,Revenge,2.3,AffixNames
+Affix_Revenge_Description,When damaged the enemy retaliates by firing bullets at the attacker.,2.3,AffixDescription
 Affix_Distortion_Name,Distortion,2.3,AffixNames
-Affix_Distortion_Description,Attacks distort player bullets into curved trajectories,2.3,AffixDescription
+Affix_Distortion_Description,Attacks distort player bullets into curved trajectories.,2.3,AffixDescription
 Buff_EliteBuff_Distortion_Name,Distortion,2.3,BuffNames
 Affix_MultiShot_Name,Multi-Shot,2.3,AffixNames
 Affix_MultiShot_Description,Fires two additional bullets on attack.,2.3,AffixDescription
@@ -126,5 +105,24 @@ Affix_Guardian_Name,Guardian,2.3,AffixNames
 Affix_Guardian_Description,The main body is completely invincible while the clone is alive.,2.3,AffixDescription
 Affix_Guardian_MateSuffix,<color=#FFD700>Guardian Core</color>,2.3,AffixBehavior
 Affix_Guardian_ImmunePop,<color=#FF9900>IMMUNE!</color>,2.3,AffixBehavior
-Settings_AffixFontSize,Affix Font Size,2.3,VisualSettings
 Affix_Guardian_ShieldBroken,SHIELD BROKEN!,2.3,AffixBehavior
+Affix_Collector_Name,Collector,2.3,AffixNames
+Affix_Collector_Description,Drops collectibles.,2.3,AffixDescription
+Affix_Gunsmith_Name,Gunsmith,2.3,AffixNames
+Affix_Gunsmith_Description,Drops firearm accessories.,2.3,AffixDescription
+Affix_MimicTear_Name,Mimic Tear,2.3,AffixNames
+Affix_MimicTear_Description,Copies the player's main-hand weapon and gear (will not drop).,2.3,AffixDescription
+Affix_Sticky_Name,Sticky,2.3,AffixNames
+Affix_Sticky_Description,"On first hit, makes the player drop the currently equipped weapon; drops tape and universal glue on death.",2.3,AffixDescription
+Affix_Sticky_PopText_1,Got stuck!,2.3,AffixBehavior
+Affix_Sticky_PopText_2,My weapon got glued...,2.3,AffixBehavior
+Affix_Slime_Name,Slime,2.3,AffixNames
+Affix_Slime_Description,"Starts huge but weak, shrinks and gains damage as health drops.",2.3,AffixDescription
+Affix_ChickenBro_Name,Chicken Bro,2.3,AffixNames
+Affix_ChickenBro_Description,Summons a chicken guard upon spawning.,2.3,AffixDescription
+Affix_ChickenBro_Summon_Name,<color=#FFD600>Little Chick</color>,2.3,AffixBehavior
+Affix_MandarinDuck_Name,Mandarin Duck,2.3,AffixNames
+Affix_MandarinDuck_Description,What a pair of ill-fated lovers!,2.3,AffixDescription
+Affix_MandarinDuck_MateSuffix,<color=#F08080>Partner</color>,2.3,AffixBehavior
+Affix_Obscurer_Name,Obscurer,2.3,AffixNames
+Affix_Obscurer_Description,Hides all affix names showing garbled text.,2.3,AffixDescription

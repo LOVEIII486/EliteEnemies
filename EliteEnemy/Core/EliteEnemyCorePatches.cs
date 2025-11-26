@@ -183,7 +183,7 @@ namespace EliteEnemies.EliteEnemy.Core
                 case 3:    return ParseColor("#FF10F0"); // 霓虹粉
                 case 4:    return ParseColor("#00FFFF"); // 青色
                 case 5:    return ParseColor("#8B0000"); // 血月色
-                default:   return ParseColor("##1A1A1A"); // 6+ 黑色
+                default:   return ParseColor("#1A1A1A"); // 6+ 黑色
             }
         }
 

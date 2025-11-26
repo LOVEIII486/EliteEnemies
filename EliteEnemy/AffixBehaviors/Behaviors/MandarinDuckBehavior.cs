@@ -120,10 +120,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             damageInfo.damageValue -= damageToShare;
             
             CharacterMainControl source = damageInfo.fromCharacter;
-
-            // 关键修复：如果攻击者是本体自己（_self），或者原始攻击者为空，
-            // 绝对不要把 _self 传进去，因为 _self 可能马上就要死了（被销毁）。
-            // 传 null 代表“未知/环境伤害”，这样伴侣受击后不会试图去寻找/攻击一个已销毁的对象。
+            
             if (source == _self || source == null)
             {
                 source = null;
