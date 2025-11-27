@@ -128,3 +128,6 @@ Affix_Obscurer_Name,Obscurer,2.3,AffixNames
 Affix_Obscurer_Description,Hides all affix names showing garbled text.,2.3,AffixDescription
 Affix_Grenadier_Name,Grenadier,2.3,AffixNames
 Affix_Grenadier_Description,Throws a grenade at the target on hit.,2.3,AffixDescription
+Affix_Hardening_Max,Absolute Defense,2.3,AffixBehavior
+Affix_Hardening_Weakened,Defense Collapse,2.3,AffixBehavior
+Affix_Hardening_Recover,Armor Reformation,2.3,AffixBehavior

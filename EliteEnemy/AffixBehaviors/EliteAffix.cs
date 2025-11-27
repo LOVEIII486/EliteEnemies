@@ -341,7 +341,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 HealthMultiplier = 1.5f,
                 DamageMultiplier = 1.1f,
                 MoveSpeedMultiplier = 1.1f,
-                Rarity = AffixRarity.Legendary,
+                Rarity = AffixRarity.Epic,
             },
             ["Split"] = new AffixData
             {
@@ -504,8 +504,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             ["Hardening"] = new AffixData
             {
                 Name = LocalizationManager.GetText("Affix_Hardening_Name", "硬化"),
-                Description = LocalizationManager.GetText("Affix_Hardening_Description", "受伤随机增加护甲值"),
-                HealthMultiplier = 1.4f,
+                Description = LocalizationManager.GetText("Affix_Hardening_Description"),
+                HealthMultiplier = 1.5f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon

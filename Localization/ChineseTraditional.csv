@@ -128,3 +128,6 @@ Affix_Obscurer_Name,封弊者,2.3,AffixNames
 Affix_Obscurer_Description,隱藏所有詞條名稱顯示為亂碼,2.3,AffixDescription
 Affix_Grenadier_Name,擲彈手,2.3,AffixNames
 Affix_Grenadier_Description,攻擊命中時會向目標投擲手雷,2.3,AffixDescription
+Affix_Hardening_Max,絕對防禦,2.3,AffixBehavior
+Affix_Hardening_Weakened,防禦崩潰,2.3,AffixBehavior
+Affix_Hardening_Recover,裝甲重組,2.3,AffixBehavior

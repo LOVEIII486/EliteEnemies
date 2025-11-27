@@ -24,10 +24,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly float MinDamageReduction = 0.05f; // 单次最小减伤 5%
         private static readonly float MaxDamageReduction = 0.15f; // 单次最大减伤 15%
         private static readonly float MaxTotalReduction = 0.60f;  // 总减伤上限 60%
-        private static readonly float TriggerCooldown = 0.6f;     // 触发CD
+        private static readonly float TriggerCooldown = 0.5f;     // 触发CD
         
-        private static readonly float DurationMaxHardened = 60f;  // 满层持续时间
-        private static readonly float DurationWeakened = 15f;     // 疲软期持续时间
+        private static readonly float DurationMaxHardened = 30f;  // 满层持续时间
+        private static readonly float DurationWeakened = 10f;     // 疲软期持续时间
 
 
         private float _accumulatedReduction = 0f; // 当前累计减伤百分比
@@ -38,12 +38,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private readonly Lazy<string> _hardeningPopTextFmt =
             new(() => LocalizationManager.GetText("Affix_Hardening_PopText_1")); // "硬化 +{0}%"
-        // private readonly Lazy<string> _maxStateText = 
-        //     new(() => LocalizationManager.GetText("Affix_Hardening_Max")); // "绝对防御"
-        // private readonly Lazy<string> _weakenedStateText = 
-        //     new(() => LocalizationManager.GetText("Affix_Hardening_Weakened")); // "防御崩溃"
-        // private readonly Lazy<string> _recoverStateText = 
-        //     new(() => LocalizationManager.GetText("Affix_Hardening_Recover")); // "装甲重组"
+        private readonly Lazy<string> _maxStateText = 
+            new(() => LocalizationManager.GetText("Affix_Hardening_Max")); // "绝对防御"
+        private readonly Lazy<string> _weakenedStateText = 
+            new(() => LocalizationManager.GetText("Affix_Hardening_Weakened")); // "防御崩溃"
+        private readonly Lazy<string> _recoverStateText = 
+            new(() => LocalizationManager.GetText("Affix_Hardening_Recover")); // "装甲重组"
 
         private string HardeningPopTextFmt => _hardeningPopTextFmt.Value;
 
@@ -126,7 +126,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _currentState = HardeningState.MaxHardened;
             _stateTimer = DurationMaxHardened;
             
-            // character.PopText(_maxStateText.Value ?? "MAX HARDENING"); 
+            character.PopText(_maxStateText.Value); 
         }
 
         // 进入疲软状态
@@ -144,7 +144,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _currentState = HardeningState.Weakened;
             _stateTimer = DurationWeakened;
             _accumulatedReduction = 0f; // 清零记录，因为数值已经还原
-            // character.PopText(_weakenedStateText.Value ?? "ARMOR BROKEN");
+            character.PopText(_weakenedStateText.Value);
         }
 
         // 重新进入积累状态
@@ -154,7 +154,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _accumulatedReduction = 0f;
             _lastTriggerTime = -999f;
             _stateTimer = 0f;
-            // character.PopText(_recoverStateText.Value ?? "REARMING");
+            character.PopText(_recoverStateText.Value);
         }
 
         private void ResetState()
