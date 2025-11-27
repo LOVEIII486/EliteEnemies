@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using Duckov.Utilities;
 using EliteEnemies.EliteEnemy.AttributeModifier;
+using UnityEngine;
 using ItemStatsSystem;
 using ItemStatsSystem.Items;
-using UnityEngine;
 
-namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors
 {
     /// <summary>
     /// 词缀：仿生泪滴
@@ -14,6 +16,25 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
     public class MimicTearBehavior : AffixBehaviorBase
     {
         public override string AffixName => "MimicTear";
+        private const string LogTag = "[EliteEnemies.MimicTear]";
+        
+        // 静态缓存区域
+        private static bool _isReflectionInitialized = false;
+        private static bool _hasCustomModelMod = false;
+
+        // 类型缓存
+        private static Type _modelHandlerType;
+        private static Type _bundleType;
+        private static Type _infoType;
+        private static Type _targetEnumType;
+
+        // 方法与字段缓存
+        private static FieldInfo _bundleInfoField;
+        private static FieldInfo _modelInfoField;
+        private static MethodInfo _initMethod;
+        private static MethodInfo _loadMethod;
+        private static MethodInfo _changeMethod;
+        private static object _aiTargetEnumValue; // 缓存枚举值
 
         private CharacterMainControl _owner;
         private Action<DamageInfo> _lootHook;
@@ -54,7 +75,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     {
                         currentBullet.StackCount = 100;
                         ForceUpdateBulletCount(clonedPrimary, gunComponent);
-                        //Debug.Log($"[MimicTear] 已为 {clonedPrimary.DisplayName} 设置初始弹药 x10，当前: {gunComponent.BulletCount}");
                     }
                     else
                     {
@@ -65,7 +85,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
 
             // 5 复制玩家模型
-            //CopyPlayerModel(enemy);
+            CopyPlayerModel(enemy, CharacterMainControl.Main);
             
             // 6 强化AI
             EnhanceAIBehavior(enemy);
@@ -86,6 +106,169 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {
             OnCleanup(character);
+        }
+
+        private void CopyPlayerModel(CharacterMainControl enemy, CharacterMainControl player)
+        {
+            // 1. 尝试初始化反射缓存
+            InitializeReflection();
+
+            // 2. 如果检测到有 Mod，尝试复制
+            bool customSuccess = false;
+            if (_hasCustomModelMod)
+            {
+                customSuccess = TryCopyCustomModel(enemy, player);
+            }
+
+            if (!customSuccess)
+            {
+                CopyVanillaFace(enemy, player);
+            }
+            else
+            {
+                HideEquipmentVisuals(enemy);
+            }
+        }
+        
+        /// <summary>
+        /// 初始化反射缓存
+        /// </summary>
+        private static void InitializeReflection()
+        {
+            if (_isReflectionInitialized) return;
+            _isReflectionInitialized = true;
+
+            try
+            {
+                // 1. 获取 ModelHandler (位于 DuckovCustomModel.GameModules)
+                _modelHandlerType = Type.GetType("DuckovCustomModel.MonoBehaviours.ModelHandler, DuckovCustomModel.GameModules");
+
+                // 2. 获取 数据类 (位于 DuckovCustomModel.Core)
+                _bundleType = Type.GetType("DuckovCustomModel.Core.Data.ModelBundleInfo, DuckovCustomModel.Core");
+                _infoType = Type.GetType("DuckovCustomModel.Core.Data.ModelInfo, DuckovCustomModel.Core");
+                _targetEnumType = Type.GetType("DuckovCustomModel.Core.Data.ModelTarget, DuckovCustomModel.Core");
+
+                // 3. 检查缺失
+                if (_modelHandlerType == null || _bundleType == null || _infoType == null || _targetEnumType == null)
+                {
+                    _hasCustomModelMod = false;
+                    return;
+                }
+
+                // 4. 缓存字段
+                _bundleInfoField = _modelHandlerType.GetField("_currentModelBundleInfo", BindingFlags.NonPublic | BindingFlags.Instance);
+                _modelInfoField = _modelHandlerType.GetField("_currentModelInfo", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                // 5. 缓存方法
+                _initMethod = _modelHandlerType.GetMethod("Initialize", new Type[] { typeof(CharacterMainControl), _targetEnumType });
+                _loadMethod = _modelHandlerType.GetMethod("InitializeCustomModel", new Type[] { _bundleType, _infoType });
+                _changeMethod = _modelHandlerType.GetMethod("ChangeToCustomModel");
+
+                // 6. 缓存枚举值 AICharacter
+                _aiTargetEnumValue = Enum.Parse(_targetEnumType, "AICharacter");;
+
+                // 7. 最终确认
+                if (_initMethod != null && _loadMethod != null && _changeMethod != null)
+                {
+                    _hasCustomModelMod = true;
+                    Debug.Log($"{LogTag} 自定义模型功能已就绪。");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{LogTag} 初始化异常: {ex.Message}");
+                _hasCustomModelMod = false;
+            }
+        }
+        
+        private void HideEquipmentVisuals(CharacterMainControl enemy)
+        {
+            try
+            {
+                if (enemy == null || enemy.characterModel == null) return;
+                
+                Transform[] socketsToHide = new Transform[] 
+                {
+                    enemy.characterModel.HelmatSocket,
+                    enemy.characterModel.ArmorSocket
+                };
+
+                foreach (var socket in socketsToHide)
+                {
+                    if (socket == null) continue;
+                    
+                    Renderer[] renderers = socket.GetComponentsInChildren<Renderer>(true);
+                    foreach (var r in renderers)
+                    {
+                        r.enabled = false;
+                    }
+                }
+                
+                Debug.Log("[MimicTear] 已强制隐藏原版装备模型。");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MimicTear] 隐藏装备失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 尝试通过反射复制自定义模型
+        /// </summary>
+        private bool TryCopyCustomModel(CharacterMainControl enemy, CharacterMainControl player)
+        {
+            try
+            {
+                // 1. 获取玩家组件
+                Component playerHandler = player.GetComponent(_modelHandlerType);
+                if (playerHandler == null) return false;
+
+                // 2. 获取数据
+                object bundleInfo = _bundleInfoField.GetValue(playerHandler);
+                object modelInfo = _modelInfoField.GetValue(playerHandler);
+
+                if (bundleInfo == null || modelInfo == null) return false;
+
+                // 3. 给敌人挂载组件
+                Component enemyHandler = enemy.GetComponent(_modelHandlerType);
+                if (enemyHandler == null)
+                {
+                    enemyHandler = enemy.gameObject.AddComponent(_modelHandlerType);
+                }
+
+                // 4. 执行方法链
+                _initMethod.Invoke(enemyHandler, new object[] { enemy, _aiTargetEnumValue });
+                _loadMethod.Invoke(enemyHandler, new object[] { bundleInfo, modelInfo });
+                _changeMethod.Invoke(enemyHandler, null);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"{LogTag} 复制过程异常: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 复制原版 Duckov 外观数据
+        /// </summary>
+        private void CopyVanillaFace(CharacterMainControl enemy, CharacterMainControl player)
+        {
+            try
+            {
+                if (enemy.characterModel == null || player.characterModel == null) return;
+
+                var playerFaceInstance = player.characterModel.CustomFace;
+                if (playerFaceInstance == null) return;
+                
+                var faceData = playerFaceInstance.ConvertToSaveData();
+                enemy.characterModel.SetFaceFromData(faceData);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{LogTag} 复制原版外观失败: {ex.Message}");
+            }
         }
         
         /// <summary>
@@ -114,14 +297,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 
                         // 强制刷新内部缓存
                         ForceUpdateBulletCount(gunItem, gunComponent);
-                
-                        // Debug.Log($"[MimicTear] 补充弹药成功，当前: {gunComponent.BulletCount}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[MimicTear] 补充弹药异常: {ex.Message}");
+                Debug.LogWarning($"{LogTag} 补充弹药异常: {ex.Message}");
             }
         }
         
@@ -149,7 +330,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 Item bulletToAdd = GetDefaultBulletForGun(gunItem);
                 if (bulletToAdd == null)
                 {
-                    Debug.LogWarning($"[MimicTear] 无法为枪械 {gunItem.DisplayName} 找到合适的子弹");
+                    Debug.LogWarning($"{LogTag} 无法为枪械 {gunItem.DisplayName} 找到合适的子弹");
                     return;
                 }
 
@@ -163,12 +344,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         
                 // 尝试重新装填
                 owner.TryToReload();
-
-                //Debug.Log($"[MimicTear] 为枪械 {gunItem.DisplayName} 添加了子弹 {bulletToAdd.DisplayName}，当前弹药: {gunComponent.BulletCount}");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MimicTear] 添加子弹失败: {ex.Message}");
+                Debug.LogError($"{LogTag} 添加子弹失败: {ex.Message}");
             }
         }
 
@@ -183,14 +362,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 Item gunPrefab = ItemAssetsCollection.GetPrefab(gunItem.TypeID);
                 if (gunPrefab == null)
                 {
-                    Debug.LogWarning($"[MimicTear] 无法获取枪械预制体: {gunItem.TypeID}");
+                    Debug.LogWarning($"{LogTag} 无法获取枪械预制体: {gunItem.TypeID}");
                     return null;
                 }
 
                 ItemSetting_Gun gunSetting = gunPrefab.GetComponent<ItemSetting_Gun>();
                 if (gunSetting == null || gunSetting.bulletPfb == null)
                 {
-                    Debug.LogWarning($"[MimicTear] 枪械预制体没有子弹信息");
+                    Debug.LogWarning($"{LogTag} 枪械预制体没有子弹信息");
                     return null;
                 }
 
@@ -200,8 +379,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 if (bulletTypeId <= 0)
                 {
                     // 如果没有设置目标子弹，尝试从口径信息推断
-                    //Debug.LogWarning($"[MimicTear] 枪械 {gunItem.DisplayName} 没有设置目标子弹类型");
-                    
                     // 尝试使用一个通用的子弹ID
                     bulletTypeId = TryGetCommonBulletId(gunSetting);
                 }
@@ -221,7 +398,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MimicTear] 获取默认子弹失败: {ex.Message}");
+                Debug.LogError($"{LogTag} 获取默认子弹失败: {ex.Message}");
                 return null;
             }
         }
@@ -258,13 +435,11 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 {
                     return bulletId;
                 }
-
-                Debug.LogWarning($"[MimicTear] 未找到口径 {caliber} 对应的子弹ID");
                 return -1;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[MimicTear] 获取通用子弹ID失败: {ex.Message}");
+                Debug.LogError($"{LogTag} 获取通用子弹ID失败: {ex.Message}");
                 return -1;
             }
         }
@@ -293,7 +468,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[MimicTear] 更新弹药计数失败: {ex.Message}");
+                Debug.LogWarning($"{LogTag} 更新弹药计数失败: {ex.Message}");
             }
         }
         
@@ -434,7 +609,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
             catch (Exception e)
             {
-                Debug.LogWarning("Clear drops exception: " + e.Message);
+                Debug.LogWarning($"{LogTag} Clear drops exception: " + e.Message);
             }
         }
     }
