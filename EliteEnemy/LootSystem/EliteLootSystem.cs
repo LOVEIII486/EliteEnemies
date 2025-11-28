@@ -5,6 +5,7 @@ using Duckov.Utilities;
 using EliteEnemies.DebugTool;
 using EliteEnemies.EliteEnemy.AffixBehaviors;
 using EliteEnemies.EliteEnemy.Core;
+using EliteEnemies.Localization;
 using HarmonyLib;
 using ItemStatsSystem;
 using UnityEngine;
@@ -33,7 +34,11 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 { "Cname_Scav", (0.7f, 1) },
                 { "Cname_ScavRage", (0.75f, 0) }
             };
-
+                
+        private static readonly string FromInfoKeyFixed = "EliteLoot_Fixed";
+        private static readonly string FromInfoKeyRandom = "EliteLoot_Random";
+        private static readonly string FromInfoKeyBonus = "EliteLoot_Bonus";
+        
         #region Harmony Patch & Entry Point
 
         [HarmonyPostfix]
@@ -121,7 +126,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 if (UnityEngine.Random.value <= finalChance)
                 {
                     int count = UnityEngine.Random.Range(pick.MinCount, pick.MaxCount + 1);
-                    AddItemToInventory(lootbox, pick.ItemID, count, "词缀固定", finalChance);
+                    AddItemToInventory(lootbox, pick.ItemID, count, "词缀固定", finalChance, FromInfoKeyFixed);
                 }
             }
         }
@@ -170,7 +175,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                         {
                             // 如果是范围生成，数量通常为1；如果是固定生成，数量读配置
                             int stackCount = isRange ? 1 : UnityEngine.Random.Range(config.MinCount, config.MaxCount + 1);
-                            AddItemInstanceToInventory(lootbox, item, stackCount, $"词缀随机({affixName})", finalChance);
+                            AddItemInstanceToInventory(lootbox, item, stackCount, $"词缀随机({affixName})", finalChance, FromInfoKeyRandom);
                         }
                     }
                 }
@@ -223,26 +228,39 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             if (item != null)
             {
                 string sourceLabel = isBoss ? "BOSS奖励" : "稀有度奖励";
-                AddItemInstanceToInventory(lootbox, item, 1, sourceLabel, finalChance);
+                AddItemInstanceToInventory(lootbox, item, 1, sourceLabel, finalChance, FromInfoKeyBonus);
             }
         }
 
         #endregion
 
         #region Helper Methods
-
-        private static void AddItemToInventory(InteractableLootbox lootbox, int itemId, int count, string sourcePool, float chance)
+        
+        public static void RegisterLootSourceLocalizations()
+        {
+            string textFixed = LocalizationManager.GetText(FromInfoKeyFixed, "--固定掉落--");
+            string textRandom = LocalizationManager.GetText(FromInfoKeyRandom, "--随机掉落--");
+            string textBonus = LocalizationManager.GetText(FromInfoKeyBonus, "--稀有度奖励--");
+            
+            SodaCraft.Localizations.LocalizationManager.overrideTexts[FromInfoKeyFixed] = textFixed;
+            SodaCraft.Localizations.LocalizationManager.overrideTexts[FromInfoKeyRandom] = textRandom;
+            SodaCraft.Localizations.LocalizationManager.overrideTexts[FromInfoKeyBonus] = textBonus;
+            
+            if (Verbose) Debug.Log($"{LogTag} 已注册掉落来源文本: {textFixed}, {textRandom}, {textBonus}");
+        }
+        
+        private static void AddItemToInventory(InteractableLootbox lootbox, int itemId, int count, string sourcePool, float chance, string sourceKey)
         {
             if (count <= 0) return;
             var item = ItemAssetsCollection.InstantiateSync(itemId);
             if (item != null)
             {
                 item.Initialize();
-                AddItemInstanceToInventory(lootbox, item, count, sourcePool, chance);
+                AddItemInstanceToInventory(lootbox, item, count, sourcePool, chance, sourceKey);
             }
         }
 
-        private static void AddItemInstanceToInventory(InteractableLootbox lootbox, Item item, int count, string sourcePool, float chance)
+        private static void AddItemInstanceToInventory(InteractableLootbox lootbox, Item item, int count, string sourcePool, float chance, string sourceKey)
         {
             if (item == null || count <= 0) return;
 
@@ -253,6 +271,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             
             // 核心逻辑：添加第一个
             item.Detach();
+            item.FromInfoKey = sourceKey;
             lootbox.Inventory.AddAndMerge(item, 0);
             
             // 如果数量 > 1，复制剩余的
@@ -262,12 +281,13 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 if (clone != null)
                 {
                     clone.Initialize();
+                    clone.FromInfoKey = sourceKey;
                     clone.Detach();
                     lootbox.Inventory.AddAndMerge(clone, 0);
                 }
             }
             
-            if (Verbose) Debug.Log($"{LogTag} + [来源:{sourcePool}] 获得: {itemName} (Q{qualityStr}) x{count} [概率:{chance:P0}]");
+            if (Verbose) Debug.Log($"{LogTag} + [来源:{sourcePool} / {sourceKey}] 获得: {itemName} (Q{qualityStr}) x{count} [概率:{chance:P0}]");
         }
 
         private static float CalculateFinalChance(float baseChance, float penalty)

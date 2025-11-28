@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Duckov.ItemBuilders;
 using Duckov.Utilities;
+using EliteEnemies.Localization;
 using EliteEnemies.Settings;
 using ItemStatsSystem;
 using UnityEngine;
@@ -41,8 +43,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         {
             "DestroyOnLootBox", "DestroyInBase", "Formula", "Formula_Blueprint", "Quest"
         };
-
-        // 确保切换场景不销毁，防止协程中断和数据丢失
+        
         private void Awake()
         {
             var others = FindObjectsOfType<LootItemHelper>();
@@ -60,7 +61,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             StartCoroutine(InitializeItemCacheAsync());
         }
 
-        // 监控销毁情况
         private void OnDestroy()
         {
             if (Verbose) Debug.Log($"{LogTag} LootItemHelper 被销毁");
@@ -89,7 +89,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                     ItemFilter filter = new ItemFilter
                     {
                         requireTags = new Tag[0],
-                        excludeTags = new Tag[0], // 不在此处过滤，在处理函数中统一处理
+                        excludeTags = new Tag[0],
                         minQuality = quality,
                         maxQuality = quality
                     };
@@ -108,7 +108,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                     int processedCount = 0;
                     foreach (int itemId in itemIds)
                     {
-                        // 处理单个物品：检查有效性并缓存标签
                         if (ProcessItemAndCacheTags(itemId))
                         {
                             validItems.Add(itemId);
@@ -142,6 +141,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             Item item = null;
             try
             {
+                // 注意：这里仅用于检测属性，检测完即销毁
                 item = ItemAssetsCollection.InstantiateSync(itemId);
                 if (item == null) return false;
                 
@@ -181,22 +181,17 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                         }
                         
                         if (isTagBlacklisted) break;
-
-                        // 记录标签到临时集合
                         currentTags.Add(tag.name);
                     }
                 }
 
-                // 如果命中黑名单，销毁并返回无效
                 if (isTagBlacklisted)
                 {
                     UnityEngine.Object.Destroy(item.gameObject);
                     return false;
                 }
 
-                // 3. 验证通过，存入缓存
                 _itemTagCache[itemId] = currentTags;
-                
                 UnityEngine.Object.Destroy(item.gameObject);
                 return true;
             }
@@ -209,23 +204,18 @@ namespace EliteEnemies.EliteEnemy.LootSystem
 
         // ========== 查询接口  ==========
 
-        /// <summary>
-        /// 检查物品是否包含所有指定标签 
-        /// </summary>
         private bool ItemHasAllTags(int itemId, Tag[] requiredTags)
         {
             if (requiredTags == null || requiredTags.Length == 0)
                 return true;
 
-            // 直接查缓存
             if (!_itemTagCache.TryGetValue(itemId, out var itemTags))
             {
-                return false; // 缓存中没有说明初始化时被过滤或无效
+                return false;
             }
 
             foreach (Tag requiredTag in requiredTags)
             {
-                // 只要有一个标签不在缓存中，就返回 false
                 if (!itemTags.Contains(requiredTag.name))
                 {
                     return false;
@@ -240,13 +230,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         /// </summary>
         public Item CreateItemWithTagsWeighted(int minQuality = 1, int maxQuality = 7, Tag[] requiredTags = null)
         {
-            if (!_isInitialized)
-            {
-                // Debug.LogWarning($"{LogTag} 正在初始化缓存，暂时无法生成掉落...");
-                return null;
-            }
+            if (!_isInitialized) return null;
 
-            // 处理 -1 特殊情况
             if (minQuality == -1 || maxQuality == -1)
             {
                 if (requiredTags == null || requiredTags.Length == 0) return null;
@@ -256,7 +241,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             minQuality = Mathf.Clamp(minQuality, 1, 7);
             maxQuality = Mathf.Clamp(maxQuality, 1, 7);
             
-            // 如果指定了标签，先统计有效品质
             if (requiredTags != null && requiredTags.Length > 0)
             {
                 List<int> validQualities = new List<int>();
@@ -266,29 +250,24 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                     if (!_qualityItemCache.TryGetValue(q, out var pool) || pool.Count == 0)
                         continue;
 
-                    // 使用优化后的方法检查是否有符合条件的物品
                     foreach (int itemId in pool)
                     {
                         if (ItemHasAllTags(itemId, requiredTags))
                         {
                             validQualities.Add(q);
-                            break; // 该品质下只要有一个符合条件的即可
+                            break;
                         }
                     }
                 }
 
                 if (validQualities.Count == 0) return null;
                 
-                // 按权重选择一个品质
                 int pickedQuality = PickQualityByWeightFromValidQualities(validQualities, minQuality, maxQuality);
-                //Debug.Log($"elite quality {qualityBiasPower} -》 {pickedQuality}");
                 return CreateItemWithTagsFromQuality(pickedQuality, requiredTags);
             }
             else
             {
-                // 无标签限制：直接按权重选择品质
                 int pickedQuality = PickQualityByWeight(minQuality, maxQuality);
-                //Debug.Log($"elite quality non limit {qualityBiasPower} -》 {pickedQuality}");
                 return CreateItemFromQuality(pickedQuality);
             }
         }
@@ -306,7 +285,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         {
             if (!_qualityItemCache.TryGetValue(quality, out var pool) || pool.Count == 0) return null;
 
-            // 筛选符合标签的ID (内存查询，速度极快)
             List<int> matchingItems = new List<int>();
             foreach (int itemId in pool)
             {
@@ -344,22 +322,64 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             return InstantiateItem(selectedId);
         }
 
+        /// <summary>
+        /// [修正] 实例化普通物品
+        /// 使用 ItemAssetsCollection 确保加载了正确的 Prefab（模型、材质等）
+        /// </summary>
         private Item InstantiateItem(int id)
         {
             try
             {
+                // 修正：移除了错误的 ItemBuilder 调用，仅使用 InstantiateSync
                 var item = ItemAssetsCollection.InstantiateSync(id);
-                if (item != null) item.Initialize();
+                if (item != null)
+                {
+                    item.Initialize();
+                    item.FromInfoKey= "EliteEnemiesLoot";
+                    SodaCraft.Localizations.LocalizationManager.overrideTexts["EliteEnemiesLoot"] = "精英怪奖励掉落";
+                }
                 return item;
             }
             catch { return null; }
         }
 
+        /// <summary>
+        /// [新增] 使用 ItemBuilder 创建自定义程序化物品
+        /// 注意：这通常创建的是无模型的数据物品，或者需要你在后续逻辑中手动处理视觉。
+        /// 用于创建特殊的 Token 或系统内部物品。
+        /// </summary>
+        public Item CreateCustomItem(int typeId, int stackCount = 1, Sprite icon = null)
+        {
+            try
+            {
+                var builder = ItemBuilder.New()
+                    .TypeID(typeId);
+
+                if (stackCount > 1)
+                    builder.EnableStacking(Mathf.Max(stackCount, 99), stackCount);
+                else
+                    builder.DisableStacking();
+
+                if (icon != null)
+                    builder.Icon(icon);
+
+                // 你可以在这里继续链式调用添加 Stats 或 Variables
+                
+                var item = builder.Instantiate();
+                item.Initialize();
+                return item;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{LogTag} 创建自定义物品失败: {ex.Message}");
+                return null;
+            }
+        }
+        
         // ========== 权重算法 ==========
 
         private int PickQualityByWeight(int minQuality, int maxQuality)
         {
-            //qualityBiasPower = GameConfig.ItemQualityBias;
             if (Mathf.Approximately(qualityBiasPower, 0f))
                 return UnityEngine.Random.Range(minQuality, maxQuality + 1);
 
@@ -388,7 +408,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
 
         private int PickQualityByWeightFromValidQualities(List<int> validQualities, int minQuality, int maxQuality)
         {
-            //qualityBiasPower = GameConfig.ItemQualityBias;
             if (validQualities == null || validQualities.Count == 0) return minQuality;
             if (Mathf.Approximately(qualityBiasPower, 0f))
                 return validQualities[UnityEngine.Random.Range(0, validQualities.Count)];

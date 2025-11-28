@@ -114,6 +114,7 @@ namespace EliteEnemies
         private void InitializeLocalization()
         {
             LocalizationManager.Initialize(info.path);
+            EliteLootSystem.RegisterLootSourceLocalizations();
             Debug.Log($"{LogTag}  本地化系统已初始化");
         }
 

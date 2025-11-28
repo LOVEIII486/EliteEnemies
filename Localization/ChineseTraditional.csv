@@ -131,3 +131,6 @@ Affix_Grenadier_Description,攻擊命中時會向目標投擲手雷,2.3,AffixDes
 Affix_Hardening_Max,絕對防禦,2.3,AffixBehavior
 Affix_Hardening_Weakened,防禦崩潰,2.3,AffixBehavior
 Affix_Hardening_Recover,裝甲重組,2.3,AffixBehavior
+EliteLoot_Fixed,<color=#B0B0B0>菁英怪固定掉落</color>,2.3,FromInfoKey
+EliteLoot_Random,<color=#4BC0FF>菁英怪隨機掉落</color>,2.3,FromInfoKey
+EliteLoot_Bonus,<color=#FFD24D>菁英怪稀有度獎勵</color>,2.3,FromInfoKey

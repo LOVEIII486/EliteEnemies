@@ -131,3 +131,6 @@ Affix_Grenadier_Description,Throws a grenade at the target on hit.,2.3,AffixDesc
 Affix_Hardening_Max,Absolute Defense,2.3,AffixBehavior
 Affix_Hardening_Weakened,Defense Collapse,2.3,AffixBehavior
 Affix_Hardening_Recover,Armor Reformation,2.3,AffixBehavior
+EliteLoot_Fixed,<color=#B0B0B0>Elite Fixed Drop</color>,2.3,FromInfoKey
+EliteLoot_Random,<color=#4BC0FF>Elite Random Drop</color>,2.3,FromInfoKey
+EliteLoot_Bonus,<color=#FFD24D>Elite Rarity Bonus</color>,2.3,FromInfoKey

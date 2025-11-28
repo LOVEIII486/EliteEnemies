@@ -131,3 +131,6 @@ Affix_Grenadier_Description,攻击命中时会向目标投掷手雷,2.3,AffixDes
 Affix_Hardening_Max,绝对防御,2.3,AffixBehavior
 Affix_Hardening_Weakened,防御崩溃,2.3,AffixBehavior
 Affix_Hardening_Recover,装甲重组,2.3,AffixBehavior
+EliteLoot_Fixed,<color=#B0B0B0>精英怪固定掉落</color>,2.3,FromInfoKey
+EliteLoot_Random,<color=#4BC0FF>精英怪随机掉落</color>,2.3,FromInfoKey
+EliteLoot_Bonus,<color=#FFD24D>精英怪稀有度奖励</color>,2.3,FromInfoKey
