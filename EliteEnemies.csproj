@@ -706,17 +706,26 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include=".gitignore" />
-      <Content Include="description.md" />
       <Content Include="Localization\ChineseSimplified.csv" />
       <Content Include="Localization\ChineseTraditional.csv" />
       <Content Include="Localization\English.csv" />
       <Content Include="Localization\LocalizationGuide.md" />
       <Content Include="README.md" />
+      <Content Include="Workshop\description.txt" />
+      <Content Include="Workshop\descriptionen.txt" />
+      <Content Include="Workshop\description\en.md" />
+      <Content Include="Workshop\description\zh.md" />
+      <Content Include="Workshop\title\en.md" />
+      <Content Include="Workshop\title\zh.md" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <PropertyGroup>
       <PostBuildEvent>copy /Y "$(TargetPath)" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\EliteEnemies.dll"
-xcopy /Y /S /I "$(ProjectDir)Localization\*.csv" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\Localization\"</PostBuildEvent>
+xcopy /Y /S /I "$(ProjectDir)Localization\*.csv" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\Localization\"
+xcopy /Y /S /I "$(ProjectDir)Workshop\description" ^
+"E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\description\"
+xcopy /Y /S /I "$(ProjectDir)Workshop\title" ^
+"E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\title\"</PostBuildEvent>
     </PropertyGroup>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.
