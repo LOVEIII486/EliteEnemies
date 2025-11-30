@@ -2,6 +2,7 @@
 using UnityEngine;
 using Duckov.Buffs;
 using EliteEnemies.EliteEnemy.AttributeModifier;
+using EliteEnemies.Localization;
 using ItemStatsSystem.Stats;
 
 namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
@@ -14,27 +15,34 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
         private const string LogTag = "[EliteEnemies.TearEffect]";
         public string BuffName => "EliteBuff_Tear";
 
-        // 削弱幅度：-0.4f 表示削弱 40% 的护甲值
-        private static readonly float ArmorReduction = -0.4f; 
-
+        // private static readonly float ArmorReduction = -0.4f; 
+        
+        private readonly Lazy<string> _popTextFmt = new(() => 
+            LocalizationManager.GetText("Affix_Tear_PopText_1")
+        );
+        
         public void OnBuffSetup(Buff buff, CharacterMainControl player)
         {
             if (player == null || player.CharacterItem == null) return;
 
             try
             {
+                // 削弱 10% - 40%
+                float randomReduction = UnityEngine.Random.Range(-0.4f, -0.1f);
+
                 var bodyArmorMod = StatModifier.AddModifier(
                     player,
-                    StatModifier.Attributes.BodyArmor, // 对应身体护甲
-                    ArmorReduction,
+                    StatModifier.Attributes.BodyArmor, 
+                    randomReduction,
                     ModifierType.PercentageMultiply
                 );
                 var headArmorMod = StatModifier.AddModifier(
                     player,
-                    StatModifier.Attributes.HeadArmor, // 对应头部护甲
-                    ArmorReduction,
+                    StatModifier.Attributes.HeadArmor,
+                    randomReduction,
                     ModifierType.PercentageMultiply
                 );
+
                 if (bodyArmorMod != null && headArmorMod != null)
                 {
                     int buffId = buff.GetInstanceID();
@@ -44,8 +52,9 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
                     
                     EliteBuffModifierManager.Instance.TrackModifier(buffId, bodyStat, bodyArmorMod);
                     EliteBuffModifierManager.Instance.TrackModifier(buffId, headStat, headArmorMod);
-    
-                    player.PopText("护甲撕裂!");
+                    
+                    string msg = string.Format(_popTextFmt.Value, (randomReduction * 100f).ToString("F1"));
+                    player.PopText(msg);
                 }
             }
             catch (Exception ex)

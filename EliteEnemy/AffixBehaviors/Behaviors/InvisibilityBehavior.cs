@@ -99,6 +99,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 _timer = VisibleInterval;
                 _isVisible = false;
                 character.Hide();
+                // ShowRandomMessage(character);
             }
         }
 

@@ -725,11 +725,7 @@
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <PropertyGroup>
       <PostBuildEvent>copy /Y "$(TargetPath)" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\EliteEnemies.dll"
-xcopy /Y /S /I "$(ProjectDir)Localization\*.csv" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\Localization\"
-xcopy /Y /S /I "$(ProjectDir)Workshop\description" ^
-"E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\description\"
-xcopy /Y /S /I "$(ProjectDir)Workshop\title" ^
-"E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\title\"</PostBuildEvent>
+xcopy /Y /S /I "$(ProjectDir)Localization\*.csv" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\Localization\"</PostBuildEvent>
     </PropertyGroup>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

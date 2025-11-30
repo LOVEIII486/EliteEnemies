@@ -139,3 +139,7 @@ Affix_EMP_Description,"Attacks disrupt electronic devices, disabling the player'
 Buff_EliteBuff_EMP_Name,EMP,2.3,BuffNames
 Affix_EMP_PopText_1,<color=#4D9CFF>▞E▒M▣P▓ Interference▒!</color>,2.3,AffixBehavior
 Affix_EMP_PopText_2,<color=#90FF90>HUD rebooting...</color>,2.3,AffixBehavior
+Affix_Tear_Name,Tear,2.3,AffixNames
+Affix_Tear_Description,Hits weaken the player's armor.,2.3,AffixDescription
+Buff_EliteBuff_Tear_Name,Tear,2.3,BuffNames
+Affix_Tear_PopText_1,<color=#FF0000>Armor Shredded {0:0}%</color>,2.3,AffixBehavior

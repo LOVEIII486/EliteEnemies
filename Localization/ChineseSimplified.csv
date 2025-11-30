@@ -139,3 +139,7 @@ Affix_EMP_Description,攻击会干扰电子设备，使玩家 HUD 失效,2.3,Aff
 Buff_EliteBuff_EMP_Name,EMP,2.3,BuffNames
 Affix_EMP_PopText_1,<color=#4D9CFF>▞电▒磁▣干▓扰▒！</color>,2.3,AffixBehavior
 Affix_EMP_PopText_2,<color=#90FF90>HUD重启中...</color>,2.3,AffixBehavior
+Affix_Tear_Name,撕裂,2.3,AffixNames
+Affix_Tear_Description,命中玩家削弱玩家护甲,2.3,AffixDescription
+Buff_EliteBuff_Tear_Name,撕裂,2.3,BuffNames
+Affix_Tear_PopText_1,<color=#FF0000>护甲撕裂 {0:0}%</color>,2.3,AffixBehavior

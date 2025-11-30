@@ -14,7 +14,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private static readonly string BuffName = "EliteBuff_Tear";
         private static readonly int BuffId = 99907;
-        private static readonly float BuffDuration = 8f;
+        private static readonly float BuffDuration = 6f;
         
         private static readonly EliteBuffFactory.BuffConfig BuffConfig = 
             new EliteBuffFactory.BuffConfig(BuffName, BuffId, BuffDuration);

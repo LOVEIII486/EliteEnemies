@@ -13,7 +13,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private static readonly string BuffName = "EliteBuff_EMP";
         private static readonly int BuffId = 99906;
-        private static readonly float BuffDuration = 7f;
+        private static readonly float BuffDuration = 5f;
         
         private static readonly EliteBuffFactory.BuffConfig BuffConfig = 
             new EliteBuffFactory.BuffConfig(BuffName, BuffId, BuffDuration);
