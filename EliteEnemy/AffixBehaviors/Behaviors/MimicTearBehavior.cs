@@ -7,9 +7,9 @@ using EliteEnemies.EliteEnemy.AttributeModifier;
 using UnityEngine;
 using ItemStatsSystem;
 using ItemStatsSystem.Items;
-using ItemStatsSystem.Stats; // 引用 ModifierType
+using ItemStatsSystem.Stats;
 
-namespace EliteEnemies.EliteEnemy.AffixBehaviors
+namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 词缀：仿生泪滴
@@ -88,7 +88,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             // 5 复制玩家模型
             CopyPlayerModel(enemy, CharacterMainControl.Main);
             
-            // 6 强化AI (已修复)
+            // 6 强化AI
             EnhanceAIBehavior(enemy);
                 
             // 7 死亡前清空掉落
@@ -110,38 +110,24 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
         }
 
         /// <summary>
-        /// 全面强化 AI 行为 (修复版)
+        /// 全面强化 AI 行为
         /// </summary>
         private void EnhanceAIBehavior(CharacterMainControl enemy)
         {
-            // --- 1. Stat 修改 (感知与属性) ---
+            // --- Stat 修改 ---
             // 使用 PercentageMultiply，数值为增量 (0.5 = +50%)
-            
-            // 视距 ViewDistance
             StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewDistance, 0.5f, ModifierType.PercentageMultiply); 
-            // 视角 ViewAngle
             StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewAngle, 0.3f, ModifierType.PercentageMultiply); 
-            // 听觉 HearingAbility
             StatModifier.AddModifier(enemy, StatModifier.Attributes.HearingAbility, 0.5f, ModifierType.PercentageMultiply);
-            
-            // 转身速度 (替代之前的 PatrolTurnSpeed/CombatTurnSpeed)
             StatModifier.AddModifier(enemy, StatModifier.Attributes.TurnSpeed, 0.3f, ModifierType.PercentageMultiply);
             StatModifier.AddModifier(enemy, StatModifier.Attributes.AimTurnSpeed, 0.5f, ModifierType.PercentageMultiply);
 
-            // --- 2. AI 字段修改 ---
-            // 修改纯逻辑字段，使用 ModifyImmediate
-            
-            // 允许移动射击 (布尔值，multiply=false)
-            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.ShootCanMove, 1f, false);
-            // 允许冲刺 (布尔值，multiply=false)
-            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.CanDash, 1f, false);
-            
-            // 巡逻与战斗范围 (倍率修改，multiply=true)
-            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.PatrolRange, 1.3f, true);
-            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.CombatMoveRange, 1.5f, true);
-            
-            // 遗忘时间 (倍率修改，0.6f 表示时间变短，更难脱战)
-            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.ForgetTime, 0.6f, true);
+            // --- AI 字段修改 ---
+            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.ShootCanMove, 1f, false);
+            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.CanDash, 1f, false);
+            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.PatrolRange, 1.3f, true);
+            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.CombatMoveRange, 1.5f, true);
+            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.ForgetTime, 0.6f, true);
         }
 
         private void CopyPlayerModel(CharacterMainControl enemy, CharacterMainControl player)

@@ -27,23 +27,17 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 _berserkTriggered = true;
                 character.PopText(BerserkPopTextFmt);
 
-                // --- 修改 1: 使用 AddModifier ---
-                // 1.3 倍伤害 = 基础值 + 0.3 倍增量
+                // 1.3 倍伤害
                 StatModifier.AddModifier(character, StatModifier.Attributes.GunDamageMultiplier, 0.3f, ModifierType.PercentageMultiply);
                 StatModifier.AddModifier(character, StatModifier.Attributes.MeleeDamageMultiplier, 0.3f, ModifierType.PercentageMultiply);
                 
-                // 移速增加 40% (0.4f)
-                // 建议同时修改行走和奔跑速度
+                // 移速增加 40%
                 StatModifier.AddModifier(character, StatModifier.Attributes.WalkSpeed, 0.4f, ModifierType.PercentageMultiply);
                 StatModifier.AddModifier(character, StatModifier.Attributes.RunSpeed, 0.4f, ModifierType.PercentageMultiply);
 
-                // --- 修改 2: AI 修改 ---
-                // 允许射击移动 (1f 代表 true)
+                // 允许射击移动
                 AIFieldModifier.ModifyImmediate(character, AIFieldModifier.Fields.ShootCanMove, 1f, false);
-                
-                // 注意：ShootDelay 已被移除，因为在新框架的白名单中未找到该字段。
-                // 如果确认游戏内有该字段，需先在 AIFieldModifier.cs 中添加它。
-                // AIFieldModifier.ModifyImmediate(character, AIFieldModifier.Fields.ShootDelay, 0.5f, true); 
+                AIFieldModifier.ModifyImmediate(character, AIFieldModifier.Fields.CanDash, 1f, false);
             }
         }
         

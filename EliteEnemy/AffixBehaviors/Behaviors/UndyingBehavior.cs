@@ -1,7 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using Duckov;       // 用于 Health
-using Duckov.Buffs; // 用于 DamageInfo
 using EliteEnemies.EliteEnemy.AttributeModifier;
 using EliteEnemies.Localization;
 
@@ -16,7 +14,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override string AffixName => "Undead";
         
         private static readonly float ThresholdRatio = 0.2f;  // 触发阈值 (20%)
-        private static readonly float HealTargetRatio = 0.7f; // 回血目标 (70% - 注：原注释写50%但代码是0.7，保留代码逻辑)
+        private static readonly float HealTargetRatio = 0.5f; // 回血目标 (50%)
         private static readonly float InvincibleDuration = 2.5f; // 无敌时间
         
         private CharacterMainControl _owner;
@@ -75,10 +73,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             _owner.PopText(_popLineStart.Value);
             
-            // 3. AI 行为增强 (修复：添加 multiply 参数 = false)
-            // 允许射击移动
             AIFieldModifier.ModifyImmediate(_owner, AIFieldModifier.Fields.ShootCanMove, 1f, false);
-            // 允许冲刺
             AIFieldModifier.ModifyImmediate(_owner, AIFieldModifier.Fields.CanDash, 1f, false);
         }
 
