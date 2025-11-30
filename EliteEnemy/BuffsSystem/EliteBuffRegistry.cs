@@ -40,13 +40,14 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem
         
         private void RegisterAllEffects()
         {
-            RegisterEffect(new BlindnessEffect());
-            RegisterEffect(new SlowEffect());
-            RegisterEffect(new StunEffect());
-            RegisterEffect(new DungEaterEffect());
-            RegisterEffect(new DistortionEffect());
-            RegisterEffect(new EMPEffect());
-            RegisterEffect(new TearEffect());
+            RegisterEffect(new BlindnessEffect()); // 99901
+            RegisterEffect(new SlowEffect()); // 99902
+            RegisterEffect(new StunEffect());// 99903
+            RegisterEffect(new DungEaterEffect());// 99904
+            RegisterEffect(new DistortionEffect());// 99905
+            RegisterEffect(new EMPEffect());// 99906
+            RegisterEffect(new TearEffect());// 99907
+            RegisterEffect(new SlipperyEffect());// 99908
         }
         
         private void RegisterEffect(IEliteBuffEffect effect)

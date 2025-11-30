@@ -1,39 +1,37 @@
-﻿using UnityEngine;
-using Duckov.Buffs;
-using EliteEnemies.EliteEnemy.AttributeModifier;
+﻿using Duckov.Buffs;
 using EliteEnemies.EliteEnemy.BuffsSystem;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 【撕裂】词缀 - 攻击命中玩家时削弱其护甲
+    /// 【打滑】词缀 - 攻击命中玩家时使其脚底打滑
     /// </summary>
-    public class TearBehavior : AffixBehaviorBase, ICombatAffixBehavior
+    public class SlipperyBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {
-        public override string AffixName => "Tear";
+        public override string AffixName => "Slippery";
 
-        private static readonly string BuffName = "EliteBuff_Tear";
-        private static readonly int BuffId = 99907;
-        private static readonly float BuffDuration = 6f;
-        
+        private static readonly string BuffName = "EliteBuff_Slippery";
+        private static readonly int BuffId = 99908; 
+        private static readonly float BuffDuration = 5f;
+
         private static readonly EliteBuffFactory.BuffConfig BuffConfig = 
-            new EliteBuffFactory.BuffConfig(BuffName, BuffId, BuffDuration);
-        
+            new (BuffName, BuffId, BuffDuration);
+            
         private static Buff _sharedBuff;
-        
+
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             _sharedBuff = EliteBuffFactory.GetOrCreateSharedBuff(BuffConfig);
         }
 
-        // 攻击命中玩家时触发
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl player, DamageInfo damageInfo)
         {
-            EliteBuffFactory.TryAddBuffToPlayer(_sharedBuff, attacker);
+            EliteBuffFactory.TryAddBuffToPlayer(_sharedBuff, player);
         }
-
+        
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
+        
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) { }
         public override void OnCleanup(CharacterMainControl character) { }
     }

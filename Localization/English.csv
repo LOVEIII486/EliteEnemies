@@ -143,3 +143,7 @@ Affix_Tear_Name,Tear,2.3,AffixNames
 Affix_Tear_Description,Hits weaken the player's armor.,2.3,AffixDescription
 Buff_EliteBuff_Tear_Name,Tear,2.3,BuffNames
 Affix_Tear_PopText_1,<color=#FF0000>Armor Shredded {0:0}%</color>,2.3,AffixBehavior
+Affix_Slippery_Name,Slippery,2.3,AffixNames
+Affix_Slippery_Description,"Attacks cause the player's footing to lose friction, making movement feel like sliding on ice.",2.3,AffixDescription
+Buff_EliteBuff_Slippery_Name,Slippery,2.3,BuffNames
+Affix_Slippery_PopText_1,<color=#7FE8FF>So slippery~~~</color>,2.3,AffixBehavior

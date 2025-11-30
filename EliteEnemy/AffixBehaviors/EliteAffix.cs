@@ -49,6 +49,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 ["Chef"] =  new HashSet<string> { "Fisherman","Musician" },
                 ["ChickenBro"] =  new HashSet<string> { "MandarinDuck" },
                 ["Guardian"] =  new HashSet<string> { "Undead","Split","ChickenBro","MandarinDuck" },
+                ["Slippery"] =  new HashSet<string> { "Slow" },
             };
 
         /// <summary>
@@ -616,6 +617,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon
             }.WithRandomLootRange(3, 5, 1, 1f, new[] { "Bullet" }),
+            ["Slippery"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Slippery_Name"),
+                Description = LocalizationManager.GetText("Affix_Slippery_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare
+            }
         };
 
 

@@ -143,3 +143,7 @@ Affix_Tear_Name,撕裂,2.3,AffixNames
 Affix_Tear_Description,命中玩家削弱玩家护甲,2.3,AffixDescription
 Buff_EliteBuff_Tear_Name,撕裂,2.3,BuffNames
 Affix_Tear_PopText_1,<color=#FF0000>护甲撕裂 {0:0}%</color>,2.3,AffixBehavior
+Affix_Slippery_Name,打滑,2.3,AffixNames
+Affix_Slippery_Description,攻击会使玩家脚底失去摩擦力，移动如同在冰面上。,2.3,AffixDescription
+Buff_EliteBuff_Slippery_Name,打滑,2.3,BuffNames
+Affix_Slippery_PopText_1,<color=#7FE8FF>好滑~~~</color>,2.3,AffixBehavior

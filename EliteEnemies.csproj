@@ -657,6 +657,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RegenerationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SelfDestructBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SlimeBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SlipperyBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SlowBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SplitBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\StickyBehavior.cs" />
@@ -672,6 +673,7 @@
         <Compile Include="EliteEnemy\AttributeModifier\StatModifier.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Effects\DistortionEffect.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Effects\EMPEffect.cs" />
+        <Compile Include="EliteEnemy\BuffsSystem\Effects\SlipperyEffect.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Effects\TearEffect.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\EliteBuffFactory.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Patches\BulletDistortionPatch.cs" />
