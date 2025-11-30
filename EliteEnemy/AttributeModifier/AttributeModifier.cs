@@ -3,7 +3,7 @@ using ItemStatsSystem.Stats;
 namespace EliteEnemies.EliteEnemy.AttributeModifier
 {
     /// <summary>
-    /// 统一属性修改器 (Facade)
+    /// 统一属性修改器
     /// 自动分发 Stat 和 AI 字段的修改请求
     /// </summary>
     public static class AttributeModifier
@@ -12,7 +12,7 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
         public static class Quick
         {
             /// <summary>
-            /// 修改血量上限 (并可选治疗)
+            /// 修改血量上限
             /// </summary>
             public static void ModifyHealth(CharacterMainControl character, float multiplier, bool healToFull = false)
             {
@@ -37,12 +37,11 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             }
 
             /// <summary>
-            /// 修改移动能力 (全面提升)
+            /// 修改移动能力
             /// </summary>
             public static void ModifySpeed(CharacterMainControl character, float multiplier)
             {
                 float val = multiplier - 1f;
-                // 同时修改行走、奔跑速度和加速度
                 StatModifier.AddModifier(character, StatModifier.Attributes.WalkSpeed, val, ModifierType.PercentageMultiply);
                 StatModifier.AddModifier(character, StatModifier.Attributes.RunSpeed, val, ModifierType.PercentageMultiply);
                 StatModifier.AddModifier(character, StatModifier.Attributes.WalkAcc, val, ModifierType.PercentageMultiply);
@@ -50,7 +49,7 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             }
 
             /// <summary>
-            /// 修改护甲 (分别修改头甲和身甲)
+            /// 修改护甲
             /// </summary>
             public static void ModifyDefense(CharacterMainControl character, float multiplier)
             {
@@ -73,12 +72,12 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             public const string HeadArmor = StatModifier.Attributes.HeadArmor;
             public const string BodyArmor = StatModifier.Attributes.BodyArmor;
 
-            // Stat 感知 (原 AI 字段，现已修正为 Stat)
+            // Stat 感知 
             public const string SightDistance = StatModifier.Attributes.ViewDistance;
             public const string SightAngle = StatModifier.Attributes.ViewAngle;
             public const string HearingAbility = StatModifier.Attributes.HearingAbility;
             
-            // AI 行为 (仍然走 AIFieldModifier)
+            // AI 行为 (走 AIFieldModifier)
             public const string PatrolRange = AIFieldModifier.Fields.PatrolRange;
             public const string CombatMoveRange = AIFieldModifier.Fields.CombatMoveRange;
             public const string ForgetTime = AIFieldModifier.Fields.ForgetTime;

@@ -1,26 +1,25 @@
 using System.Collections.Generic;
 using EliteEnemies.EliteEnemy.BuffsSystem;
-using ItemStatsSystem.Stats; // 确保引用了 Modifier 类所在的命名空间
+using ItemStatsSystem.Stats;
 using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.AttributeModifier
 {
     /// <summary>
     /// Stat 修改器 - 通过 Item Stats 修改属性
-    /// 已根据 CharacterMainControl 源码进行全量校准
     /// </summary>
     public static class StatModifier
     {
         private const string LogTag = "[EliteEnemies.StatModifier]";
 
-        // ========== Stat 属性列表 (官方全量版) ==========
+        // ========== Stat 属性列表 ==========
         private static readonly HashSet<string> StatAttributes = new HashSet<string>
         {
             // === 生存基础 ===
             "MaxHealth", 
             "Stamina", "StaminaDrainRate", "StaminaRecoverRate", "StaminaRecoverTime",
-            "MaxEnergy", "EnergyCost", // 饱食度
-            "MaxWater", "WaterCost",   // 水分
+            "MaxEnergy", "EnergyCost",
+            "MaxWater", "WaterCost",
             "FoodGain", "HealGain",
             "MaxWeight",
             

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -7,39 +8,24 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
 {
     /// <summary>
     /// AI 字段修改器 
-    /// 仅处理非 Stat 的纯逻辑字段 (如巡逻范围、遗忘时间等)
     /// </summary>
     public static class AIFieldModifier
     {
         private const string LogTag = "[EliteEnemies.AIFieldModifier]";
         
-        // ========== AI 字段列表 ==========
-        public static class Fields
+        // 辅助组件：用于在对象激活时启动协程
+        private class ModificationApplier : MonoBehaviour
         {
-            // 战斗行为
-            public const string PatrolRange = "patrolRange";
-            public const string CombatMoveRange = "combatMoveRange";
-            public const string ForgetTime = "forgetTime";
-            
-            // 行为开关
-            public const string CanDash = "canDash";
-            public const string ShootCanMove = "shootCanMove";
-            
-            // 注意：SightDistance, SightAngle 等已移除，请使用 StatModifier
+            private void Start()
+            {
+                var character = GetComponent<CharacterMainControl>();
+                if (character != null)
+                {
+                    character.StartCoroutine(ApplyPendingModifications(character));
+                }
+                Destroy(this);
+            }
         }
-
-        private static readonly HashSet<string> ValidFields = new HashSet<string>
-        {
-            Fields.PatrolRange,
-            Fields.CombatMoveRange,
-            Fields.ForgetTime,
-            Fields.CanDash,
-            Fields.ShootCanMove
-        };
-
-        public static bool CanModify(string fieldName) => ValidFields.Contains(fieldName);
-
-        // ========== 核心逻辑 ==========
 
         internal static AICharacterController GetAI(CharacterMainControl character)
         {
@@ -49,58 +35,180 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             return character.GetComponentInParent<AICharacterController>();
         }
 
-        public static void ModifyImmediate(CharacterMainControl character, string fieldName, float value, bool multiply)
+        // 存储结构
+        private struct PendingModification
+        {
+            public string FieldName;
+            public float Value;
+            public bool Multiply;
+        }
+
+        private static readonly Dictionary<CharacterMainControl, List<PendingModification>> _pendingModifications 
+            = new Dictionary<CharacterMainControl, List<PendingModification>>();
+
+        private static readonly HashSet<CharacterMainControl> _processingCharacters = new HashSet<CharacterMainControl>();
+
+        // ========== AI 字段定义 ==========
+        public static class Fields
+        {
+            public const string ReactionTime = "reactionTime";
+            public const string ShootDelay = "shootDelay";
+            public const string ShootCanMove = "shootCanMove";
+            public const string CanDash = "canDash";
+            public const string DefaultWeaponOut = "defaultWeaponOut";
+            
+            public const string PatrolRange = "patrolRange";
+            public const string CombatMoveRange = "combatMoveRange";
+            public const string ForgetTime = "forgetTime";
+            
+            public const string ItemSkillChance = "itemSkillChance";
+            public const string ItemSkillCoolTime = "itemSkillCoolTime";
+        }
+
+        private static readonly HashSet<string> ValidFields = new HashSet<string>
+        {
+            Fields.ReactionTime, Fields.ShootDelay, Fields.ShootCanMove, Fields.CanDash, Fields.DefaultWeaponOut,
+            Fields.PatrolRange, Fields.CombatMoveRange, Fields.ForgetTime,
+            Fields.ItemSkillChance, Fields.ItemSkillCoolTime
+        };
+
+        public static bool CanModify(string fieldName) => ValidFields.Contains(fieldName);
+
+        // ========== 延迟修改接口  ==========
+
+        public static void ModifyDelayed(CharacterMainControl character, string fieldName, float value, bool multiply = false)
+        {
+            if (character == null) return;
+
+            if (!_pendingModifications.ContainsKey(character))
+            {
+                _pendingModifications[character] = new List<PendingModification>();
+            }
+
+            _pendingModifications[character].Add(new PendingModification
+            {
+                FieldName = fieldName,
+                Value = value,
+                Multiply = multiply
+            });
+
+            if (!_processingCharacters.Contains(character))
+            {
+                _processingCharacters.Add(character);
+
+                if (character.gameObject.activeInHierarchy)
+                {
+                    character.StartCoroutine(ApplyPendingModifications(character));
+                }
+                else
+                {
+                    if (character.GetComponent<ModificationApplier>() == null)
+                    {
+                        character.gameObject.AddComponent<ModificationApplier>();
+                    }
+                }
+            }
+        }
+
+        // ========== 立即修改接口 ==========
+
+        public static void ModifyImmediate(CharacterMainControl character, string fieldName, float value, bool multiply = false)
         {
             var ai = GetAI(character);
-            if (ai == null) return;
-
-            ApplyModification(ai, fieldName, value, multiply);
+            if (ai != null)
+            {
+                ApplyModification(ai, fieldName, value, multiply);
+            }
         }
+
+        // ========== 核心协程 ==========
+
+        private static IEnumerator ApplyPendingModifications(CharacterMainControl character)
+        {
+            // 等待帧结束。确保所有 Start/Update 初始化逻辑都跑完了。
+            yield return new WaitForEndOfFrame();
+
+            // 如果 AI 控制器还没挂载再等一帧
+            if (character != null && GetAI(character) == null)
+            {
+                yield return new WaitForEndOfFrame();
+            }
+
+            if (character == null)
+            {
+                CleanUp(character);
+                yield break;
+            }
+
+            var ai = GetAI(character);
+            if (ai != null && _pendingModifications.TryGetValue(character, out var list))
+            {
+                foreach (var mod in list)
+                {
+                    ApplyModification(ai, mod.FieldName, mod.Value, mod.Multiply);
+                }
+            }
+
+            CleanUp(character);
+        }
+
+        private static void CleanUp(CharacterMainControl character)
+        {
+            if (character != null)
+            {
+                _pendingModifications.Remove(character);
+                _processingCharacters.Remove(character);
+            }
+        }
+
+        // ========== 反射逻辑 ==========
 
         private static void ApplyModification(object target, string fieldName, float value, bool multiply)
         {
             try
             {
-                var type = target.GetType();
-                var field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                Type type = target.GetType();
                 
-                if (field != null)
+                FieldInfo field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase);
+
+                if (field == null)
                 {
-                    if (field.FieldType == typeof(float))
+                    Debug.LogWarning($"{LogTag} 字段 '{fieldName}' 未在 {type.Name} 中找到");
+                    return;
+                }
+
+                if (field.FieldType == typeof(bool))
+                {
+                    field.SetValue(target, value > 0.5f);
+                }
+                else if (field.FieldType == typeof(float))
+                {
+                    if (multiply)
                     {
-                        float original = (float)field.GetValue(target);
-                        float final = multiply ? original * value : original + value;
-                        field.SetValue(target, final);
+                        float current = (float)field.GetValue(target);
+                        field.SetValue(target, current * value);
                     }
-                    else if (field.FieldType == typeof(int))
+                    else
                     {
-                        int original = (int)field.GetValue(target);
-                        int final = multiply ? (int)(original * value) : original + (int)value;
-                        field.SetValue(target, final);
-                    }
-                    else if (field.FieldType == typeof(bool))
-                    {
-                        // 对于布尔值，大于0视为true
-                        field.SetValue(target, value > 0);
+                        field.SetValue(target, value);
                     }
                 }
-                else
+                else if (field.FieldType == typeof(int))
                 {
-                    var prop = type.GetProperty(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    if (prop != null && prop.CanWrite)
+                    if (multiply)
                     {
-                        if (prop.PropertyType == typeof(float))
-                        {
-                            float original = (float)prop.GetValue(target);
-                            float final = multiply ? original * value : original + value;
-                            prop.SetValue(target, final);
-                        }
+                        int current = (int)field.GetValue(target);
+                        field.SetValue(target, Mathf.RoundToInt(current * value));
+                    }
+                    else
+                    {
+                        field.SetValue(target, Mathf.RoundToInt(value));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"{LogTag} 修改 AI 字段 {fieldName} 失败: {ex.Message}");
+                Debug.LogWarning($"{LogTag} 修改 {fieldName} 异常: {ex.Message}");
             }
         }
     }
