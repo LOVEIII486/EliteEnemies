@@ -661,6 +661,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SplitBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\StickyBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\StunBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\TearBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\TestTalkativeBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\TimeStopBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\UndyingBehavior.cs" />
@@ -671,6 +672,7 @@
         <Compile Include="EliteEnemy\AttributeModifier\StatModifier.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Effects\DistortionEffect.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Effects\EMPEffect.cs" />
+        <Compile Include="EliteEnemy\BuffsSystem\Effects\TearEffect.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\EliteBuffFactory.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Patches\BulletDistortionPatch.cs" />
         <Compile Include="EliteEnemy\Core\EggSpawnHelper.cs" />

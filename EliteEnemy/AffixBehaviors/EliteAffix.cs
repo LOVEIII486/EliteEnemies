@@ -607,6 +607,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
             },
+            ["Tear"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Tear_Name", "撕裂"),
+                Description = LocalizationManager.GetText("Affix_Tear_Description", "攻击会撕裂护甲，使玩家护甲属性大幅降低 15 秒"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.1f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare
+            }
         };
 
 

@@ -46,6 +46,7 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem
             RegisterEffect(new DungEaterEffect());
             RegisterEffect(new DistortionEffect());
             RegisterEffect(new EMPEffect());
+            RegisterEffect(new TearEffect());
         }
         
         private void RegisterEffect(IEliteBuffEffect effect)

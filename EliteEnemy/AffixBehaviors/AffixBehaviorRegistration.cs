@@ -39,6 +39,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<GuardianBehavior>();
             AffixBehaviorManager.RegisterBehavior<GrenadierBehavior>();
             AffixBehaviorManager.RegisterBehavior<EMPBehavior>();
+            AffixBehaviorManager.RegisterBehavior<TearBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }
