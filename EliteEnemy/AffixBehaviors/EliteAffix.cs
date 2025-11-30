@@ -606,16 +606,16 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
-            },
+            }.WithRandomLoot(-1, 1, 0.8f, new[] { "Electric" }),
             ["Tear"] = new AffixData
             {
-                Name = LocalizationManager.GetText("Affix_Tear_Name", "撕裂"),
-                Description = LocalizationManager.GetText("Affix_Tear_Description", "攻击会撕裂护甲，使玩家护甲属性大幅降低 15 秒"),
+                Name = LocalizationManager.GetText("Affix_Tear_Name"),
+                Description = LocalizationManager.GetText("Affix_Tear_Description"),
                 HealthMultiplier = 1.0f,
-                DamageMultiplier = 1.1f,
+                DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
-            }
+                Rarity = AffixRarity.Uncommon
+            }.WithRandomLootRange(3, 5, 1, 1f, new[] { "Bullet" }),
         };
 
 
