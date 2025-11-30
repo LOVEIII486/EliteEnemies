@@ -14,7 +14,7 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
         private const string LogTag = "[EliteEnemies.BlindnessEffect]";
         public string BuffName => "EliteBuff_Blindness";
 
-        private static readonly float ViewDistanceReduction = -0.9f; // 减少90%
+        private static readonly float ViewDistanceReduction = -0.8f; // 减少90%
         private static readonly float ViewAngleReduction = -0.6f;     // 减少60%
         
         public void OnBuffSetup(Buff buff, CharacterMainControl player)

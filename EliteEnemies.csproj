@@ -639,6 +639,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChickenBroBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DistortionBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DungEaterBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\EMPBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GigantificationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GrenadierBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GuardianBehavior.cs" />
@@ -669,6 +670,7 @@
         <Compile Include="EliteEnemy\AttributeModifier\AttributeModifier.cs" />
         <Compile Include="EliteEnemy\AttributeModifier\StatModifier.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Effects\DistortionEffect.cs" />
+        <Compile Include="EliteEnemy\BuffsSystem\Effects\EMPEffect.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\EliteBuffFactory.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Patches\BulletDistortionPatch.cs" />
         <Compile Include="EliteEnemy\Core\EggSpawnHelper.cs" />

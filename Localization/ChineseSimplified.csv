@@ -134,3 +134,8 @@ Affix_Hardening_Recover,装甲重组,2.3,AffixBehavior
 EliteLoot_Fixed,<color=#B0B0B0>精英怪固定掉落</color>,2.3,FromInfoKey
 EliteLoot_Random,<color=#4BC0FF>精英怪随机掉落</color>,2.3,FromInfoKey
 EliteLoot_Bonus,<color=#FFD24D>精英怪稀有度奖励</color>,2.3,FromInfoKey
+Affix_EMP_Name,电磁干扰,2.3,AffixNames
+Affix_EMP_Description,攻击会干扰电子设备，使玩家 HUD 失效,2.3,AffixDescription
+Buff_EliteBuff_EMP_Name,EMP,2.3,BuffNames
+Affix_EMP_PopText_1,<color=#4D9CFF>▞电▒磁▣干▓扰▒！</color>,2.3,AffixBehavior
+Affix_EMP_PopText_2,<color=#90FF90>HUD重启中...</color>,2.3,AffixBehavior

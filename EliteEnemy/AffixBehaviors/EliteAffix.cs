@@ -598,6 +598,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic
             },
+            ["EMP"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_EMP_Name"),
+                Description = LocalizationManager.GetText("Affix_EMP_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Epic
+            },
         };
 
 

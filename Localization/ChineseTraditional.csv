@@ -134,3 +134,8 @@ Affix_Hardening_Recover,裝甲重組,2.3,AffixBehavior
 EliteLoot_Fixed,<color=#B0B0B0>菁英怪固定掉落</color>,2.3,FromInfoKey
 EliteLoot_Random,<color=#4BC0FF>菁英怪隨機掉落</color>,2.3,FromInfoKey
 EliteLoot_Bonus,<color=#FFD24D>菁英怪稀有度獎勵</color>,2.3,FromInfoKey
+Affix_EMP_Name,電磁干擾,2.3,AffixNames
+Affix_EMP_Description,攻擊會干擾電子設備，使玩家 HUD 失效,2.3,AffixDescription
+Buff_EliteBuff_EMP_Name,EMP,2.3,BuffNames
+Affix_EMP_PopText_1,<color=#4D9CFF>▞電▒磁▣干▓擾▒！</color>,2.3,AffixBehavior
+Affix_EMP_PopText_2,<color=#90FF90>HUD重啟中...</color>,2.3,AffixBehavior

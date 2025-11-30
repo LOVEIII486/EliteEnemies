@@ -134,3 +134,8 @@ Affix_Hardening_Recover,Armor Reformation,2.3,AffixBehavior
 EliteLoot_Fixed,<color=#B0B0B0>Elite Fixed Drop</color>,2.3,FromInfoKey
 EliteLoot_Random,<color=#4BC0FF>Elite Random Drop</color>,2.3,FromInfoKey
 EliteLoot_Bonus,<color=#FFD24D>Elite Rarity Bonus</color>,2.3,FromInfoKey
+Affix_EMP_Name,EMP Interference,2.3,AffixNames
+Affix_EMP_Description,"Attacks disrupt electronic devices, disabling the player's HUD.",2.3,AffixDescription
+Buff_EliteBuff_EMP_Name,EMP,2.3,BuffNames
+Affix_EMP_PopText_1,<color=#4D9CFF>▞E▒M▣P▓ Interference▒!</color>,2.3,AffixBehavior
+Affix_EMP_PopText_2,<color=#90FF90>HUD rebooting...</color>,2.3,AffixBehavior
