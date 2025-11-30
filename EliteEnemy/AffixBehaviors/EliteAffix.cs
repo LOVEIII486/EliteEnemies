@@ -625,7 +625,16 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare
-            }
+            },
+            ["Locksmith"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Locksmith_Name"),
+                Description = LocalizationManager.GetText("Affix_Locksmith_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Legendary
+            }.WithRandomLoot(-1, 1, 1f, new[] { "Key" }),
         };
 
 

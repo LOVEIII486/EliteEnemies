@@ -147,3 +147,5 @@ Affix_Slippery_Name,打滑,2.3,AffixNames
 Affix_Slippery_Description,攻擊會使玩家腳底失去摩擦力，移動如同在冰面上。,2.3,AffixDescription
 Buff_EliteBuff_Slippery_Name,打滑,2.3,BuffNames
 Affix_Slippery_PopText_1,<color=#7FE8FF>好滑~~~</color>,2.3,AffixBehavior
+Affix_Locksmith_Name,鎖匠,2.3,AffixNames
+Affix_Locksmith_Description,死亡時會掉落一把隨機鑰匙。,2.3,AffixDescription
