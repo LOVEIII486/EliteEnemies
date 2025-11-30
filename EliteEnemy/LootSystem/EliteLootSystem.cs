@@ -9,6 +9,7 @@ using EliteEnemies.Localization;
 using HarmonyLib;
 using ItemStatsSystem;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace EliteEnemies.EliteEnemy.LootSystem
 {
@@ -31,9 +32,14 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         private static readonly Dictionary<string, (float dropRatePenalty, int qualityDowngrade)> WeakEnemyPenalties =
             new Dictionary<string, (float, int)>
             {
-                { "Cname_Scav", (0.7f, 1) },
+                { "Cname_Scav", (0.7f, 0) },
                 { "Cname_ScavRage", (0.75f, 0) }
             };
+        
+        private static readonly Dictionary<string, int> MapQualityCaps = new Dictionary<string, int>
+        {
+            { "Level_GroundZero_Main", 5 },
+        };
                 
         private static readonly string FromInfoKeyFixed = "EliteLoot_Fixed";
         private static readonly string FromInfoKeyRandom = "EliteLoot_Random";
@@ -138,6 +144,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         {
             var helper = GetLootItemHelper();
             if (helper == null) return;
+            int mapCap = GetCurrentMapQualityCap();
 
             foreach (var affixName in affixes)
             {
@@ -150,10 +157,14 @@ namespace EliteEnemies.EliteEnemy.LootSystem
 
                     if (UnityEngine.Random.value > finalChance) continue;
 
-                    // 计算品质降级
-                    int targetQ = Mathf.Max(1, config.Quality - qualityDowngrade);
-                    int minQ = Mathf.Max(1, config.MinCount - qualityDowngrade);
-                    int maxQ = Mathf.Max(1, config.MaxCount - qualityDowngrade);
+                    int rawTargetQ = Mathf.Max(1, config.Quality - qualityDowngrade);
+                    int rawMinQ = Mathf.Max(1, config.MinCount - qualityDowngrade);
+                    int rawMaxQ = Mathf.Max(1, config.MaxCount - qualityDowngrade);
+
+                    // 应用地图 Cap
+                    int targetQ = Mathf.Min(rawTargetQ, mapCap);
+                    int maxQ = Mathf.Min(rawMaxQ, mapCap);
+                    int minQ = Mathf.Min(rawMinQ, maxQ); // 确保 min <= max
 
                     // 解析标签
                     Tag[] tags = ParseTags(config.TagNames);
@@ -189,7 +200,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         {
             var helper = GetLootItemHelper();
             if (helper == null) return;
-
+            
+            int mapCap = GetCurrentMapQualityCap();
             bool isBoss = EliteEnemyCore.BossPresets.Contains(charName);
             
             // 计算积分
@@ -212,17 +224,21 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 return;
             }
 
-            // 计算品质范围
             int baseQuality = Mathf.FloorToInt(1.5f + (powerScore / 3.0f));
-            int minQ = Mathf.Clamp(baseQuality - qualityDowngrade, 1, 6);
-            int maxQ = Mathf.Clamp(minQ + UnityEngine.Random.Range(1, 3), minQ, 7);
+            // 先应用弱怪降级
+            int rawMinQ = Mathf.Clamp(baseQuality - qualityDowngrade, 1, 6);
+            int rawMaxQ = Mathf.Clamp(rawMinQ + UnityEngine.Random.Range(1, 3), rawMinQ, 7);
 
             // BOSS保底修正
-            if (isBoss && qualityDowngrade == 0 && minQ < 3) 
+            if (isBoss && qualityDowngrade == 0 && rawMinQ < 3) 
             { 
-                minQ = 3; 
-                if (maxQ < 3) maxQ = 3; 
+                rawMinQ = 3; 
+                if (rawMaxQ < 3) rawMaxQ = 3; 
             }
+
+            // 应用地图 Cap
+            int maxQ = Mathf.Min(rawMaxQ, mapCap);
+            int minQ = Mathf.Min(rawMinQ, maxQ);
 
             Item item = helper.CreateItemWithTagsWeighted(minQ, maxQ, null);
             if (item != null)
@@ -235,6 +251,16 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         #endregion
 
         #region Helper Methods
+        
+        private static int GetCurrentMapQualityCap()
+        {
+            string sceneName = SceneManager.GetActiveScene().name;
+            if (MapQualityCaps.TryGetValue(sceneName, out int cap))
+            {
+                return Mathf.Clamp(cap, 1, 10);
+            }
+            return 10;
+        }
         
         public static void RegisterLootSourceLocalizations()
         {

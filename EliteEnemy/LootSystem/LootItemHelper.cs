@@ -323,14 +323,12 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         }
 
         /// <summary>
-        /// [修正] 实例化普通物品
-        /// 使用 ItemAssetsCollection 确保加载了正确的 Prefab（模型、材质等）
+        /// 实例化普通物品
         /// </summary>
         private Item InstantiateItem(int id)
         {
             try
             {
-                // 修正：移除了错误的 ItemBuilder 调用，仅使用 InstantiateSync
                 var item = ItemAssetsCollection.InstantiateSync(id);
                 if (item != null)
                 {
@@ -344,9 +342,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         }
 
         /// <summary>
-        /// [新增] 使用 ItemBuilder 创建自定义程序化物品
-        /// 注意：这通常创建的是无模型的数据物品，或者需要你在后续逻辑中手动处理视觉。
-        /// 用于创建特殊的 Token 或系统内部物品。
+        /// 使用 ItemBuilder 创建自定义程序化物品
         /// </summary>
         public Item CreateCustomItem(int typeId, int stackCount = 1, Sprite icon = null)
         {
@@ -362,8 +358,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
 
                 if (icon != null)
                     builder.Icon(icon);
-
-                // 你可以在这里继续链式调用添加 Stats 或 Variables
                 
                 var item = builder.Instantiate();
                 item.Initialize();
