@@ -39,6 +39,10 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         private static readonly Dictionary<string, int> MapQualityCaps = new Dictionary<string, int>
         {
             { "Level_GroundZero_Main", 5 },
+            { "Level_GroundZero_1", 5 },
+            { "Level_HiddenWarehouse", 6 },
+            { "Level_Farm_Main", 7 },
+            { "Level_Farm_01", 7 }
         };
                 
         private static readonly string FromInfoKeyFixed = "EliteLoot_Fixed";
@@ -154,38 +158,35 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 foreach (var config in affixData.RandomLootConfigs)
                 {
                     float finalChance = CalculateFinalChance(config.DropChance, enemyPenalty);
-
                     if (UnityEngine.Random.value > finalChance) continue;
 
-                    int rawTargetQ = Mathf.Max(1, config.Quality - qualityDowngrade);
-                    int rawMinQ = Mathf.Max(1, config.MinCount - qualityDowngrade);
-                    int rawMaxQ = Mathf.Max(1, config.MaxCount - qualityDowngrade);
-
-                    // 应用地图 Cap
-                    int targetQ = Mathf.Min(rawTargetQ, mapCap);
-                    int maxQ = Mathf.Min(rawMaxQ, mapCap);
-                    int minQ = Mathf.Min(rawMinQ, maxQ); // 确保 min <= max
-
-                    // 解析标签
                     Tag[] tags = ParseTags(config.TagNames);
 
-                    // 生成并添加
+                    int effectiveMax = Mathf.Max(1, mapCap - qualityDowngrade);
+                    int targetMin, targetMax;
+
+                    // 检查是否为全随机
+                    if (config.MinQuality == -1)
+                    {
+                        targetMin = 1;
+                        targetMax = effectiveMax;
+                    }
+                    else
+                    {
+                        int rawMin = Mathf.Max(1, config.MinQuality - qualityDowngrade);
+                        int rawMax = Mathf.Max(1, config.MaxQuality - qualityDowngrade);
+                        targetMax = Mathf.Min(rawMax, effectiveMax);
+                        targetMin = Mathf.Min(rawMin, targetMax);
+                    }
+                    
+                    // 两层逻辑不一样，第一次是多个不同物品，第二层是多个相同物品
                     for (int i = 0; i < config.ItemCount; i++)
                     {
-                        Item item = null;
-                        bool isRange = IsQualityRange(config);
-
-                        if (config.Quality == -1)
-                            item = helper.CreateItemWithTagsWeighted(-1, -1, tags);
-                        else if (isRange)
-                            item = helper.CreateItemWithTagsWeighted(minQ, maxQ, tags);
-                        else
-                            item = helper.CreateItemWithTagsWeighted(targetQ, targetQ, tags);
+                        Item item = helper.CreateItemWithTagsWeighted(targetMin, targetMax, tags);
 
                         if (item != null)
                         {
-                            // 如果是范围生成，数量通常为1；如果是固定生成，数量读配置
-                            int stackCount = isRange ? 1 : UnityEngine.Random.Range(config.MinCount, config.MaxCount + 1);
+                            int stackCount = UnityEngine.Random.Range(config.MinStack, config.MaxStack + 1);
                             AddItemInstanceToInventory(lootbox, item, stackCount, $"词缀随机({affixName})", finalChance, FromInfoKeyRandom);
                         }
                     }
@@ -239,7 +240,9 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             // 应用地图 Cap
             int maxQ = Mathf.Min(rawMaxQ, mapCap);
             int minQ = Mathf.Min(rawMinQ, maxQ);
-
+            
+            
+            // 只生成1个稀有度奖励
             Item item = helper.CreateItemWithTagsWeighted(minQ, maxQ, null);
             if (item != null)
             {
@@ -257,9 +260,10 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             string sceneName = SceneManager.GetActiveScene().name;
             if (MapQualityCaps.TryGetValue(sceneName, out int cap))
             {
-                return Mathf.Clamp(cap, 1, 10);
+                int mapCap = Mathf.Clamp(cap, 1, 7);
+                return mapCap;
             }
-            return 10;
+            return 7;
         }
         
         public static void RegisterLootSourceLocalizations()
@@ -400,13 +404,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             AffixRarity.Legendary => 5f,
             _ => 1f
         };
-
-        private static bool IsQualityRange(EliteAffixes.RandomLootConfig config)
-        {
-            return config.MinCount >= 1 && config.MaxCount >= 1 &&
-                   config.MinCount <= 7 && config.MaxCount <= 7 &&
-                   config.MinCount <= config.MaxCount;
-        }
         
         private static Tag[] ParseTags(string[] tagNames)
         {
