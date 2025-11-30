@@ -130,13 +130,9 @@ namespace EliteEnemies.EliteEnemy.Core
             if (!cmc) return;
 
             AccumulateFromAffixes(affixes, out float hp, out float dmg, out float spd);
-            AttributeModifier.AttributeModifier.ApplyEliteMultipliers(
-                cmc,
-                healthMult: hp,
-                damageMult: dmg,
-                speedMult: spd,
-                healToFull: true
-            );
+            AttributeModifier.AttributeModifier.Quick.ModifyHealth(cmc, hp, healToFull: true);
+            AttributeModifier.AttributeModifier.Quick.ModifyDamage(cmc, dmg);
+            AttributeModifier.AttributeModifier.Quick.ModifySpeed(cmc, spd);
             TagAsElite(cmc, new List<string>(affixes), ResolveBaseName(cmc));
         }
 

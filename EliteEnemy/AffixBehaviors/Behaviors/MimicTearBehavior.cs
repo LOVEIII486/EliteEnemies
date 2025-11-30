@@ -7,6 +7,7 @@ using EliteEnemies.EliteEnemy.AttributeModifier;
 using UnityEngine;
 using ItemStatsSystem;
 using ItemStatsSystem.Items;
+using ItemStatsSystem.Stats; // 引用 ModifierType
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors
 {
@@ -87,7 +88,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             // 5 复制玩家模型
             CopyPlayerModel(enemy, CharacterMainControl.Main);
             
-            // 6 强化AI
+            // 6 强化AI (已修复)
             EnhanceAIBehavior(enemy);
                 
             // 7 死亡前清空掉落
@@ -108,12 +109,45 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             OnCleanup(character);
         }
 
+        /// <summary>
+        /// 全面强化 AI 行为 (修复版)
+        /// </summary>
+        private void EnhanceAIBehavior(CharacterMainControl enemy)
+        {
+            // --- 1. Stat 修改 (感知与属性) ---
+            // 使用 PercentageMultiply，数值为增量 (0.5 = +50%)
+            
+            // 视距 ViewDistance
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewDistance, 0.5f, ModifierType.PercentageMultiply); 
+            // 视角 ViewAngle
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewAngle, 0.3f, ModifierType.PercentageMultiply); 
+            // 听觉 HearingAbility
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.HearingAbility, 0.5f, ModifierType.PercentageMultiply);
+            
+            // 转身速度 (替代之前的 PatrolTurnSpeed/CombatTurnSpeed)
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.TurnSpeed, 0.3f, ModifierType.PercentageMultiply);
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.AimTurnSpeed, 0.5f, ModifierType.PercentageMultiply);
+
+            // --- 2. AI 字段修改 ---
+            // 修改纯逻辑字段，使用 ModifyImmediate
+            
+            // 允许移动射击 (布尔值，multiply=false)
+            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.ShootCanMove, 1f, false);
+            // 允许冲刺 (布尔值，multiply=false)
+            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.CanDash, 1f, false);
+            
+            // 巡逻与战斗范围 (倍率修改，multiply=true)
+            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.PatrolRange, 1.3f, true);
+            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.CombatMoveRange, 1.5f, true);
+            
+            // 遗忘时间 (倍率修改，0.6f 表示时间变短，更难脱战)
+            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.ForgetTime, 0.6f, true);
+        }
+
         private void CopyPlayerModel(CharacterMainControl enemy, CharacterMainControl player)
         {
-            // 1. 尝试初始化反射缓存
             InitializeReflection();
 
-            // 2. 如果检测到有 Mod，尝试复制
             bool customSuccess = false;
             if (_hasCustomModelMod)
             {
@@ -130,9 +164,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
         }
         
-        /// <summary>
-        /// 初始化反射缓存
-        /// </summary>
         private static void InitializeReflection()
         {
             if (_isReflectionInitialized) return;
@@ -140,34 +171,26 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
 
             try
             {
-                // 1. 获取 ModelHandler (位于 DuckovCustomModel.GameModules)
                 _modelHandlerType = Type.GetType("DuckovCustomModel.MonoBehaviours.ModelHandler, DuckovCustomModel.GameModules");
-
-                // 2. 获取 数据类 (位于 DuckovCustomModel.Core)
                 _bundleType = Type.GetType("DuckovCustomModel.Core.Data.ModelBundleInfo, DuckovCustomModel.Core");
                 _infoType = Type.GetType("DuckovCustomModel.Core.Data.ModelInfo, DuckovCustomModel.Core");
                 _targetEnumType = Type.GetType("DuckovCustomModel.Core.Data.ModelTarget, DuckovCustomModel.Core");
 
-                // 3. 检查缺失
                 if (_modelHandlerType == null || _bundleType == null || _infoType == null || _targetEnumType == null)
                 {
                     _hasCustomModelMod = false;
                     return;
                 }
 
-                // 4. 缓存字段
                 _bundleInfoField = _modelHandlerType.GetField("_currentModelBundleInfo", BindingFlags.NonPublic | BindingFlags.Instance);
                 _modelInfoField = _modelHandlerType.GetField("_currentModelInfo", BindingFlags.NonPublic | BindingFlags.Instance);
 
-                // 5. 缓存方法
                 _initMethod = _modelHandlerType.GetMethod("Initialize", new Type[] { typeof(CharacterMainControl), _targetEnumType });
                 _loadMethod = _modelHandlerType.GetMethod("InitializeCustomModel", new Type[] { _bundleType, _infoType });
                 _changeMethod = _modelHandlerType.GetMethod("ChangeToCustomModel");
 
-                // 6. 缓存枚举值 AICharacter
                 _aiTargetEnumValue = Enum.Parse(_targetEnumType, "AICharacter");;
 
-                // 7. 最终确认
                 if (_initMethod != null && _loadMethod != null && _changeMethod != null)
                 {
                     _hasCustomModelMod = true;
@@ -203,8 +226,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                         r.enabled = false;
                     }
                 }
-                
-                Debug.Log("[MimicTear] 已强制隐藏原版装备模型。");
             }
             catch (Exception ex)
             {
@@ -212,31 +233,24 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
         }
         
-        /// <summary>
-        /// 尝试通过反射复制自定义模型
-        /// </summary>
         private bool TryCopyCustomModel(CharacterMainControl enemy, CharacterMainControl player)
         {
             try
             {
-                // 1. 获取玩家组件
                 Component playerHandler = player.GetComponent(_modelHandlerType);
                 if (playerHandler == null) return false;
 
-                // 2. 获取数据
                 object bundleInfo = _bundleInfoField.GetValue(playerHandler);
                 object modelInfo = _modelInfoField.GetValue(playerHandler);
 
                 if (bundleInfo == null || modelInfo == null) return false;
 
-                // 3. 给敌人挂载组件
                 Component enemyHandler = enemy.GetComponent(_modelHandlerType);
                 if (enemyHandler == null)
                 {
                     enemyHandler = enemy.gameObject.AddComponent(_modelHandlerType);
                 }
 
-                // 4. 执行方法链
                 _initMethod.Invoke(enemyHandler, new object[] { enemy, _aiTargetEnumValue });
                 _loadMethod.Invoke(enemyHandler, new object[] { bundleInfo, modelInfo });
                 _changeMethod.Invoke(enemyHandler, null);
@@ -250,9 +264,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
         }
 
-        /// <summary>
-        /// 复制原版 Duckov 外观数据
-        /// </summary>
         private void CopyVanillaFace(CharacterMainControl enemy, CharacterMainControl player)
         {
             try
@@ -271,17 +282,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
         }
         
-        /// <summary>
-        /// 弹药补充方法
-        /// </summary>
         private void RefillAmmoIfNeeded(Item gunItem, ItemSetting_Gun gunComponent)
         {
             try
             {
-                // 先强制刷新弹药计数
                 int actualCount = gunComponent.GetBulletCount();
         
-                // 弹匣剩余子弹少于10发时补充
                 if (actualCount < 10)
                 {
                     int bulletTypeId = gunComponent.TargetBulletID;
@@ -294,8 +300,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                         newBullet.Inspected = true;
                         newBullet.StackCount = 100;
                         gunItem.Inventory.AddAndMerge(newBullet);
-                
-                        // 强制刷新内部缓存
                         ForceUpdateBulletCount(gunItem, gunComponent);
                     }
                 }
@@ -306,18 +310,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
         }
         
-        /// <summary>
-        /// 确保枪械有可用的子弹
-        /// </summary>
         private void EnsureGunHasBullet(Item gunItem, ItemSetting_Gun gunComponent, CharacterMainControl owner)
         {
             try
             {
-                // 检查枪械当前是否有子弹
                 Item currentBullet = gunComponent.GetCurrentLoadedBullet();
                 if (currentBullet != null)
                 {
-                    // 已有子弹，确保堆叠数量足够并刷新计数
                     if (currentBullet.StackCount < 100)
                     {
                         currentBullet.StackCount = 100;
@@ -326,7 +325,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                     return;
                 }
 
-                // 尝试从枪械预制体获取默认子弹
                 Item bulletToAdd = GetDefaultBulletForGun(gunItem);
                 if (bulletToAdd == null)
                 {
@@ -334,15 +332,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                     return;
                 }
 
-                // 添加子弹到枪械的 Inventory
                 bulletToAdd.Inspected = true;
                 bulletToAdd.StackCount = 100;
                 gunItem.Inventory.AddAndMerge(bulletToAdd);
-        
-                // 强制刷新计数
                 ForceUpdateBulletCount(gunItem, gunComponent);
-        
-                // 尝试重新装填
                 owner.TryToReload();
             }
             catch (Exception ex)
@@ -351,48 +344,26 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
         }
 
-        /// <summary>
-        /// 获取枪械的默认子弹
-        /// </summary>
         private Item GetDefaultBulletForGun(Item gunItem)
         {
             try
             {
-                // 从枪械预制体获取弹道信息
                 Item gunPrefab = ItemAssetsCollection.GetPrefab(gunItem.TypeID);
-                if (gunPrefab == null)
-                {
-                    Debug.LogWarning($"{LogTag} 无法获取枪械预制体: {gunItem.TypeID}");
-                    return null;
-                }
+                if (gunPrefab == null) return null;
 
                 ItemSetting_Gun gunSetting = gunPrefab.GetComponent<ItemSetting_Gun>();
-                if (gunSetting == null || gunSetting.bulletPfb == null)
-                {
-                    Debug.LogWarning($"{LogTag} 枪械预制体没有子弹信息");
-                    return null;
-                }
+                if (gunSetting == null || gunSetting.bulletPfb == null) return null;
 
-                // 获取子弹的 TypeID
                 int bulletTypeId = gunSetting.TargetBulletID;
-                
                 if (bulletTypeId <= 0)
                 {
-                    // 如果没有设置目标子弹，尝试从口径信息推断
-                    // 尝试使用一个通用的子弹ID
                     bulletTypeId = TryGetCommonBulletId(gunSetting);
                 }
 
-                if (bulletTypeId <= 0)
-                {
-                    return null;
-                }
+                if (bulletTypeId <= 0) return null;
                 
                 Item bulletItem = ItemAssetsCollection.InstantiateSync(bulletTypeId);
-                if (bulletItem != null)
-                {
-                    bulletItem.Initialize();
-                }
+                if (bulletItem != null) bulletItem.Initialize();
 
                 return bulletItem;
             }
@@ -403,62 +374,38 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
         }
 
-        /// <summary>
-        /// 尝试根据口径获取通用子弹ID
-        /// </summary>
         private int TryGetCommonBulletId(ItemSetting_Gun gunSetting)
         {
             try
             {
-                // 获取口径信息
                 int caliberHash = "Caliber".GetHashCode();
                 string caliber = gunSetting.Item.Constants.GetString(caliberHash);
 
-                if (string.IsNullOrEmpty(caliber))
-                {
-                    return -1;
-                }
+                if (string.IsNullOrEmpty(caliber)) return -1;
 
-                // 常见口径的子弹ID
                 var caliberToBulletId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
                 {
-                    { "S", 598 },
-                    { "AR", 607 },
-                    { "SHT", 634 },
-                    { "L", 616 },
-                    { "SNP", 701 },
-                    { "MAG", 709 },
-                    { "PWS", 1162 },
+                    { "S", 598 }, { "AR", 607 }, { "SHT", 634 }, { "L", 616 },
+                    { "SNP", 701 }, { "MAG", 709 }, { "PWS", 1162 },
                 };
 
-                if (caliberToBulletId.TryGetValue(caliber, out int bulletId))
-                {
-                    return bulletId;
-                }
+                if (caliberToBulletId.TryGetValue(caliber, out int bulletId)) return bulletId;
                 return -1;
             }
-            catch (Exception ex)
-            {
-                Debug.LogError($"{LogTag} 获取通用子弹ID失败: {ex.Message}");
-                return -1;
-            }
+            catch { return -1; }
         }
         
         private void ForceUpdateBulletCount(Item gunItem, ItemSetting_Gun gunComponent)
         {
             try
             {
-                // 1. 从 Inventory 重新计算实际子弹数量
                 int actualCount = gunComponent.GetBulletCount();
-        
-                // 2. 更新 Variables（界面显示用）
                 int bulletCountHash = "BulletCount".GetHashCode();
                 if (gunItem.Variables != null)
                 {
                     gunItem.Variables.SetInt(bulletCountHash, actualCount);
                 }
         
-                // 3. 更新内部缓存字段
                 var cacheField = gunComponent.GetType()
                     .GetField("_bulletCountCache", BindingFlags.NonPublic | BindingFlags.Instance);
                 if (cacheField != null)
@@ -471,54 +418,16 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 Debug.LogWarning($"{LogTag} 更新弹药计数失败: {ex.Message}");
             }
         }
-        
-        /// <summary>
-        /// 全面强化 AI 行为
-        /// </summary>
-        private void EnhanceAIBehavior(CharacterMainControl enemy)
-        {
-            var aiEnhancements = new Dictionary<string, float>
-            {
-                [AIFieldModifier.Fields.ReactionTime] = 0.15f,
-                [AIFieldModifier.Fields.ShootDelay] = 0.2f,
-                
-                [AIFieldModifier.Fields.ShootCanMove] = 1f,
-                [AIFieldModifier.Fields.CanDash] = 1f,
-                [AIFieldModifier.Fields.DefaultWeaponOut] = 1f,
-                
-                [AIFieldModifier.Fields.SightDistance] = 1.5f,
-                [AIFieldModifier.Fields.SightAngle] = 1.3f,
-                [AIFieldModifier.Fields.HearingAbility] = 1.5f,
-                [AIFieldModifier.Fields.ForceTracePlayerDistance] = 2f,
-                [AIFieldModifier.Fields.NightReactionTimeFactor] = 0.5f,
-                
-                [AIFieldModifier.Fields.PatrolRange] = 1.3f,
-                [AIFieldModifier.Fields.CombatMoveRange] = 1.5f,
-                [AIFieldModifier.Fields.ForgetTime] = 0.6f,
-                
-                [AIFieldModifier.Fields.PatrolTurnSpeed] = 1.3f,
-                [AIFieldModifier.Fields.CombatTurnSpeed] = 1.5f,
-                
-                [AIFieldModifier.Fields.ItemSkillChance] = 1.5f,
-                [AIFieldModifier.Fields.ItemSkillCoolTime] = 0.6f,
-            };
-
-            AIFieldModifier.ModifyDelayedBatch(enemy, aiEnhancements, multiply: true);
-        }
 
         private static void ClearWeaponSlots(CharacterMainControl c)
         {
             try
             {
-                // 依次销毁
                 string[] weaponSlots = new string[] { "PrimaryWeapon", "SecondaryWeapon", "MeleeWeapon" };
                 foreach (string sName in weaponSlots)
                 {
                     Item it = GetSlotItem(c, sName);
-                    if (it != null)
-                    {
-                        it.DestroyTree();
-                    }
+                    if (it != null) it.DestroyTree();
                 }
 
                 if (c.CharacterItem != null && c.CharacterItem.Inventory != null)
@@ -527,10 +436,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                     foreach (var it in c.CharacterItem.Inventory)
                         if (it != null && LooksLikeWeapon(it))
                             kill.Add(it);
-                    foreach (var it in kill)
-                    {
-                        it.DestroyTree();
-                    }
+                    foreach (var it in kill) it.DestroyTree();
                 }
             }
             catch (Exception ex)
@@ -548,15 +454,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                    n.Contains("weapon");
         }
 
-        private static Item CloneViaInstantiate(Item src, Vector3 pos, CharacterMainControl owner,
-            string targetTagForLog)
+        private static Item CloneViaInstantiate(Item src, Vector3 pos, CharacterMainControl owner, string targetTagForLog)
         {
             if (src == null || owner == null) return null;
 
             try
             {
-                GameObject go =
-                    UnityEngine.Object.Instantiate(src.gameObject, pos + Vector3.up * 0.05f, Quaternion.identity);
+                GameObject go = UnityEngine.Object.Instantiate(src.gameObject, pos + Vector3.up * 0.05f, Quaternion.identity);
                 Item clone = (go != null) ? go.GetComponent<Item>() : null;
                 if (clone == null) return null;
                 
@@ -597,11 +501,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 List<Item> buf = new List<Item>();
                 if (c.CharacterItem.Inventory != null)
                     foreach (Item it in c.CharacterItem.Inventory)
-                        if (it != null)
-                            buf.Add(it);
+                        if (it != null) buf.Add(it);
                 foreach (Slot s in c.CharacterItem.Slots)
-                    if (s != null && s.Content != null)
-                        buf.Add(s.Content);
+                    if (s != null && s.Content != null) buf.Add(s.Content);
                 foreach (Item it in buf)
                 {
                     it.DestroyTree();

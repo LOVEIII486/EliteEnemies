@@ -117,6 +117,8 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             public const string WalkAcc = "WalkAcc";
             public const string RunAcc = "RunAcc";
             public const string Moveability = "Moveability";
+            public const string TurnSpeed = "TurnSpeed";
+            public const string AimTurnSpeed = "AimTurnSpeed";
             
             // 射击
             public const string GunScatterMultiplier = "GunScatterMultiplier";

@@ -1,11 +1,10 @@
-﻿// InvisibilityBehavior.cs
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using EliteEnemies.EliteEnemy.AttributeModifier;
 using EliteEnemies.Localization;
 using UnityEngine;
+using ItemStatsSystem.Stats; // 必须引用，用于 ModifierType
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
@@ -16,7 +15,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
     {
         public override string AffixName => "Invisible";
         
-        private const char  MessageSeparator = '|';  // 本地化的分隔符
+        private const char MessageSeparator = '|';
         
         private static readonly float VisibleInterval = 6.0f;  // 每隔多少秒触发一次显形效果
         private static readonly float FlashInterval   = 0.15f; // 闪烁间隔（秒）
@@ -28,179 +27,173 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private bool _isFlashing;
         private bool _isVisible;
         private bool _isActive;
-        private bool _hasBeenHit; // 是否已被攻击过
+        private bool _hasBeenHit; 
         
         private List<string> _messages = new List<string>();
-        private int _lastMsgIndex = -1; // 避免连续重复
+        private int _lastMsgIndex = -1;
 
-        /// <summary>
-        /// 从聚合字符串初始化台词
-        /// </summary>
-        private void InitMessages(string raw, char separator = MessageSeparator)
-        {
-            if (string.IsNullOrWhiteSpace(raw))
-            {
-                _messages = new List<string> { "……" };
-                return;
-            }
-
-            _messages = raw
-                .Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => s.Trim())
-                .Where(s => s.Length > 0)
-                .ToList();
-
-            if (_messages.Count == 0)
-                _messages.Add("……");
-        }
-
-        /// <summary>
-        /// 从消息列表中随机取一句
-        /// </summary>
-        private string GetRandomMessage()
-        {
-            if (_messages == null || _messages.Count == 0) return "……";
-            int index;
-            do
-            {
-                index = UnityEngine.Random.Range(0, _messages.Count);
-            } while (_messages.Count > 1 && index == _lastMsgIndex);
-
-            _lastMsgIndex = index;
-            return _messages[index];
-        }
+        // 初始化本地化文本
+        private readonly Lazy<string> _msgString = new(() => 
+            LocalizationManager.GetText("Affix_Invisible_PopText_1", "你在打哪里？|我就在你后面|太慢了|没用的|看不见我吧"));
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
+            if (character == null) return;
+
+            // 分割并缓存嘲讽语句
+            var raw = _msgString.Value;
+            if (!string.IsNullOrEmpty(raw))
+            {
+                _messages = raw.Split(MessageSeparator).ToList();
+            }
+
             _isActive = true;
-            _isVisible = true;
-            _isFlashing = false;
+            _isVisible = true; // 初始默认可见
             _hasBeenHit = false;
             _timer = 0f;
-            _flashTimer = 0f;
-            _flashStep = 0;
             
-            character.Show();
-            
-            string raw = LocalizationManager.GetText("Affix_Invisible_Messages");
-            InitMessages(raw);
+            // 强化 AI 属性
             EnhanceAIBehavior(character);
+        }
+
+        /// <summary>
+        /// 强化 AI 能力 (修复版)
+        /// </summary>
+        private void EnhanceAIBehavior(CharacterMainControl enemy)
+        {
+            // --- 1. Stat 修改 (感知与属性) ---
+            // 视距 +50%
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewDistance, 0.5f, ModifierType.PercentageMultiply);
+            // 视角 +30%
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewAngle, 0.3f, ModifierType.PercentageMultiply);
+            // 听觉 +50%
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.HearingAbility, 0.5f, ModifierType.PercentageMultiply);
+            
+            // 转身速度 +30% (替代 PatrolTurnSpeed)
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.TurnSpeed, 0.3f, ModifierType.PercentageMultiply);
+            // 瞄准转身 +50% (替代 CombatTurnSpeed)
+            StatModifier.AddModifier(enemy, StatModifier.Attributes.AimTurnSpeed, 0.5f, ModifierType.PercentageMultiply);
+
+            // --- 2. AI 字段修改 ---
+            // 允许移动射击
+            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.ShootCanMove, 1f, false);
+            // 允许冲刺
+            AIFieldModifier.ModifyImmediate(enemy, AIFieldModifier.Fields.CanDash, 1f, false);
+            
+            // 注意：ReactionTime, ShootDelay, NightReactionTimeFactor 已被移除，因为新框架不支持修改这些非标准字段
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
         {
-            if (!_hasBeenHit)
+            // 攻击时显形一小段时间，或者你可以选择不处理
+        }
+
+        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        {
+            // 命中玩家时也可以触发嘲讽
+            if (attacker != null && _messages.Count > 0 && UnityEngine.Random.value < 0.3f)
             {
-                _hasBeenHit = true;
-                character.Hide();
-                _isVisible = false;
-                _timer = 0f; // 重置计时器，开始周期循环
-                
-                character.PopText(GetRandomMessage());
+                ShowRandomMessage(attacker);
             }
         }
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
-            // 首次受伤时立即隐身并开始计时
+            // 首次受击触发隐身
             if (!_hasBeenHit)
             {
                 _hasBeenHit = true;
-                character.Hide();
+                _timer = VisibleInterval; // 立即进入隐身倒计时循环
                 _isVisible = false;
-                _timer = 0f; // 重置计时器，开始周期循环
-                
-                character.PopText(GetRandomMessage());
+                character.Hide();
             }
-        }
-
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
-        {
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
             if (!_isActive || !_hasBeenHit) return;
 
-            _timer += deltaTime;
-
-            if (!_isFlashing && _timer >= VisibleInterval)
-            {
-                _isFlashing = true;
-                _flashTimer = 0f;
-                _timer = 0f;
-                character.PopText(GetRandomMessage());
-            }
-
-            bool shouldBeVisible = false;
-
+            // 1. 处理闪烁 (Flashing)
             if (_isFlashing)
             {
-                _flashTimer += deltaTime;
-        
-                float totalFlashDuration = FlashCount * 2 * FlashInterval;
+                _flashTimer -= deltaTime;
+                if (_flashTimer <= 0f)
+                {
+                    _flashTimer = FlashInterval;
+                    _flashStep--;
 
-                if (_flashTimer >= totalFlashDuration)
-                {
-                    _isFlashing = false;
-                    shouldBeVisible = false; // 结束时必须隐身
+                    if (_flashStep <= 0)
+                    {
+                        // 闪烁结束 -> 彻底隐身
+                        _isFlashing = false;
+                        _isVisible = false;
+                        character.Hide();
+                        _timer = VisibleInterval; // 重置显形倒计时
+                    }
+                    else
+                    {
+                        // 切换显隐状态
+                        if (_isVisible)
+                        {
+                            character.Hide();
+                            _isVisible = false;
+                        }
+                        else
+                        {
+                            character.Show();
+                            _isVisible = true;
+                        }
+                    }
                 }
-                else
-                {
-                    int step = Mathf.FloorToInt(_flashTimer / FlashInterval);
-                    shouldBeVisible = (step % 2 == 0); 
-                }
+                return;
             }
 
-    
-            if (shouldBeVisible)
+            // 2. 处理周期性显形逻辑
+            _timer -= deltaTime;
+            if (_timer <= 0f)
             {
-                if (!_isVisible)
-                {
-                    character.Show();
-                    _isVisible = true;
-                }
+                // 倒计时结束，开始闪烁显形
+                _isFlashing = true;
+                _flashStep = FlashCount * 2; // 开+关算一次，所以乘2
+                _flashTimer = FlashInterval;
+                
+                // 嘲讽
+                ShowRandomMessage(character);
             }
-            else
+        }
+
+        private void ShowRandomMessage(CharacterMainControl character)
+        {
+            if (_messages.Count == 0) return;
+
+            int idx = UnityEngine.Random.Range(0, _messages.Count);
+            if (idx == _lastMsgIndex && _messages.Count > 1)
             {
-                character.Hide();
-                _isVisible = false;
+                idx = (idx + 1) % _messages.Count;
             }
+            _lastMsgIndex = idx;
+            
+            character.PopText(_messages[idx]);
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {
-            character.Show();
+            OnCleanup(character);
         }
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            character.Show();
+            if (character != null)
+            {
+                character.Show(); // 确保死后或移除时可见
+            }
+            
             _isActive = false;
-            _isVisible = false;
+            _isVisible = true;
             _isFlashing = false;
             _hasBeenHit = false;
             _lastMsgIndex = -1;
-            _messages.Clear();
-        }
-        
-        private void EnhanceAIBehavior(CharacterMainControl enemy)
-        {
-            var aiEnhancements = new Dictionary<string, float>
-            {
-                [AIFieldModifier.Fields.ReactionTime] = 0.15f,
-                [AIFieldModifier.Fields.ShootDelay] = 0.2f,
-                [AIFieldModifier.Fields.ShootCanMove] = 1f,
-                [AIFieldModifier.Fields.CanDash] = 1f,
-                [AIFieldModifier.Fields.SightDistance] = 1.5f,
-                [AIFieldModifier.Fields.SightAngle] = 1.3f,
-                [AIFieldModifier.Fields.HearingAbility] = 1.5f,
-                [AIFieldModifier.Fields.NightReactionTimeFactor] = 0.5f,
-                [AIFieldModifier.Fields.PatrolTurnSpeed] = 1.3f,
-                [AIFieldModifier.Fields.CombatTurnSpeed] = 1.5f
-            };
- 
-            AIFieldModifier.ModifyDelayedBatch(enemy, aiEnhancements, multiply: true);
+            // _messages.Clear(); // 缓存的文本可以保留，无需清空
         }
     }
 }

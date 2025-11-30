@@ -34,6 +34,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private float _lastTriggerTime = -999f;   // 上次触发时间
         private HardeningState _currentState = HardeningState.Accumulating;
         private float _stateTimer = 0f;           // 状态计时器
+        private ItemStatsSystem.Stats.Modifier _hardeningModifier;
 
 
         private readonly Lazy<string> _hardeningPopTextFmt =
@@ -104,7 +105,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             if (reductionGain > 0.001f)
             {
-                ApplyPhysicsFactorChange(character, 1f - reductionGain);
+                ApplyPhysicsFactorChange(character);
                 
                 _accumulatedReduction += reductionGain;
                 _lastTriggerTime = currentTime;
@@ -134,11 +135,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             if (_accumulatedReduction > 0)
             {
-                // 还原数值
-                // 原理: Current = Base * (1 - accumulated)
-                // 还原: Target = Current / (1 - accumulated)
-                float reverseMultiplier = 1f / (1f - _accumulatedReduction);
-                ApplyPhysicsFactorChange(character, reverseMultiplier);
+                ApplyPhysicsFactorChange(character);
             }
 
             _currentState = HardeningState.Weakened;
@@ -167,36 +164,35 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            if (_accumulatedReduction > 0.001f)
+            // 修复：直接移除修改器，而不是通过反向乘法计算还原
+            if (_hardeningModifier != null)
             {
-                float reverseMultiplier = 1f / (1f - _accumulatedReduction);
-                ApplyPhysicsFactorChange(character, reverseMultiplier);
+                StatModifier.RemoveModifier(character, StatModifier.Attributes.ElementFactor_Physics, _hardeningModifier);
+                _hardeningModifier = null;
             }
             
             ResetState();
         }
 
         // 辅助方法：修改物理抗性
-        private void ApplyPhysicsFactorChange(CharacterMainControl character, float multiplier)
+        private void ApplyPhysicsFactorChange(CharacterMainControl character)
         {
-            float currentFactor = GetCurrentPhysicsFactor(character);
-            float newFactor = currentFactor * multiplier;
-            StatModifier.Set(character, StatModifier.Attributes.ElementFactor_Physics, newFactor);
-        }
-
-        private float GetCurrentPhysicsFactor(CharacterMainControl character)
-        {
-            if (character?.CharacterItem == null)
-                return 1f;
-
-            try
+            // 1. 先移除旧的修改器
+            if (_hardeningModifier != null)
             {
-                var stat = character.CharacterItem.GetStat(StatModifier.Attributes.ElementFactor_Physics);
-                return stat?.Value ?? 1f;
+                StatModifier.RemoveModifier(character, StatModifier.Attributes.ElementFactor_Physics, _hardeningModifier);
+                _hardeningModifier = null;
             }
-            catch
+
+            // 2. 根据当前的减伤总层数，添加新的修改器
+            if (_accumulatedReduction > 0.001f)
             {
-                return 1f;
+                _hardeningModifier = StatModifier.AddModifier(
+                    character, 
+                    StatModifier.Attributes.ElementFactor_Physics, 
+                    -_accumulatedReduction, 
+                    ItemStatsSystem.Stats.ModifierType.PercentageMultiply
+                );
             }
         }
 

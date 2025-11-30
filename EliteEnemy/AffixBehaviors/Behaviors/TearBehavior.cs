@@ -29,7 +29,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _sharedBuff = EliteBuffFactory.GetOrCreateSharedBuff(BuffConfig);
             if (!_hasCheckStatsSelf)
             {
-                StatModifier.DebugCheckAllStats(character);
                 _hasCheckStatsSelf = true;
             }
         }
@@ -38,14 +37,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
         {
             EliteBuffFactory.TryAddBuffToPlayer(_sharedBuff, attacker);
-            // 【调试代码】只在第一次生成带撕裂词缀的怪时运行自检
-            if (!_hasCheckStats)
-            {
-                // 这里传入 character 或者 CharacterMainControl.Main 都可以
-                // 建议传入 character (精英怪自己)，因为怪物的属性表通常和玩家是一样的结构
-                StatModifier.DebugCheckAllStats(CharacterMainControl.Main);
-                _hasCheckStats = true;
-            }
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
