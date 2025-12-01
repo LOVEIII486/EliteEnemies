@@ -23,11 +23,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         
         private static readonly float MinDamageReduction = 0.05f; // 单次最小减伤 5%
         private static readonly float MaxDamageReduction = 0.15f; // 单次最大减伤 15%
-        private static readonly float MaxTotalReduction = 0.60f;  // 总减伤上限 60%
+        private static readonly float MaxTotalReduction = 0.5f;  // 总减伤上限 50%
         private static readonly float TriggerCooldown = 0.5f;     // 触发CD
         
         private static readonly float DurationMaxHardened = 20f;  // 满层持续时间
         private static readonly float DurationWeakened = 10f;     // 疲软持续时间
+        
+        private static readonly float MinPhysicsFactorLimit = 0.01f;
         
         private HardeningState _currentState = HardeningState.Accumulating;
         private float _accumulatedReduction = 0f;
@@ -159,14 +161,31 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private void ApplyPhysicsFactorChange(CharacterMainControl character)
         {
             RemoveHardeningModifier(character);
+
+            if (_accumulatedReduction <= 0.001f) { return; }
             
-            // 在 StatModifier 系统中，AddModifier(PercentageMultiply, -0.6) 意味着 Base * (1 - 0.6)
-            if (_accumulatedReduction > 0.001f)
+            if (character.CharacterItem == null) return;
+            var physicsStat = character.CharacterItem.GetStat(StatModifier.Attributes.ElementFactor_Physics);
+            
+            if (physicsStat == null)
+            {
+                return;
+            }
+            
+            float currentFactor = physicsStat.Value;
+            float maxAllowedReduction = currentFactor - MinPhysicsFactorLimit;
+
+            // 如果当前系数已经很低，则不允许再减
+            if (maxAllowedReduction < 0f) { maxAllowedReduction = 0f; }
+            
+            float finalReduction = Mathf.Min(_accumulatedReduction, maxAllowedReduction);
+
+            if (finalReduction > 0.001f)
             {
                 _hardeningModifier = StatModifier.AddModifier(
                     character, 
                     StatModifier.Attributes.ElementFactor_Physics, 
-                    -_accumulatedReduction, // 负数表示减少系数
+                    -finalReduction, // 负数表示减少系数
                     ModifierType.PercentageMultiply
                 );
             }
