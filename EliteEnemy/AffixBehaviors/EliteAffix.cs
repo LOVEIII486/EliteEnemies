@@ -568,8 +568,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             {
                 Name = LocalizationManager.GetText("Affix_Obscurer_Name"),
                 Description = LocalizationManager.GetText("Affix_Obscurer_Description"),
-                HealthMultiplier = 1.5f,
-                DamageMultiplier = 1.2f,
+                HealthMultiplier = 1.1f,
+                DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.1f,
                 Rarity = AffixRarity.Legendary
             }.WithRandomLoot(-1, 1, 1f, new[] { "MiniGame" })

@@ -153,7 +153,14 @@ namespace EliteEnemies.EliteEnemy.Core
 
             // 2. 常规随机选择
             var selected = new List<string>();
+            // 额外添加一个彩蛋怪的判断
+            if (cmc?.characterPreset?.nameKey == "Enemy_Custom_Love486")
+            {
+                selected.Add("Obscurer");
+            }
             var currentAvailable = new List<string>(basePool); 
+            currentAvailable.RemoveAll(a => selected.Contains(a));
+            
             int targetCount = Mathf.Clamp(SelectWeightedAffixCount(maxCount), 1, currentAvailable.Count);
 
             // 执行常规选择

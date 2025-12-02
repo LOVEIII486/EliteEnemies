@@ -40,8 +40,9 @@ namespace EliteEnemies.EliteEnemy.Core
                 bool isBoss = EliteEnemyCore.BossPresets.Contains(presetName);
                 bool isMerchant = EliteEnemyCore.MerchantPresets.Contains(presetName);
                 bool isNormal = EliteEnemyCore.IsEligiblePreset(presetName);
-
-                if (!isBoss && !isMerchant && !isNormal)
+                bool isLove486 = presetName == "Enemy_Custom_Love486";
+                
+                if (!isBoss && !isMerchant && !isNormal && !isLove486)
                 {
                     if (EliteEnemyCore.TryAutoRegisterExternalPreset(presetName))
                     {
@@ -50,7 +51,9 @@ namespace EliteEnemies.EliteEnemy.Core
                 }
 
                 float chance = 0f;
-                if (isBoss)
+                if (isLove486) 
+                    chance = 1.0f;
+                else if (isBoss)
                     chance = Mathf.Clamp01(EliteEnemyCore.Config.BossEliteChance);
                 else if (isMerchant)
                     chance = Mathf.Clamp01(EliteEnemyCore.Config.MerchantEliteChance);
