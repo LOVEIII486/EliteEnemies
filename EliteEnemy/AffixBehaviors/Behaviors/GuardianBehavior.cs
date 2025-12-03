@@ -16,14 +16,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override string AffixName => "Guardian";
         
         private static readonly float OrbitRadius = 2.0f;
-        private static readonly float RotationSpeed = 180f;
+        private static readonly float RotationSpeed = 160f;
         private static readonly float CloneDelay = 0.5f;
         
-        private static readonly float PartnerHealthRatio = 0.6f;
+        private static readonly float PartnerHealthRatio = 0.5f;
         private static readonly float PartnerDamageRatio = 0.5f;
         private static readonly float PartnerScaleRatio = 0.7f;
 
-        private static readonly int MaxInvincibleHits = 50; 
+        private static readonly int MaxInvincibleHits = 30; 
 
         private static readonly float MaxSeparationDeviation = 8.0f; 
         private static readonly float MaxSeparationTime = 3.0f;      
