@@ -20,7 +20,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         /// 100	3	精良	捕兽陷阱	Item_Trap
         /// 23	1	普通	管状炸弹	Item_Dynamite
         /// </summary>
-        private static readonly int[] GrenadePool = { 66, 67, 933, 941, 942, 24, 23 };
+        private static readonly int[] GrenadePool = { 66, 67, 933, 941, 942 };
 
         private static readonly float HitCooldown = 3.0f;     // 命中玩家触发CD
         private static readonly float DamageCooldown = 12.0f;  // 受伤反击触发CD
