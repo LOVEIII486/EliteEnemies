@@ -1,5 +1,6 @@
 ﻿using Duckov.Buffs;
 using EliteEnemies.EliteEnemy.BuffsSystem;
+using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
@@ -13,6 +14,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly string BuffName = "EliteBuff_Slippery";
         private static readonly int BuffId = 99908; 
         private static readonly float BuffDuration = 5f;
+        
+        private const float InternalCooldown = 15f;
+        private float _lastTriggerTime = -999f;
 
         private static readonly EliteBuffFactory.BuffConfig BuffConfig = 
             new (BuffName, BuffId, BuffDuration);
@@ -22,11 +26,17 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             _sharedBuff = EliteBuffFactory.GetOrCreateSharedBuff(BuffConfig);
+            _lastTriggerTime = -999f;
         }
 
         public override void OnHitPlayer(CharacterMainControl player, DamageInfo damageInfo)
         {
+            if (Time.time < _lastTriggerTime + InternalCooldown)
+            {
+                return;
+            }
             EliteBuffFactory.TryAddBuffToPlayer(_sharedBuff, player);
+            _lastTriggerTime = Time.time;
         }
         
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
