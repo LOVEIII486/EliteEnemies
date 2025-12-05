@@ -12,19 +12,19 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override string AffixName => "Slime";
 
         // ===== 体型与属性配置 =====
-        private static readonly float InitialScale       = 3.5f;   // 初始体型倍率
-        private static readonly float MinScale           = 0.5f; // 最小体型倍率
-        private static readonly float InitialHealthMult  = 3.5f;   // 初始血量倍率
-        private static readonly float InitialDamageMult  = 0.65f; // 初始伤害倍率
-        private static readonly float MaxDamageMult      = 1.6f; // 最大伤害倍率
-        private static readonly float HealthThreshold    = 0.05f; // 血量变化达到 5% 才更新
+        private static readonly float InitialScale = 3.5f; // 初始体型倍率
+        private static readonly float MinScale = 0.5f; // 最小体型倍率
+        private static readonly float InitialHealthMult = 3.5f; // 初始血量倍率
+        private static readonly float InitialDamageMult = 0.65f; // 初始伤害倍率
+        private static readonly float MaxDamageMult = 1.6f; // 最大伤害倍率
+        private static readonly float HealthThreshold = 0.05f; // 血量变化达到 5% 才更新
 
         // ===== 跳跃相关配置 =====
-        private static readonly float JumpIntervalMin    = 0.5f;  // 最小跳跃间隔
-        private static readonly float JumpIntervalMax    = 1.5f;  // 最大跳跃间隔
-        private static readonly float JumpForce          = 5f;    // 跳跃力度
-        private static readonly float GroundPause        = 0.3f;  // 地面约束暂停时间
-        private static readonly float MaxJumpHeightCheck = 5f;    // 跳跃前检测上方空间高度
+        private static readonly float JumpIntervalMin = 0.5f; // 最小跳跃间隔
+        private static readonly float JumpIntervalMax = 1.5f; // 最大跳跃间隔
+        private static readonly float JumpForce = 5f; // 跳跃力度
+        private static readonly float GroundPause = 0.3f; // 地面约束暂停时间
+        private static readonly float MaxJumpHeightCheck = 5f; // 跳跃前检测上方空间高度
 
         private CharacterMainControl _character;
         private Health _health;
@@ -37,31 +37,31 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private float _lastHealthPercent = 1f;
         private float _nextJumpTime;
-        private float _currentDamageMultiplier = 1f; // 记录当前已应用的伤害倍率（用于差值更新）
+        private float _currentDamageMultiplier = 1f; // 记录当前已应用的伤害倍率
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             if (character == null) return;
 
             _character = character;
-            _health    = character.Health;
+            _health = character.Health;
 
             if (_health == null)
             {
                 Debug.LogError("[SlimeBehavior] 找不到 Health 组件");
                 return;
             }
-            
+
             if (character.movementControl != null)
             {
                 _movement = character.movementControl.GetComponent<CharacterMovement>();
             }
 
             // 记录原始体型 & 位置
-            _originalScale      = character.transform.localScale;
-            _lastValidPosition  = character.transform.position;
+            _originalScale = character.transform.localScale;
+            _lastValidPosition = character.transform.position;
             _lastGroundedPosition = character.transform.position;
-            _hasGroundedPosition  = true;
+            _hasGroundedPosition = true;
 
             // 初始放大体型
             character.transform.localScale = _originalScale * InitialScale;
@@ -70,8 +70,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             ApplyInitialStats(character);
 
             // 初始化状态
-            _lastHealthPercent       = 1f;
-            _nextJumpTime            = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
+            _lastHealthPercent = 1f;
+            _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
             // _currentDamageMultiplier 已在 ApplyInitialStats 中设置为 InitialDamageMult
         }
 
@@ -126,18 +126,18 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             {
                 _lastValidPosition = currentPos;
             }
-            
+
             float currentHealthPercent = _health.CurrentHealth / _health.MaxHealth;
             if (Mathf.Abs(currentHealthPercent - _lastHealthPercent) >= HealthThreshold)
             {
                 UpdateScaleAndDamage(character, currentHealthPercent);
                 _lastHealthPercent = currentHealthPercent;
             }
-            
+
             if (Time.time >= _nextJumpTime && CanSafelyJump())
             {
                 _lastGroundedPosition = character.transform.position;
-                _hasGroundedPosition  = true;
+                _hasGroundedPosition = true;
 
                 PerformJump();
                 _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
@@ -149,12 +149,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         /// </summary>
         private void UpdateScaleAndDamage(CharacterMainControl character, float healthPercent)
         {
-            // 血量从 100% → 0% ：
-            // 体型从 InitialScale → MinScale
-            // 伤害从 InitialDamageMult → MaxDamageMult
-            float t = 1f - healthPercent;  // 血量越低 t 越大（0→1）
+            float t = 1f - healthPercent;
 
-            float newScale          = Mathf.Lerp(InitialScale, MinScale, t);
+            float newScale = Mathf.Lerp(InitialScale, MinScale, t);
             float newDamageMultiplier = Mathf.Lerp(InitialDamageMult, MaxDamageMult, t);
 
             // 应用体型
@@ -193,8 +190,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
 
             // 检查周围是否过于狭窄
-            float   checkRadius      = 2f;
-            var     nearbyColliders  = Physics.OverlapSphere(_character.transform.position, checkRadius,
+            float checkRadius = 2f;
+            var nearbyColliders = Physics.OverlapSphere(_character.transform.position, checkRadius,
                 LayerMask.GetMask("Default", "Terrain"));
 
             if (nearbyColliders.Length > 5)
@@ -210,77 +207,60 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             if (_movement == null || _character == null) return;
 
-            try
-            {
-                // 暂停地面约束
-                _movement.PauseGroundConstraint(GroundPause);
 
-                // 设置向上速度
-                Vector3 velocity = _movement.velocity;
-                velocity.y       = JumpForce;
-                _movement.velocity = velocity;
-
-                // Debug.Log($"[SlimeBehavior] {_character.name} 跳跃!");
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[SlimeBehavior] 跳跃失败: {ex.Message}");
-            }
+            _movement.PauseGroundConstraint(GroundPause);
+            Vector3 velocity = _movement.velocity;
+            velocity.y = JumpForce;
+            _movement.velocity = velocity;
         }
 
         /// <summary>
-        /// 尝试在精英死亡时把位置拉回到地面，避免尸体悬空/跌落
+        /// 避免尸体悬空
         /// </summary>
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {
             if (character == null) return;
-
-            try
+            if (_originalScale != Vector3.zero)
             {
-                Vector3    pos = character.transform.position;
-                RaycastHit hit;
-
-                // 用射线往下找到地面
-                if (Physics.Raycast(pos + Vector3.up, Vector3.down, out hit, 50f,
-                        LayerMask.GetMask("Default", "Terrain")))
-                {
-                    character.transform.position = hit.point;
-                }
-                // 否则退回到最后一次记录的落地点
-                else if (_hasGroundedPosition)
-                {
-                    character.transform.position = _lastGroundedPosition;
-                }
+                character.transform.localScale = _originalScale;
             }
-            catch (Exception ex)
+
+            var rb = character.GetComponent<Rigidbody>();
+            if (rb != null)
             {
-                Debug.LogError($"[SlimeBehavior] OnEliteDeath 复位到地面失败: {ex.Message}");
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
+
+            Vector3 pos = character.transform.position;
+            Vector3 rayOrigin = pos + Vector3.up * 5.0f;
+
+            RaycastHit hit;
+            if (Physics.Raycast(rayOrigin, Vector3.down, out hit, 100f,
+                    LayerMask.GetMask("Default", "Terrain"), QueryTriggerInteraction.Ignore))
+            {
+                character.transform.position = hit.point;
+                // character.transform.position = hit.point + Vector3.up * 0.1f; 
+            }
+            else if (_hasGroundedPosition)
+            {
+                character.transform.position = _lastGroundedPosition;
             }
         }
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            // 注意：当前整体框架（包括 Giant/Mini）在清理时都不还原 Stat，
-            // 因为敌人本身通常会被销毁，对象不会复用。
-            // 这里仅恢复体型，并清空引用，避免潜在的复用问题。
-            try
+            if (character != null && _originalScale != Vector3.zero)
             {
-                if (character != null && _originalScale != Vector3.zero)
-                {
-                    character.transform.localScale = _originalScale;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[SlimeBehavior] OnCleanup 重置体型失败: {ex.Message}");
+                character.transform.localScale = _originalScale;
             }
 
-            _character               = null;
-            _health                  = null;
-            _movement                = null;
-            _lastHealthPercent       = 1f;
+            _character = null;
+            _health = null;
+            _movement = null;
+            _lastHealthPercent = 1f;
             _currentDamageMultiplier = 1f;
-            _hasGroundedPosition     = false;
+            _hasGroundedPosition = false;
         }
     }
 }
