@@ -123,13 +123,24 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         /// </summary>
         private static void ProcessFixedLoot(InteractableLootbox lootbox, List<string> affixes, float enemyPenalty)
         {
+            var helper = GetLootItemHelper();
             var lootGroups = EliteAffixes.GetLootGroupsForAffixes(affixes);
+            
             foreach (var group in lootGroups)
             {
                 if (group == null || group.Count == 0) continue;
 
                 var pick = group[UnityEngine.Random.Range(0, group.Count)];
                 if (pick == null) continue;
+
+                if (helper != null)
+                {
+                    if (!helper.IsItemWhitelisted(pick.ItemID))
+                    {
+                        Debug.LogWarning($"{LogTag} 固定掉落 {pick.ItemID} 因在黑名单中被拦截");
+                        continue;
+                    }
+                }
 
                 float finalChance = CalculateFinalChance(pick.DropChance, enemyPenalty);
 

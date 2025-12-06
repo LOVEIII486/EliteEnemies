@@ -203,7 +203,16 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         }
 
         // ========== 查询接口  ==========
-
+        
+        /// <summary>
+        /// 检查物品ID是否在白名单缓存中
+        /// </summary>
+        public bool IsItemWhitelisted(int itemId)
+        {
+            if (!_isInitialized) return false;
+            return _itemTagCache.ContainsKey(itemId);
+        }
+        
         private bool ItemHasAllTags(int itemId, Tag[] requiredTags)
         {
             if (requiredTags == null || requiredTags.Length == 0)

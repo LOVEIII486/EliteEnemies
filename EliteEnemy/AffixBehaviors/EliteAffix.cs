@@ -393,6 +393,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }.WithLootGroup(
                 new LootEntry(51, 1, 1, 1f), // 钟
                 new LootEntry(83, 1, 1, 1f) // 紫色怀表
+                //new LootEntry(385, 1, 1, 1f) // 怀表 任务物品
             ),
             ["MagazineCurse"] = new AffixData
             {
