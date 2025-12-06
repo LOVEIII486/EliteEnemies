@@ -28,15 +28,24 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         private Dictionary<int, List<int>> _qualityItemCache = new Dictionary<int, List<int>>();
         // 存储物品ID对应的标签集合，避免运行时实例化查询
         private Dictionary<int, HashSet<string>> _itemTagCache = new Dictionary<int, HashSet<string>>();
-        
-        // 标记是否初始化完成
+
         private bool _isInitialized = false;
 
         // ========== 黑名单配置 ==========
+        
+        private readonly HashSet<int> _idBlacklist = new HashSet<int>
+        {
+            1158, // 水族箱
+            397, // 比特币矿机
+            769, // 蛋清能源碎片
+            913, // 口口头盔
+            910, // 口口防弹衣
+            1151, // 防空系统密钥
+        };
+        
         private readonly string[] _nameDescriptionBlacklist =
         {
-            "Item_", "Quest_", "BP_", "水族箱", "比特币矿机", "蛋清能源碎片",
-            "口口头盔", "口口防弹衣", "防空系统密钥"
+            "Item_", "Quest_", "BP_"
         };
 
         private readonly string[] _tagBlacklist =
@@ -138,6 +147,12 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         /// </summary>
         private bool ProcessItemAndCacheTags(int itemId)
         {
+            // 1. 优先检查 ID 黑名单
+            if (_idBlacklist.Contains(itemId))
+            {
+                return false;
+            }
+
             Item item = null;
             try
             {
@@ -147,7 +162,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 
                 item.Initialize();
 
-                // 1. 检查名称和描述黑名单
+                // 2. 检查名称和描述黑名单 (仅检查通用前缀)
                 string name = item.DisplayName ?? "";
                 string desc = item.Description ?? "";
                 
@@ -161,7 +176,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                     }
                 }
 
-                // 2. 提取标签 & 检查标签黑名单
+                // 3. 提取标签 & 检查标签黑名单
                 HashSet<string> currentTags = new HashSet<string>();
                 bool isTagBlacklisted = false;
 
@@ -203,16 +218,16 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         }
 
         // ========== 查询接口  ==========
-        
+
         /// <summary>
-        /// 检查物品ID是否在白名单缓存中
+        /// 检查物品ID是否在白名单缓存中（通过了黑名单检查且初始化完成）
         /// </summary>
         public bool IsItemWhitelisted(int itemId)
         {
-            if (!_isInitialized) return false;
+            if (!_isInitialized) return false; 
             return _itemTagCache.ContainsKey(itemId);
         }
-        
+
         private bool ItemHasAllTags(int itemId, Tag[] requiredTags)
         {
             if (requiredTags == null || requiredTags.Length == 0)
