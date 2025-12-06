@@ -19,7 +19,7 @@ namespace EliteEnemies
         public static LootItemHelper LootHelper => Instance?._lootItemHelper;
         
         private const string LogTag = "[EliteEnemies]";
-        private const bool EnableDevSpawn = false;
+        private const bool EnableDebugTool = false;
         
         private Harmony _harmony;
         
@@ -28,6 +28,7 @@ namespace EliteEnemies
         private GameObject _eggSpawnHelperObject;
         
         private GameObject _spawnHelperObject;
+        private GameObject _debugToolObject;
         
         private bool _isPatched = false;
         private bool _settingsInitialized = false;
@@ -45,10 +46,12 @@ namespace EliteEnemies
             InitializeLootHelper();
             InitializeEggSpawnHelper();
             
-            if (EnableDevSpawn)
+            if (EnableDebugTool)
             {
                 InitializeSpawnHelper();
+                InitializeDebugTools();
             }
+            
             ModManager.OnModActivated += OnModActivated;
         }
 
@@ -64,7 +67,11 @@ namespace EliteEnemies
             CleanupLootHelper();
             CleanupEggSpawnHelper();
             
-            CleanupSpawnHelper();
+            if (EnableDebugTool)
+            {
+                CleanupSpawnHelper();
+                CleanupDebugTools();
+            }
             
             _settingsInitialized = false;
         }
@@ -148,6 +155,16 @@ namespace EliteEnemies
             DontDestroyOnLoad(_eggSpawnHelperObject);
             Debug.Log($"{LogTag}  EggSpawnHelper 已初始化");
         }
+        
+        private void InitializeDebugTools()
+        {
+            if (_debugToolObject != null) return;
+
+            _debugToolObject = new GameObject("EliteEnemies_DebugTools");
+            _debugToolObject.AddComponent<EliteEnemies.DebugTool.LootCacheDumper>();
+            DontDestroyOnLoad(_debugToolObject);
+            Debug.Log($"{LogTag} 调试工具已初始化 (F10 导出掉落信息)");
+        }
 
         private void InitializeSettings()
         {
@@ -221,6 +238,15 @@ namespace EliteEnemies
             Destroy(_eggSpawnHelperObject);
             _eggSpawnHelperObject = null;
             Debug.Log($"{LogTag}  EggSpawnHelper 已清理");
+        }
+        
+        
+        private void CleanupDebugTools()
+        {
+            if (_debugToolObject == null) return;
+            Destroy(_debugToolObject);
+            _debugToolObject = null;
+            Debug.Log($"{LogTag} 调试工具已清理");
         }
 
         private void CleanupLocalization()
