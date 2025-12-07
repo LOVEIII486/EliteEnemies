@@ -149,3 +149,6 @@ Buff_EliteBuff_Slippery_Name,Slippery,2.3,BuffNames
 Affix_Slippery_PopText_1,<color=#7FE8FF>So slippery~~~</color>,2.3,AffixBehavior
 Affix_Locksmith_Name,Locksmith,2.3,AffixNames
 Affix_Locksmith_Description,Drops a random key upon death.,2.3,AffixDescription
+Affix_Overload_Name,Overload,2.3,AffixNames
+Affix_Overload_Description,"After taking damage, enters an overload state that greatly extends continuous firing duration",2.3,AffixDescription
+Affix_Overload_PopText,<color=#FF4500>WEAPON OVERLOAD!!!</color>,2.3,AffixBehavior

@@ -646,6 +646,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Legendary
             }.WithRandomLoot(-1, 1, 1f, new[] { "Key" }),
+            ["Overload"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Overload_Name"),
+                Description = LocalizationManager.GetText("Affix_Overload_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                Rarity = AffixRarity.Uncommon
+            }.WithRandomLootRange(3, 4, 2, 0.7f, new[] { "Bullet" }),
         };
 
 

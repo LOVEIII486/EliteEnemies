@@ -149,3 +149,6 @@ Buff_EliteBuff_Slippery_Name,打滑,2.3,BuffNames
 Affix_Slippery_PopText_1,<color=#7FE8FF>好滑~~~</color>,2.3,AffixBehavior
 Affix_Locksmith_Name,锁匠,2.3,AffixNames
 Affix_Locksmith_Description,死亡时会掉落一把随机钥匙。,2.3,AffixDescription
+Affix_Overload_Name,过载,2.3,AffixNames
+Affix_Overload_Description,受伤后进入过载状态，持续射击时间大幅延长,2.3,AffixDescription
+Affix_Overload_PopText,<color=#FF4500>武器过载！！！</color>,2.3,AffixBehavior

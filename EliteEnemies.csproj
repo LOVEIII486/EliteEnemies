@@ -654,6 +654,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MultiShotBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ObscurerBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\PhaseSwapBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RageBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RevengeBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RegenerationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SelfDestructBehavior.cs" />

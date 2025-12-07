@@ -41,6 +41,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<EMPBehavior>();
             AffixBehaviorManager.RegisterBehavior<TearBehavior>();
             AffixBehaviorManager.RegisterBehavior<SlipperyBehavior>();
+            AffixBehaviorManager.RegisterBehavior<OverloadBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }
