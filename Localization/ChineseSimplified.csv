@@ -4,8 +4,8 @@ Settings_NormalEliteChance,普通怪物精英概率,2.3,BasicSettings
 Settings_BossEliteChance,Boss精英概率,2.3,BasicSettings
 Settings_MerchantEliteChance,商人精英概率,2.3,BasicSettings
 Settings_MaxAffixCount,词条数量上限,2.3,BasicSettings
-Settings_DropRateMultiplier,精英掉落倍率（影响掉落概率）,2.3,BasicSettings
-Settings_ItemQualityBias,物品品质偏好（影响掉落品质，建议在-0.8到+1.5之间）,2.3,BasicSettings
+Settings_DropRateMultiplier,精英掉落倍率（影响掉落概率，默认1即无惩罚，建议0.5至1）,2.3,BasicSettings
+Settings_ItemQualityBias,物品品质偏好（影响掉落品质，默认-1.5，建议-2至0.5）,2.3,BasicSettings
 Settings_GlobalMultipliers_Group,全局属性调整（仅对精英怪生效）,2.3,Groups
 Settings_GlobalHealthMultiplier,全局血量倍率,2.3,BasicSettings
 Settings_GlobalDamageMultiplier,全局伤害倍率,2.3,BasicSettings

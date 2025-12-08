@@ -11,8 +11,8 @@ namespace EliteEnemies.Settings
         public float BossEliteChance { get; set; } = 0.4f;
         public float MerchantEliteChance { get; set; } = 0.0f;
         public int MaxAffixCount { get; set; } = 2;
-        public float DropRateMultiplier { get; set; } = 1.0f;
-        public float ItemQualityBias { get; set; } = -1f;
+        public float DropRateMultiplier { get; set; } = 0.7f;
+        public float ItemQualityBias { get; set; } = -1.5f;
         public bool EnableBonusLoot { get; set; } = true;
         public float GlobalHealthMultiplier { get; set; } = 1.0f;
         public float GlobalDamageMultiplier { get; set; } = 1.0f;

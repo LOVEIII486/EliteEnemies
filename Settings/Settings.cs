@@ -101,10 +101,10 @@ namespace EliteEnemies.Settings
 
             DropRateMultiplier = ModSettingAPI.GetSavedValue<float>("DropRateMultiplier", out float dropRate)
                 ? Mathf.Clamp(dropRate, ConfigRanges.MinDropRate, ConfigRanges.MaxDropRate)
-                : 1.0f;
+                : 0.7f;
             ItemQualityBias = ModSettingAPI.GetSavedValue<float>("ItemQualityBias", out float qualityBias)
                 ? Mathf.Clamp(qualityBias, ConfigRanges.MinQualityBias, ConfigRanges.MaxQualityBias)
-                : -1f;
+                : -1.5f;
             EnableBonusLoot = ModSettingAPI.GetSavedValue<bool>("EnableBonusLoot", out bool enableBonus)
                 ? enableBonus
                 : true;
