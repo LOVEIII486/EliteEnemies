@@ -21,7 +21,7 @@ namespace EliteEnemies.Settings
         public int[] AffixCountWeights { get; set; } = new int[] { 0, 50, 30, 15, 4, 1 };
         
         public bool ShowEliteName { get; set; } = true;
-        public bool ShowDetailedHealth { get; set; } = true;
+        public bool ShowDetailedHealth { get; set; } = false;
         public GameConfig.AffixTextDisplayPosition AffixDisplayPosition { get; set; } = GameConfig.AffixTextDisplayPosition.Overhead;
         public int AffixFontSize { get; set; } = 20;
     }

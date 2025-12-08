@@ -122,7 +122,7 @@ namespace EliteEnemies.Settings
             ShowEliteName = ModSettingAPI.GetSavedValue<bool>("ShowEliteName", out bool showName) ? showName : true;
             ShowDetailedHealth = ModSettingAPI.GetSavedValue<bool>("ShowDetailedHealth", out bool showHealth)
                 ? showHealth
-                : true;
+                : false;
             if (ModSettingAPI.GetSavedValue<string>("AffixDisplayPosition", out string adp))
             {
                 if (System.Enum.TryParse<AffixTextDisplayPosition>(adp, out var position))
