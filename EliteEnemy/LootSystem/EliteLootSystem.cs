@@ -31,13 +31,16 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         // 弱怪惩罚配置
         private static readonly Dictionary<string, (float dropRatePenalty, int qualityDowngrade)> WeakEnemyPenalties =
             new Dictionary<string, (float, int)>
-            {
+            { 
+                { "Cname_Prison", (0.4f, 1) },
                 { "Cname_Scav", (0.6f, 1) },
                 { "Cname_ScavRage", (0.7f, 0) }
             };
         
         private static readonly Dictionary<string, int> MapQualityCaps = new Dictionary<string, int>
         {
+            { "Level_Guide_1", 3 },
+            { "Level_Guide_Main", 3 },
             { "Level_GroundZero_Main", 5 },
             { "Level_GroundZero_1", 5 },
             { "Level_HiddenWarehouse", 6 },
