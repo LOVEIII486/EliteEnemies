@@ -50,6 +50,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 ["ChickenBro"] =  new HashSet<string> { "MandarinDuck" },
                 ["Guardian"] =  new HashSet<string> { "Undead","Split","ChickenBro","MandarinDuck" },
                 ["Slippery"] =  new HashSet<string> { "Slow" },
+                ["Mimic"] = new HashSet<string> { "MimicTear", "Split", "ChickenBro", "MandarinDuck", "Guardian" },
             };
 
         /// <summary>
@@ -654,6 +655,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 DamageMultiplier = 1.0f,
                 Rarity = AffixRarity.Uncommon
             }.WithRandomLootRange(3, 4, 2, 0.7f, new[] { "Bullet" }),
+            ["Mimic"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Mimic_Name"),
+                Description = LocalizationManager.GetText("Affix_Mimic_Description"),
+                HealthMultiplier = 1.2f,
+                DamageMultiplier = 1.2f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare
+            }
         };
 
 

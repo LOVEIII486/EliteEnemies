@@ -152,3 +152,5 @@ Affix_Locksmith_Description,死亡時會掉落一把隨機鑰匙。,2.3,AffixDes
 Affix_Overload_Name,過載,2.3,AffixNames
 Affix_Overload_Description,受傷後進入過載狀態，持續射擊時間大幅延長,2.3,AffixDescription
 Affix_Overload_PopText,<color=#FF4500>武器過載！！！</color>,2.3,AffixBehavior
+Affix_Mimic_Name,擬態,2.3,AffixNames
+Affix_Mimic_Description,偽裝成補給箱，在靠近或受傷時顯形並突襲,2.3,AffixDescription

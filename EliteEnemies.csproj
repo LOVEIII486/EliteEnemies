@@ -649,6 +649,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\KnockbackBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MagazineCurseBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MandarinDuckBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MimicBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MimicTearBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MiniaturationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MultiShotBehavior.cs" />
