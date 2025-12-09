@@ -28,8 +28,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         // 全局活跃分裂体计数器 & 上限配置
         // 限制场景中同时存在的分裂体不超过 40 
         public static int GlobalActiveSplitClones { get; private set; } = 0;
-        private const int MaxGlobalSplitClones = 40;
-        private const float MinFPSThreshold = 30.0f; // 最低帧率阈值，低于此值不分裂
 
         private CharacterMainControl _originalCharacter;
         private bool _hasSplit = false;
@@ -96,9 +94,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private void TriggerSplit(CharacterMainControl character)
         {
+            int maxClones = EliteEnemyCore.Config.SplitAffixMaxCloneCount;
+            float minFps = EliteEnemyCore.Config.SplitAffixMinFPSThreshold;
+            
             // 1. 熔断检查
             float currentFPS = 1.0f / Mathf.Max(Time.smoothDeltaTime, 0.001f);
-            if (currentFPS < MinFPSThreshold || GlobalActiveSplitClones >= MaxGlobalSplitClones)
+            if (currentFPS < minFps || GlobalActiveSplitClones >= maxClones)
             {
                 Debug.LogWarning($"[SplitBehavior] 熔断触发 (FPS:{currentFPS:F1}, Count:{GlobalActiveSplitClones})");
                 return;
@@ -129,7 +130,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             Vector3 deathPosition = character.transform.position;
             int splitCount = Random.Range(MinSplitCount, MaxSplitCount + 1);
-            int remainingQuota = MaxGlobalSplitClones - GlobalActiveSplitClones;
+            int remainingQuota = maxClones - GlobalActiveSplitClones;
             if (splitCount > remainingQuota) splitCount = Mathf.Max(1, remainingQuota);
 
             string originalName = character.characterPreset.nameKey.ToPlainText();
