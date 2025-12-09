@@ -17,7 +17,9 @@ namespace EliteEnemies.DebugTool
 
         private static readonly Dictionary<string, int> Skipped =
             new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
+        
+        public static int TotalProcessedCount => Processed.Values.Sum();
+        
         /// <summary> 清空统计数据 </summary>
         internal static void Reset()
         {
