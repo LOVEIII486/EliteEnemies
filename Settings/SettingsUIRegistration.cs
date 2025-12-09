@@ -26,9 +26,10 @@ namespace EliteEnemies.Settings
             RegisterGlobalMultipliers();
             RegisterAffixCountWeights();
             var affixKeys = RegisterAffixToggles();
-            RegisterGroups(affixKeys);
             RegisterAffixSpecialSettings();
-
+            
+            // 必须最后调用
+            RegisterGroups(affixKeys);
             Debug.Log($"{LogTag} UI 注册完成");
         }
 

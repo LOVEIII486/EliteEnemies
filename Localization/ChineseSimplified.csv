@@ -154,3 +154,6 @@ Affix_Overload_Description,受伤后进入过载状态，持续射击时间大�
 Affix_Overload_PopText,<color=#FF4500>武器过载！！！</color>,2.3,AffixBehavior
 Affix_Mimic_Name,拟态,2.3,AffixNames
 Affix_Mimic_Description,伪装成补给箱，在受伤时显形并突袭,2.3,AffixDescription
+Settings_AffixSpecialSettings_Group,词缀特殊设置,2.3,Groups
+Settings_SplitAffixMaxCloneCount,[分裂] 最大同屏数量限制,2.3,BasicSettings
+Settings_SplitAffixMinFPSThreshold,[分裂] 最低帧率熔断值,2.3,BasicSettings

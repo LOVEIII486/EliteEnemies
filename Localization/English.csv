@@ -154,3 +154,6 @@ Affix_Overload_Description,"After taking damage, enters an overload state that g
 Affix_Overload_PopText,<color=#FF4500>WEAPON OVERLOAD!!!</color>,2.3,AffixBehavior
 Affix_Mimic_Name,Mimic,2.3,AffixNames
 Affix_Mimic_Description,Disguises as a supply crate. Reveals itself and attacks when approached or damaged,2.3,AffixDescription
+Settings_AffixSpecialSettings_Group,Affix Special Settings,2.3,Groups
+Settings_SplitAffixMaxCloneCount,[Split] Maximum On-Screen Clone Limit,2.3,BasicSettings
+Settings_SplitAffixMinFPSThreshold,[Split] Minimum FPS Cutoff Threshold,2.3,BasicSettings
