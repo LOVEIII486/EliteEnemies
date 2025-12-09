@@ -19,7 +19,7 @@ namespace EliteEnemies
         public static LootItemHelper LootHelper => Instance?._lootItemHelper;
         
         private const string LogTag = "[EliteEnemies]";
-        private const bool EnableDebugTool = false;
+        private const bool EnableDebugTool = true;
         
         private Harmony _harmony;
         

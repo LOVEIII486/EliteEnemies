@@ -65,6 +65,9 @@ namespace EliteEnemies.Settings
         public static int AffixWeight3 { get; private set; }
         public static int AffixWeight4 { get; private set; }
         public static int AffixWeight5 { get; private set; }
+        
+        public static int SplitAffixMaxCloneCount { get; private set; }
+        public static float SplitAffixMinFPSThreshold { get; private set; }
 
         // ==================== 初始化 ====================
 
@@ -158,6 +161,14 @@ namespace EliteEnemies.Settings
                 ? Mathf.Clamp(w5, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 1;
             // 添加新配置项需要修改！！！
+            
+            SplitAffixMaxCloneCount = ModSettingAPI.GetSavedValue<int>("SplitAffixMaxCloneCount", out int splitCount)
+                ? Mathf.Clamp(splitCount, 10, 100)
+                : 40;
+
+            SplitAffixMinFPSThreshold = ModSettingAPI.GetSavedValue<float>("SplitAffixMinFPSThreshold", out float splitFps)
+                ? Mathf.Clamp(splitFps, 10f, 120f)
+                : 30.0f;
 
             // Debug.Log($"{LogTag} NormalEliteChance: {NormalEliteChance}");
             // Debug.Log($"{LogTag} DropRateMultiplier: {DropRateMultiplier}");
@@ -193,6 +204,9 @@ namespace EliteEnemies.Settings
             AffixWeight3 = 15;
             AffixWeight4 = 4;
             AffixWeight5 = 1;
+            
+            SplitAffixMaxCloneCount = 40;
+            SplitAffixMinFPSThreshold = 30.0f;
 
             LoadAffixStates();
             SyncConfigToComponents();
@@ -344,6 +358,19 @@ namespace EliteEnemies.Settings
             AffixWeight5 = Mathf.Clamp(value, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight);
             NotifyConfigChanged();
         }
+        
+        public static void SetSplitAffixMaxCloneCount(int value)
+        {
+            SplitAffixMaxCloneCount = Mathf.Clamp(value, 10, 100);
+            NotifyConfigChanged();
+        }
+        
+        public static void SetSplitAffixMinFPSThreshold(float value)
+        {
+            SplitAffixMinFPSThreshold = Mathf.Clamp(value, 10f, 120f);
+            NotifyConfigChanged();
+        }
+        
         // ==================== 词缀管理 ====================
 
         public static void SetAffixEnabled(string affixKey, bool enabled)
@@ -401,7 +428,10 @@ namespace EliteEnemies.Settings
 
                 DisabledAffixes = GetDisabledAffixBlacklist(),
                 AffixCountWeights = new int[]
-                    { 0, AffixWeight1, AffixWeight2, AffixWeight3, AffixWeight4, AffixWeight5 }
+                    { 0, AffixWeight1, AffixWeight2, AffixWeight3, AffixWeight4, AffixWeight5 },
+                
+                SplitAffixMaxCloneCount = SplitAffixMaxCloneCount,
+                SplitAffixMinFPSThreshold = SplitAffixMinFPSThreshold,
             };
         }
 

@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Duckov.Utilities;
 using UnityEngine;
 
@@ -18,13 +20,17 @@ namespace EliteEnemies.DebugTool
         public bool enableSpawning = false;
         public KeyCode spawnKey = KeyCode.F5;
         public float eggSpawnDelay = 0.001f;
-        public string defaultPresetName = "Cname_Scav";
+        
+        public string defaultPresetNameKey = "Cname_Scav";
+        public string defaultPresetName = "EnemyPreset_Boss_Kamakoto_Special";
+        
         public bool spawnAsElite = false;
         public List<string> eliteAffixes = new List<string>();
         public EnemyPresetConfig enemyConfig = new EnemyPresetConfig();
         
         private static Egg _eggPrefab;
         private Dictionary<string, CharacterRandomPreset> _presetCache = new Dictionary<string, CharacterRandomPreset>();
+        private Dictionary<string, CharacterRandomPreset> _internalNameCache = new Dictionary<string, CharacterRandomPreset>();
 
         private void Awake()
         {
@@ -51,7 +57,10 @@ namespace EliteEnemies.DebugTool
 
             if (Input.GetKeyDown(spawnKey))
             {
-                SpawnEnemyAtMousePosition();
+                SpawnEnemyByName(defaultPresetName);
+                //LoadAvailablePresets();
+                //DumpAllPresets();
+                //SpawnEnemyAtMousePosition();
             }
         }
 
@@ -85,12 +94,40 @@ namespace EliteEnemies.DebugTool
                     {
                         _presetCache[preset.nameKey] = preset;
                     }
+                    if (!string.IsNullOrEmpty(preset.name))
+                    {
+                        _internalNameCache[preset.name] = preset;
+                    }
                 }
             }
             catch (System.Exception ex)
             {
                 Debug.LogError($"{LogTag} 加载角色预设失败: {ex.Message}");
             }
+        }
+        
+        public void DumpAllPresets()
+        {
+            if (_internalNameCache.Count == 0 && _presetCache.Count == 0)
+            {
+                Debug.LogWarning($"{LogTag} 当前没有缓存任何预设，请先确保游戏已加载数据。");
+                return;
+            }
+
+            Debug.Log($"========== {LogTag} 可用预设列表 (总数: {_internalNameCache.Count}) ==========");
+            Debug.Log("格式: [内部名 (name)]  ---->  [键名 (nameKey)]");
+
+            // 遍历内部名缓存，因为它包含了最完整的 ScriptableObject 列表
+            foreach (var kvp in _internalNameCache)
+            {
+                string internalName = kvp.Key;
+                CharacterRandomPreset preset = kvp.Value;
+                string nameKey = (preset != null && !string.IsNullOrEmpty(preset.nameKey)) ? preset.nameKey : "无";
+
+                Debug.Log($"• {internalName,-40} | {nameKey}");
+            }
+            
+            Debug.Log("==========================================================");
         }
 
         // ========== 生成逻辑 ==========
@@ -109,7 +146,7 @@ namespace EliteEnemies.DebugTool
                 return;
             }
 
-            string targetPreset = string.IsNullOrEmpty(presetName) ? defaultPresetName : presetName;
+            string targetPreset = string.IsNullOrEmpty(presetName) ? defaultPresetNameKey : presetName;
             CharacterRandomPreset preset = GetPreset(targetPreset);
             
             if (preset == null)
@@ -132,7 +169,42 @@ namespace EliteEnemies.DebugTool
                 StartCoroutine(ApplyEliteAffixesDelayed(egg));
             }
         }
+        
+        public void SpawnEnemyByName(string internalName)
+        {
+            // 1. 基础验证
+            if (!ValidateSpawnConditions()) return;
 
+            // 2. 获取位置
+            Vector3 spawnPosition = GetMouseGroundPosition();
+            if (spawnPosition == Vector3.zero)
+            {
+                Debug.LogWarning($"{LogTag} 无法获取有效的鼠标位置");
+                return;
+            }
+
+            // 3. [核心] 通过内部名查找预设
+            if (string.IsNullOrEmpty(internalName) || !_internalNameCache.TryGetValue(internalName, out CharacterRandomPreset preset))
+            {
+                Debug.LogError($"{LogTag} 未找到内部名为 '{internalName}' 的预设");
+                return;
+            }
+
+            // 4. 应用自定义配置 (复用现有逻辑)
+            preset = ApplyCustomConfig(preset);
+
+            // 5. 生成 Egg (复用现有逻辑)
+            Egg egg = SpawnEgg(spawnPosition, preset);
+    
+            Debug.Log($"{LogTag} [SpawnByName] 生成敌人: {internalName} at {spawnPosition}");
+
+            // 6. 应用精英词缀 (复用现有逻辑)
+            if (spawnAsElite && eliteAffixes.Count > 0)
+            {
+                StartCoroutine(ApplyEliteAffixesDelayed(egg));
+            }
+        }
+        
         private bool ValidateSpawnConditions()
         {
             if (_eggPrefab == null)

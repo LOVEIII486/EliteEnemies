@@ -24,5 +24,8 @@ namespace EliteEnemies.Settings
         public bool ShowDetailedHealth { get; set; } = false;
         public GameConfig.AffixTextDisplayPosition AffixDisplayPosition { get; set; } = GameConfig.AffixTextDisplayPosition.Overhead;
         public int AffixFontSize { get; set; } = 20;
+        
+        public int SplitAffixMaxCloneCount { get; set; } = 40;
+        public float SplitAffixMinFPSThreshold { get; set; } = 30.0f;
     }
 }

@@ -27,6 +27,7 @@ namespace EliteEnemies.Settings
             RegisterAffixCountWeights();
             var affixKeys = RegisterAffixToggles();
             RegisterGroups(affixKeys);
+            RegisterAffixSpecialSettings();
 
             Debug.Log($"{LogTag} UI 注册完成");
         }
@@ -250,7 +251,30 @@ namespace EliteEnemies.Settings
 
             return affixKeys;
         }
+        
+        // 词缀特殊设置
+        private static void RegisterAffixSpecialSettings()
+        {
+            ModSettingAPI.AddSlider(
+                key: "SplitAffixMaxCloneCount",
+                description: LocalizationManager.GetText("Settings_SplitAffixMaxCloneCount"), // 记得在语言文件中添加此 Key
+                defaultValue: GameConfig.SplitAffixMaxCloneCount,
+                minValue: 10,
+                maxValue: 100,
+                onValueChange: GameConfig.SetSplitAffixMaxCloneCount
+            );
 
+            ModSettingAPI.AddSlider(
+                key: "SplitAffixMinFPSThreshold",
+                description: LocalizationManager.GetText("Settings_SplitAffixMinFPSThreshold"), // 记得在语言文件中添加此 Key
+                defaultValue: GameConfig.SplitAffixMinFPSThreshold,
+                sliderRange: new Vector2(10f, 60f),
+                onValueChange: GameConfig.SetSplitAffixMinFPSThreshold,
+                decimalPlaces: 0,
+                characterLimit: 5
+            );
+        }
+        
         // 注册分组
         private static void RegisterGroups(List<string> affixKeys)
         {
@@ -321,6 +345,19 @@ namespace EliteEnemies.Settings
                 key: "AffixToggles",
                 description: LocalizationManager.GetText("Settings_AffixToggles_Group"),
                 keys: affixKeys,
+                scale: GroupScale,
+                topInsert: GroupTopInsert,
+                open: false
+            );
+            
+            ModSettingAPI.AddGroup(
+                key: "AffixSpecialSettings",
+                description: LocalizationManager.GetText("Settings_AffixSpecialSettings_Group"),
+                keys: new List<string>
+                {
+                    "SplitAffixMaxCloneCount",
+                    "SplitAffixMinFPSThreshold"
+                },
                 scale: GroupScale,
                 topInsert: GroupTopInsert,
                 open: false
