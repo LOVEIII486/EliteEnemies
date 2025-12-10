@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 【拟态】
+    /// 【拟态】 - 垃圾诱饵版 (无清理逻辑)
     /// </summary>
     public class MimicBehavior : AffixBehaviorBase, IUpdateableAffixBehavior, ICombatAffixBehavior
     {
@@ -22,17 +22,16 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private bool _hasTriggered = false; 
         private readonly Vector3 _followOffset = Vector3.up * 0.5f; 
         
-        // 诱饵
-        private const int BaitItemID = 1182; 
-        private const int BaitItemCount = 5;
-        private List<Item> _phantomItems = new List<Item>();
-        private bool _isTriggering = false; // 防止在延迟期间重复触发
+        private const int BaitItemID = 445; 
+        private const int BaitItemCount = 10;
+        private bool _isTriggering = false; 
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             if (character == null) return;
 
             _hasTriggered = false;
+            _isTriggering = false;
             _col = character.GetComponent<Collider>();
             _aiController = character.GetComponentInChildren<AICharacterController>();
             if (_aiController == null) _aiController = character.GetComponentInParent<AICharacterController>();
@@ -52,7 +51,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             if (_trapBox != null)
             {
-                // 同步位置
                 Vector3 targetPos = _trapBox.transform.position + _followOffset;
                 if (Vector3.SqrMagnitude(character.transform.position - targetPos) > 0.0025f)
                 {
@@ -90,15 +88,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     if (col != null) col.isTrigger = false;
                 }
                 
-                _trapBox.Inventory.SetCapacity(8);
+                _trapBox.Inventory.SetCapacity(BaitItemCount+4);
 
-                // 生成诱饵
                 GenerateBaitItems();
 
                 _trapInteractable = _trapBox.GetComponent<InteractableBase>();
                 if (_trapInteractable != null)
                 {
-                    // 监听互动事件
                     _trapInteractable.OnInteractStartEvent.AddListener((player, interactable) =>
                     {
                         OnPlayerOpenedBox(player, owner);
@@ -113,16 +109,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             if (_trapBox == null || _trapBox.Inventory == null) return;
             
-            _phantomItems.Clear();
-
             for (int i = 0; i < BaitItemCount; i++)
             {
                 Item newItem = ItemAssetsCollection.InstantiateSync(BaitItemID);
                 if (newItem != null)
                 {
-                    newItem.FromInfoKey = "EliteEnemiesBait"; 
+                    newItem.FromInfoKey = "MimicBait"; 
                     _trapBox.Inventory.AddItem(newItem);
-                    _phantomItems.Add(newItem);
                 }
             }
         }
@@ -159,10 +152,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private void OnPlayerOpenedBox(CharacterMainControl player, CharacterMainControl owner)
         {
             if (_hasTriggered || _isTriggering) return;
-            
             _isTriggering = true;
 
-            // 打断玩家动作
             if (player.interactAction != null && player.interactAction.Running)
                 player.interactAction.StopAction();
 
@@ -178,21 +169,19 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         
         private IEnumerator DelayedAmbushRoutine(CharacterMainControl owner)
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1.5f);
 
             if (owner != null)
             {
                 TriggerAmbush(owner);
             }
         }
-        
 
         private void TriggerAmbush(CharacterMainControl character)
         {
             if (_hasTriggered) return;
             _hasTriggered = true;
             
-            CleanupPhantomItems();
 
             if (_trapBox != null)
             {
@@ -212,23 +201,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             ToggleAI(true);
             _hasTriggered = false;
-            CleanupPhantomItems();
+            _isTriggering = false;
+            
             if (_trapBox != null) UnityEngine.Object.Destroy(_trapBox.gameObject);
-        }
-
-        private void CleanupPhantomItems()
-        {
-            if (_phantomItems != null)
-            {
-                foreach (var item in _phantomItems)
-                {
-                    if (item != null && item.gameObject != null)
-                    {
-                        UnityEngine.Object.Destroy(item.gameObject);
-                    }
-                }
-                _phantomItems.Clear();
-            }
         }
 
         public void OnAttack(CharacterMainControl c, DamageInfo d) { }
