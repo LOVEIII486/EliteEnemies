@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.AI;
 using Duckov.Scenes;
+using ItemStatsSystem;
+using System.Collections.Generic;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
@@ -16,40 +19,40 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private AICharacterController _aiController; 
         private Collider _col;
         
-        // private System.Collections.Generic.List<Renderer> _cachedRenderers = new System.Collections.Generic.List<Renderer>();
-
         private bool _hasTriggered = false; 
-        
         private readonly Vector3 _followOffset = Vector3.up * 0.5f; 
+        
+        // 诱饵
+        private const int BaitItemID = 1182; 
+        private const int BaitItemCount = 5;
+        private List<Item> _phantomItems = new List<Item>();
+        private bool _isTriggering = false; // 防止在延迟期间重复触发
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             if (character == null) return;
 
             _hasTriggered = false;
-
             _col = character.GetComponent<Collider>();
-
             _aiController = character.GetComponentInChildren<AICharacterController>();
             if (_aiController == null) _aiController = character.GetComponentInParent<AICharacterController>();
 
             SpawnTrapBox(character);
-
             ToggleAI(false);
             
-            // 关闭自身碰撞
             if (_col != null) _col.enabled = false;
-            
             SyncPositionToBox(character);
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
             if (_hasTriggered || character == null || character.characterModel == null) return;
+            
             character.Hide();
             
             if (_trapBox != null)
             {
+                // 同步位置
                 Vector3 targetPos = _trapBox.transform.position + _followOffset;
                 if (Vector3.SqrMagnitude(character.transform.position - targetPos) > 0.0025f)
                 {
@@ -80,19 +83,22 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     rb.angularVelocity = UnityEngine.Random.insideUnitSphere * 2f; 
                 }
 
-                if (_trapBox.interactCollider != null)
-                {
-                    _trapBox.interactCollider.isTrigger = false;
-                }
+                if (_trapBox.interactCollider != null) _trapBox.interactCollider.isTrigger = false;
                 else
                 {
                     var col = _trapBox.GetComponent<Collider>();
                     if (col != null) col.isTrigger = false;
                 }
+                
                 _trapBox.Inventory.SetCapacity(8);
+
+                // 生成诱饵
+                GenerateBaitItems();
+
                 _trapInteractable = _trapBox.GetComponent<InteractableBase>();
                 if (_trapInteractable != null)
                 {
+                    // 监听互动事件
                     _trapInteractable.OnInteractStartEvent.AddListener((player, interactable) =>
                     {
                         OnPlayerOpenedBox(player, owner);
@@ -100,6 +106,24 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 }
                 
                 try { MultiSceneCore.MoveToActiveWithScene(_trapBox.gameObject, UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex); } catch { }
+            }
+        }
+
+        private void GenerateBaitItems()
+        {
+            if (_trapBox == null || _trapBox.Inventory == null) return;
+            
+            _phantomItems.Clear();
+
+            for (int i = 0; i < BaitItemCount; i++)
+            {
+                Item newItem = ItemAssetsCollection.InstantiateSync(BaitItemID);
+                if (newItem != null)
+                {
+                    newItem.FromInfoKey = "EliteEnemiesBait"; 
+                    _trapBox.Inventory.AddItem(newItem);
+                    _phantomItems.Add(newItem);
+                }
             }
         }
 
@@ -134,19 +158,42 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private void OnPlayerOpenedBox(CharacterMainControl player, CharacterMainControl owner)
         {
-            if (_hasTriggered) return;
+            if (_hasTriggered || _isTriggering) return;
             
+            _isTriggering = true;
+
+            // 打断玩家动作
             if (player.interactAction != null && player.interactAction.Running)
                 player.interactAction.StopAction();
 
-            TriggerAmbush(owner);
+            if (owner != null && owner.gameObject.activeInHierarchy)
+            {
+                owner.StartCoroutine(DelayedAmbushRoutine(owner));
+            }
+            else
+            {
+                TriggerAmbush(owner);
+            }
         }
+        
+        private IEnumerator DelayedAmbushRoutine(CharacterMainControl owner)
+        {
+            yield return new WaitForSeconds(1f);
+
+            if (owner != null)
+            {
+                TriggerAmbush(owner);
+            }
+        }
+        
 
         private void TriggerAmbush(CharacterMainControl character)
         {
             if (_hasTriggered) return;
             _hasTriggered = true;
             
+            CleanupPhantomItems();
+
             if (_trapBox != null)
             {
                 UnityEngine.Object.Destroy(_trapBox.gameObject);
@@ -157,29 +204,31 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             if (_col != null) _col.enabled = true;
             character.Show();
         }
-        
-        // private void ToggleRenderers(CharacterMainControl character, bool enable)
-        // {
-        //     if (_cachedRenderers.Count == 0 && character.characterModel != null)
-        //     {
-        //         _cachedRenderers.AddRange(character.GetComponentsInChildren<Renderer>(true));
-        //     }
-        //     foreach (var r in _cachedRenderers)
-        //     {
-        //         if (r != null) r.enabled = enable;
-        //     }
-        // }
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            if (character != null) 
-            {
-                character.Show();
-            }
+            if (character != null) character.Show();
             if (_col != null) _col.enabled = true;
+            
             ToggleAI(true);
             _hasTriggered = false;
+            CleanupPhantomItems();
             if (_trapBox != null) UnityEngine.Object.Destroy(_trapBox.gameObject);
+        }
+
+        private void CleanupPhantomItems()
+        {
+            if (_phantomItems != null)
+            {
+                foreach (var item in _phantomItems)
+                {
+                    if (item != null && item.gameObject != null)
+                    {
+                        UnityEngine.Object.Destroy(item.gameObject);
+                    }
+                }
+                _phantomItems.Clear();
+            }
         }
 
         public void OnAttack(CharacterMainControl c, DamageInfo d) { }
