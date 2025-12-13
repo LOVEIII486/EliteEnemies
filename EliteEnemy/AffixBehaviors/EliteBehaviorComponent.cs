@@ -208,6 +208,21 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             _combatBehaviors.Clear();
             _isInitialized = false;
         }
+        
+        /// <summary>
+        /// 检查是否拥有某种行为（新增方法，修复编译错误）
+        /// </summary>
+        public bool HasBehavior<T>() where T : IAffixBehavior
+        {
+            foreach (var behavior in _behaviors)
+            {
+                if (behavior is T)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// 解绑战斗事件

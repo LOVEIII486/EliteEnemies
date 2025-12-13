@@ -634,6 +634,7 @@
     <ItemGroup>
         <Compile Include="DebugTool\LootAlgorithmVerifier.cs" />
         <Compile Include="DebugTool\LootCacheDumper.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\BehaviorPatches\ReflectPatch.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BerserkBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BlindnessBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChaosOnHitBehavior.cs" />
@@ -656,6 +657,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ObscurerBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\PhaseSwapBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RageBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ReflectBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RevengeBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RegenerationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SelfDestructBehavior.cs" />
