@@ -109,6 +109,15 @@ namespace EliteEnemies.EliteEnemy.Core
                 },
             };
 
+        internal static readonly Dictionary<string, HashSet<string>> AffixPresetBlacklist =
+            new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Mimic"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "Enemy_Kamakoto_Special"
+                },
+            };
+
         // ========== 公共接口 ==========
 
         public static void UpdateConfig(EliteEnemiesConfig newConfig)
@@ -323,7 +332,14 @@ namespace EliteEnemies.EliteEnemy.Core
         {
             if (string.IsNullOrEmpty(affixName) || string.IsNullOrEmpty(presetName))
                 return false;
-
+            
+            if (AffixPresetBlacklist.TryGetValue(affixName, out var blacklist))
+            {
+                // 如果存在黑名单且包含当前预设，则禁止
+                if (blacklist != null && blacklist.Contains(presetName))
+                    return false;
+            }
+            
             if (AffixPresetWhitelist.TryGetValue(affixName, out var whitelist))
                 return whitelist == null || whitelist.Count == 0 || whitelist.Contains(presetName);
 

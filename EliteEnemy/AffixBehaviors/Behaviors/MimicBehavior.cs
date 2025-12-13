@@ -35,6 +35,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private const int BaitItemID = 445; 
         private const int BaitItemCount = 10;
+        
+        private const float SyncThresholdSqr = 1.0f; 
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
@@ -81,11 +83,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             if (_soundMaker != null && _soundMaker.enabled) _soundMaker.enabled = false;
             if (_movement != null && _movement.enabled) _movement.enabled = false;
             
-            // 位置同步
+            // 位置同步逻辑优化
             if (_trapBox != null)
             {
                 Vector3 targetPos = _trapBox.transform.position + _followOffset;
-                if (Vector3.SqrMagnitude(character.transform.position - targetPos) > 0.0001f)
+
+                if (Vector3.SqrMagnitude(character.transform.position - targetPos) > SyncThresholdSqr)
                 {
                     character.transform.position = targetPos;
                     character.transform.rotation = _trapBox.transform.rotation;
@@ -106,6 +109,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private void TriggerAmbush(CharacterMainControl character)
         {
             if (_hasTriggered) return;
+            
+            // 触发埋伏瞬间，强制将敌人拉回箱子位置
+            // if (_trapBox != null)
+            // {
+            //     character.transform.position = _trapBox.transform.position + _followOffset;
+            //     character.transform.rotation = _trapBox.transform.rotation;
+            // }
+
             _hasTriggered = true;
 
             if (_trapBox != null)
@@ -130,10 +141,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             if (_movement != null)
             {
                 _movement.enabled = enable;
-                // 如果是禁用移动，顺便把残余速度清零，防止 SoundMaker 在下一帧激活瞬间读取到残留速度
+                // 如果是禁用移动，顺便把残余速度清零
                 if (!enable && _movement.characterController != null) 
                 {
-                    // 尝试清空 movement 内部的速度变量 (如果可访问)
                     // _movement.Velocity 是只读的，通常通过刚体控制
                 }
             }
@@ -184,7 +194,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         }
 
         #region 辅助函数
-
 
         private void ForceShowVisuals()
         {
