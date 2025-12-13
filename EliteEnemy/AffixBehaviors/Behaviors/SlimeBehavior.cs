@@ -5,39 +5,46 @@ using UnityEngine;
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 【史莱姆】词缀 - 初始巨大但虚弱，血量降低时体型缩小且伤害增强，并会周期性跳跃
+    /// 【史莱姆】词缀
     /// </summary>
     public class SlimeBehavior : AffixBehaviorBase, IUpdateableAffixBehavior
     {
         public override string AffixName => "Slime";
 
-        // ===== 体型与属性配置 =====
-        private static readonly float InitialScale = 3.5f; // 初始体型倍率
-        private static readonly float MinScale = 0.5f; // 最小体型倍率
-        private static readonly float InitialHealthMult = 3.5f; // 初始血量倍率
-        private static readonly float InitialDamageMult = 0.65f; // 初始伤害倍率
-        private static readonly float MaxDamageMult = 1.6f; // 最大伤害倍率
-        private static readonly float HealthThreshold = 0.05f; // 血量变化达到 5% 才更新
+        // ===== 基础配置 =====
+        private static readonly float InitialScale = 3.5f;
+        private static readonly float MinScale = 0.5f;
+        private static readonly float InitialHealthMult = 3.5f;
+        private static readonly float InitialDamageMult = 0.65f;
+        private static readonly float MaxDamageMult = 1.6f;
+        private static readonly float HealthThreshold = 0.05f;
 
-        // ===== 跳跃相关配置 =====
-        private static readonly float JumpIntervalMin = 0.5f; // 最小跳跃间隔
-        private static readonly float JumpIntervalMax = 1.5f; // 最大跳跃间隔
-        private static readonly float JumpForce = 5f; // 跳跃力度
-        private static readonly float GroundPause = 0.3f; // 地面约束暂停时间
-        private static readonly float MaxJumpHeightCheck = 5f; // 跳跃前检测上方空间高度
+        // ===== 跳跃配置 =====
+        private static readonly float JumpIntervalMin = 0.5f;
+        private static readonly float JumpIntervalMax = 1.5f;
+        private static readonly float JumpForce = 5f;
+        private static readonly float GroundPause = 0.3f;
+        private static readonly float MaxJumpHeightCheck = 5f;
+        
+        // 残血跳跃禁用阈值
+        private static readonly float NoJumpHealthThreshold = 0.2f;
 
+        // ===== 核心组件 =====
         private CharacterMainControl _character;
         private Health _health;
         private CharacterMovement _movement;
+        private Rigidbody _rb;
 
+        // ===== 状态记录 =====
         private Vector3 _originalScale;
-        private Vector3 _lastValidPosition;
-        private Vector3 _lastGroundedPosition;
-        private bool _hasGroundedPosition;
+        private float _lastSafeGroundY;
+        private bool _hasSafeData = false;
 
         private float _lastHealthPercent = 1f;
         private float _nextJumpTime;
-        private float _currentDamageMultiplier = 1f; // 记录当前已应用的伤害倍率
+        private float _currentDamageMultiplier = 1f;
+
+        private int _obstacleMask;
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
@@ -45,88 +52,66 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             _character = character;
             _health = character.Health;
-
-            if (_health == null)
-            {
-                Debug.LogError("[SlimeBehavior] 找不到 Health 组件");
-                return;
-            }
-
+            _rb = character.GetComponent<Rigidbody>();
+            
             if (character.movementControl != null)
-            {
                 _movement = character.movementControl.GetComponent<CharacterMovement>();
-            }
 
-            // 记录原始体型 & 位置
+            _obstacleMask = LayerMask.GetMask("Default", "Ground", "Wall", "HalfObsticle", "Door");
+
+            // 初始化记录
             _originalScale = character.transform.localScale;
-            _lastValidPosition = character.transform.position;
-            _lastGroundedPosition = character.transform.position;
-            _hasGroundedPosition = true;
+            _lastSafeGroundY = character.transform.position.y;
+            _hasSafeData = true;
 
-            // 初始放大体型
+            // 初始变大
             character.transform.localScale = _originalScale * InitialScale;
-
-
             ApplyInitialStats(character);
 
-            // 初始化状态
             _lastHealthPercent = 1f;
             _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
-            // _currentDamageMultiplier 已在 ApplyInitialStats 中设置为 InitialDamageMult
         }
 
-        /// <summary>
-        /// 应用初始血量和伤害倍率
-        /// </summary>
         private void ApplyInitialStats(CharacterMainControl character)
         {
-            // 血量：直接乘以倍率并回满
             AttributeModifier.AttributeModifier.Quick.ModifyHealth(character, InitialHealthMult, healToFull: true);
-
-            // 伤害：通过“增量倍率”方式更新，
-            // 防止多次调用时重复叠乘，使用 new / old 做差值
             _currentDamageMultiplier = 1f;
             ApplyDamageMultiplier(character, InitialDamageMult);
         }
 
-        /// <summary>
-        /// 以“相对当前值”的方式更新伤害倍率：实际乘以 (new / old)
-        /// 这样不会因为多次调用导致无限叠乘。
-        /// </summary>
         private void ApplyDamageMultiplier(CharacterMainControl character, float newMultiplier)
         {
             if (character == null) return;
-            if (Mathf.Approximately(_currentDamageMultiplier, newMultiplier)) return;
-
-            // 真实乘上的倍数
+            if (Mathf.Abs(_currentDamageMultiplier - newMultiplier) < 0.01f) return;
             float ratio = newMultiplier / Mathf.Max(_currentDamageMultiplier, 0.0001f);
-
             AttributeModifier.AttributeModifier.Quick.ModifyDamage(character, ratio);
             _currentDamageMultiplier = newMultiplier;
         }
 
-        /// <summary>
-        /// 每帧更新 
-        /// </summary>
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
             if (_health == null || _health.IsDead || character == null) return;
 
-            // 边界检查
-            Vector3 currentPos = character.transform.position;
-            if (currentPos.y < -50f || currentPos.y > 100f)
+            // 1. 实时更新安全高度
+            if (IsGrounded())
             {
-                Debug.LogWarning($"[SlimeBehavior] {character.characterPreset.nameKey} 超出边界，传送回安全位置");
-                character.movementControl.ForceSetPosition(_lastValidPosition);
+                _lastSafeGroundY = character.transform.position.y;
+                _hasSafeData = true;
+            }
+
+            // 2. 边界保护
+            if (character.transform.position.y < -50f)
+            {
+                if (_hasSafeData)
+                {
+                    character.movementControl.ForceSetPosition(
+                        new Vector3(character.transform.position.x, _lastSafeGroundY + 0.5f, character.transform.position.z)
+                    );
+                }
                 return;
             }
 
-            // 更新最后有效位置
-            if (IsGrounded())
-            {
-                _lastValidPosition = currentPos;
-            }
-
+            // 3. 动态体型和伤害
             float currentHealthPercent = _health.CurrentHealth / _health.MaxHealth;
             if (Mathf.Abs(currentHealthPercent - _lastHealthPercent) >= HealthThreshold)
             {
@@ -134,133 +119,115 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 _lastHealthPercent = currentHealthPercent;
             }
 
+            // 4. 残血时禁止跳跃
+            if (currentHealthPercent < NoJumpHealthThreshold)
+            {
+                return;
+            }
+
+            // 5. 正常跳跃逻辑
             if (Time.time >= _nextJumpTime && CanSafelyJump())
             {
-                _lastGroundedPosition = character.transform.position;
-                _hasGroundedPosition = true;
-
                 PerformJump();
                 _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
             }
         }
 
-        /// <summary>
-        /// 根据当前血量百分比更新体型和伤害倍率
-        /// </summary>
         private void UpdateScaleAndDamage(CharacterMainControl character, float healthPercent)
         {
             float t = 1f - healthPercent;
-
             float newScale = Mathf.Lerp(InitialScale, MinScale, t);
             float newDamageMultiplier = Mathf.Lerp(InitialDamageMult, MaxDamageMult, t);
-
-            // 应用体型
             character.transform.localScale = _originalScale * newScale;
-
-            // 伤害用“差值倍率”更新
             ApplyDamageMultiplier(character, newDamageMultiplier);
-
-            // Debug.Log($"[SlimeBehavior] {character.name} HP:{healthPercent:P0}, Scale:{newScale:F2}x, Dmg:{newDamageMultiplier:F2}x");
         }
 
-        /// <summary>
-        /// 是否在地面上
-        /// </summary>
         private bool IsGrounded()
         {
             if (_movement == null) return false;
-            return Mathf.Abs(_movement.velocity.y) < 0.1f;
+            return _movement.isGrounded && Mathf.Abs(_movement.velocity.y) < 0.1f;
         }
 
-        /// <summary>
-        /// 是否可以安全跳跃
-        /// </summary>
         private bool CanSafelyJump()
         {
-            if (_movement == null || _character == null) return false;
-
             if (!IsGrounded()) return false;
-
-            // 检查上方是否有足够空间
-            Vector3 rayStart = _character.transform.position + Vector3.up * 0.5f;
-            if (Physics.Raycast(rayStart, Vector3.up, MaxJumpHeightCheck,
-                    LayerMask.GetMask("Default", "Terrain")))
-            {
+            
+            // 头顶检测
+            if (Physics.Raycast(_character.transform.position + Vector3.up, Vector3.up, MaxJumpHeightCheck, _obstacleMask))
                 return false;
-            }
-
-            // 检查周围是否过于狭窄
-            float checkRadius = 2f;
-            var nearbyColliders = Physics.OverlapSphere(_character.transform.position, checkRadius,
-                LayerMask.GetMask("Default", "Terrain"));
-
-            if (nearbyColliders.Length > 5)
-                return false;
-
+                
             return true;
         }
 
-        /// <summary>
-        /// 执行一次向上跳跃
-        /// </summary>
         private void PerformJump()
         {
-            if (_movement == null || _character == null) return;
-
-
+            if (_movement == null) return;
             _movement.PauseGroundConstraint(GroundPause);
-            Vector3 velocity = _movement.velocity;
-            velocity.y = JumpForce;
-            _movement.velocity = velocity;
+            Vector3 v = _movement.velocity;
+            v.y = JumpForce;
+            _movement.velocity = v;
         }
-
-        /// <summary>
-        /// 避免尸体悬空
-        /// </summary>
+        
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {
             if (character == null) return;
+
+            // 1. 恢复体型
             if (_originalScale != Vector3.zero)
             {
                 character.transform.localScale = _originalScale;
             }
 
-            var rb = character.GetComponent<Rigidbody>();
-            if (rb != null)
+            // 2. 冻结物理
+            if (_movement != null)
             {
-                rb.velocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
+                _movement.velocity = Vector3.zero;
+                _movement.enabled = false;
+            }
+            if (_rb != null)
+            {
+                _rb.velocity = Vector3.zero;
+                _rb.isKinematic = true;
             }
 
-            Vector3 pos = character.transform.position;
-            Vector3 rayOrigin = pos + Vector3.up * 5.0f;
-
-            RaycastHit hit;
-            if (Physics.Raycast(rayOrigin, Vector3.down, out hit, 100f,
-                    LayerMask.GetMask("Default", "Terrain"), QueryTriggerInteraction.Ignore))
+            // 3. 位置修正
+            if (_hasSafeData)
             {
-                character.transform.position = hit.point;
-                // character.transform.position = hit.point + Vector3.up * 0.1f; 
-            }
-            else if (_hasGroundedPosition)
-            {
-                character.transform.position = _lastGroundedPosition;
+                float currentY = character.transform.position.y;
+                
+                // 如果当前高度比记录的安全高度高出 1 米以上，说明可能在跳跃中死亡
+                if (currentY > _lastSafeGroundY + 1.0f)
+                {
+                    character.transform.position = new Vector3(
+                        character.transform.position.x,
+                        _lastSafeGroundY + 0.1f,
+                        character.transform.position.z
+                    );
+                    // Debug.Log($"[Slime] 检测到悬空死亡，回退到安全高度 {_lastSafeGroundY:F2}");
+                }
             }
         }
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            if (character != null && _originalScale != Vector3.zero)
+            if (character != null)
             {
-                character.transform.localScale = _originalScale;
+                if (_originalScale != Vector3.zero) 
+                    character.transform.localScale = _originalScale;
+                if (_movement != null) 
+                    _movement.enabled = true;
+                if (_rb != null)
+                {
+                    _rb.isKinematic = false;
+                    _rb.detectCollisions = true;
+                }
             }
-
+            
             _character = null;
             _health = null;
             _movement = null;
-            _lastHealthPercent = 1f;
-            _currentDamageMultiplier = 1f;
-            _hasGroundedPosition = false;
+            _rb = null;
+            _hasSafeData = false;
         }
     }
 }
