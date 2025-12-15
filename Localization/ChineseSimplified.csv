@@ -159,3 +159,4 @@ Settings_SplitAffixMaxCloneCount,[分裂] 最大同屏数量限制,2.3,BasicSett
 Settings_SplitAffixMinFPSThreshold,[分裂] 最低帧率熔断值,2.3,BasicSettings
 Affix_Reflect_Name,反弹,2.3,AffixNames
 Affix_Reflect_Description,周期性生成护盾，将受到的子弹反弹回攻击者,2.3,AffixDescription
+Affix_Reflect_PopText,<color=#00BFFF>反弹！</color>,2.3,AffixBehavior

@@ -157,3 +157,6 @@ Affix_Mimic_Description,Disguises as a supply crate. Reveals itself and attacks 
 Settings_AffixSpecialSettings_Group,Affix Special Settings,2.3,Groups
 Settings_SplitAffixMaxCloneCount,[Split] Maximum On-Screen Clone Limit,2.3,BasicSettings
 Settings_SplitAffixMinFPSThreshold,[Split] Minimum FPS Cutoff Threshold,2.3,BasicSettings
+Affix_Reflect_Name,Reflect,2.3,AffixNames
+Affix_Reflect_Description,Periodically generates a shield that reflects incoming bullets back to the attacker,2.3,AffixDescription
+Affix_Reflect_PopText,<color=#00BFFF>Reflect!</color>,2.3,AffixBehavior
