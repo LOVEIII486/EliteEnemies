@@ -663,6 +663,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 DamageMultiplier = 1.2f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare
+            },
+            ["Reflect"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Reflect_Name"),
+                Description = LocalizationManager.GetText("Affix_Reflect_Description"),
+                HealthMultiplier = 1.2f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Epic
             }
         };
 
