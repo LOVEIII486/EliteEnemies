@@ -50,7 +50,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 ["ChickenBro"] =  new HashSet<string> { "MandarinDuck" },
                 ["Guardian"] =  new HashSet<string> { "Undead","Split","ChickenBro","MandarinDuck" },
                 ["Slippery"] =  new HashSet<string> { "Slow" },
-                ["Mimic"] = new HashSet<string> { "MimicTear", "Split", "ChickenBro", "MandarinDuck", "Guardian" },
+                ["Mimic"] = new HashSet<string> { "MimicTear", "Split", "ChickenBro", "MandarinDuck", "Guardian","Giant","Slime","Reflect" },
             };
 
         /// <summary>
