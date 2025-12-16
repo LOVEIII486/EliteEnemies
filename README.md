@@ -11,7 +11,7 @@
 
 仓库包含以下核心模块：
 
-- 精英词条（Affix）逻辑与数值系统  
+- 精英词条逻辑与数值系统  
 - 战斗行为与特殊效果 
 - 独立掉落池与词条专属掉落配置  
 - ModSetting 配置项与设置界面  
@@ -22,8 +22,7 @@
 
 ## 📜 许可说明
 
-本项目以开源形式提供，供自由阅读、修改与扩展。  
-若基于本模组进行发布或二次创作，请注明来源。
+本项目采用 **GNU General Public License v3.0 (GPLv3)** 授权。
 
 Steam 创意工坊页面：  
 https://steamcommunity.com/sharedfiles/filedetails/?id=3602009885
@@ -33,12 +32,5 @@ https://steamcommunity.com/sharedfiles/filedetails/?id=3602009885
 ## 🙏 希望大佬们指点 & 帮忙优化框架
 
 本人仍在学习 C# 与 Duckov 模组开发，  
-项目结构与实现仍有改进空间，例如：
-
-- 行为/事件系统的抽象方式  
-- 性能优化  
-- 可扩展词条架构  
-- Harmony Patch 的组织优化  
-- 本地化加载流程  
-
+项目结构与实现仍有改进空间。
 欢迎 Issue / PR 提供建议与帮助，感激不尽！
