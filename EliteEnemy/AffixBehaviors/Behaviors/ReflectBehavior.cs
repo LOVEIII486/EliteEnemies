@@ -9,17 +9,19 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
     public class ReflectBehavior : AffixBehaviorBase, IUpdateableAffixBehavior
     {
         public override string AffixName => "Reflect";
-
         public static readonly HashSet<int> ActiveReflectors = new HashSet<int>();
 
         private CharacterMainControl _owner;
         private int _ownerID;
-        private EliteGlowController _glowController;
+        //private EliteGlowController _glowController;
+        // 改用更明显的护盾吧
+        private EliteBehaviorHelper.SimpleShieldEffect _visualShield;
+
         private float _timer;
         private bool _isReflecting;
 
         private const float CooldownTime = 5.0f; 
-        private const float ActiveDuration = 5.0f;
+        private const float ActiveDuration = 3.0f;
         
         private readonly Lazy<string> _popText = new(() => LocalizationManager.GetText("Affix_Reflect_PopText"));
 
@@ -27,7 +29,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             _owner = character;
             _ownerID = character.GetInstanceID();
-            _glowController = new EliteGlowController(character);
+            //_glowController = new EliteGlowController(character);
+            
+            _visualShield = new EliteBehaviorHelper.SimpleShieldEffect(
+                character.transform, 
+                new Color(1f, 0.84f, 0f, 0.35f),
+                1.3f
+            );
             
             _timer = CooldownTime; 
             _isReflecting = false;
@@ -39,12 +47,11 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             _isReflecting = true;
             _timer = 0f;
-            
             ActiveReflectors.Add(_ownerID);
             
-            _glowController.TriggerFlash(new Color(1f, 0.84f, 0f), ActiveDuration);
+            //_glowController.TriggerFlash(new Color(1f, 0.84f, 0f), 0.5f);
             _owner.PopText(_popText.Value);
-            //Debug.Log($"[Reflect] {_owner.name} 开启反弹！");
+            _visualShield.Show();
         }
 
         private void EndReflect()
@@ -53,15 +60,17 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             _isReflecting = false;
             _timer = 0f;
-            
             ActiveReflectors.Remove(_ownerID);
-            //Debug.Log($"[Reflect] {_owner.name} 反弹结束，进入冷却。");
+            _visualShield.Hide();
         }
 
         public override void OnCleanup(CharacterMainControl character)
         {
             if (_isReflecting) ActiveReflectors.Remove(_ownerID);
-            _glowController?.Reset();
+            //_glowController?.Reset();
+            
+            _visualShield?.Destroy();
+            
             _owner = null;
         }
 
@@ -73,20 +82,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             if (_isReflecting)
             {
-                if (_timer >= ActiveDuration)
-                {
-                    EndReflect();
-                }
+                if (_timer >= ActiveDuration) EndReflect();
             }
             else
             {
-                if (_timer >= CooldownTime)
-                {
-                    StartReflect();
-                }
+                if (_timer >= CooldownTime) StartReflect();
             }
             
-            _glowController?.Update(deltaTime);
+            //_glowController?.Update(deltaTime);
+            _visualShield?.Update(deltaTime);
         }
     }
 }
