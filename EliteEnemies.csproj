@@ -718,6 +718,7 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include=".gitignore" />
+      <Content Include="LICENSE" />
       <Content Include="Localization\ChineseSimplified.csv" />
       <Content Include="Localization\ChineseTraditional.csv" />
       <Content Include="Localization\English.csv" />
