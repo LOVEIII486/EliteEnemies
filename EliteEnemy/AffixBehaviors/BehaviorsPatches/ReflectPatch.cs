@@ -45,7 +45,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.BehaviorPatches
             var victim = receiver.GetComponentInParent<CharacterMainControl>();
             if (victim == null && receiver.health != null)
             {
-                 victim = receiver.health.GetComponent<CharacterMainControl>(); 
+                victim = receiver.health.GetComponent<CharacterMainControl>(); 
             }
 
             if (victim != null && ReflectBehavior.ActiveReflectors.Contains(victim.GetInstanceID()))
@@ -55,7 +55,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.BehaviorPatches
                 ctx.team = victim.Team; 
                 ctx.fromCharacter = victim;
 
-                Vector3 newDirection = -ctx.direction;
+                // 反向基础向量
+                Vector3 baseReverseDir = -ctx.direction;
+
+                // 随机偏转角度
+                float deviationAngle = UnityEngine.Random.Range(-10f, 10f);
+                Vector3 newDirection = Quaternion.Euler(0, deviationAngle, 0) * baseReverseDir;
                 newDirection.y = 0; 
                 newDirection.Normalize();
 
@@ -69,16 +74,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.BehaviorPatches
 
                 // 重置命中判定
                 projectile.damagedObjects.Clear();
-                projectile.damagedObjects.Add(victim.gameObject); // 忽略反弹者自己
+                projectile.damagedObjects.Add(victim.gameObject); 
 
                 _traveledDistField?.SetValue(projectile, 0f);
 
-                // 增加穿透，防止子弹消失
                 ctx.penetrate += 1;
                 return false;
             }
 
-            // 执行原版伤害逻辑
             return receiver.Hurt(info);
         }
     }

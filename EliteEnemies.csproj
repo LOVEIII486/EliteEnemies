@@ -634,7 +634,7 @@
     <ItemGroup>
         <Compile Include="DebugTool\LootAlgorithmVerifier.cs" />
         <Compile Include="DebugTool\LootCacheDumper.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\BehaviorPatches\ReflectPatch.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\BehaviorsPatches\ReflectPatch.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\BehaviorsPatches\SlimeLootboxPhysicsPatch.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BerserkBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BlindnessBehavior.cs" />
