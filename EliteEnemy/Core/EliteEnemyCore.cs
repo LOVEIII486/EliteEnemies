@@ -117,6 +117,11 @@ namespace EliteEnemies.EliteEnemy.Core
                     "Enemy_Kamakoto_Special"
                 },
             };
+        
+        private static readonly string[] AutoRegisterBlacklist = new string[]
+        {
+            "_CM_", // 战斗女仆
+        };
 
         // ========== 公共接口 ==========
 
@@ -431,6 +436,16 @@ namespace EliteEnemies.EliteEnemy.Core
                 return false;
 
             if (!LooksLikeEnemyPreset(presetName)) return false;
+            
+            foreach (var keyword in AutoRegisterBlacklist)
+            {
+                if (presetName.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    Debug.Log($"{LogTag} 跳过自动注册（匹配黑名单 '{keyword}'）: {presetName}");
+                    return false;
+                }
+            }
+            
             if (ExternalEligiblePresets.Contains(presetName)) return true;
 
             ExternalEligiblePresets.Add(presetName);
