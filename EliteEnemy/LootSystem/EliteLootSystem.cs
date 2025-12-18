@@ -20,7 +20,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
     public static class EliteLootSystem
     {
         private const string LogTag = "[EliteEnemies.EliteLootSystem]";
-        private static bool Verbose = true;
+        private static bool Verbose = false;
         public static float GlobalDropRate = 1.0f;
 
         private static readonly HashSet<int> ProcessedLootBoxes = new HashSet<int>();
