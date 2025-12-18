@@ -1,42 +1,40 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Reflection; 
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.AI;
-using Duckov.Scenes;
 using ItemStatsSystem;
+using NodeCanvas.Framework;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 【拟态】 - 静音版
+    /// 【拟态】
     /// </summary>
     public class MimicBehavior : AffixBehaviorBase, IUpdateableAffixBehavior, ICombatAffixBehavior
     {
         public override string AffixName => "Mimic";
 
         private InteractableLootbox _trapBox;
-        private InteractableBase _trapInteractable;
         private AICharacterController _aiController;
-        private Collider _col;
-        
-        private NavMeshAgent _navAgent;
-        private Animator _animator;
-        private Rigidbody _rb;
-        private Movement _movement;
         private CharacterSoundMaker _soundMaker;
+        private NavMeshAgent _navAgent;
+        private GraphOwner _brain;
 
         private List<Renderer> _cachedRenderers;
         private static FieldInfo _renderersField;
 
         private bool _hasTriggered = false;
         private bool _isTriggering = false;
-        private readonly Vector3 _followOffset = Vector3.up * 0.5f;
 
-        private const int BaitItemID = 445; 
+        private readonly Vector3 _followOffset = Vector3.up * 0.15f;
+
+        private const int BaitItemID = 445;
         private const int BaitItemCount = 10;
-        
-        private const float SyncThresholdSqr = 1.0f; 
+        private const float SyncThresholdSqr = 0.001f;
+
+        private float _cachedSightDist, _cachedHearing, _cachedSightAngle, _cachedTraceDist;
+        private bool _isSensorySuppressed = false;
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
@@ -44,79 +42,135 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             _hasTriggered = false;
             _isTriggering = false;
-    
-            _col = character.GetComponent<Collider>();
-            _rb = character.GetComponent<Rigidbody>();
-            _animator = character.GetComponentInChildren<Animator>();
-            _navAgent = character.GetComponent<NavMeshAgent>();
+
             _aiController = character.GetComponentInChildren<AICharacterController>();
             if (_aiController == null) _aiController = character.GetComponentInParent<AICharacterController>();
-
-            _movement = character.GetComponent<Movement>();
             _soundMaker = character.GetComponent<CharacterSoundMaker>();
+            _navAgent = character.GetComponent<NavMeshAgent>();
 
-            //初始化渲染器反射
+            if (_aiController != null)
+            {
+                _brain = _aiController.GetComponent<GraphOwner>();
+                if (_brain == null) _brain = _aiController.GetComponentInParent<GraphOwner>();
+            }
+
             InitRendererCache(character);
 
-            // 生成陷阱
-            SpawnTrapBox(character);
-            
-            ToggleAI(false);
-            if (_col != null) _col.enabled = false;
-            
-            SyncPositionToBox(character);
-            ForceHideVisuals(); 
+            SpawnBoxByLiftingEnemy(character);
+
+            SetMimicState(character, true);
+
+            ForceHideVisuals();
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            if (_hasTriggered || character == null || character.characterModel == null) return;
-            
-            character.Hide(); // 必须hide防止血条显现
-            ForceHideVisuals(); // 有时候hide无法关闭模型，不知道为啥
-            
-            // 1. 导航
-            if (_navAgent != null && _navAgent.enabled) _navAgent.enabled = false;
-            if (_animator != null && _animator.enabled) _animator.enabled = false;
-            
-            // 2. 静音
+            if (_hasTriggered || character == null) return;
+
+            character.Hide();
+            ForceHideVisuals();
+
+            // 持续压制 AI
+            if (_aiController != null) SuppressAIHard(_aiController);
             if (_soundMaker != null && _soundMaker.enabled) _soundMaker.enabled = false;
-            if (_movement != null && _movement.enabled) _movement.enabled = false;
-            
-            // 位置同步逻辑优化
+
             if (_trapBox != null)
             {
                 Vector3 targetPos = _trapBox.transform.position + _followOffset;
-
                 if (Vector3.SqrMagnitude(character.transform.position - targetPos) > SyncThresholdSqr)
                 {
                     character.transform.position = targetPos;
                     character.transform.rotation = _trapBox.transform.rotation;
-                    if (_rb != null && !_rb.isKinematic) 
-                    {
-                        _rb.velocity = Vector3.zero;
-                        _rb.angularVelocity = Vector3.zero;
-                    }
                 }
             }
         }
 
+        /// <summary>
+        /// 被攻击时触发埋伏
+        /// </summary>
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
-            if (!_hasTriggered) TriggerAmbush(character);
+            if (_hasTriggered) return;
+    
+            // 被打激活时，如果是被其他单位攻击，将攻击者设为突袭目标
+            CharacterMainControl attacker = damageInfo.fromCharacter;
+            TriggerAmbush(character, attacker);
         }
 
-        private void TriggerAmbush(CharacterMainControl character)
+        private void SpawnBoxByLiftingEnemy(CharacterMainControl character)
+        {
+            if (character == null || character.deadLootBoxPrefab == null) return;
+
+            Vector3 originalFloorPos = character.transform.position;
+            character.transform.position += Vector3.up * 5.0f;
+
+            _trapBox = UnityEngine.Object.Instantiate(character.deadLootBoxPrefab, originalFloorPos,
+                character.transform.rotation);
+
+            if (_trapBox != null)
+            {
+                Rigidbody boxRb = _trapBox.GetComponent<Rigidbody>();
+                if (boxRb != null)
+                {
+                    boxRb.isKinematic = false;
+                    boxRb.useGravity = true;
+                    boxRb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                    boxRb.angularVelocity = UnityEngine.Random.insideUnitSphere * 2f;
+                    boxRb.WakeUp();
+                }
+
+                // 确保箱子不是触发器，以便它能撞击地面
+                if (_trapBox.interactCollider != null) _trapBox.interactCollider.isTrigger = false;
+                else
+                {
+                    var col = _trapBox.GetComponent<Collider>();
+                    if (col != null) col.isTrigger = false;
+                }
+
+                _trapBox.Inventory.SetCapacity(BaitItemCount + 4);
+                for (int i = 0; i < BaitItemCount; i++)
+                {
+                    Item newItem = ItemAssetsCollection.InstantiateSync(BaitItemID);
+                    if (newItem != null) _trapBox.Inventory.AddItem(newItem);
+                }
+
+                // 绑定交互
+                if (_trapBox.GetComponent<InteractableBase>() is var interactable && interactable != null)
+                {
+                    interactable.OnInteractStartEvent.AddListener((player, _) => OnPlayerOpenedBox(player, character));
+                }
+
+                // 移至当前活动场景
+                try
+                {
+                    Duckov.Scenes.MultiSceneCore.MoveToActiveWithScene(_trapBox.gameObject,
+                        UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        private void SuppressAIHard(AICharacterController ai)
+        {
+            ai.sightDistance = 0f;
+            ai.sightAngle = 0f;
+            ai.hearingAbility = 0f;
+            ai.forceTracePlayerDistance = 0f;
+
+            if (ai.searchedEnemy != null || ai.aimTarget != null)
+            {
+                ai.SetTarget(null);
+                ai.searchedEnemy = null;
+                ai.alert = false;
+                ai.StopMove();
+            }
+        }
+
+        private void TriggerAmbush(CharacterMainControl character, CharacterMainControl initialTarget = null)
         {
             if (_hasTriggered) return;
-            
-            // 触发埋伏瞬间，强制将敌人拉回箱子位置
-            // if (_trapBox != null)
-            // {
-            //     character.transform.position = _trapBox.transform.position + _followOffset;
-            //     character.transform.rotation = _trapBox.transform.rotation;
-            // }
-
             _hasTriggered = true;
 
             if (_trapBox != null)
@@ -124,94 +178,71 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 UnityEngine.Object.Destroy(_trapBox.gameObject);
                 _trapBox = null;
             }
-            
-            // 1. 恢复所有能力 (AI、移动、声音)
-            ToggleAI(true); 
-            if (_col != null) _col.enabled = true;
-            
-            // 2. 强制显形
+    
+            SetMimicState(character, false);
             ForceShowVisuals(); 
             character.Show();
+
+            if (initialTarget != null && _aiController != null)
+            {
+                FaceTarget(character, initialTarget);
+                _aiController.SetTarget(initialTarget.transform);
+                _aiController.searchedEnemy = initialTarget.mainDamageReceiver;
+                _aiController.alert = true;
+        
+            }
         }
 
-        private void ToggleAI(bool enable)
+        private void SetMimicState(CharacterMainControl character, bool isMimic)
         {
-            // 1. 声音与移动控制 (强类型操作)
-            if (_soundMaker != null) _soundMaker.enabled = enable;
-            if (_movement != null)
+            if (_aiController == null) return;
+
+            if (isMimic)
             {
-                _movement.enabled = enable;
-                // 如果是禁用移动，顺便把残余速度清零
-                if (!enable && _movement.characterController != null) 
-                {
-                    // _movement.Velocity 是只读的，通常通过刚体控制
-                }
+                // 暂停大脑逻辑
+                if (_brain != null && _brain.isRunning) _brain.PauseBehaviour();
+                SetSensorySuppression(_aiController, true);
+                if (_soundMaker != null) _soundMaker.enabled = false;
+
+                // 停止寻路系统，防止其在被强刷坐标时尝试回正位置导致抖动
+                if (_navAgent != null && _navAgent.enabled) _navAgent.isStopped = true;
             }
-
-            // 2. 导航代理
-            if (_navAgent != null)
+            else
             {
-                if (!enable)
-                {
-                    if (_navAgent.isOnNavMesh) _navAgent.isStopped = true;
-                    _navAgent.enabled = false;
-                }
-                else
-                {
-                    _navAgent.enabled = true;
-                    if (_navAgent.isOnNavMesh) _navAgent.isStopped = false;
-                }
-            }
-
-            // 3. 刚体
-            if (_rb != null)
-            {
-                _rb.isKinematic = !enable; 
-                if (!enable) _rb.velocity = Vector3.zero;
-            }
-
-            // 4. 动画
-            if (_animator != null) _animator.enabled = enable;
-
-            // 5. AI
-            if (_aiController != null)
-            {
-                if (enable)
-                {
-                    _aiController.gameObject.SetActive(true);
-                    _aiController.enabled = true;
-                }
-                else
-                {
-                    _aiController.StopMove();
-                    _aiController.alert = false;
-                    _aiController.searchedEnemy = null;
-                    _aiController.SetTarget(null);
-                    _aiController.PutBackWeapon();
-                    _aiController.gameObject.SetActive(false);
-                }
+                SetSensorySuppression(_aiController, false);
+                if (_brain != null && _brain.isPaused) _brain.StartBehaviour();
+                if (_soundMaker != null) _soundMaker.enabled = true;
+                if (_navAgent != null && _navAgent.enabled) _navAgent.isStopped = false;
             }
         }
 
-        #region 辅助函数
-
-        private void ForceShowVisuals()
+        private void SetSensorySuppression(AICharacterController ai, bool shouldSuppress)
         {
-            if (_cachedRenderers == null) return;
-            for (int i = 0; i < _cachedRenderers.Count; i++)
+            if (ai == null) return;
+            if (shouldSuppress)
             {
-                if (_cachedRenderers[i] != null) _cachedRenderers[i].enabled = true;
+                if (_isSensorySuppressed) return;
+                _cachedSightDist = ai.sightDistance;
+                _cachedHearing = ai.hearingAbility;
+                _cachedSightAngle = ai.sightAngle;
+                _cachedTraceDist = ai.forceTracePlayerDistance;
+
+                SuppressAIHard(ai);
+                ai.PutBackWeapon();
+                _isSensorySuppressed = true;
+            }
+            else
+            {
+                if (!_isSensorySuppressed) return;
+                ai.sightDistance = _cachedSightDist;
+                ai.sightAngle = _cachedSightAngle;
+                ai.hearingAbility = _cachedHearing;
+                ai.forceTracePlayerDistance = _cachedTraceDist;
+                _isSensorySuppressed = false;
             }
         }
 
-        private void ForceHideVisuals()
-        {
-            if (_cachedRenderers == null) return;
-            for (int i = 0; i < _cachedRenderers.Count; i++)
-            {
-                if (_cachedRenderers[i] != null && _cachedRenderers[i].enabled) _cachedRenderers[i].enabled = false;
-            }
-        }
+        #region 基础辅助逻辑
 
         private void InitRendererCache(CharacterMainControl character)
         {
@@ -219,107 +250,84 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             try
             {
                 if (_renderersField == null)
-                    _renderersField = typeof(CharacterModel).GetField("renderers", BindingFlags.Instance | BindingFlags.NonPublic);
+                    _renderersField =
+                        typeof(CharacterModel).GetField("renderers", BindingFlags.Instance | BindingFlags.NonPublic);
                 if (_renderersField != null)
                     _cachedRenderers = _renderersField.GetValue(character.characterModel) as List<Renderer>;
             }
-            catch { _cachedRenderers = null; }
-        }
-
-        private void SpawnTrapBox(CharacterMainControl owner)
-        {
-            if (owner.deadLootBoxPrefab == null) return;
-            Vector3 spawnPos = owner.transform.position + Vector3.up * 1.5f;
-
-            _trapBox = UnityEngine.Object.Instantiate(owner.deadLootBoxPrefab, spawnPos, owner.transform.rotation);
-            if (_trapBox != null)
+            catch
             {
-                var boxRb = _trapBox.GetComponent<Rigidbody>();
-                if (boxRb != null)
-                {
-                    boxRb.isKinematic = false; 
-                    boxRb.useGravity = true;   
-                    boxRb.collisionDetectionMode = CollisionDetectionMode.Continuous; 
-                    boxRb.angularVelocity = UnityEngine.Random.insideUnitSphere * 2f; 
-                }
-
-                if (_trapBox.interactCollider != null) _trapBox.interactCollider.isTrigger = false;
-                else
-                {
-                    var col = _trapBox.GetComponent<Collider>();
-                    if (col != null) col.isTrigger = false;
-                }
-                
-                _trapBox.Inventory.SetCapacity(BaitItemCount + 4);
-                GenerateBaitItems();
-
-                _trapInteractable = _trapBox.GetComponent<InteractableBase>();
-                if (_trapInteractable != null)
-                {
-                    _trapInteractable.OnInteractStartEvent.AddListener((player, interactable) =>
-                    {
-                        OnPlayerOpenedBox(player, owner);
-                    });
-                }
-                
-                try { MultiSceneCore.MoveToActiveWithScene(_trapBox.gameObject, UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex); } catch { }
+                _cachedRenderers = null;
             }
         }
 
-        private void GenerateBaitItems()
+        private void ForceShowVisuals()
         {
-            if (_trapBox == null || _trapBox.Inventory == null) return;
-            for (int i = 0; i < BaitItemCount; i++)
-            {
-                Item newItem = ItemAssetsCollection.InstantiateSync(BaitItemID);
-                if (newItem != null)
-                {
-                    newItem.FromInfoKey = "MimicBait"; 
-                    _trapBox.Inventory.AddItem(newItem);
-                }
-            }
+            if (_cachedRenderers == null) return;
+            foreach (var r in _cachedRenderers)
+                if (r != null)
+                    r.enabled = true;
         }
 
-        private void SyncPositionToBox(CharacterMainControl character)
+        private void ForceHideVisuals()
         {
-            if (_trapBox != null)
-            {
-                character.transform.position = _trapBox.transform.position + _followOffset;
-                character.transform.rotation = _trapBox.transform.rotation;
-            }
+            if (_cachedRenderers == null) return;
+            foreach (var r in _cachedRenderers)
+                if (r != null)
+                    r.enabled = false;
         }
 
         private void OnPlayerOpenedBox(CharacterMainControl player, CharacterMainControl owner)
         {
             if (_hasTriggered || _isTriggering) return;
             _isTriggering = true;
-            if (player.interactAction != null && player.interactAction.Running) player.interactAction.StopAction();
-            if (owner != null && owner.gameObject.activeInHierarchy) owner.StartCoroutine(DelayedAmbushRoutine(owner));
-            else TriggerAmbush(owner);
+    
+            if (player.interactAction != null && player.interactAction.Running) 
+                player.interactAction.StopAction();
+        
+            // 延迟突袭：将玩家传入作为初始目标
+            owner.StartCoroutine(DelayedAmbushRoutine(owner, player));
+        }
+
+        private IEnumerator DelayedAmbushRoutine(CharacterMainControl owner, CharacterMainControl target)
+        {
+            yield return new WaitForSeconds(1.2f);
+            if (owner != null) TriggerAmbush(owner, target);
         }
         
-        private IEnumerator DelayedAmbushRoutine(CharacterMainControl owner)
+        private void FaceTarget(CharacterMainControl character, CharacterMainControl target)
         {
-            yield return new WaitForSeconds(1.5f);
-            if (owner != null) TriggerAmbush(owner);
+            if (character == null || target == null) return;
+    
+            Vector3 direction = (target.transform.position - character.transform.position);
+            direction.y = 0f;
+    
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                character.transform.rotation = Quaternion.LookRotation(direction);
+            }
         }
-
-        #endregion
-
+        
         public override void OnCleanup(CharacterMainControl character)
         {
+            SetMimicState(character, false);
             ForceShowVisuals();
             if (character != null) character.Show();
-            if (_col != null) _col.enabled = true;
-            ToggleAI(true);
             _hasTriggered = false;
             _isTriggering = false;
-            _cachedRenderers = null; 
             if (_trapBox != null) UnityEngine.Object.Destroy(_trapBox.gameObject);
         }
 
-        public void OnAttack(CharacterMainControl c, DamageInfo d) { }
-        public override void OnHitPlayer(CharacterMainControl c, DamageInfo d) { }
+        public void OnAttack(CharacterMainControl c, DamageInfo d)
+        {
+        }
+
+        public override void OnHitPlayer(CharacterMainControl c, DamageInfo d)
+        {
+        }
+
         public override void OnEliteDeath(CharacterMainControl c, DamageInfo d) => OnCleanup(c);
+
+        #endregion
     }
 }

@@ -10,12 +10,10 @@ namespace EliteEnemies.DebugTool
     {
         private const string LogTag = "[EliteEnemies.PresetKeyLogger]";
         
-        // 设置触发按键为 F9 (可根据需要修改)
         public KeyCode dumpKey = KeyCode.F9;
 
         private void Update()
         {
-            // 在游戏运行时，按下指定按键触发导出
             if (Input.GetKeyDown(dumpKey))
             {
                 DumpPresets();
@@ -63,7 +61,6 @@ namespace EliteEnemies.DebugTool
                 string outputPath = Application.persistentDataPath + "/EliteEnemies_PresetMapping.txt";
                 System.IO.File.WriteAllText(outputPath, sb.ToString());
                 
-                // 给玩家/开发者一个明显的反馈
                 Debug.Log($"{LogTag} 成功！映射清单已导出至: {outputPath}");
             }
             catch (Exception ex)

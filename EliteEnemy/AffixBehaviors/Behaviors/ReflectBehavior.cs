@@ -20,7 +20,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private float _timer;
         private bool _isReflecting;
 
-        private const float CooldownTime = 5.0f; 
+        private const float CooldownTime = 4.0f; 
         private const float ActiveDuration = 3.5f;
         
         private readonly Lazy<string> _popText = new(() => LocalizationManager.GetText("Affix_Reflect_PopText"));

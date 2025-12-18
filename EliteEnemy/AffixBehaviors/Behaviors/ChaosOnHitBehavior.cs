@@ -1,6 +1,4 @@
-﻿// ChaosOnHitBehavior.cs
-
-using System;
+﻿using System;
 using Duckov.Buffs;
 using Duckov.Utilities;
 using EliteEnemies.Localization;
@@ -10,13 +8,13 @@ using Random = UnityEngine.Random;
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 词缀：混沌（Chaos On Hit）
+    /// 词缀：混沌
     /// </summary>
     public class ChaosOnHitBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {
         public override string AffixName => "Chaos";
         
-        private static readonly float CooldownSeconds = 0.7f;
+        private static readonly float CooldownSeconds = 0.5f;
         // 内置全局冷却，共享
         private static float _lastApplyTime = -999f;
         
@@ -38,6 +36,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             GameplayDataSettings.Buffs.Electric, // Electric
             GameplayDataSettings.Buffs.Burn, // Burning
             GameplayDataSettings.Buffs.Space, // Space
+            GameplayDataSettings.Buffs.Cold
             // 这三个不会自动取消
             // TryAdd(GameplayDataSettings.Buffs.Weight_Overweight);          // Weight 
             // TryAdd(GameplayDataSettings.Buffs.Starve);            // Starve
