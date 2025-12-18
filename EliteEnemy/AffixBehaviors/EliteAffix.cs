@@ -385,12 +385,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             ),
             ["TimeStop"] = new AffixData
             {
-                Name = LocalizationManager.GetText("Affix_TimeStop_Name", "时停"),
-                Description = LocalizationManager.GetText("Affix_TimeStop_Description", "受伤时会短暂停止时间约 3 秒"),
+                Name = LocalizationManager.GetText("Affix_TimeStop_Name"),
+                Description = LocalizationManager.GetText("Affix_TimeStop_Description"),
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Epic
+                Rarity = AffixRarity.Rare
             }.WithLootGroup(
                 new LootEntry(51, 1, 1, 1f), // 钟
                 new LootEntry(83, 1, 1, 1f) // 紫色怀表
@@ -671,6 +671,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 HealthMultiplier = 1.2f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Epic
+            },
+            ["Frozen"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Frozen_Name"),
+                Description = LocalizationManager.GetText("Affix_Frozen_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 0.8f,
+                MoveSpeedMultiplier = 0.8f,
                 Rarity = AffixRarity.Epic
             }
         };

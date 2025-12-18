@@ -160,3 +160,5 @@ Settings_SplitAffixMinFPSThreshold,[分裂] 最低幀率熔斷值,2.3,BasicSetti
 Affix_Reflect_Name,反彈,2.3,AffixNames
 Affix_Reflect_Description,週期性生成護盾，將受到的子彈反彈回攻擊者,2.3,AffixDescription
 Affix_Reflect_PopText,<color=#00BFFF>反彈！</color>,2.3,AffixBehavior
+Affix_Frozen_Name,嚴寒,2.3,AffixNames
+Affix_Frozen_Description,攻擊命中時有概率凍結玩家（12秒冷卻時間）,2.3,AffixDescription

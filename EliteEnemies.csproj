@@ -644,6 +644,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DistortionBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DungEaterBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\EMPBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\FrozenBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GigantificationBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GrenadierBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GuardianBehavior.cs" />

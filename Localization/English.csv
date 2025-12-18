@@ -160,3 +160,5 @@ Settings_SplitAffixMinFPSThreshold,[Split] Minimum FPS Cutoff Threshold,2.3,Basi
 Affix_Reflect_Name,Reflect,2.3,AffixNames
 Affix_Reflect_Description,Periodically generates a shield that reflects incoming bullets back to the attacker,2.3,AffixDescription
 Affix_Reflect_PopText,<color=#00BFFF>Reflect!</color>,2.3,AffixBehavior
+Affix_Frozen_Name,Frigid,2.3,AffixNames
+Affix_Frozen_Description,Attacks have a chance to freeze the player on hit (12s Cooldown).,2.3,AffixDescription
