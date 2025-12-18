@@ -12,7 +12,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【分裂】词缀 - 敌人残血时分裂成多个较弱的小怪
-    /// 集成了防卡死全局计数限制
     /// </summary>
     public class SplitBehavior : AffixBehaviorBase
     {
@@ -25,21 +24,18 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly float SplitDamageRatio = 0.7f;
         private static readonly float SplitSpeedRatio = 1.15f;
 
-        // 全局活跃分裂体计数器 & 上限配置
-        // 限制场景中同时存在的分裂体不超过 40 
+        // 全局活跃分裂体计数器
         public static int GlobalActiveSplitClones { get; private set; } = 0;
 
         private CharacterMainControl _originalCharacter;
         private bool _hasSplit = false;
 
-        // 场景重置时清零计数器，防止数值残留
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             GlobalActiveSplitClones = 0;
         }
 
-        // 维护计数器
         public class SplitCloneMarker : MonoBehaviour
         {
             private void Start()
@@ -69,14 +65,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             if (health != _originalCharacter?.Health) return;
             if (_hasSplit) return;
 
-            // 简单限制无限分裂
-            if (health.MaxHealth <= 20)
-            {
-                // Debug.LogWarning("[EliteEnemies.SplitBehavior] 敌人太弱小，无法分裂");
-                return;
-            }
+            // 基础限制，防止极弱小单位产生无限分裂
+            if (health.MaxHealth <= 20) return;
 
-            // 残血时触发分裂
+            // 残血触发
             if (health.CurrentHealth < health.MaxHealth / 3)
             {
                 _hasSplit = true;
@@ -97,7 +89,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             int maxClones = EliteEnemyCore.Config.SplitAffixMaxCloneCount;
             float minFps = EliteEnemyCore.Config.SplitAffixMinFPSThreshold;
             
-            // 1. 熔断检查
+            // 1. 性能与数量熔断检查
             float currentFPS = 1.0f / Mathf.Max(Time.smoothDeltaTime, 0.001f);
             if (currentFPS < minFps || GlobalActiveSplitClones >= maxClones)
             {
@@ -108,7 +100,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             var helper = EggSpawnHelper.Instance;
             if (helper == null || !helper.IsReady) return;
             
-            // 2. 捕获父级当前的 Buff 快照
+            // 2. 捕获父级当前的 Buff 快照以便继承
             List<Buff> buffsToInherit = new List<Buff>();
             var activeBuffs = BuffInheritanceHelper.GetActiveBuffs(character);
             if (activeBuffs != null)
@@ -118,23 +110,18 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     if (b != null) buffsToInherit.Add(b);
                 }
             }
-
-            // // 3. 捕获父级当前的精英词缀
-            // List<string> affixesToInherit = new List<string>();
-            // var parentMarker = character.GetComponent<EliteEnemyCore.EliteMarker>();
-            // if (parentMarker != null && parentMarker.Affixes != null)
-            // {
-            //     affixesToInherit.AddRange(parentMarker.Affixes);
-            //     if (affixesToInherit.Contains(AffixName)) affixesToInherit.Remove(AffixName);
-            // }
             
             Vector3 deathPosition = character.transform.position;
             int splitCount = Random.Range(MinSplitCount, MaxSplitCount + 1);
+            
+            // 修正生成数量不超过剩余额度
             int remainingQuota = maxClones - GlobalActiveSplitClones;
             if (splitCount > remainingQuota) splitCount = Mathf.Max(1, remainingQuota);
 
-            string originalName = character.characterPreset.nameKey.ToPlainText();
+            // 获取原始显示的中文名（或本地化文本）
+            string originalDisplayName = character.characterPreset.nameKey.ToPlainText();
 
+            // 3. 批量生成分裂体
             helper.SpawnCloneCircle(
                 originalEnemy: character,
                 centerPosition: deathPosition,
@@ -144,8 +131,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 damageMultiplier: SplitDamageRatio,
                 speedMultiplier: SplitSpeedRatio,
                 scaleMultiplier: 1f,
-                preventElite: false, 
-                customDisplayName: originalName,
+                preventElite: false, // 分裂体本身可以通过逻辑再次产生，但受 GlobalActiveSplitClones 熔断保护
+                customKeySuffix: "EE_Split", 
+                customDisplayName: originalDisplayName,
                 onAllSpawned: (clones) => 
                 {
                     if (clones == null) return;
@@ -153,15 +141,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     {
                         if (clone != null)
                         {
+                            // 挂载计数标记
                             clone.gameObject.AddComponent<SplitCloneMarker>();
 
-                            // // 应用继承的精英词缀
-                            // if (affixesToInherit.Count > 0)
-                            // {
-                            //     EliteEnemyCore.ForceMakeElite(clone, affixesToInherit);
-                            // }
-
-                            // 应用继承的普通 Buff
+                            // 继承父级 Buff
                             if (buffsToInherit.Count > 0)
                             {
                                 BuffInheritanceHelper.ApplyBuffsTo(clone, buffsToInherit);
@@ -183,6 +166,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         }
     }
 
+    // 补丁逻辑：清除分裂体的掉落物，防止分裂产生海量掉落
     [HarmonyPatch(typeof(InteractableLootbox), "CreateFromItem")]
     public static class SplitLootPatch
     {
@@ -194,6 +178,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             CharacterMainControl character = GetCharacterFromItem(item);
             if (character == null) return;
 
+            // 如果是分裂体产生的掉落箱，清理大部分内容
             if (character.GetComponent<SplitBehavior.SplitCloneMarker>() != null)
             {
                 ClearCloneLootBoxInventory(__result);
@@ -202,6 +187,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private static CharacterMainControl GetCharacterFromItem(Item item)
         {
+            // 通过反射或父子关系尝试定位所属 CMC
             MethodInfo method = item.GetType().GetMethod("GetCharacterItem");
             if (method != null)
             {
@@ -217,7 +203,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 current = current.parent;
                 depth++;
             }
-
             return null;
         }
 
@@ -227,12 +212,11 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             if (inv == null) return;
 
             var items = new List<Item>();
-            foreach (var it in inv)
-                if (it != null)
-                    items.Add(it);
+            foreach (var it in inv) if (it != null) items.Add(it);
 
             if (items.Count <= 2) return;
 
+            // 仅保留 2 个随机物品，销毁其他物品
             HashSet<int> keepIndices = new HashSet<int>();
             while (keepIndices.Count < 2)
             {
@@ -247,19 +231,18 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         }
     }
 
+    // 辅助工具：Buff 继承逻辑
     public static class BuffInheritanceHelper
     {
         private static FieldInfo _buffsField;
         private static bool _initialized;
 
-        public static void Initialize()
+        private static void Initialize()
         {
             if (_initialized) return;
             var type = typeof(Duckov.Buffs.CharacterBuffManager);
             _buffsField = type.GetField("buffs", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                          ?? type.GetField("_buffs",
-                              BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
+                          ?? type.GetField("_buffs", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
             _initialized = true;
         }
 
@@ -270,9 +253,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             if (manager == null) return null;
 
             Initialize();
-            if (_buffsField == null) return null;
-
-            return _buffsField.GetValue(manager) as List<Duckov.Buffs.Buff>;
+            return _buffsField?.GetValue(manager) as List<Duckov.Buffs.Buff>;
         }
 
         public static void ApplyBuffsTo(CharacterMainControl target, List<Duckov.Buffs.Buff> buffsToCopy)
@@ -282,11 +263,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             foreach (var originalBuff in buffsToCopy)
             {
                 if (originalBuff == null) continue;
-
-                // 克隆 Buff 实例
                 var clonedBuff = Object.Instantiate(originalBuff);
-
-                // 修正名称 (移除 (Clone) 后缀)
                 clonedBuff.name = originalBuff.name.Replace("(Clone)", "");
                 
                 try
@@ -295,7 +272,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogWarning($"[BuffInheritance] 无法继承 Buff {clonedBuff.name}: {e.Message}");
+                    Debug.LogWarning($"[BuffInheritance] Failed to inherit {clonedBuff.name}: {e.Message}");
                     Object.Destroy(clonedBuff.gameObject);
                 }
             }

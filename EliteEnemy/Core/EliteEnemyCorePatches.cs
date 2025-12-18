@@ -24,36 +24,43 @@ namespace EliteEnemies.EliteEnemy.Core
                 var cmc = _characterMainControl;
                 if (!cmc || cmc.IsMainCharacter) return;
 
+                // 排除友军
                 var main = LevelManager.Instance?.MainCharacter;
                 if (main && cmc.Team == main.Team) return;
+
+                var preset = cmc.characterPreset;
+                if (preset == null) return;
+
+                // 获取资源名作为唯一标识符
+                string rName = preset.name;
+                string baseName = EliteEnemyCore.ResolveBaseName(cmc);
                 
-                string presetName = cmc.characterPreset?.nameKey ?? string.Empty;
-                
+                // 1. 忽略逻辑判定
                 if (EliteEnemyCore.IsIgnored(cmc.gameObject) || 
-                    EliteEnemyCore.IsIgnoredPreset(cmc.characterPreset) ||
-                    presetName.IndexOf("NonElite", StringComparison.OrdinalIgnoreCase) >= 0)
+                    EliteEnemyCore.IsIgnoredPreset(preset) ||
+                    EliteEnemyCore.IgnoredGenericPresets.Contains(rName))
                 {
-                    EliteEnemyTracker.RecordDecision(presetName, processedFlag: false);
+                    EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: false);
                     return;
                 }
                 
-                bool isBoss = EliteEnemyCore.BossPresets.Contains(presetName);
-                bool isMerchant = EliteEnemyCore.MerchantPresets.Contains(presetName);
-                bool isNormal = EliteEnemyCore.IsEligiblePreset(presetName);
-                bool isLove486 = presetName == "Enemy_Custom_Love486";
+                // 2. 类型分类判定
+                bool isBoss = EliteEnemyCore.BossPresets.Contains(rName);
+                bool isMerchant = EliteEnemyCore.MerchantPresets.Contains(rName);
+                bool isNormal = EliteEnemyCore.IsEligiblePreset(preset);
                 
-                if (!isBoss && !isMerchant && !isNormal && !isLove486)
+                // 3. 自动注册逻辑
+                if (!isBoss && !isMerchant && !isNormal)
                 {
-                    if (EliteEnemyCore.TryAutoRegisterExternalPreset(presetName))
+                    if (EliteEnemyCore.TryAutoRegisterExternalPreset(preset))
                     {
                         isNormal = true;
                     }
                 }
 
+                // 4. 精英化概率计算
                 float chance = 0f;
-                if (isLove486) 
-                    chance = 1.0f;
-                else if (isBoss)
+                if (isBoss)
                     chance = Mathf.Clamp01(EliteEnemyCore.Config.BossEliteChance);
                 else if (isMerchant)
                     chance = Mathf.Clamp01(EliteEnemyCore.Config.MerchantEliteChance);
@@ -61,31 +68,32 @@ namespace EliteEnemies.EliteEnemy.Core
                     chance = Mathf.Clamp01(EliteEnemyCore.Config.NormalEliteChance);
                 else
                 {
-                    EliteEnemyTracker.RecordDecision(presetName, processedFlag: false);
+                    EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: true);
                     return;
                 }
 
+                // 随机判定
                 if (UnityEngine.Random.value > chance)
                 {
-                    EliteEnemyTracker.RecordDecision(presetName, processedFlag: false);
+                    EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: true);
                     return;
                 }
 
+                // 5. 应用精英化
                 int maxCount = Mathf.Max(1, EliteEnemyCore.Config.MaxAffixCount);
                 var affixes = EliteEnemyCore.SelectRandomAffixes(maxCount, cmc);
 
+                // 修改属性并标记
                 EliteEnemyCore.ForceMakeElite(cmc, affixes);
 
-                string baseName = EliteEnemyCore.ResolveBaseName(cmc);
-                EliteEnemyCore.TagAsElite(cmc, affixes, baseName);
-
+                // 6. 附加行为组件
                 AttachBehaviorComponent(cmc, affixes);
 
-                EliteEnemyTracker.RecordDecision(presetName, processedFlag: true);
+                EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: true);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 处理失败: {ex.Message}");
+                Debug.LogError($"{LogTag} AI初始化补丁执行失败: {ex.Message}\n{ex.StackTrace}");
             }
         }
 
@@ -93,10 +101,11 @@ namespace EliteEnemies.EliteEnemy.Core
         {
             if (cmc == null || affixes == null || affixes.Count == 0) return;
 
+            // 检查是否有任何词缀需要特殊的逻辑监听
             bool needsBehavior = false;
             foreach (string affixName in affixes)
             {
-                if (AffixBehaviors.AffixBehaviorManager.IsRegistered(affixName))
+                if (AffixBehaviorManager.IsRegistered(affixName))
                 {
                     needsBehavior = true;
                     break;
@@ -105,89 +114,79 @@ namespace EliteEnemies.EliteEnemy.Core
 
             if (!needsBehavior) return;
 
-            var component = cmc.gameObject.AddComponent<AffixBehaviors.EliteBehaviorComponent>();
+            // 添加核心逻辑驱动组件
+            var component = cmc.gameObject.AddComponent<EliteBehaviorComponent>();
             component.Initialize(cmc, affixes);
 
-            cmc.BeforeCharacterSpawnLootOnDead += (damageInfo) => { component?.OnDeath(damageInfo); };
+            // 注册死亡清理回调
+            cmc.BeforeCharacterSpawnLootOnDead += (damageInfo) => { 
+                if(component != null) component.OnDeath(damageInfo); 
+            };
         }
     }
+
     /// <summary>
     /// 强制精英敌人显示血条
     /// </summary>
     [HarmonyPatch(typeof(Health), "Start")]
     internal static class Health_ForceShowEliteHealthBar_Patch
     {
-        private const string LogTag = "[EliteEnemies.HealthBar]";
-
         static void Postfix(Health __instance)
         {
             var cmc = __instance.TryGetCharacter();
             if (cmc == null || cmc.IsMainCharacter) return;
 
-            var main = LevelManager.Instance?.MainCharacter;
-            if (main && cmc.Team == main.Team) return;
-
+            // 仅对精英怪强制开启血条
             var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();
-            if (marker == null) return;
-
-            // 强制显示血条
-            if (!__instance.showHealthBar)
+            if (marker != null && !__instance.showHealthBar)
             {
                 __instance.showHealthBar = true;
             }
         }
     }
+
     /// <summary>
-    /// 血条颜色补丁
+    /// 血条颜色与外观补丁
     /// </summary>
     [HarmonyPatch(typeof(HealthBar), "Refresh")]
     internal static class HealthBar_EliteColor_Patch
     {
-        private static readonly FieldInfo
-            ColorOverAmountField = AccessTools.Field(typeof(HealthBar), "colorOverAmount");
+        private static readonly FieldInfo ColorOverAmountField = AccessTools.Field(typeof(HealthBar), "colorOverAmount");
 
         [HarmonyPrefix]
         private static void Prefix(HealthBar __instance)
         {
-            if (ColorOverAmountField == null) return;
+            if (ColorOverAmountField == null || __instance.target == null) return;
 
-            var cmc = __instance?.target?.TryGetCharacter();
+            var cmc = __instance.target.TryGetCharacter();
             if (cmc == null) return;
 
-            var main = LevelManager.Instance?.MainCharacter;
-            if (main && cmc.Team == main.Team) return;
+            // 获取精英标记组件
+            var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();
+            if (marker == null) return;
 
-            int affixCount = TryGetEliteAffixCount(cmc);
+            int affixCount = marker.Affixes?.Count ?? 0;
+            if (affixCount <= 0) return;
 
-            Color color = GetHealthBarColor(affixCount);
-            var gradient = CreateSolidGradient(color);
+            // 根据词缀数量应用特殊颜色
+            Color eliteColor = GetHealthBarColor(affixCount);
+            var gradient = CreateSolidGradient(eliteColor);
 
             ColorOverAmountField.SetValue(__instance, gradient);
         }
 
-        private static int TryGetEliteAffixCount(Component cmc)
-        {
-            var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();
-            if (marker == null)
-            {
-                return 0;
-            }
-            int count = marker.Affixes?.Count ?? 0;
-            return count;
-        }
-
         private static Color GetHealthBarColor(int count)
         {
-            switch (count)
+            return count switch
             {
-                case <= 0: return ParseColor("#FF4D4D"); // 红色
-                case 1:    return ParseColor("#A673FF"); // 紫色
-                case 2:    return ParseColor("#FFD700"); // 金色
-                case 3:    return ParseColor("#FF10F0"); // 霓虹粉
-                case 4:    return ParseColor("#00FFFF"); // 青色
-                case 5:    return ParseColor("#8B0000"); // 血月色
-                default:   return ParseColor("#1A1A1A"); // 6+ 黑色
-            }
+                1 => ParseColor("#A673FF"), // 紫色
+                2 => ParseColor("#FFD700"), // 金色
+                3 => ParseColor("#FF10F0"), // 霓虹粉
+                4 => ParseColor("#00FFFF"), // 青色
+                5 => ParseColor("#8B0000"), // 血月色
+                >= 6 => ParseColor("#1A1A1A"), // 深渊黑
+                _ => ParseColor("#FF4D4D")  // 默认红
+            };
         }
 
         private static Gradient CreateSolidGradient(Color color)
@@ -205,46 +204,48 @@ namespace EliteEnemies.EliteEnemy.Core
             return ColorUtility.TryParseHtmlString(hex, out Color color) ? color : Color.white;
         }
     }
+
     /// <summary>
-    /// 词缀名称补丁
+    /// 词缀显示组件挂载
     /// </summary>
     [HarmonyPatch(typeof(HealthBar), "Awake")]
     internal static class HealthBar_Awake_Patch
     {
         static void Postfix(HealthBar __instance)
         {
-            // 确保组件存在
             if (__instance.GetComponent<VisualEffects.EliteHealthBarUI>() == null)
             {
                 __instance.gameObject.AddComponent<VisualEffects.EliteHealthBarUI>();
             }
         }
     }
+
     /// <summary>
-    /// 玩家受伤Hook
+    /// 玩家受伤检测逻辑 (用于触发词缀的战斗逻辑)
     /// </summary>
     [HarmonyPatch(typeof(DamageReceiver), nameof(DamageReceiver.Hurt))]
     public static class PlayerHitDetectionPatch
     {
         static void Postfix(DamageReceiver __instance, DamageInfo damageInfo)
         {
-            if (damageInfo.fromCharacter == null)
-                return;
+            // 必须是由角色造成的伤害
+            if (damageInfo.fromCharacter == null) return;
 
             CharacterMainControl attacker = damageInfo.fromCharacter;
 
+            // 检查攻击者是否是拥有行为组件的精英怪
             var behaviorComponent = attacker.GetComponent<EliteBehaviorComponent>();
-            if (behaviorComponent == null)
-                return;
+            if (behaviorComponent == null) return;
 
+            // 检查受击者是否是玩家
             var receiver = __instance.GetComponentInParent<CharacterMainControl>();
-            if (receiver == null || !receiver.IsMainCharacter)
-                return;
+            if (receiver == null || !receiver.IsMainCharacter) return;
 
-            if (attacker.Team == receiver.Team)
-                return;
-
-            behaviorComponent.TriggerHitPlayer(attacker, damageInfo);
+            // 确保不是同队伤害
+            if (attacker.Team != receiver.Team)
+            {
+                behaviorComponent.TriggerHitPlayer(attacker, damageInfo);
+            }
         }
     }
 }

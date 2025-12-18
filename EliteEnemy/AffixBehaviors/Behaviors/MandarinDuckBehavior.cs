@@ -8,7 +8,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 【鸳鸯】词缀
-    /// 效果：出生时复制一个无精英词条的伴侣，伴侣会围绕本体旋转，并为本体分担 50% 的伤害。
+    /// 效果：出生时复制一个无精英词条的伴侣，伴侣会围绕本体旋转，并为本体分担伤害。
     /// </summary>
     public class MandarinDuckBehavior : AffixBehaviorBase, IUpdateableAffixBehavior, ICombatAffixBehavior
     {
@@ -30,9 +30,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private float _currentAngle = 0f;
         private bool _hasSpawned = false;
         
-        private readonly Lazy<string> _partnerName = new(() => 
-            LocalizationManager.GetText("Affix_MandarinDuck_MateSuffix"));
-        private string PartnerName => _partnerName.Value;
+        // 仅保留后缀文本的本地化获取
+        private readonly Lazy<string> _partnerSuffix = new(() => 
+            LocalizationManager.GetText("Affix_MandarinDuck_MateSuffix") ?? "Partner");
+        private string PartnerSuffix => _partnerSuffix.Value;
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
@@ -70,8 +71,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 scaleMultiplier: PartnerScaleRatio,
                 affixes: null,
                 preventElite: true, 
-                customKeySuffix:"EE_MandarinDuckPartner_NonElite",
-                customDisplayName: $"{_self.characterPreset.DisplayName} {PartnerName}",
+                customKeySuffix: "EE_DuckMate",
+                customDisplayName: $"{_self.characterPreset.DisplayName} ({PartnerSuffix})",
                 onSpawned: OnPartnerSpawned
             );
         }
@@ -104,12 +105,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             Vector3 targetPos = _self.transform.position + offset;
 
             _partner.transform.position = targetPos;
-            //_partner.transform.rotation = _self.transform.rotation; 
         }
         
-        public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
-        {
-        }
+        public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
         
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
@@ -121,14 +119,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             CharacterMainControl source = damageInfo.fromCharacter;
             
-            if (source == _self || source == null)
-            {
-                source = null;
-            }
-            DamageInfo sharedDmg = new DamageInfo(source);
+            // 如果伤害来源是自己（防止循环伤害），设为空
+            if (source == _self) source = null;
 
-            sharedDmg.damageValue = damageToShare;
-            sharedDmg.damageType = damageInfo.damageType;
+            DamageInfo sharedDmg = new DamageInfo(source)
+            {
+                damageValue = damageToShare,
+                damageType = damageInfo.damageType
+            };
 
             // 对分身造成伤害
             if (_partner.mainDamageReceiver != null)
@@ -149,8 +147,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 if (agent) 
                 {
                     agent.enabled = true;
-                    UnityEngine.AI.NavMeshHit hit;
-                    if (UnityEngine.AI.NavMesh.SamplePosition(_partner.transform.position, out hit, 5.0f, UnityEngine.AI.NavMesh.AllAreas))
+                    // 伴侣在本体死后恢复自由，尝试将其放回导航网格表面
+                    if (UnityEngine.AI.NavMesh.SamplePosition(_partner.transform.position, out var hit, 5.0f, UnityEngine.AI.NavMesh.AllAreas))
                     {
                         _partner.transform.position = hit.position;
                     }

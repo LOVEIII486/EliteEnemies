@@ -8,13 +8,15 @@ using UnityEngine;
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 【鸡哥】词缀 - 出生时召唤 4 只小鸡护卫
+    /// 【鸡哥】词缀 - 出生时召唤 2 只小鸡护卫
     /// </summary>
     public class ChickenBroBehavior : AffixBehaviorBase
     {
         public override string AffixName => "ChickenBro";
         
-        private static readonly string ChickenPresetName = "Cname_Chick";
+        // 原本是 nameKey "Cname_Chick"，现对应资源名为 "SpawnPreset_Animal_Jinitaimei"
+        private static readonly string ChickenPresetName = "SpawnPreset_Animal_Jinitaimei";
+        
         private static readonly int ChickenCount = 2;
         private static readonly float SpawnRadius = 2f;
         private static readonly float ChickenHealthRatio = 0.8f;
@@ -49,6 +51,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
 
             SpawnChickens();
+            _chickensSpawned = true; // 标记已生成
         }
 
         private void SpawnChickens()
@@ -64,9 +67,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 Vector3 offset = Quaternion.Euler(0, angle, 0) * Vector3.forward * SpawnRadius;
                 Vector3 spawnPosition = bossPosition + offset;
                 spawnPosition.y = bossPosition.y;
-        
+                
                 helper.SpawnByPresetName(
-                    presetName: ChickenPresetName,
+                    resourceName: ChickenPresetName,
                     position: spawnPosition,
                     spawner: _boss,
                     healthMultiplier: ChickenHealthRatio,
@@ -76,13 +79,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     affixes: null,
                     preventElite: true,
                     customKeySuffix: "EE_Chick_NonElite",
-                    customDisplayName: ChickenCustomName,  // 自定义名称
+                    customDisplayName: ChickenCustomName,
                     onSpawned: (chicken) => {
                         if (chicken != null) _chickens.Add(chicken);
                     });
             }
         }
-
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {

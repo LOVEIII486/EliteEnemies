@@ -32,7 +32,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         // 发光控制器
         private EliteGlowController _glowController;
         private readonly Color _shieldColor = new Color(1.0f, 0.6f, 0.0f); // 金色护盾光
-        private const float FlashDuration = 0.25f; // 受击闪烁时长 (deltaTime*4 约等于 0.25s)
+        private const float FlashDuration = 0.25f;
         
         private float _lastPopTime = -999f;
         private const float PopCooldown = 0.5f;
@@ -46,7 +46,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private int _currentHitCount = 0;
         private bool _isForceBroken = false;
 
-        private readonly Lazy<string> _partnerName = new(() => 
+        // 本地化文本
+        private readonly Lazy<string> _partnerSuffix = new(() => 
             LocalizationManager.GetText("Affix_Guardian_MateSuffix") ?? "Guardian");
         
         private readonly Lazy<string> _immuneText = new(() => 
@@ -55,7 +56,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private readonly Lazy<string> _brokenText = new(() => 
             LocalizationManager.GetText("Affix_Guardian_ShieldBroken") ?? "SHIELD BROKEN");
         
-        private string PartnerName => _partnerName.Value;
+        private string PartnerSuffix => _partnerSuffix.Value;
         private string ImmuneText => _immuneText.Value;
         private string BrokenText => _brokenText.Value;
 
@@ -70,7 +71,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _isForceBroken = false;
             _separationTimer = 0f;
 
-            // 初始化发光控制器
             _glowController = new EliteGlowController(character);
 
             ModBehaviour.Instance?.StartCoroutine(SpawnPartnerDelayed());
@@ -95,6 +95,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             Vector3 spawnPos = _self.transform.position + _self.transform.forward * OrbitRadius;
             
+            // [重构逻辑] 
+            // 1. customKeySuffix 使用固定后缀，EggSpawnHelper 会将其同时应用到 name 和 nameKey
+            // 2. customDisplayName 传入后缀名，EggSpawnHelper 内部会自动拼接原始名称
             helper.SpawnClone(
                 originalEnemy: _self,
                 position: spawnPos,
@@ -104,8 +107,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 scaleMultiplier: PartnerScaleRatio,
                 affixes: null,
                 preventElite: true, 
-                customKeySuffix: "EE_GuardianCore_NonElite",
-                customDisplayName: $"{_self.characterPreset.DisplayName} {PartnerName}",
+                customKeySuffix: "EE_GuardianPartner",
+                customDisplayName: $"{_self.characterPreset.DisplayName} ({PartnerSuffix})",
                 onSpawned: OnPartnerSpawned
             );
         }
@@ -116,6 +119,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             _partner = clone;
 
+            // 分身处于轨道模式，禁用 NavMesh 避免逻辑冲突
             var agent = clone.GetComponent<UnityEngine.AI.NavMeshAgent>();
             if (agent) agent.enabled = false;
 
@@ -127,21 +131,17 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            // 1. 驱动发光控制器 (替代了 UpdateFlashDecay)
             _glowController?.Update(deltaTime);
 
-            // 基础有效性检查
             if (_isForceBroken || !IsPartnerValid())
             {
                 if (_isInvincible) SetInvincibleState(false);
                 return;
             }
 
-            // 2. 距离完整性检查
             CheckSeparation(character, deltaTime);
             if (_isForceBroken) return;
 
-            // 3. 更新轨道位置
             UpdateOrbit(deltaTime);
         }
 
@@ -151,12 +151,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             float dist = Vector3.Distance(_self.transform.position, _partner.transform.position);
             
+            // 如果分身因为地形原因卡死在远处，强制破盾
             if (dist > OrbitRadius + MaxSeparationDeviation)
             {
                 _separationTimer += deltaTime;
                 if (_separationTimer > MaxSeparationTime)
                 {
-                    Debug.LogWarning($"[GuardianBehavior] Partner stuck detected. Dist: {dist:F1}. Force breaking shield.");
                     ForceBreakShield(character);
                 }
             }
@@ -170,23 +170,20 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             if (_partner == null) return false;
             if (_partner.Health == null || _partner.Health.CurrentHealth <= 0) return false;
-            if (!_partner.gameObject.activeInHierarchy) return false;
-
-            return true;
+            return _partner.gameObject.activeInHierarchy;
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
-            if (character != _self || !_isInvincible) return;
-            if (_isForceBroken) return;
+            if (character != _self || !_isInvincible || _isForceBroken) return;
             
-            // 触发闪烁
             _glowController?.TriggerFlash(_shieldColor, FlashDuration, 2.0f);
             
             _currentHitCount++;
 
+            // 达到最大抗性次数强制破盾
             if (_currentHitCount >= MaxInvincibleHits)
             {
                 ForceBreakShield(character);
@@ -195,11 +192,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             if (Time.time - _lastPopTime >= PopCooldown)
             {
-                if (damageInfo.fromCharacter != null)
-                {
-                    character.PopText(ImmuneText);
-                    _lastPopTime = Time.time;
-                }
+                character.PopText(ImmuneText);
+                _lastPopTime = Time.time;
             }
         }
 
@@ -215,11 +209,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 {
                     _partner.DestroyCharacter();
                 }
-
-                if (_partner != null && _partner.gameObject != null)
-                {
-                    UnityEngine.Object.Destroy(_partner.gameObject, 0.1f);
-                }
+                UnityEngine.Object.Destroy(_partner.gameObject, 0.1f);
             }
             _partner = null;
         }
@@ -247,19 +237,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             if (!isInvincible)
             {
-                _glowController?.Reset(); // 破盾时关闭发光
+                _glowController?.Reset(); 
             }
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
         {
             SetInvincibleState(false);
-            
-            if (!_isForceBroken && _partner != null && _partner.Health.CurrentHealth > 0)
-            {
-                var agent = _partner.GetComponent<UnityEngine.AI.NavMeshAgent>();
-                if (agent) agent.enabled = true;
-            }
         }
 
         public override void OnCleanup(CharacterMainControl character)

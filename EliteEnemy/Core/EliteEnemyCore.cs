@@ -10,7 +10,9 @@ namespace EliteEnemies.EliteEnemy.Core
     /// <summary>
     /// 标记组件：挂载此组件的物体将被精英怪系统忽略
     /// </summary>
-    public class EliteIgnoredTag : MonoBehaviour { }
+    public class EliteIgnoredTag : MonoBehaviour
+    {
+    }
 
     /// <summary>
     /// 精英敌人核心系统 
@@ -50,7 +52,7 @@ namespace EliteEnemies.EliteEnemy.Core
         }
 
         /// <summary>
-        /// 检查对象是否被标记为忽略（不生成精英）
+        /// 检查对象是否被标记为忽略
         /// </summary>
         public static bool IsIgnored(GameObject target)
         {
@@ -59,7 +61,7 @@ namespace EliteEnemies.EliteEnemy.Core
         }
 
         /// <summary>
-        /// 将对象标记为忽略（不会变成精英怪）
+        /// 将对象标记为忽略
         /// </summary>
         public static void MarkAsIgnored(GameObject target)
         {
@@ -72,30 +74,73 @@ namespace EliteEnemies.EliteEnemy.Core
 
         // ========== 预设集合 ==========
 
+        /// <summary>
+        /// 普通敌人预设
+        /// </summary>
         internal static readonly HashSet<string> EligiblePresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "Cname_Scav", "Cname_ScavRage", "Cname_Wolf", "Cname_Usec", "Cname_DengWolf",
-            "Cname_SpeedyChild", "Cname_RobSpider", "Cname_BALeader_Child", "Cname_Boss_Fly_Child",
-            "Cname_Football_1", "Cname_Football_2", "Cname_SchoolBully_Child",
-            "Cname_StormVirus", "Cname_MonsterClimb", "Cname_Raider", "Cname_LabTestObjective",
-            "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child", "Cname_Ghost", "Cname_XINGS","Cname_SpeedyChild_Ice"
+            // 动物与生物
+            "EnemyPreset_Animal_Wolf", "EnemyPreset_Animal_Wolf_Farm", "EnemyPreset_Boss_Deng_Wolf",
+            "EnemyPreset_Mushroom", "EnemyPreset_StormCreature", "EnemyPreset_StormCreature_Virus",
+            "EnemyPreset_Storm_MonsterClimb", "SpawnPreset_Animal_Jinitaimei",
+
+            // 人类敌人 (Scav/USEC/Raider/Prison)
+            "EnemyPreset_Scav", "EnemyPreset_Scav_Elete", "EnemyPreset_Scav_Farm",
+            "EnemyPreset_Scav_low", "EnemyPreset_Scav_low_ak74", "EnemyPreset_Scav_Melee",
+            "EnemyPreset_USEC_Farm", "EnemyPreset_USEC_HiddenWareHouse", "EnemyPreset_USEC_Low",
+            "EnemyPreset_JLab_Raider", "EnemyPreset_Prison_Melee", "EnemyPreset_Prison_Pistol",
+
+            // 机械与特殊
+            "EnemyPreset_Spider_Rifle", "EnemyPreset_Spider_Rifle_JLab", "EnemyPreset_Spider_Rifle_Strong",
+            "EnemyPreset_Spider_Ring", "EnemyPreset_Spider_RotateShoot", "EnemyPreset_Drone_Rifle",
+            "EnemyPreset_Football_1", "EnemyPreset_Football_2", "EnemyPreset_JLab_Melee_Invisable",
+
+            // Boss 随从
+            "EnemyPreset_Boss_3Shot_Child", "EnemyPreset_Boss_BALeader_Child", "EnemyPreset_Boss_Fly_Child",
+            "EnemyPreset_Boss_Speedy_Child", "EnemyPreset_Boss_Storm_1_Child", "EnemyPreset_Boss_XING_Child",
+            "EnemyPreset_BossMelee_SchoolBully_Child"
         };
 
-        // 风暴生物临时移动到 Boss列表
-        internal static readonly HashSet<string> BossPresets = new HashSet<string>
+        /// <summary>
+        /// Boss 级预设
+        /// </summary>
+        internal static readonly HashSet<string> BossPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "Cname_UltraMan", "Cname_ShortEagle", "Cname_Boss_Sniper", "Cname_Speedy", "Cname_Vida",
-            "Cname_Grenade", "Cname_ServerGuardian", "Cname_Boss_Fly", "Cname_SenorEngineer",
-            "Cname_BALeader", "Cname_Boss_Shot", "Cname_Boss_Arcade", "Cname_CrazyRob",
-            "Cname_SchoolBully", "Cname_RPG", "Cname_Boss_3Shot", "Cname_Roadblock",
-            "Cname_StormBoss1", "Cname_StormBoss2", "Cname_StormBoss3", "Cname_StormBoss4",
-            "Cname_StormBoss5", "Cname_Boss_Red", "Cname_StormCreature", "Cname_XING","Cname_Speedy_Ice","Cname_Snow_BigIce"
+            "EnemyPreset_Boss_3Shot", "EnemyPreset_Boss_Arcade", "EnemyPreset_Boss_BALeader",
+            "EnemyPreset_Boss_Deng", "EnemyPreset_Boss_Fly", "EnemyPreset_Boss_Grenade",
+            "EnemyPreset_Boss_Red", "EnemyPreset_Boss_Roadblock", "EnemyPreset_Boss_RPG",
+            "EnemyPreset_Boss_SenorEngineer", "EnemyPreset_Boss_ServerGuardian", "EnemyPreset_Boss_ShortEagle",
+            "EnemyPreset_Boss_ShortEagle_Elete", "EnemyPreset_Boss_Shot", "EnemyPreset_Boss_Speedy",
+            "EnemyPreset_Boss_Storm_1_BreakArmor", "EnemyPreset_Boss_Storm_2_Poison",
+            "EnemyPreset_Boss_Storm_3_Fire", "EnemyPreset_Boss_Storm_4_Electric", "EnemyPreset_Boss_Storm_5_Space",
+            "EnemyPreset_Boss_Vida", "EnemyPreset_Boss_XING", "EnemyPreset_BossMelee_SchoolBully",
+            "EnemyPreset_Melee_UltraMan", "EnemyPreset_Spider_Scare", "EnemyPreset_Prison_Boss"
         };
 
-        internal static readonly HashSet<string> MerchantPresets = new HashSet<string>
+        /// <summary>
+        /// 商家/NPC 预设
+        /// </summary>
+        internal static readonly HashSet<string> MerchantPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "MerchantName_Myst",
+            "EnemyPreset_Merchant_Myst", "EnemyPreset_Merchant_Myst0", "EnemyPreset_Merchant_Test",
+            "EnemyPreset_QuestGiver_Fo", "EnemyPreset_QuestGiver_XiaoMing"
         };
+
+        /// <summary>
+        /// 强制忽略的通用预设
+        /// </summary>
+        internal static readonly HashSet<string> IgnoredGenericPresets =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                // 占位符/测试怪
+                "DummyEnemyCharacterRandomPresetLv 0", "DummyEnemyCharacterRandomPresetLv 1",
+                "DummyEnemyCharacterRandomPresetLv 2", "DummyEnemyCharacterRandomPresetLv 3",
+                "DummyEnemyCharacterRandomPresetLv 4", "DummyEnemyCharacterRandomPresetLv 5",
+                "EnemyPreset_Basement", "EnemyPreset_LittleBoss",
+
+                // 队友与宠物
+                "MatePreset_PMC", "PetPreset_NormalPet"
+            };
 
         internal static readonly HashSet<string> ExternalEligiblePresets =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -105,19 +150,30 @@ namespace EliteEnemies.EliteEnemy.Core
             {
                 ["MimicTear"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "Cname_Scav", "Cname_Usec", "Cname_Raider", "Cname_BALeader_Child", "Cname_3Shot_Child", "Cname_SpeedyChild"
+                    "EnemyPreset_Scav", 
+                    "EnemyPreset_Scav_Elete", 
+                    "EnemyPreset_Scav_Farm", 
+                    "EnemyPreset_Scav_low", 
+                    "EnemyPreset_Scav_low_ak74",
+                    "EnemyPreset_USEC_Farm", 
+                    "EnemyPreset_USEC_HiddenWareHouse", 
+                    "EnemyPreset_USEC_Low",
+                    "EnemyPreset_JLab_Raider",
+                    "EnemyPreset_Boss_BALeader_Child", 
+                    "EnemyPreset_Boss_3Shot_Child", 
+                    "EnemyPreset_Boss_Speedy_Child"
                 },
             };
 
         internal static readonly Dictionary<string, HashSet<string>> AffixPresetBlacklist =
             new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
             {
-                ["Mimic"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    "Enemy_Kamakoto_Special"
-                },
+                // ["Mimic"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                // {
+                //     "Enemy_Kamakoto_Special"
+                // },
             };
-        
+
         private static readonly string[] AutoRegisterBlacklist = new string[]
         {
             "_CM_", // 战斗女仆
@@ -150,10 +206,19 @@ namespace EliteEnemies.EliteEnemy.Core
             TagAsElite(cmc, new List<string>(affixes), ResolveBaseName(cmc));
         }
 
-        internal static bool IsEligiblePreset(string presetName)
+        /// <summary>
+        /// 检查预设是否满足精英化基础条件
+        /// </summary>
+        internal static bool IsEligiblePreset(CharacterRandomPreset preset)
         {
-            if (string.IsNullOrEmpty(presetName)) return false;
-            return EligiblePresets.Contains(presetName);
+            if (preset == null) return false;
+            string rName = preset.name;
+
+            // 1. 优先排除强制忽略列表
+            if (IgnoredGenericPresets.Contains(rName)) return false;
+
+            // 2. 检查是否在普通敌人或 Boss 列表中
+            return EligiblePresets.Contains(rName) || BossPresets.Contains(rName);
         }
 
         // ========== 词缀选择 ==========
@@ -167,19 +232,21 @@ namespace EliteEnemies.EliteEnemy.Core
 
             // 2. 常规随机选择
             var selected = new List<string>();
-            // 额外添加一个彩蛋怪的判断
-            if (cmc?.characterPreset?.nameKey == "Enemy_Custom_Love486")
+            
+            // [修改] 彩蛋怪判断也改为使用资源名 name，保持逻辑一致性
+            if (cmc?.characterPreset != null && cmc.characterPreset.name == "EnemyPreset_Custom_Love486")
             {
                 selected.Add("Obscurer");
             }
-            var currentAvailable = new List<string>(basePool); 
+
+            var currentAvailable = new List<string>(basePool);
             currentAvailable.RemoveAll(a => selected.Contains(a));
-            
+
             int targetCount = Mathf.Clamp(SelectWeightedAffixCount(maxCount), 1, currentAvailable.Count);
 
             // 执行常规选择
             SelectAndAppendAffixes(selected, currentAvailable, targetCount);
-            
+
             // 3. 封弊者逻辑
             const string SpecialAffix = "Obscurer";
             const int SafetyHardLimit = 10;
@@ -198,14 +265,15 @@ namespace EliteEnemies.EliteEnemy.Core
                     {
                         // 设定额外奖励数量：随机 1 到 3 个
                         int extraRewardCount = UnityEngine.Random.Range(1, 4);
-                        
+
                         // 实际可添加数量 = Min(想要奖励的数量, 剩余可用词条数量, 距离熔断值的剩余空间)
                         int actualAddCount = Mathf.Min(extraRewardCount, extraAvailable.Count);
                         actualAddCount = Mathf.Min(actualAddCount, SafetyHardLimit - selected.Count);
 
                         if (actualAddCount > 0)
                         {
-                            Debug.Log($"{LogTag} [封弊者] 生效！突破上限，额外添加 {actualAddCount} 个词条。当前总数: {selected.Count + actualAddCount}");
+                            Debug.Log(
+                                $"{LogTag} [封弊者] 生效！突破上限，额外添加 {actualAddCount} 个词条。当前总数: {selected.Count + actualAddCount}");
                             SelectAndAppendAffixes(selected, extraAvailable, actualAddCount);
                         }
                     }
@@ -227,14 +295,14 @@ namespace EliteEnemies.EliteEnemy.Core
             for (int i = 0; i < count; i++)
             {
                 if (available.Count == 0) break;
-                
+
                 if (selected.Count > 0)
                 {
                     available.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
                 }
 
                 if (available.Count == 0) break;
-                
+
                 string chosen = SelectWeightedRandom(available);
                 selected.Add(chosen);
                 available.Remove(chosen);
@@ -247,10 +315,11 @@ namespace EliteEnemies.EliteEnemy.Core
         private static List<string> GetBaseValidAffixes(CharacterMainControl cmc)
         {
             var pool = new List<string>(EliteAffixes.Pool.Keys);
-            string nameKey = cmc?.characterPreset?.nameKey ?? string.Empty;
+            
+            string resourceName = cmc?.characterPreset != null ? cmc.characterPreset.name : string.Empty;
 
             // 1. 过滤预设白名单
-            pool.RemoveAll(n => !IsAffixAllowedForPreset(n, nameKey));
+            pool.RemoveAll(n => !IsAffixAllowedForPreset(n, resourceName));
 
             // 2. 过滤用户黑名单
             if (_config.DisabledAffixes != null && _config.DisabledAffixes.Count > 0)
@@ -333,20 +402,19 @@ namespace EliteEnemies.EliteEnemy.Core
             return 1;
         }
 
-        private static bool IsAffixAllowedForPreset(string affixName, string presetName)
+        private static bool IsAffixAllowedForPreset(string affixName, string resourceName)
         {
-            if (string.IsNullOrEmpty(affixName) || string.IsNullOrEmpty(presetName))
+            if (string.IsNullOrEmpty(affixName) || string.IsNullOrEmpty(resourceName))
                 return false;
-            
+
             if (AffixPresetBlacklist.TryGetValue(affixName, out var blacklist))
             {
-                // 如果存在黑名单且包含当前预设，则禁止
-                if (blacklist != null && blacklist.Contains(presetName))
+                if (blacklist != null && blacklist.Contains(resourceName))
                     return false;
             }
-            
+
             if (AffixPresetWhitelist.TryGetValue(affixName, out var whitelist))
-                return whitelist == null || whitelist.Count == 0 || whitelist.Contains(presetName);
+                return whitelist == null || whitelist.Count == 0 || whitelist.Contains(resourceName);
 
             return true;
         }
@@ -423,46 +491,47 @@ namespace EliteEnemies.EliteEnemy.Core
 
             return sb.ToString();
         }
+        
 
-        // ========== 外部预设注册 ==========
+        // ========== 外部预设注册 (重构版) ==========
 
-        internal static bool TryAutoRegisterExternalPreset(string presetName)
+        /// <summary>
+        /// 尝试自动注册未知的外部敌人预设
+        /// </summary>
+        internal static bool TryAutoRegisterExternalPreset(CharacterRandomPreset preset)
         {
-            if (string.IsNullOrEmpty(presetName)) return false;
-
-            if (EligiblePresets.Contains(presetName) ||
-                BossPresets.Contains(presetName) ||
-                MerchantPresets.Contains(presetName))
+            if (preset == null) return false;
+    
+            string rName = preset.name; 
+            if (EligiblePresets.Contains(rName) ||
+                BossPresets.Contains(rName) ||
+                MerchantPresets.Contains(rName) ||
+                IgnoredGenericPresets.Contains(rName))
                 return false;
 
-            if (!LooksLikeEnemyPreset(presetName)) return false;
+            if (!LooksLikeEnemyPreset(rName)) return false;
+            if (rName.IndexOf("NonElite", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+            if (!ExternalEligiblePresets.Add(rName)) return true;
             
-            foreach (var keyword in AutoRegisterBlacklist)
-            {
-                if (presetName.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    Debug.Log($"{LogTag} 跳过自动注册（匹配黑名单 '{keyword}'）: {presetName}");
-                    return false;
-                }
-            }
-            
-            if (ExternalEligiblePresets.Contains(presetName)) return true;
-
-            ExternalEligiblePresets.Add(presetName);
-            EligiblePresets.Add(presetName);
-
-            Debug.Log($"{LogTag} 自动注册外部敌人类型: {presetName}");
+            EligiblePresets.Add(rName);
+            Debug.Log($"{LogTag} 自动发现并注册外部敌人类型: {rName}");
             return true;
         }
 
-        private static bool LooksLikeEnemyPreset(string presetName)
+        /// <summary>
+        /// 判定该资源名是否具有敌人的基本特征
+        /// </summary>
+        private static bool LooksLikeEnemyPreset(string rName)
         {
-            if (string.IsNullOrEmpty(presetName)) return false;
-            if (presetName.StartsWith("MerchantName_", StringComparison.OrdinalIgnoreCase)) return false;
-            if (presetName.StartsWith("Player", StringComparison.OrdinalIgnoreCase)) return false;
+            if (string.IsNullOrEmpty(rName)) return false;
+            if (rName.Contains("Dummy")) return false;
+            if (rName.Contains("MatPreset")) return false;
+            if (rName.Contains("PetPreset")) return false;
+            if (rName.Contains("Merchant")) return false;
+            if (rName.Contains("QuestGiver")) return false;
             return true;
         }
-        
+
 
         // ========== 精英标记组件 ==========
 

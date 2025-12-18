@@ -161,9 +161,16 @@ namespace EliteEnemies
             if (_debugToolObject != null) return;
 
             _debugToolObject = new GameObject("EliteEnemies_DebugTools");
+    
+            // 1. 添加原有的掉落导出工具 (F10)
             _debugToolObject.AddComponent<EliteEnemies.DebugTool.LootCacheDumper>();
+    
+            // 2. 添加新增的预设清单导出工具 (F9)
+            var logger = _debugToolObject.AddComponent<EliteEnemies.DebugTool.PresetKeyLogger>();
+            logger.dumpKey = KeyCode.F9;
+    
             DontDestroyOnLoad(_debugToolObject);
-            Debug.Log($"{LogTag} 调试工具已初始化 (F10 导出掉落信息)");
+            Debug.Log($"{LogTag} 调试工具已初始化: F9 (预设清单), F10 (掉落信息)");
         }
 
         private void InitializeSettings()

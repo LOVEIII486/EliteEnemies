@@ -20,7 +20,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
     public static class EliteLootSystem
     {
         private const string LogTag = "[EliteEnemies.EliteLootSystem]";
-        private static bool Verbose = false;
+        private static bool Verbose = true;
         public static float GlobalDropRate = 1.0f;
 
         private static readonly HashSet<int> ProcessedLootBoxes = new HashSet<int>();
@@ -30,11 +30,16 @@ namespace EliteEnemies.EliteEnemy.LootSystem
 
         // 弱怪惩罚配置
         private static readonly Dictionary<string, (float dropRatePenalty, int qualityDowngrade)> WeakEnemyPenalties =
-            new Dictionary<string, (float, int)>
+            new Dictionary<string, (float, int)>(StringComparer.OrdinalIgnoreCase)
             { 
-                { "Cname_Prison", (0.4f, 1) },
-                { "Cname_Scav", (0.6f, 1) },
-                { "Cname_ScavRage", (0.7f, 0) }
+                { "EnemyPreset_Prison_Melee", (0.4f, 1) },
+                { "EnemyPreset_Prison_Pistol", (0.4f, 1) },
+                { "EnemyPreset_Scav", (0.6f, 1) },
+                { "EnemyPreset_Scav_Elete", (0.6f, 1) },
+                { "EnemyPreset_Scav_Farm", (0.6f, 1) },
+                { "EnemyPreset_Scav_low", (0.6f, 1) },
+                { "EnemyPreset_Scav_low_ak74", (0.6f, 1) },
+                { "EnemyPreset_Scav_Melee", (0.7f, 0) }
             };
         
         private static readonly Dictionary<string, int> MapQualityCaps = new Dictionary<string, int>
@@ -98,7 +103,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             }
             LootAlgorithmVerifier.RecordAttempt();
             
-            string charName = character.characterPreset?.nameKey ?? character.name;
+            string charName = character.characterPreset != null ? character.characterPreset.name : character.name;
             
             // 获取惩罚参数
             GetEnemyPenalty(charName, out float dropPenalty, out int qualityDowngrade);
@@ -339,17 +344,26 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             return Mathf.Clamp01(baseChance * GlobalDropRate * penalty);
         }
 
-        private static void GetEnemyPenalty(string charName, out float dropPenalty, out int qualityDowngrade)
+        private static void GetEnemyPenalty(string resourceName, out float dropRate, out int qualityDowngrade)
         {
-            if (WeakEnemyPenalties.TryGetValue(charName, out var p))
+            dropRate = 1f;
+            qualityDowngrade = 0;
+
+            if (string.IsNullOrEmpty(resourceName)) return;
+
+            // 在进行字典查找前，先剥离掉 EggSpawnHelper 可能添加的后缀
+            // 这样 EnemyPreset_Scav_low_EE_Split 就能匹配到 EnemyPreset_Scav_low
+            string cleanName = resourceName;
+            int suffixIndex = cleanName.IndexOf("_EE_");
+            if (suffixIndex > 0)
             {
-                dropPenalty = p.dropRatePenalty;
-                qualityDowngrade = p.qualityDowngrade;
+                cleanName = cleanName.Substring(0, suffixIndex);
             }
-            else
+
+            if (WeakEnemyPenalties.TryGetValue(cleanName, out var penalty))
             {
-                dropPenalty = 1.0f;
-                qualityDowngrade = 0;
+                dropRate = penalty.dropRatePenalty;
+                qualityDowngrade = penalty.qualityDowngrade;
             }
         }
 
