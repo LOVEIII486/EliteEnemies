@@ -161,14 +161,20 @@ namespace EliteEnemies.EliteEnemy.Core
             var cmc = __instance.target.TryGetCharacter();
             if (cmc == null) return;
 
-            // 获取精英标记组件
+            // 检查是否有精英标记组件
             var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();
-            if (marker == null) return;
 
-            int affixCount = marker.Affixes?.Count ?? 0;
-            if (affixCount <= 0) return;
+            // 如果标记不存在，或者标记里的词缀列表为空，将颜色还原为原生红色
+            if (marker == null || marker.Affixes == null || marker.Affixes.Count == 0)
+            {
+                // 原生红色：#FF4D4D
+                var defaultGradient = CreateSolidGradient(ParseColor("#FF4D4D"));
+                ColorOverAmountField.SetValue(__instance, defaultGradient);
+                return; 
+            }
 
-            // 根据词缀数量应用特殊颜色
+            // 如果是精英怪，按词缀数量染色
+            int affixCount = marker.Affixes.Count;
             Color eliteColor = GetHealthBarColor(affixCount);
             var gradient = CreateSolidGradient(eliteColor);
 
