@@ -78,7 +78,7 @@ namespace EliteEnemies.EliteEnemy.Core
             "Cname_SpeedyChild", "Cname_RobSpider", "Cname_BALeader_Child", "Cname_Boss_Fly_Child",
             "Cname_Football_1", "Cname_Football_2", "Cname_SchoolBully_Child",
             "Cname_StormVirus", "Cname_MonsterClimb", "Cname_Raider", "Cname_LabTestObjective",
-            "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child", "Cname_Ghost", "Cname_XINGS"
+            "Cname_StormBoss1_Child", "Cname_Mushroom", "Cname_3Shot_Child", "Cname_Ghost", "Cname_XINGS","Cname_SpeedyChild_Ice"
         };
 
         // 风暴生物临时移动到 Boss列表
@@ -89,7 +89,7 @@ namespace EliteEnemies.EliteEnemy.Core
             "Cname_BALeader", "Cname_Boss_Shot", "Cname_Boss_Arcade", "Cname_CrazyRob",
             "Cname_SchoolBully", "Cname_RPG", "Cname_Boss_3Shot", "Cname_Roadblock",
             "Cname_StormBoss1", "Cname_StormBoss2", "Cname_StormBoss3", "Cname_StormBoss4",
-            "Cname_StormBoss5", "Cname_Boss_Red", "Cname_StormCreature", "Cname_XING",
+            "Cname_StormBoss5", "Cname_Boss_Red", "Cname_StormCreature", "Cname_XING","Cname_Speedy_Ice","Cname_Snow_BigIce"
         };
 
         internal static readonly HashSet<string> MerchantPresets = new HashSet<string>
