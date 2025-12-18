@@ -23,11 +23,7 @@ namespace EliteEnemies.EliteEnemy.Core
 
         private static EliteEnemiesConfig _config = new EliteEnemiesConfig();
         public static EliteEnemiesConfig Config => _config;
-
-        // [修改] 移除了 NonEliteSuffix
-
-        // ========== 忽略逻辑 (新增) ==========
-
+        
         // 用于存储由生成器创建的临时预设实例ID，这些实例对应的敌人不应精英化
         // 使用 InstanceID 避免内存泄漏
         private static readonly HashSet<int> IgnoredPresetInstanceIDs = new HashSet<int>();
@@ -84,7 +80,7 @@ namespace EliteEnemies.EliteEnemy.Core
             "EnemyPreset_Mushroom", "EnemyPreset_StormCreature", "EnemyPreset_StormCreature_Virus",
             "EnemyPreset_Storm_MonsterClimb", "SpawnPreset_Animal_Jinitaimei",
 
-            // 人类敌人 (Scav/USEC/Raider/Prison)
+            // 常规敌人 (Scav/USEC/Raider/Prison)
             "EnemyPreset_Scav", "EnemyPreset_Scav_Elete", "EnemyPreset_Scav_Farm",
             "EnemyPreset_Scav_low", "EnemyPreset_Scav_low_ak74", "EnemyPreset_Scav_Melee",
             "EnemyPreset_USEC_Farm", "EnemyPreset_USEC_HiddenWareHouse", "EnemyPreset_USEC_Low",
@@ -122,8 +118,7 @@ namespace EliteEnemies.EliteEnemy.Core
         /// </summary>
         internal static readonly HashSet<string> MerchantPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "EnemyPreset_Merchant_Myst", "EnemyPreset_Merchant_Myst0", "EnemyPreset_Merchant_Test",
-            "EnemyPreset_QuestGiver_Fo", "EnemyPreset_QuestGiver_XiaoMing"
+            "EnemyPreset_Merchant_Myst", "EnemyPreset_Merchant_Myst0"
         };
 
         /// <summary>
@@ -139,7 +134,12 @@ namespace EliteEnemies.EliteEnemy.Core
                 "EnemyPreset_Basement", "EnemyPreset_LittleBoss",
 
                 // 队友与宠物
-                "MatePreset_PMC", "PetPreset_NormalPet"
+                "MatePreset_PMC", "PetPreset_NormalPet",
+                
+                // 其他NPC
+                "EnemyPreset_Merchant_Test", 
+                "EnemyPreset_QuestGiver_Fo", 
+                "EnemyPreset_QuestGiver_XiaoMing"
             };
 
         internal static readonly HashSet<string> ExternalEligiblePresets =
@@ -161,23 +161,19 @@ namespace EliteEnemies.EliteEnemy.Core
                     "EnemyPreset_JLab_Raider",
                     "EnemyPreset_Boss_BALeader_Child", 
                     "EnemyPreset_Boss_3Shot_Child", 
-                    "EnemyPreset_Boss_Speedy_Child"
+                    "EnemyPreset_Boss_Speedy_Child",
+                    "EnemyPreset_Boss_Storm_1_Child"
                 },
             };
 
         internal static readonly Dictionary<string, HashSet<string>> AffixPresetBlacklist =
             new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
             {
-                // ["Mimic"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                // {
-                //     "Enemy_Kamakoto_Special"
-                // },
+                ["Mimic"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "EnemyPreset_Boss_Kamakoto_Special"
+                },
             };
-
-        private static readonly string[] AutoRegisterBlacklist = new string[]
-        {
-            "_CM_", // 战斗女仆
-        };
 
         // ========== 公共接口 ==========
 
@@ -233,7 +229,7 @@ namespace EliteEnemies.EliteEnemy.Core
             // 2. 常规随机选择
             var selected = new List<string>();
             
-            // [修改] 彩蛋怪判断也改为使用资源名 name，保持逻辑一致性
+            // 彩蛋怪判断也改为使用资源名 name，保持逻辑一致性
             if (cmc?.characterPreset != null && cmc.characterPreset.name == "EnemyPreset_Custom_Love486")
             {
                 selected.Add("Obscurer");
@@ -493,7 +489,7 @@ namespace EliteEnemies.EliteEnemy.Core
         }
         
 
-        // ========== 外部预设注册 (重构版) ==========
+        // ========== 外部预设注册 ==========
 
         /// <summary>
         /// 尝试自动注册未知的外部敌人预设

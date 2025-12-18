@@ -217,7 +217,7 @@ namespace EliteEnemies.EliteEnemy.Core
             float speedMultiplier = 1f,
             float scaleMultiplier = 1f,
             bool preventElite = true,
-            string customKeySuffix = null, // 修正后的参数名
+            string customKeySuffix = null,
             string customDisplayName = null,
             System.Action<List<CharacterMainControl>> onAllSpawned = null)
         {
@@ -243,7 +243,7 @@ namespace EliteEnemies.EliteEnemy.Core
             float speedMultiplier,
             float scaleMultiplier,
             bool preventElite,
-            string customKeySuffix, // 修正后的参数名
+            string customKeySuffix,
             string customDisplayName,
             System.Action<List<CharacterMainControl>> onAllSpawned)
         {
@@ -260,7 +260,6 @@ namespace EliteEnemies.EliteEnemy.Core
                 Vector3 offset = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
                 Vector3 spawnPosition = centerPosition + offset;
 
-                // 调用重构后的 SpawnClone，它会处理 name/nameKey 的后缀对齐和本地化注入
                 SpawnClone(
                     originalEnemy: originalEnemy,
                     position: spawnPosition,
@@ -303,7 +302,7 @@ namespace EliteEnemies.EliteEnemy.Core
             // 1. 确定标识后缀
             string suffix = !string.IsNullOrEmpty(customKeySuffix) ? customKeySuffix : "EE_Clone";
 
-            // 2. [关键重构] 同步修改 name 和 nameKey，确保与新的判定系统兼容
+            // 2. 同步修改 name 和 nameKey，确保与新的判定系统兼容
             // 同时增加 EndsWith 检查防止递归生成导致名称无限延长
             if (!original.name.EndsWith($"_{suffix}"))
             {
@@ -321,21 +320,17 @@ namespace EliteEnemies.EliteEnemy.Core
             modified.damageMultiplier = original.damageMultiplier * damageMultiplier;
             modified.moveSpeedFactor = original.moveSpeedFactor * speedMultiplier;
 
-            // 4. [保留并优化] 处理本地化注入
+            // 4. 处理本地化注入
             if (!string.IsNullOrEmpty(customDisplayName))
             {
                 modified.showName = true;
                 modified.showHealthBar = true;
                 string targetKey = modified.nameKey;
 
-                var overrideDict = LocalizationManager.overrideTexts;
-                if (overrideDict != null)
+                // 检查是否已经注入过相同文本，避免重复调用开销
+                if (!LocalizationManager.TryGetOverrideText(targetKey, out string currentVal) || currentVal != customDisplayName)
                 {
-                    // 仅当值不同时才写入，避免字典冗余操作
-                    if (!overrideDict.TryGetValue(targetKey, out string current) || current != customDisplayName)
-                    {
-                        overrideDict[targetKey] = customDisplayName;
-                    }
+                    LocalizationManager.SetOverrideText(targetKey, customDisplayName);
                 }
             }
 
@@ -351,7 +346,6 @@ namespace EliteEnemies.EliteEnemy.Core
                 var allPresets = Resources.FindObjectsOfTypeAll<CharacterRandomPreset>();
                 foreach (var preset in allPresets)
                 {
-                    // [修改] 切换为按 .name (Asset Name) 查找
                     if (preset.name.Equals(resourceName, StringComparison.OrdinalIgnoreCase))
                     {
                         return preset;
@@ -424,7 +418,5 @@ namespace EliteEnemies.EliteEnemy.Core
 
             return best;
         }
-
-        // 其余 API (SpawnCloneCircle 等) 调用 SpawnClone 即可自动适配新逻辑
     }
 }

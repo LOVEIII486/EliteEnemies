@@ -13,7 +13,6 @@ namespace EliteEnemies.DebugTool
     {
         private const string LogTag = "[EliteEnemies.EliteEnemyTracker]";
 
-        // 修改 Value 结构，同时存储 计数 和 最新的显示名称
         private class StatEntry
         {
             public int Count;

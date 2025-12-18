@@ -291,9 +291,9 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             string textRandom = LocalizationManager.GetText(FromInfoKeyRandom, "--随机掉落--");
             string textBonus = LocalizationManager.GetText(FromInfoKeyBonus, "--稀有度奖励--");
             
-            SodaCraft.Localizations.LocalizationManager.overrideTexts[FromInfoKeyFixed] = textFixed;
-            SodaCraft.Localizations.LocalizationManager.overrideTexts[FromInfoKeyRandom] = textRandom;
-            SodaCraft.Localizations.LocalizationManager.overrideTexts[FromInfoKeyBonus] = textBonus;
+            SodaCraft.Localizations.LocalizationManager.SetOverrideText(FromInfoKeyFixed, LocalizationManager.GetText(FromInfoKeyFixed));
+            SodaCraft.Localizations.LocalizationManager.SetOverrideText(FromInfoKeyRandom, LocalizationManager.GetText(FromInfoKeyRandom));
+            SodaCraft.Localizations.LocalizationManager.SetOverrideText(FromInfoKeyBonus, LocalizationManager.GetText(FromInfoKeyBonus));
             
             if (Verbose) Debug.Log($"{LogTag} 已注册掉落来源文本: {textFixed}, {textRandom}, {textBonus}");
         }
