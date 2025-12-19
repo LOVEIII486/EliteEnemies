@@ -17,7 +17,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private Buff _frozenPrefab;
         
         private const float TriggerChance = 0.33f;
-        private const float CooldownDuration = 12f;
+        private const float CooldownDuration = 15f;
         private float _lastTriggerTime = -999f;
 
         public override void OnEliteInitialized(CharacterMainControl character)
