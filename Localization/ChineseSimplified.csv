@@ -162,3 +162,5 @@ Affix_Reflect_Description,周期性生成护盾，将受到的子弹反弹回攻
 Affix_Reflect_PopText,<color=#00BFFF>反弹！</color>,2.3,AffixBehavior
 Affix_Frozen_Name,严寒,2.3,AffixNames
 Affix_Frozen_Description,攻击命中时有概率冻结玩家（12秒冷却时间）,2.3,AffixDescription
+Settings_EnableComboSystem,是否生成Combo怪物,2.3,BasicSettings
+Settings_ComboSystemChance,Combo怪物出现概率,2.3,BasicSettings

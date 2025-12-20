@@ -68,7 +68,10 @@ namespace EliteEnemies.Settings
         
         public static int SplitAffixMaxCloneCount { get; private set; }
         public static float SplitAffixMinFPSThreshold { get; private set; }
-
+        
+        public static bool EnableComboSystem { get; private set; }
+        public static float ComboSystemChance { get; private set; }
+        
         // ==================== 初始化 ====================
 
         /// <summary>
@@ -169,7 +172,10 @@ namespace EliteEnemies.Settings
             SplitAffixMinFPSThreshold = ModSettingAPI.GetSavedValue<float>("SplitAffixMinFPSThreshold", out float splitFps)
                 ? Mathf.Clamp(splitFps, 10f, 120f)
                 : 30.0f;
-
+            
+            EnableComboSystem = ModSettingAPI.GetSavedValue<bool>("EnableComboSystem", out bool enableCombo) ? enableCombo : true;
+            ComboSystemChance = ModSettingAPI.GetSavedValue<float>("ComboSystemChance", out float comboChance) ? comboChance : 0.15f;
+            
             // Debug.Log($"{LogTag} NormalEliteChance: {NormalEliteChance}");
             // Debug.Log($"{LogTag} DropRateMultiplier: {DropRateMultiplier}");
             // Debug.Log($"{LogTag} ItemQualityBias: {ItemQualityBias}");
@@ -207,6 +213,9 @@ namespace EliteEnemies.Settings
             
             SplitAffixMaxCloneCount = 40;
             SplitAffixMinFPSThreshold = 30.0f;
+            
+            EnableComboSystem = true;
+            ComboSystemChance = 0.15f;
 
             LoadAffixStates();
             SyncConfigToComponents();
@@ -371,6 +380,18 @@ namespace EliteEnemies.Settings
             NotifyConfigChanged();
         }
         
+        public static void SetEnableComboSystem(bool value)
+        {
+            EnableComboSystem = value;
+            NotifyConfigChanged();
+        }
+
+        public static void SetComboSystemChance(float value)
+        {
+            ComboSystemChance = Mathf.Clamp01(value);
+            NotifyConfigChanged();
+        }
+        
         // ==================== 词缀管理 ====================
 
         public static void SetAffixEnabled(string affixKey, bool enabled)
@@ -432,6 +453,9 @@ namespace EliteEnemies.Settings
                 
                 SplitAffixMaxCloneCount = SplitAffixMaxCloneCount,
                 SplitAffixMinFPSThreshold = SplitAffixMinFPSThreshold,
+                
+                EnableComboSystem = EnableComboSystem, 
+                ComboSystemChance = ComboSystemChance,
             };
         }
 

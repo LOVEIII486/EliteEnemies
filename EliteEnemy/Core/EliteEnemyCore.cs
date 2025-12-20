@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.EliteEnemy.ComboSystem;
 using EliteEnemies.Settings;
 using SodaCraft.Localizations;
 using UnityEngine;
@@ -221,15 +222,27 @@ namespace EliteEnemies.EliteEnemy.Core
 
         public static List<string> SelectRandomAffixes(int maxCount, CharacterMainControl cmc)
         {
-            // 1. 获取基础有效词缀池
-            List<string> basePool = GetBaseValidAffixes(cmc);
+            //1. Combo 系统拦截
+            if (Config.EnableComboSystem && UnityEngine.Random.value < Config.ComboSystemChance)
+            {
+                EliteComboDefinition combo = EliteComboRegistry.GetRandomCombo();
+                if (combo != null)
+                {
+                    Debug.Log($"{LogTag} 精英怪进化为 Combo 模式: {combo.DisplayName}");
+                    // 标记特殊头衔
+                    var marker = cmc.GetComponent<EliteMarker>();
+                    if (!marker) marker = cmc.gameObject.AddComponent<EliteMarker>();
+                    marker.CustomDisplayName = combo.DisplayName;
 
+                    return new List<string>(combo.AffixIds); // 直接返回组合词缀，不执行后续随机逻辑
+                }
+            }
+
+            // 2. 原有基础有效词缀池逻辑
+            List<string> basePool = GetBaseValidAffixes(cmc);
             if (basePool.Count == 0) return new List<string>();
 
-            // 2. 常规随机选择
             var selected = new List<string>();
-            
-            // 彩蛋怪判断也改为使用资源名 name，保持逻辑一致性
             if (cmc?.characterPreset != null && cmc.characterPreset.name == "EnemyPreset_Custom_Love486")
             {
                 selected.Add("Obscurer");
@@ -239,43 +252,30 @@ namespace EliteEnemies.EliteEnemy.Core
             currentAvailable.RemoveAll(a => selected.Contains(a));
 
             int targetCount = Mathf.Clamp(SelectWeightedAffixCount(maxCount), 1, currentAvailable.Count);
-
-            // 执行常规选择
             SelectAndAppendAffixes(selected, currentAvailable, targetCount);
 
-            // 3. 封弊者逻辑
+            // 3. 封弊者突破逻辑 
             const string SpecialAffix = "Obscurer";
             const int SafetyHardLimit = 10;
 
             if (selected.Contains(SpecialAffix))
             {
-                // 当总数未达到绝对安全熔断值
                 if (selected.Count < SafetyHardLimit)
                 {
-                    // 重新构建可用池：从基础池中移除 已选词条 和 与已选词条冲突的词条
                     var extraAvailable = new List<string>(basePool);
                     extraAvailable.RemoveAll(a => selected.Contains(a));
                     extraAvailable.RemoveAll(affix => EliteAffixes.IsAffixConflictingWithList(affix, selected));
 
                     if (extraAvailable.Count > 0)
                     {
-                        // 设定额外奖励数量：随机 1 到 3 个
                         int extraRewardCount = UnityEngine.Random.Range(1, 4);
-
-                        // 实际可添加数量 = Min(想要奖励的数量, 剩余可用词条数量, 距离熔断值的剩余空间)
-                        int actualAddCount = Mathf.Min(extraRewardCount, extraAvailable.Count);
-                        actualAddCount = Mathf.Min(actualAddCount, SafetyHardLimit - selected.Count);
+                        int actualAddCount = Mathf.Min(extraRewardCount, extraAvailable.Count, SafetyHardLimit - selected.Count);
 
                         if (actualAddCount > 0)
                         {
-                            Debug.Log(
-                                $"{LogTag} [封弊者] 生效！突破上限，额外添加 {actualAddCount} 个词条。当前总数: {selected.Count + actualAddCount}");
+                            Debug.Log($"{LogTag} [封弊者] 生效！额外添加 {actualAddCount} 个词条。");
                             SelectAndAppendAffixes(selected, extraAvailable, actualAddCount);
                         }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"{LogTag} [封弊者] 触发，但没有更多可用/不冲突的词条可添加。");
                     }
                 }
             }
@@ -486,6 +486,22 @@ namespace EliteEnemies.EliteEnemy.Core
             }
 
             return sb.ToString();
+        }
+        
+        public static string GetEliteFullDisplayName(CharacterMainControl cmc)
+        {
+            var marker = cmc.GetComponent<EliteMarker>();
+            if (marker == null) return ResolveBaseName(cmc);
+
+            // 如果是 Combo 怪，优先显示 CustomDisplayName
+            if (!string.IsNullOrEmpty(marker.CustomDisplayName))
+            {
+                return $"{marker.CustomDisplayName} {marker.BaseName}";
+            }
+
+            // 普通精英怪：[词缀标签] 名字
+            string prefix = BuildColoredPrefix(marker.Affixes);
+            return $"{prefix} {marker.BaseName}";
         }
         
 

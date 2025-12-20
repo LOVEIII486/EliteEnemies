@@ -27,5 +27,8 @@ namespace EliteEnemies.Settings
         
         public int SplitAffixMaxCloneCount { get; set; } = 40;
         public float SplitAffixMinFPSThreshold { get; set; } = 30.0f;
+        
+        public bool EnableComboSystem = true;
+        public float ComboSystemChance = 0.2f;
     }
 }

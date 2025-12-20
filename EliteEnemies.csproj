@@ -685,6 +685,8 @@
         <Compile Include="EliteEnemy\BuffsSystem\Effects\TearEffect.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\EliteBuffFactory.cs" />
         <Compile Include="EliteEnemy\BuffsSystem\Patches\BulletDistortionPatch.cs" />
+        <Compile Include="EliteEnemy\ComboSystem\EliteComboDefinition.cs" />
+        <Compile Include="EliteEnemy\ComboSystem\EliteComboRegistry.cs" />
         <Compile Include="EliteEnemy\Core\EggSpawnHelper.cs" />
         <Compile Include="EliteEnemy\Core\EliteEnemyCorePatches.cs" />
         <Compile Include="EliteEnemy\LootSystem\EliteLootSystem.cs" />
@@ -730,12 +732,14 @@
       <Content Include="Workshop\descriptionen.txt" />
       <Content Include="Workshop\description\en.md" />
       <Content Include="Workshop\description\zh.md" />
+      <Content Include="Workshop\info.ini" />
       <Content Include="Workshop\title\en.md" />
       <Content Include="Workshop\title\zh.md" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <PropertyGroup>
       <PostBuildEvent>copy /Y "$(TargetPath)" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\EliteEnemies.dll"
+copy /Y "$(ProjectDir)\Workshop\info.ini" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\info.ini"
 xcopy /Y /S /I "$(ProjectDir)Localization\*.csv" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\Localization\"</PostBuildEvent>
     </PropertyGroup>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

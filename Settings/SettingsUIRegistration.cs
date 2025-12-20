@@ -101,6 +101,23 @@ namespace EliteEnemies.Settings
                 enable: GameConfig.EnableBonusLoot,
                 onValueChange: GameConfig.SetEnableBonusLoot
             );
+            
+            ModSettingAPI.AddToggle(
+                key: "EnableComboSystem",
+                description: LocalizationManager.GetText("Settings_EnableComboSystem"),
+                enable: GameConfig.EnableComboSystem,
+                onValueChange: GameConfig.SetEnableComboSystem
+            );
+
+            ModSettingAPI.AddSlider(
+                key: "ComboSystemChance",
+                description: LocalizationManager.GetText("Settings_ComboSystemChance"),
+                defaultValue: GameConfig.ComboSystemChance,
+                sliderRange: new Vector2(0f, 1f),
+                onValueChange: GameConfig.SetComboSystemChance,
+                decimalPlaces: 2,
+                characterLimit: 5
+            );
         }
 
         
@@ -258,7 +275,7 @@ namespace EliteEnemies.Settings
         {
             ModSettingAPI.AddSlider(
                 key: "SplitAffixMaxCloneCount",
-                description: LocalizationManager.GetText("Settings_SplitAffixMaxCloneCount"), // 记得在语言文件中添加此 Key
+                description: LocalizationManager.GetText("Settings_SplitAffixMaxCloneCount"),
                 defaultValue: GameConfig.SplitAffixMaxCloneCount,
                 minValue: 10,
                 maxValue: 100,
@@ -267,7 +284,7 @@ namespace EliteEnemies.Settings
 
             ModSettingAPI.AddSlider(
                 key: "SplitAffixMinFPSThreshold",
-                description: LocalizationManager.GetText("Settings_SplitAffixMinFPSThreshold"), // 记得在语言文件中添加此 Key
+                description: LocalizationManager.GetText("Settings_SplitAffixMinFPSThreshold"),
                 defaultValue: GameConfig.SplitAffixMinFPSThreshold,
                 sliderRange: new Vector2(10f, 60f),
                 onValueChange: GameConfig.SetSplitAffixMinFPSThreshold,
@@ -288,6 +305,8 @@ namespace EliteEnemies.Settings
                     "BossEliteChance",
                     "MerchantEliteChance",
                     "MaxAffixCount",
+                    "EnableComboSystem",
+                    "ComboSystemChance",
                     "DropRateMultiplier",
                     "ItemQualityBias",
                     "EnableBonusLoot",
