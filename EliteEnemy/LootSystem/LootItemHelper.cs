@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Duckov.ItemBuilders;
 using Duckov.Utilities;
-using EliteEnemies.Localization;
 using EliteEnemies.Settings;
 using ItemStatsSystem;
 using UnityEngine;
@@ -26,13 +25,15 @@ namespace EliteEnemies.EliteEnemy.LootSystem
 
         // 存储每个品质对应的可用物品ID列表
         private Dictionary<int, List<int>> _qualityItemCache = new Dictionary<int, List<int>>();
-        // 存储物品ID对应的标签集合，避免运行时实例化查询
+        // 存储物品ID对应的标签集合
         private Dictionary<int, HashSet<string>> _itemTagCache = new Dictionary<int, HashSet<string>>();
 
         private bool _isInitialized = false;
 
         // ========== 黑名单配置 ==========
-        
+        // 其他mod物品
+        private static readonly HashSet<int> _modItemIdBlacklist = new HashSet<int>();
+        // 原版
         private readonly HashSet<int> _idBlacklist = new HashSet<int>
         {
             1158, // 水族箱
@@ -62,7 +63,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 return;
             }
             DontDestroyOnLoad(this.gameObject);
-            qualityBiasPower = GameConfig.ItemQualityBias; 
+            qualityBiasPower = GameConfig.ItemQualityBias;
+            InitializeModIdBlacklist();
         }
 
         private void Start()
@@ -76,6 +78,23 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         }
 
         // ========== 初始化核心逻辑 ==========
+        
+        private void InitializeModIdBlacklist()
+        {
+            _modItemIdBlacklist.Clear();
+
+            // 1. “三角鸭武器和配件扩展2.6.2”
+            _modItemIdBlacklist.Add(12013);
+            _modItemIdBlacklist.Add(12014);
+
+            // 2. “ArcaneEra(beta)” ID 范围：421455000-421455033
+            for (int id = 421455000; id <= 421455033; id++)
+            {
+                _modItemIdBlacklist.Add(id);
+            }
+
+            Debug.Log($"{LogTag} MOD ID黑名单初始化完成，共屏蔽 {_modItemIdBlacklist.Count} 个MOD物品。");
+        }
         
         private IEnumerator InitializeItemCacheAsync()
         {
@@ -149,6 +168,10 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         {
             // 1. 优先检查 ID 黑名单
             if (_idBlacklist.Contains(itemId))
+            {
+                return false;
+            }
+            if (_modItemIdBlacklist.Contains(itemId))
             {
                 return false;
             }
