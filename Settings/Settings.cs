@@ -166,7 +166,6 @@ namespace EliteEnemies.Settings
             AffixWeight5 = ModSettingAPI.GetSavedValue<int>("AffixWeight5", out int w5)
                 ? Mathf.Clamp(w5, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
                 : 1;
-            // 添加新配置项需要修改！！！
             
             SplitAffixMaxCloneCount = ModSettingAPI.GetSavedValue<int>("SplitAffixMaxCloneCount", out int splitCount)
                 ? Mathf.Clamp(splitCount, 10, 100)
@@ -176,7 +175,7 @@ namespace EliteEnemies.Settings
                 ? Mathf.Clamp(splitFps, 10f, 120f)
                 : 30.0f;
             
-            EnableComboSystem = ModSettingAPI.GetSavedValue<bool>("EnableComboSystem", out bool enableCombo) ? enableCombo : true;
+            EnableComboSystem = ModSettingAPI.GetSavedValue<bool>("EnableComboSystem", out bool enableCombo) ? enableCombo : false;
             ComboSystemChance = ModSettingAPI.GetSavedValue<float>("ComboSystemChance", out float comboChance) ? comboChance : 0.15f;
             
             // Debug.Log($"{LogTag} NormalEliteChance: {NormalEliteChance}");
@@ -197,7 +196,7 @@ namespace EliteEnemies.Settings
             MaxAffixCount = 2;
 
             DropRateMultiplier = 1.0f;
-            ItemQualityBias = -1.0f;
+            ItemQualityBias = -1.5f;
             EnableBonusLoot = true;
 
             GlobalHealthMultiplier = 1.0f;
@@ -205,7 +204,7 @@ namespace EliteEnemies.Settings
             GlobalSpeedMultiplier = 1.0f;
 
             ShowEliteName = true;
-            ShowDetailedHealth = true;
+            ShowDetailedHealth = false;
             AffixDisplayPosition = AffixTextDisplayPosition.Overhead;
             AffixFontSize = 20;
 
@@ -218,10 +217,11 @@ namespace EliteEnemies.Settings
             SplitAffixMaxCloneCount = 40;
             SplitAffixMinFPSThreshold = 30.0f;
             
-            EnableComboSystem = true;
+            EnableComboSystem = false;
             ComboSystemChance = 0.15f;
 
             LoadAffixStates();
+            LoadComboStates();
             SyncConfigToComponents();
         }
 
