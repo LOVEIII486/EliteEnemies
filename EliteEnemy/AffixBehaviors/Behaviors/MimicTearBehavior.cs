@@ -140,6 +140,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 customSuccess = TryCopyCustomModel(enemy, player);
             }
 
+            // 如果自定义模型失败或未安装，使用原生外观
             if (!customSuccess)
             {
                 CopyVanillaFace(enemy, player);
@@ -162,11 +163,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 _infoType = Type.GetType("DuckovCustomModel.Core.Data.ModelInfo, DuckovCustomModel.Core");
                 _targetEnumType = Type.GetType("DuckovCustomModel.Core.Data.ModelTarget, DuckovCustomModel.Core");
 
-                if (_modelHandlerType == null || _bundleType == null || _infoType == null || _targetEnumType == null)
-                {
-                    _hasCustomModelMod = false;
-                    return;
-                }
+                if (_modelHandlerType == null || _bundleType == null || _infoType == null || _targetEnumType == null) return;
 
                 _bundleInfoField = _modelHandlerType.GetField("_currentModelBundleInfo", BindingFlags.NonPublic | BindingFlags.Instance);
                 _modelInfoField = _modelHandlerType.GetField("_currentModelInfo", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -175,17 +172,22 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 _loadMethod = _modelHandlerType.GetMethod("InitializeCustomModel", new Type[] { _bundleType, _infoType });
                 _changeMethod = _modelHandlerType.GetMethod("ChangeToCustomModel");
 
-                _aiTargetEnumValue = Enum.Parse(_targetEnumType, "AICharacter");;
+                _aiTargetEnumValue = Enum.Parse(_targetEnumType, "AICharacter");
 
-                if (_initMethod != null && _loadMethod != null && _changeMethod != null)
+                if (_bundleInfoField != null && _modelInfoField != null && 
+                    _initMethod != null && _loadMethod != null && _changeMethod != null)
                 {
                     _hasCustomModelMod = true;
-                    Debug.Log($"{LogTag} 自定义模型功能已就绪。");
+                    Debug.Log($"{LogTag} 自定义模型插件反射连接成功。");
+                }
+                else
+                {
+                    Debug.LogWarning($"{LogTag} 自定义模型插件反射失败：部分方法或字段不存在（可能版本不兼容）。");
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 初始化异常: {ex.Message}");
+                Debug.LogError($"{LogTag} 初始化反射严重异常: {ex.Message}");
                 _hasCustomModelMod = false;
             }
         }
@@ -223,13 +225,18 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             try
             {
+                if (player == null || enemy == null) return false;
+
                 Component playerHandler = player.GetComponent(_modelHandlerType);
                 if (playerHandler == null) return false;
 
                 object bundleInfo = _bundleInfoField.GetValue(playerHandler);
                 object modelInfo = _modelInfoField.GetValue(playerHandler);
 
-                if (bundleInfo == null || modelInfo == null) return false;
+                if (bundleInfo == null || modelInfo == null)
+                {
+                    return false;
+                }
 
                 Component enemyHandler = enemy.GetComponent(_modelHandlerType);
                 if (enemyHandler == null)
@@ -245,7 +252,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"{LogTag} 复制过程异常: {ex.Message}");
+                Debug.LogWarning($"{LogTag} 复制自定义模型时发生错误: {ex.Message}");
                 return false;
             }
         }
@@ -254,7 +261,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         {
             try
             {
-                if (enemy.characterModel == null || player.characterModel == null) return;
+                if (enemy == null || enemy.characterModel == null || 
+                    player == null || player.characterModel == null) return;
 
                 var playerFaceInstance = player.characterModel.CustomFace;
                 if (playerFaceInstance == null) return;
@@ -264,7 +272,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 复制原版外观失败: {ex.Message}");
+                Debug.LogWarning($"{LogTag} 复制原版外观失败: {ex.Message}");
             }
         }
         

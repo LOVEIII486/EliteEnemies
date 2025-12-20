@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using EliteEnemies.EliteEnemy.AffixBehaviors;
 using EliteEnemies.EliteEnemy.ComboSystem;
 using EliteEnemies.Settings;
@@ -93,6 +94,7 @@ namespace EliteEnemies.EliteEnemy.Core
             "EnemyPreset_Football_1", "EnemyPreset_Football_2", "EnemyPreset_JLab_Melee_Invisable",
 
             // Boss 随从
+            "EnemyPreset_Boss_ShortEagle_Elete", // 这个是矮鸭召唤的雇佣兵
             "EnemyPreset_Boss_3Shot_Child", "EnemyPreset_Boss_BALeader_Child", "EnemyPreset_Boss_Fly_Child",
             "EnemyPreset_Boss_Speedy_Child", "EnemyPreset_Boss_Storm_1_Child", "EnemyPreset_Boss_XING_Child",
             "EnemyPreset_BossMelee_SchoolBully_Child"
@@ -106,8 +108,8 @@ namespace EliteEnemies.EliteEnemy.Core
             "EnemyPreset_Boss_3Shot", "EnemyPreset_Boss_Arcade", "EnemyPreset_Boss_BALeader",
             "EnemyPreset_Boss_Deng", "EnemyPreset_Boss_Fly", "EnemyPreset_Boss_Grenade",
             "EnemyPreset_Boss_Red", "EnemyPreset_Boss_Roadblock", "EnemyPreset_Boss_RPG",
-            "EnemyPreset_Boss_SenorEngineer", "EnemyPreset_Boss_ServerGuardian", "EnemyPreset_Boss_ShortEagle",
-            "EnemyPreset_Boss_ShortEagle_Elete", "EnemyPreset_Boss_Shot", "EnemyPreset_Boss_Speedy",
+            "EnemyPreset_Boss_SenorEngineer", "EnemyPreset_Boss_ServerGuardian", "EnemyPreset_Boss_ShortEagle", 
+            "EnemyPreset_Boss_Shot", "EnemyPreset_Boss_Speedy",
             "EnemyPreset_Boss_Storm_1_BreakArmor", "EnemyPreset_Boss_Storm_2_Poison",
             "EnemyPreset_Boss_Storm_3_Fire", "EnemyPreset_Boss_Storm_4_Electric", "EnemyPreset_Boss_Storm_5_Space",
             "EnemyPreset_Boss_Vida", "EnemyPreset_Boss_XING", "EnemyPreset_BossMelee_SchoolBully",
@@ -222,26 +224,39 @@ namespace EliteEnemies.EliteEnemy.Core
 
         public static List<string> SelectRandomAffixes(int maxCount, CharacterMainControl cmc)
         {
-            //1. Combo 系统拦截
+            // 1. Combo 系统拦截逻辑
             if (Config.EnableComboSystem && UnityEngine.Random.value < Config.ComboSystemChance)
             {
-                string currentPresetName = cmc?.characterPreset?.name ?? string.Empty;
-                
-                var availableCombos = EliteComboRegistry.ComboPool.FindAll(c => 
-                    !Config.DisabledCombos.Contains(c.ComboId) && 
-                    (c.AllowedPresets == null || c.AllowedPresets.Count == 0 || c.AllowedPresets.Contains(currentPresetName))
+                string currentPresetName = cmc?.characterPreset != null ? cmc.characterPreset.name : string.Empty;
+
+                var availableCombos = ComboSystem.EliteComboRegistry.ComboPool.FindAll(c => 
+                    GameConfig.IsComboEnabled(c.ComboId) && 
+                    (c.AllowedPresets.Count == 0 || c.AllowedPresets.Contains(currentPresetName))
                 );
 
                 if (availableCombos.Count > 0)
                 {
-                    EliteComboDefinition combo = GetRandomFromPool(availableCombos);
-                    if (combo != null)
+                    float totalWeight = availableCombos.Sum(c => c.Weight);
+                    float roll = UnityEngine.Random.Range(0, totalWeight);
+                    float currentSum = 0;
+                    ComboSystem.EliteComboDefinition selectedCombo = availableCombos[0];
+
+                    foreach (var combo in availableCombos)
                     {
-                        var marker = cmc.GetComponent<EliteMarker>();
-                        if (!marker) marker = cmc.gameObject.AddComponent<EliteMarker>();
-                        marker.CustomDisplayName = combo.GetColoredTitle(); 
-                        return new List<string>(combo.AffixIds);
+                        currentSum += combo.Weight;
+                        if (roll <= currentSum)
+                        {
+                            selectedCombo = combo;
+                            break;
+                        }
                     }
+
+                    var marker = cmc.GetComponent<EliteMarker>();
+                    if (!marker) marker = cmc.gameObject.AddComponent<EliteMarker>();
+                    marker.CustomDisplayName = selectedCombo.GetColoredTitle();
+
+                    //Debug.Log($"{LogTag} [Combo模式] 敌人 {currentPresetName} 匹配成功: {selectedCombo.ComboId}");
+                    return new List<string>(selectedCombo.AffixIds);
                 }
             }
 

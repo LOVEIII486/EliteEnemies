@@ -2,18 +2,20 @@
 using System.Text;
 using EliteEnemies.EliteEnemy.AffixBehaviors;
 using EliteEnemies.Localization;
+using System;
 
 namespace EliteEnemies.EliteEnemy.ComboSystem
 {
     public class EliteComboDefinition
     {
         public string ComboId { get; set; }           
-        public string DisplayName { get; set; }        
+        public string DisplayName { get; set; }
         public List<string> AffixIds { get; set; }    
         public float Weight { get; set; }              
-        public string CustomColorHex { get; set; }
+        public string CustomColorHex { get; set; }     
         
-        public HashSet<string> AllowedPresets { get; set; }
+        // 白名单集合：存储允许生成的敌人预设名
+        public HashSet<string> AllowedPresets { get; set; } 
 
         public EliteComboDefinition(string id, string name, List<string> affixes, float weight = 1f, string colorHex = "FFD700") 
         {
@@ -22,37 +24,28 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
             AffixIds = affixes;
             Weight = weight;
             CustomColorHex = colorHex.Replace("#", "");
+            AllowedPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         }
+
+        // 链式调用：添加白名单
         public EliteComboDefinition WithWhitelist(params string[] presetNames)
         {
-            foreach (var name in presetNames)
+            if (presetNames != null)
             {
-                AllowedPresets.Add(name);
+                foreach (var name in presetNames) AllowedPresets.Add(name);
             }
             return this;
         }
         
-        /// <summary>
-        /// 获取设置项中显示的格式化描述
-        /// </summary>
-        public string GetFormattedDescription()
-        {
-            return $"{GetColoredTitle()}：{GetColoredAffixList()}";
-        }
-
-        /// <summary>
-        /// 获取带颜色标签的 Combo 标题
-        /// </summary>
+        // 获取本地化且带颜色的标题（用于 UI 和 血条）
         public string GetColoredTitle()
         {
             string localizedName = LocalizationManager.GetText(ComboId, DisplayName);
             return $"<color=#{CustomColorHex}>【{localizedName}】</color>";
         }
 
-        /// <summary>
-        /// 获取带各自稀有度颜色的词缀列表字符串
-        /// </summary>
-        private string GetColoredAffixList()
+        // 获取格式化描述（用于设置菜单）
+        public string GetFormattedDescription()
         {
             StringBuilder sb = new StringBuilder();
             if (AffixIds != null)
@@ -60,16 +53,12 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
                 foreach (string aid in AffixIds)
                 {
                     if (EliteAffixes.TryGetAffix(aid, out var affixData))
-                    {
                         sb.Append(affixData.ColoredTag);
-                    }
                     else
-                    {
                         sb.Append($"[{aid}]");
-                    }
                 }
             }
-            return sb.ToString();
+            return $"{GetColoredTitle()}：{sb}";
         }
     }
 }
