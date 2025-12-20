@@ -162,3 +162,15 @@ Affix_Reflect_Description,週期性生成護盾，將受到的子彈反彈回攻
 Affix_Reflect_PopText,<color=#00BFFF>反彈！</color>,2.3,AffixBehavior
 Affix_Frozen_Name,嚴寒,2.3,AffixNames
 Affix_Frozen_Description,攻擊命中時有概率凍結玩家（12秒冷卻時間）,2.3,AffixDescription
+Settings_EnableComboSystem,啟用 Combo 組合系統（再次提醒！對於普通玩家非常困難！）,2.4,ComboSettings
+Settings_ComboSystemChance,Combo 精英怪出現機率,2.4,ComboSettings
+Settings_ComboSettings_Group,精英怪 Combo 組合設定（實驗性系統！非常困難！）,2.4,Groups
+Settings_Combo_Prefix,組合：,2.4,ComboSettings
+Combo_omni_artisan_Name,全域匠師,2.4,ComboNames
+Combo_hyper_colossus_Name,超構巨軀,2.4,ComboNames
+Combo_phase_stalker_Name,相位潛獵者,2.4,ComboNames
+Combo_overload_simulacrum_Name,過載映像體,2.4,ComboNames
+Combo_chaos_devour_Name,混沌蠶食,2.4,ComboNames
+Combo_suppression_field_Name,全域抑制場,2.4,ComboNames
+Combo_killzone_barrage_Name,火力絞殺網,2.4,ComboNames
+Combo_immortal_blood_pact_Name,不滅血誓,2.4,ComboNames

@@ -162,3 +162,15 @@ Affix_Reflect_Description,Periodically generates a shield that reflects incoming
 Affix_Reflect_PopText,<color=#00BFFF>Reflect!</color>,2.3,AffixBehavior
 Affix_Frozen_Name,Frigid,2.3,AffixNames
 Affix_Frozen_Description,Attacks have a chance to freeze the player on hit (12s Cooldown).,2.3,AffixDescription
+Settings_EnableComboSystem,Enable Combo System (Warning! Extremely difficult for casual players!),2.4,ComboSettings
+Settings_ComboSystemChance,Elite Combo Spawn Chance,2.4,ComboSettings
+Settings_ComboSettings_Group,Elite Combo Configuration (Experimental System! Extremely Difficult!),2.4,Groups
+Settings_Combo_Prefix,Combo:,2.4,ComboSettings
+Combo_omni_artisan_Name,Omni Artisan,2.4,ComboNames
+Combo_hyper_colossus_Name,Hyper Colossus,2.4,ComboNames
+Combo_phase_stalker_Name,Phase Stalker,2.4,ComboNames
+Combo_overload_simulacrum_Name,Overload Simulacrum,2.4,ComboNames
+Combo_chaos_devour_Name,Chaos Devourer,2.4,ComboNames
+Combo_suppression_field_Name,Suppression Field,2.4,ComboNames
+Combo_killzone_barrage_Name,Killzone Barrage,2.4,ComboNames
+Combo_immortal_blood_pact_Name,Immortal Blood Pact,2.4,ComboNames

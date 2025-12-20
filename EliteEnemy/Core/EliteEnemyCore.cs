@@ -236,7 +236,7 @@ namespace EliteEnemies.EliteEnemy.Core
                         //Debug.Log($"{LogTag} 精英怪进化为 Combo 模式: {combo.DisplayName}");
                         var marker = cmc.GetComponent<EliteMarker>();
                         if (!marker) marker = cmc.gameObject.AddComponent<EliteMarker>();
-                        marker.CustomDisplayName = combo.DisplayName;
+                        marker.CustomDisplayName = combo.GetColoredTitle();
 
                         return new List<string>(combo.AffixIds);
                     }

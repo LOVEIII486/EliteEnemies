@@ -728,6 +728,7 @@
       <Content Include="Localization\English.csv" />
       <Content Include="Localization\LocalizationGuide.md" />
       <Content Include="README.md" />
+      <Content Include="Workshop\combo设计.txt" />
       <Content Include="Workshop\description.txt" />
       <Content Include="Workshop\descriptionen.txt" />
       <Content Include="Workshop\description\en.md" />
@@ -735,6 +736,7 @@
       <Content Include="Workshop\info.ini" />
       <Content Include="Workshop\title\en.md" />
       <Content Include="Workshop\title\zh.md" />
+      <Content Include="Workshop\词条统计.txt" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <PropertyGroup>
