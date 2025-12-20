@@ -12,6 +12,8 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
         public List<string> AffixIds { get; set; }    
         public float Weight { get; set; }              
         public string CustomColorHex { get; set; }
+        
+        public HashSet<string> AllowedPresets { get; set; }
 
         public EliteComboDefinition(string id, string name, List<string> affixes, float weight = 1f, string colorHex = "FFD700") 
         {
@@ -20,6 +22,14 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
             AffixIds = affixes;
             Weight = weight;
             CustomColorHex = colorHex.Replace("#", "");
+        }
+        public EliteComboDefinition WithWhitelist(params string[] presetNames)
+        {
+            foreach (var name in presetNames)
+            {
+                AllowedPresets.Add(name);
+            }
+            return this;
         }
         
         /// <summary>

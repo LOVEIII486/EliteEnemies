@@ -225,19 +225,21 @@ namespace EliteEnemies.EliteEnemy.Core
             //1. Combo 系统拦截
             if (Config.EnableComboSystem && UnityEngine.Random.value < Config.ComboSystemChance)
             {
+                string currentPresetName = cmc?.characterPreset?.name ?? string.Empty;
+                
                 var availableCombos = EliteComboRegistry.ComboPool.FindAll(c => 
-                    !Config.DisabledCombos.Contains(c.ComboId));
+                    !Config.DisabledCombos.Contains(c.ComboId) && 
+                    (c.AllowedPresets == null || c.AllowedPresets.Count == 0 || c.AllowedPresets.Contains(currentPresetName))
+                );
 
                 if (availableCombos.Count > 0)
                 {
-                    var combo = GetRandomFromPool(availableCombos);
+                    EliteComboDefinition combo = GetRandomFromPool(availableCombos);
                     if (combo != null)
                     {
-                        //Debug.Log($"{LogTag} 精英怪进化为 Combo 模式: {combo.DisplayName}");
                         var marker = cmc.GetComponent<EliteMarker>();
                         if (!marker) marker = cmc.gameObject.AddComponent<EliteMarker>();
-                        marker.CustomDisplayName = combo.GetColoredTitle();
-
+                        marker.CustomDisplayName = combo.GetColoredTitle(); 
                         return new List<string>(combo.AffixIds);
                     }
                 }
@@ -405,11 +407,15 @@ namespace EliteEnemies.EliteEnemy.Core
         
         private static EliteComboDefinition GetRandomFromPool(List<EliteComboDefinition> pool)
         {
-            float total = 0;
-            foreach (var c in pool) total += c.Weight;
-            float roll = UnityEngine.Random.Range(0, total);
-            float cur = 0;
-            foreach (var c in pool) { cur += c.Weight; if (roll <= cur) return c; }
+            float totalWeight = 0;
+            foreach (var c in pool) totalWeight += c.Weight;
+            float roll = UnityEngine.Random.Range(0, totalWeight);
+            float currentSum = 0;
+            foreach (var c in pool)
+            {
+                currentSum += c.Weight;
+                if (roll <= currentSum) return c;
+            }
             return pool[0];
         }
 

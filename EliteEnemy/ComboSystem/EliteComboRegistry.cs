@@ -24,7 +24,7 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
                     "omni_artisan",
                     LocalizationManager.GetText("Combo_omni_artisan_Name", "全域匠师"),
                     new List<string> { "Musician", "Chef", "Gunsmith", "Locksmith" },
-                    1f, "E6C27A"
+                    0.5f, "E6C27A"
                 ),
 
                 // 2. 【超构巨躯】 - 钢铁灰蓝 (#8FAFC6)
@@ -33,7 +33,7 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
                     "hyper_colossus",
                     LocalizationManager.GetText("Combo_hyper_colossus_Name", "超构巨躯"),
                     new List<string> { "Hardening", "Giant", "Slime" },
-                    1f, "8FAFC6"
+                    0.7f, "8FAFC6"
                 ),
 
                 // 3. 【相位潜猎者】 - 冷相紫 (#9FA8DA)
@@ -52,6 +52,20 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
                     LocalizationManager.GetText("Combo_overload_simulacrum_Name", "过载映像体"),
                     new List<string> { "MimicTear", "NineDragons", "Overload" },
                     1f, "FFB347"
+                ).WithWhitelist(
+                    "EnemyPreset_Scav", 
+                    "EnemyPreset_Scav_Elete", 
+                    "EnemyPreset_Scav_Farm", 
+                    "EnemyPreset_Scav_low", 
+                    "EnemyPreset_Scav_low_ak74",
+                    "EnemyPreset_USEC_Farm", 
+                    "EnemyPreset_USEC_HiddenWareHouse", 
+                    "EnemyPreset_USEC_Low",
+                    "EnemyPreset_JLab_Raider",
+                    "EnemyPreset_Boss_BALeader_Child", 
+                    "EnemyPreset_Boss_3Shot_Child", 
+                    "EnemyPreset_Boss_Speedy_Child",
+                    "EnemyPreset_Boss_Storm_1_Child"
                 ),
 
                 // 5. 【混沌蚕食】 - 病蚀紫 (#B57BA6)
@@ -87,7 +101,7 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
                     "immortal_blood_pact",
                     LocalizationManager.GetText("Combo_immortal_blood_pact_Name", "不灭血誓"),
                     new List<string> { "Guardian", "Undead", "Vampirism" },
-                    1f, "A7C7E7"
+                    0.7f, "A7C7E7"
                 )
             };
         }
