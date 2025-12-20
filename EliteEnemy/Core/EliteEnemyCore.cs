@@ -225,16 +225,21 @@ namespace EliteEnemies.EliteEnemy.Core
             //1. Combo 系统拦截
             if (Config.EnableComboSystem && UnityEngine.Random.value < Config.ComboSystemChance)
             {
-                EliteComboDefinition combo = EliteComboRegistry.GetRandomCombo();
-                if (combo != null)
-                {
-                    Debug.Log($"{LogTag} 精英怪进化为 Combo 模式: {combo.DisplayName}");
-                    // 标记特殊头衔
-                    var marker = cmc.GetComponent<EliteMarker>();
-                    if (!marker) marker = cmc.gameObject.AddComponent<EliteMarker>();
-                    marker.CustomDisplayName = combo.DisplayName;
+                var availableCombos = EliteComboRegistry.ComboPool.FindAll(c => 
+                    !Config.DisabledCombos.Contains(c.ComboId));
 
-                    return new List<string>(combo.AffixIds); // 直接返回组合词缀，不执行后续随机逻辑
+                if (availableCombos.Count > 0)
+                {
+                    var combo = GetRandomFromPool(availableCombos);
+                    if (combo != null)
+                    {
+                        //Debug.Log($"{LogTag} 精英怪进化为 Combo 模式: {combo.DisplayName}");
+                        var marker = cmc.GetComponent<EliteMarker>();
+                        if (!marker) marker = cmc.gameObject.AddComponent<EliteMarker>();
+                        marker.CustomDisplayName = combo.DisplayName;
+
+                        return new List<string>(combo.AffixIds);
+                    }
                 }
             }
 
@@ -396,6 +401,16 @@ namespace EliteEnemies.EliteEnemy.Core
             }
 
             return 1;
+        }
+        
+        private static EliteComboDefinition GetRandomFromPool(List<EliteComboDefinition> pool)
+        {
+            float total = 0;
+            foreach (var c in pool) total += c.Weight;
+            float roll = UnityEngine.Random.Range(0, total);
+            float cur = 0;
+            foreach (var c in pool) { cur += c.Weight; if (roll <= cur) return c; }
+            return pool[0];
         }
 
         private static bool IsAffixAllowedForPreset(string affixName, string resourceName)

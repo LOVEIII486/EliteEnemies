@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Text;
+using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.Localization;
 
 namespace EliteEnemies.EliteEnemy.ComboSystem
 {
@@ -15,6 +18,28 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
             DisplayName = name;
             AffixIds = affixes;
             Weight = weight;
+        }
+        
+        public string GetFormattedDescription()
+        {
+            string localizedName = LocalizationManager.GetText(ComboId, DisplayName);
+            StringBuilder sb = new StringBuilder();
+            if (AffixIds != null)
+            {
+                foreach (string aid in AffixIds)
+                {
+                    if (EliteAffixes.TryGetAffix(aid, out var affixData))
+                    {
+                        sb.Append($"[{affixData.Name}]");
+                    }
+                    else
+                    {
+                        sb.Append($"[{aid}]");
+                    }
+                }
+            }
+
+            return $"【{localizedName}】：{sb}";
         }
     }
 }

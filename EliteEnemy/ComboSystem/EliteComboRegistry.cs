@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using EliteEnemies.Localization;
 using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.ComboSystem
@@ -19,19 +20,19 @@ namespace EliteEnemies.EliteEnemy.ComboSystem
             {
                 new EliteComboDefinition(
                     "heavy_tank",
-                    "【不破要塞】",
+                    LocalizationManager.GetText("Combo_heavy_tank_Name", "不破要塞"), 
                     new List<string> { "Hardening", "Regeneration", "Guardian" }, 
                     1.0f
                 ),
                 new EliteComboDefinition(
                     "phantom_assassin",
-                    "【虚空行者】",
+                    LocalizationManager.GetText("Combo_phantom_assassin_Name", "虚空行者"), 
                     new List<string> { "Invisibility", "Vampirism" }, 
                     0.8f
                 ),
                 new EliteComboDefinition(
                     "chaos_master",
-                    "【狂乱之源】",
+                    LocalizationManager.GetText("Combo_chaos_master_Name", "狂乱之源"), 
                     new List<string> { "Chaos", "MultiShot", "Distortion" }, 
                     0.5f
                 )

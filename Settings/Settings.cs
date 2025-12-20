@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.EliteEnemy.ComboSystem;
 using EliteEnemies.EliteEnemy.Core;
 using EliteEnemies.EliteEnemy.LootSystem;
 using EliteEnemies.ModSettingsApi;
@@ -69,8 +70,10 @@ namespace EliteEnemies.Settings
         public static int SplitAffixMaxCloneCount { get; private set; }
         public static float SplitAffixMinFPSThreshold { get; private set; }
         
+        // combo 系统
         public static bool EnableComboSystem { get; private set; }
         public static float ComboSystemChance { get; private set; }
+        private static Dictionary<string, bool> _comboStates = new Dictionary<string, bool>();
         
         // ==================== 初始化 ====================
 
@@ -182,6 +185,7 @@ namespace EliteEnemies.Settings
             // Debug.Log($"{LogTag} EnableBonusLoot: {EnableBonusLoot}");
 
             LoadAffixStates();
+            LoadComboStates();
             SyncConfigToComponents(); // 同步到掉落系统
         }
 
@@ -425,7 +429,42 @@ namespace EliteEnemies.Settings
 
             return blacklist;
         }
+        
+        
+        // ==================== Combo 状态管理 ====================
 
+        private static void LoadComboStates()
+        {
+            foreach (var combo in EliteComboRegistry.ComboPool)
+            {
+                if (ModSettingAPI.GetSavedValue<bool>(combo.ComboId, out bool saved))
+                    _comboStates[combo.ComboId] = saved;
+                else
+                    _comboStates[combo.ComboId] = true;
+            }
+        }
+
+        public static void SetComboEnabled(string comboId, bool enabled)
+        {
+            _comboStates[comboId] = enabled;
+            NotifyConfigChanged();
+        }
+
+        public static bool IsComboEnabled(string comboId)
+        {
+            return _comboStates.TryGetValue(comboId, out bool enabled) && enabled;
+        }
+
+        public static HashSet<string> GetDisabledComboBlacklist()
+        {
+            var blacklist = new HashSet<string>();
+            foreach (var combo in EliteComboRegistry.ComboPool)
+            {
+                if (!IsComboEnabled(combo.ComboId)) blacklist.Add(combo.ComboId);
+            }
+            return blacklist;
+        }
+        
         public static EliteEnemiesConfig GetConfig()
         {
             return new EliteEnemiesConfig
@@ -456,6 +495,7 @@ namespace EliteEnemies.Settings
                 
                 EnableComboSystem = EnableComboSystem, 
                 ComboSystemChance = ComboSystemChance,
+                DisabledCombos = GetDisabledComboBlacklist(),
             };
         }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using EliteEnemies.EliteEnemy.AffixBehaviors;
+using EliteEnemies.EliteEnemy.ComboSystem;
 using EliteEnemies.Localization;
 using EliteEnemies.ModSettingsApi;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace EliteEnemies.Settings
         private const string LogTag = "[EliteEnemies.SettingsUI]";
         private const float GroupScale = 0.7f;
         private const bool GroupTopInsert = false;
-        
+
         // 注册 ModSetting UI 控件
         public static void RegisterUI()
         {
@@ -25,11 +26,14 @@ namespace EliteEnemies.Settings
             RegisterVisualSettings();
             RegisterGlobalMultipliers();
             RegisterAffixCountWeights();
+
             var affixKeys = RegisterAffixToggles();
             RegisterAffixSpecialSettings();
-            
+
+            var comboKeys = RegisterComboToggles();
+
             // 必须最后调用
-            RegisterGroups(affixKeys);
+            RegisterGroups(affixKeys, comboKeys);
             Debug.Log($"{LogTag} UI 注册完成");
         }
 
@@ -45,7 +49,7 @@ namespace EliteEnemies.Settings
                 decimalPlaces: 2,
                 characterLimit: 5
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "BossEliteChance",
                 description: LocalizationManager.GetText("Settings_BossEliteChance"),
@@ -55,7 +59,7 @@ namespace EliteEnemies.Settings
                 decimalPlaces: 2,
                 characterLimit: 5
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "MerchantEliteChance",
                 description: LocalizationManager.GetText("Settings_MerchantEliteChance"),
@@ -65,7 +69,7 @@ namespace EliteEnemies.Settings
                 decimalPlaces: 2,
                 characterLimit: 5
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "MaxAffixCount",
                 description: LocalizationManager.GetText("Settings_MaxAffixCount"),
@@ -74,7 +78,7 @@ namespace EliteEnemies.Settings
                 maxValue: 5,
                 onValueChange: GameConfig.SetMaxAffixCount
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "DropRateMultiplier",
                 description: LocalizationManager.GetText("Settings_DropRateMultiplier"),
@@ -84,7 +88,7 @@ namespace EliteEnemies.Settings
                 decimalPlaces: 2,
                 characterLimit: 5
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "ItemQualityBias",
                 description: LocalizationManager.GetText("Settings_ItemQualityBias"),
@@ -94,33 +98,16 @@ namespace EliteEnemies.Settings
                 decimalPlaces: 1,
                 characterLimit: 5
             );
-            
+
             ModSettingAPI.AddToggle(
                 key: "EnableBonusLoot",
                 description: LocalizationManager.GetText("Settings_EnableBonusLoot"),
                 enable: GameConfig.EnableBonusLoot,
                 onValueChange: GameConfig.SetEnableBonusLoot
             );
-            
-            ModSettingAPI.AddToggle(
-                key: "EnableComboSystem",
-                description: LocalizationManager.GetText("Settings_EnableComboSystem"),
-                enable: GameConfig.EnableComboSystem,
-                onValueChange: GameConfig.SetEnableComboSystem
-            );
-
-            ModSettingAPI.AddSlider(
-                key: "ComboSystemChance",
-                description: LocalizationManager.GetText("Settings_ComboSystemChance"),
-                defaultValue: GameConfig.ComboSystemChance,
-                sliderRange: new Vector2(0f, 1f),
-                onValueChange: GameConfig.SetComboSystemChance,
-                decimalPlaces: 2,
-                characterLimit: 5
-            );
         }
 
-        
+
         private static void RegisterVisualSettings()
         {
             ModSettingAPI.AddToggle(
@@ -129,22 +116,22 @@ namespace EliteEnemies.Settings
                 enable: GameConfig.ShowEliteName,
                 onValueChange: GameConfig.SetShowEliteName
             );
-            
+
             ModSettingAPI.AddToggle(
                 key: "ShowDetailedHealth",
                 description: LocalizationManager.GetText("Settings_ShowDetailedHealth"),
                 enable: GameConfig.ShowDetailedHealth,
                 onValueChange: GameConfig.SetShowDetailedHealth
             );
-            
+
             var displayPositionOptions = new List<string>
             {
                 "Overhead",
                 "Underfoot"
             };
-            
+
             string currentPosition = GameConfig.AffixDisplayPosition.ToString();
-            
+
             ModSettingAPI.AddDropdownList(
                 key: "AffixDisplayPosition",
                 description: LocalizationManager.GetText("Settings_AffixDisplayPosition"),
@@ -152,7 +139,7 @@ namespace EliteEnemies.Settings
                 defaultValue: currentPosition,
                 onValueChange: GameConfig.SetAffixDisplayPosition
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "AffixFontSize",
                 description: LocalizationManager.GetText("Settings_AffixFontSize"),
@@ -162,7 +149,7 @@ namespace EliteEnemies.Settings
                 onValueChange: GameConfig.SetAffixFontSize
             );
         }
-        
+
         // 全局属性调整
         private static void RegisterGlobalMultipliers()
         {
@@ -175,7 +162,7 @@ namespace EliteEnemies.Settings
                 decimalPlaces: 1,
                 characterLimit: 5
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "GlobalDamageMultiplier",
                 description: LocalizationManager.GetText("Settings_GlobalDamageMultiplier"),
@@ -185,7 +172,7 @@ namespace EliteEnemies.Settings
                 decimalPlaces: 1,
                 characterLimit: 5
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "GlobalSpeedMultiplier",
                 description: LocalizationManager.GetText("Settings_GlobalSpeedMultiplier"),
@@ -196,7 +183,7 @@ namespace EliteEnemies.Settings
                 characterLimit: 5
             );
         }
-        
+
         // 词条数量权重设置
         private static void RegisterAffixCountWeights()
         {
@@ -208,7 +195,7 @@ namespace EliteEnemies.Settings
                 maxValue: 100,
                 onValueChange: GameConfig.SetAffixWeight1
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "AffixWeight2",
                 description: LocalizationManager.GetText("Settings_AffixWeight2"),
@@ -217,7 +204,7 @@ namespace EliteEnemies.Settings
                 maxValue: 100,
                 onValueChange: GameConfig.SetAffixWeight2
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "AffixWeight3",
                 description: LocalizationManager.GetText("Settings_AffixWeight3"),
@@ -226,7 +213,7 @@ namespace EliteEnemies.Settings
                 maxValue: 100,
                 onValueChange: GameConfig.SetAffixWeight3
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "AffixWeight4",
                 description: LocalizationManager.GetText("Settings_AffixWeight4"),
@@ -235,7 +222,7 @@ namespace EliteEnemies.Settings
                 maxValue: 100,
                 onValueChange: GameConfig.SetAffixWeight4
             );
-            
+
             ModSettingAPI.AddSlider(
                 key: "AffixWeight5",
                 description: LocalizationManager.GetText("Settings_AffixWeight5"),
@@ -245,7 +232,7 @@ namespace EliteEnemies.Settings
                 onValueChange: GameConfig.SetAffixWeight5
             );
         }
-         
+
         // 词缀开关
         private static List<string> RegisterAffixToggles()
         {
@@ -269,7 +256,7 @@ namespace EliteEnemies.Settings
 
             return affixKeys;
         }
-        
+
         // 词缀特殊设置
         private static void RegisterAffixSpecialSettings()
         {
@@ -292,9 +279,51 @@ namespace EliteEnemies.Settings
                 characterLimit: 5
             );
         }
-        
+
+        // combo开关
+        private static List<string> RegisterComboToggles()
+        {
+            var comboKeys = new List<string>();
+
+            ModSettingAPI.AddToggle(
+                key: "EnableComboSystem",
+                description: LocalizationManager.GetText("Settings_EnableComboSystem"),
+                enable: GameConfig.EnableComboSystem,
+                onValueChange: GameConfig.SetEnableComboSystem
+            );
+
+            ModSettingAPI.AddSlider(
+                key: "ComboSystemChance",
+                description: LocalizationManager.GetText("Settings_ComboSystemChance"),
+                defaultValue: GameConfig.ComboSystemChance,
+                sliderRange: new Vector2(0f, 1f),
+                onValueChange: GameConfig.SetComboSystemChance,
+                decimalPlaces: 2,
+                characterLimit: 5
+            );
+
+            comboKeys.Add("EnableComboSystem");
+            comboKeys.Add("ComboSystemChance");
+
+            foreach (var combo in EliteComboRegistry.ComboPool)
+            {
+                string key = combo.ComboId;
+                string dynamicDesc = combo.GetFormattedDescription();
+                ModSettingAPI.AddToggle(
+                    key: key,
+                    description: dynamicDesc,
+                    enable: GameConfig.IsComboEnabled(key),
+                    onValueChange: (bool value) => GameConfig.SetComboEnabled(key, value)
+                );
+
+                comboKeys.Add(key);
+            }
+
+            return comboKeys;
+        }
+
         // 注册分组
-        private static void RegisterGroups(List<string> affixKeys)
+        private static void RegisterGroups(List<string> affixKeys, List<string> comboKeys)
         {
             ModSettingAPI.AddGroup(
                 key: "BasicSettings",
@@ -305,8 +334,6 @@ namespace EliteEnemies.Settings
                     "BossEliteChance",
                     "MerchantEliteChance",
                     "MaxAffixCount",
-                    "EnableComboSystem",
-                    "ComboSystemChance",
                     "DropRateMultiplier",
                     "ItemQualityBias",
                     "EnableBonusLoot",
@@ -315,9 +342,9 @@ namespace EliteEnemies.Settings
                 topInsert: GroupTopInsert,
                 open: true
             );
-            
+
             ModSettingAPI.AddGroup(
-                key: "VisualSettings", 
+                key: "VisualSettings",
                 description: LocalizationManager.GetText("Settings_VisualSettings_Group"),
                 keys: new List<string>
                 {
@@ -330,7 +357,7 @@ namespace EliteEnemies.Settings
                 topInsert: GroupTopInsert,
                 open: false
             );
-            
+
             ModSettingAPI.AddGroup(
                 key: "GlobalMultipliers",
                 description: LocalizationManager.GetText("Settings_GlobalMultipliers_Group"),
@@ -344,7 +371,7 @@ namespace EliteEnemies.Settings
                 topInsert: GroupTopInsert,
                 open: false
             );
-            
+
             ModSettingAPI.AddGroup(
                 key: "AffixCountWeights",
                 description: LocalizationManager.GetText("Settings_AffixCountWeights_Group"),
@@ -360,7 +387,7 @@ namespace EliteEnemies.Settings
                 topInsert: GroupTopInsert,
                 open: false
             );
-            
+
             ModSettingAPI.AddGroup(
                 key: "AffixToggles",
                 description: LocalizationManager.GetText("Settings_AffixToggles_Group"),
@@ -369,7 +396,16 @@ namespace EliteEnemies.Settings
                 topInsert: GroupTopInsert,
                 open: false
             );
-            
+
+            ModSettingAPI.AddGroup(
+                key: "ComboSettings",
+                description: LocalizationManager.GetText("Settings_ComboSettings_Group"),
+                keys: comboKeys,
+                scale: GroupScale,
+                topInsert: GroupTopInsert,
+                open: false
+            );
+
             ModSettingAPI.AddGroup(
                 key: "AffixSpecialSettings",
                 description: LocalizationManager.GetText("Settings_AffixSpecialSettings_Group"),
