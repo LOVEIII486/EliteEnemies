@@ -70,7 +70,7 @@ namespace EliteEnemies.EliteEnemy.Core
             }
         }
 
-        // ========== 预设集合 ==========
+        #region 预设集合
 
         /// <summary>
         /// 普通敌人预设
@@ -144,10 +144,15 @@ namespace EliteEnemies.EliteEnemy.Core
                 "EnemyPreset_QuestGiver_Fo", 
                 "EnemyPreset_QuestGiver_XiaoMing"
             };
-
+        
+        // 自动注册的外部预设
         internal static readonly HashSet<string> ExternalEligiblePresets =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
+        
+        #endregion
+        
+        #region 预设白名单与黑名单
+        
         internal static readonly Dictionary<string, HashSet<string>> AffixPresetWhitelist =
             new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase)
             {
@@ -177,6 +182,13 @@ namespace EliteEnemies.EliteEnemy.Core
                     "EnemyPreset_Boss_Kamakoto_Special"
                 },
             };
+        
+        public static readonly HashSet<string> UIHiddenPresets = new HashSet<string> 
+        { 
+            "EnemyPreset_JLab_Melee_Invisable"
+        };
+        
+        #endregion
 
         // ========== 公共接口 ==========
 
@@ -189,6 +201,11 @@ namespace EliteEnemies.EliteEnemy.Core
             }
 
             _config = newConfig;
+        }
+        
+        public static bool IsUIHidden(string presetName)
+        {
+            return !string.IsNullOrEmpty(presetName) && UIHiddenPresets.Contains(presetName);
         }
 
         /// <summary>

@@ -135,6 +135,12 @@ namespace EliteEnemies.EliteEnemy.Core
         {
             var cmc = __instance.TryGetCharacter();
             if (cmc == null || cmc.IsMainCharacter) return;
+            
+            // 特殊UI黑名单怪物不显示血条
+            if (cmc.characterPreset != null && EliteEnemyCore.IsUIHidden(cmc.characterPreset.name))
+            {
+                return;
+            }
 
             // 仅对精英怪强制开启血条
             var marker = cmc.GetComponent<EliteEnemyCore.EliteMarker>();

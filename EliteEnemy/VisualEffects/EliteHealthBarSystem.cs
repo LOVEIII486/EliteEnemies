@@ -32,7 +32,7 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
 
     /// <summary>
     /// 挂载在 HealthBar 游戏对象上的控制器
-    /// 只负责显示额外的词缀和血量数值，绝不修改原版名字。
+    /// 只负责显示额外的词缀和血量数值。
     /// 针对 Combo 怪，优先显示组合名称。
     /// </summary>
     [DefaultExecutionOrder(100)]
@@ -114,8 +114,9 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             _cachedCmc = newTarget ? newTarget.TryGetCharacter() : null;
             _cachedMarker = _cachedCmc ? _cachedCmc.GetComponent<EliteEnemyCore.EliteMarker>() : null;
             
-            // 排除友军
-            if (_cachedCmc && LevelManager.Instance?.MainCharacter && _cachedCmc.Team == LevelManager.Instance.MainCharacter.Team)
+            bool isFriendly = _cachedCmc && LevelManager.Instance?.MainCharacter && _cachedCmc.Team == LevelManager.Instance.MainCharacter.Team;
+            bool isUIHidden = _cachedCmc != null && _cachedCmc.characterPreset != null && EliteEnemyCore.IsUIHidden(_cachedCmc.characterPreset.name);
+            if (isFriendly || isUIHidden)
             {
                 _isElite = false;
                 return;
