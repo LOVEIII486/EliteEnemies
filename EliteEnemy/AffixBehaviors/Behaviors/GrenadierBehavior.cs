@@ -38,7 +38,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             int randomItemId = GetRandomGrenadeId();
             
-            EliteBehaviorHelper.LaunchGrenadeAtPlayer(attacker, randomItemId);
+            EliteBehaviorHelper.LaunchGrenadeAtPlayer(attacker, randomItemId,1.2f);
             
             _lastHitTime = Time.time;
         }

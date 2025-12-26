@@ -15,7 +15,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
         /// <summary>
         /// 让指定角色向目标位置投掷
         /// </summary>
-        public static void LaunchGrenade(CharacterMainControl attacker, int itemId, Vector3 targetPos, float delay = 2.0f, bool canHurtSelf = false)
+        public static void LaunchGrenade(CharacterMainControl attacker, int itemId, Vector3 targetPos, float delay = 1.5f, bool canHurtSelf = false)
         {
             if (attacker == null) return;
             
@@ -48,7 +48,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
         /// <summary>
         /// 直接向玩家当前位置发射
         /// </summary>
-        public static void LaunchGrenadeAtPlayer(CharacterMainControl attacker, int itemId, float delay = 2.0f)
+        public static void LaunchGrenadeAtPlayer(CharacterMainControl attacker, int itemId, float delay = 1.5f)
         {
             if (LevelManager.Instance?.MainCharacter == null) return;
             Vector3 playerPos = LevelManager.Instance.MainCharacter.transform.position;
