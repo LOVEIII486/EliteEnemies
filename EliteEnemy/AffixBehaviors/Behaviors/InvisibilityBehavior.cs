@@ -17,7 +17,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         
         private const char MessageSeparator = '|';
         
-        private static readonly float VisibleInterval = 6.0f;  // 每隔多少秒触发一次显形效果
+        private static readonly float VisibleInterval = 5f;  // 每隔多少秒触发一次显形效果
         private static readonly float FlashInterval   = 0.15f; // 闪烁间隔（秒）
         private static readonly int   FlashCount      = 3;     // 每次闪烁次数
         
@@ -80,6 +80,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
         {
+            if (!_hasBeenHit)
+            {
+                _hasBeenHit = true;
+                _isVisible = false;
+                _timer = VisibleInterval;
+                character.Hide();
+            }
         }
 
         public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
@@ -150,6 +157,15 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 _flashTimer = FlashInterval;
                 
                 ShowRandomMessage(character);
+            }
+            
+            if (_isVisible)
+            {
+                character.Show();
+            }
+            else
+            {
+                character.Hide();
             }
         }
 
