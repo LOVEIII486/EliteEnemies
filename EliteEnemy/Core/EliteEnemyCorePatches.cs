@@ -68,20 +68,26 @@ namespace EliteEnemies.EliteEnemy.Core
                     chance = Mathf.Clamp01(EliteEnemyCore.Config.NormalEliteChance);
                 else
                 {
-                    EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: true);
+                    EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: false);
                     return;
                 }
 
                 // 随机判定
                 if (UnityEngine.Random.value > chance)
                 {
-                    EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: true);
+                    EliteEnemyTracker.RecordDecision(rName, baseName, processedFlag: false);
                     return;
                 }
 
                 // 5. 应用精英化
                 int maxCount = Mathf.Max(1, EliteEnemyCore.Config.MaxAffixCount);
                 var affixes = EliteEnemyCore.SelectRandomAffixes(maxCount, cmc);
+                
+                if (affixes == null || affixes.Count == 0)
+                {
+                    EliteEnemyTracker.RecordDecision(rName,baseName, processedFlag: false);
+                    return;
+                }
 
                 // 修改属性并标记
                 EliteEnemyCore.ForceMakeElite(cmc, affixes);

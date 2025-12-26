@@ -118,7 +118,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                     team = shooter.Team,
                     fromCharacter = shooter,
                     fromWeaponItemID = ProjectileSourceItemId,
-                    damage = 8f,
+                    damage = 10f,
                     critRate = 0.05f,
                     critDamageFactor = 1.2f,
                     distance = 25f,

@@ -117,7 +117,7 @@ namespace EliteEnemies.EliteEnemy.Core
         };
 
         /// <summary>
-        /// 商家/NPC 预设
+        /// 商人 预设
         /// </summary>
         internal static readonly HashSet<string> MerchantPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
