@@ -1,0 +1,176 @@
+key,value,version,sheet
+Settings_BasicSettings_Group,Элитные Противники,2.3,Groups
+Settings_NormalEliteChance,Шанс Элиты Для Нормальных Противников,2.3,BasicSettings
+Settings_BossEliteChance,Шанс Элиты Для Боссов,2.3,BasicSettings
+Settings_MerchantEliteChance,Шанс Элиты Для Торговца,2.3,BasicSettings
+Settings_MaxAffixCount,Максимальное Число Аффиксов,2.3,BasicSettings
+Settings_DropRateMultiplier,Модификатор Шанса Добычи с Элиты (общий шанс добычи),2.3,BasicSettings
+Settings_ItemQualityBias,"Смещение по Качеству Добычи (влияет на ценность добычи, рекоменд. от -0.8 до +1.5)",2.3,BasicSettings
+Settings_GlobalMultipliers_Group,Глобальные Аттрибуты Элитных Противников,2.3,Groups
+Settings_GlobalHealthMultiplier,Модификатор Здоровья,2.3,BasicSettings
+Settings_GlobalDamageMultiplier,Модификатор Урона,2.3,BasicSettings
+Settings_GlobalSpeedMultiplier,Модификатор Скорости,2.3,BasicSettings
+Settings_EnableBonusLoot,Бонусная Добыча с Элитных Врагов,2.3,BasicSettings
+Settings_VisualSettings_Group,Визуальные Настройки,2.3,Groups
+Settings_ShowEliteName,Показывать Имена Элиты,2.3,VisualSettings
+Settings_ShowDetailedHealth,Показывать Здоровье Элиты,2.3,VisualSettings
+Settings_AffixDisplayPosition,Позиция Аффиксов,2.3,VisualSettings
+Settings_AffixFontSize,Размер Шрифта Аффиксов,2.3,VisualSettings
+Settings_AffixCountWeights_Group,Распределение по Количеству Аффиксов (Выше = Чаще),2.3,Groups
+Settings_AffixWeight1,1 Аффикс (рекоменд.: 30-70),2.3,BasicSettings
+Settings_AffixWeight2,2 Аффикса (рекоменд.: 20-50),2.3,BasicSettings
+Settings_AffixWeight3,3 Аффикса (рекоменд.: 10-30),2.3,BasicSettings
+Settings_AffixWeight4,4 Аффикса (рекоменд.: 1-10),2.3,BasicSettings
+Settings_AffixWeight5,5 Аффиксов (рекоменд.: 0-5),2.3,BasicSettings
+Settings_AffixToggles_Group,Индивидуальные Аффиксы,2.3,Groups
+Affix_Tanky_Name,Танк,2.3,AffixNames
+Affix_Tanky_Description,"Крепкий, но медленный. Добыча: тяжелая броня, аптечки.",2.3,AffixDescription
+Affix_Swift_Name,Шустрый,2.3,AffixNames
+Affix_Swift_Description,"Быстрый, но менее живучий. Добыча: тотем ловкости, инъектор скорости.",2.3,AffixDescription
+Affix_Berserk_Name,Берсерк,2.3,AffixNames
+Affix_Berserk_Description,"Сильные атаки, но меньше здоровья. Добыча: штурмовой тотем, адреналиновый инъектор.",2.3,AffixDescription
+Affix_Berserk_PopText_1,<color=#DC143C>ЯРОСТЬ!!!</color>,2.3,AffixBehavior
+Affix_GlassCannon_Name,Опасный,2.3,AffixNames
+Affix_GlassCannon_Description,"Очень высокий урон, но очень мало здоровья. Добыча: специальные бронебойные патроны.",2.3,AffixDescription
+Affix_Fisherman_Name,Рыбак,2.3,AffixNames
+Affix_Fisherman_Description,"Добыча: разная рыба, наживка и удочки.",2.3,AffixDescription
+Affix_Chef_Name,Шеф,2.3,AffixNames
+Affix_Chef_Description,Любит хорошенько поесть и попить.,2.3,AffixDescription
+Affix_Talkative_Name,Болтун,2.3,AffixNames
+Affix_Talkative_Description,"Болтает без умолку, поражая своим красноречием. Может достать кого угодно.",2.3,AffixDescription
+Affix_Talkative_Messages,"Астрологи объявили неделю Элиты!|И это всё, на что ты способен?|Стреляйте! Уйдут, шеф! Стреляйте!|Ну ты и мазила!|Ха! Это было щекотно!|Я вижу страх в твоих глазах|А ну иди сюда!|Война никогда не меняется|Тебе не сбежать!|Кто не спрятался, я не виноват!",2.3,AffixBehavior
+Affix_Regeneration_Name,Регенерат,2.3,AffixNames
+Affix_Regeneration_Description,"Постоянно восстанавливает здоровье, по 10 в секунду",2.3,AffixDescription
+Affix_Hardening_Name,Закалённый,2.3,AffixNames
+Affix_Hardening_Description,Повышает сопростивление физическому урону на 5%-12% за каждый удар (макс - 50%).,2.3,AffixDescription
+Affix_Hardening_PopText_1,<color=#B2B2B2>Закалка +{0}</color>,2.3,AffixBehavior
+Affix_Blindness_Name,Ослепляющий,2.3,AffixNames
+Affix_Blindness_Description,Атаки временно ослепляют.,2.3,AffixDescription
+Buff_EliteBuff_Blindness_Name,Слепота,2.3,BuffNames
+Affix_Slow_Name,Замедляющий,2.3,AffixNames
+Affix_Slow_Description,Атаки временно замедляют.,2.3,AffixDescription
+Buff_EliteBuff_Slow_Name,Замедление,2.3,BuffNames
+Affix_Stun_Name,Оглушающий,2.3,AffixNames
+Affix_Stun_Description,Атаки временно оглушают и затрудняют контроль оружия.,2.3,AffixDescription
+Buff_EliteBuff_Stun_Name,Оглушение,2.3,BuffNames
+Affix_Invisible_Name,Невидимка,2.3,AffixNames
+Affix_Invisible_Description,"Становится невидимым, проявляясь для атак каждые несколько секунд.",2.3,AffixDescription
+Affix_Invisible_Messages,"Тссс.. ты ничего не видел|Ты меня видел?|Истина где-то рядом|Угадай, где я :)|Смотри не потеряй меня",2.3,AffixBehavior
+Affix_Musician_Name,Музыкант,2.3,AffixNames
+Affix_Musician_Description,"Чудак, который всюду таскает с собой музыкальные инструменты.",2.3,AffixDescription
+Affix_NineDragons_Name,Девять Драконов,2.3,AffixNames
+Affix_NineDragons_Description,Все аттрибуты ×1.3. Добыча: различные инъекторы.,2.3,AffixDescription
+Affix_Giant_Name,Гигант,2.3,AffixNames
+Affix_Giant_Description,"Большой размер; больше здоровья, но медлительный.",2.3,AffixDescription
+Affix_Mini_Name,Мелкий,2.3,AffixNames
+Affix_Mini_Description,"Мелкий размер; немного меньше здоровья, но выше скорость.",2.3,AffixDescription
+Affix_Undead_Name,Кощей,2.3,AffixNames
+Affix_Undead_Description,"При низком здоровье, становится неуязвимым на 2 сек и восстанавливает половину здоровья.",2.3,AffixDescription
+Affix_Undead_PopText_1,Я бессмертный!,2.3,AffixBehavior
+Affix_Undead_PopText_2,Не там смерть моя!,2.3,AffixBehavior
+Affix_Vampirism_Name,Вампир,2.3,AffixNames
+Affix_Vampirism_Description,Лечится при атаках.,2.3,AffixDescription
+Affix_Vampirism_PopText_1,<color=#DC143C>Вампиризм! +{0}</color>,2.3,AffixBehavior
+Affix_DungEater_Name,Навозник,2.3,AffixNames
+Affix_DungEater_Description,"Настолько невежливый, что кидается навозом!",2.3,AffixDescription
+Buff_EliteBuff_DungEater_Name,Навозник,2.3,BuffNames
+Affix_Chaos_Name,Хаос,2.3,AffixNames
+Affix_Chaos_Description,Атаки накладывают случайный эффект.,2.3,AffixDescription
+Affix_Chaos_PopText_1,<color=#9400D3>Хаос! {0}</color>,2.3,AffixBehavior
+Affix_Split_Name,Подкрепление,2.3,AffixNames
+Affix_Split_Description,"Когда мало здоровья, призывает подкрепление.",2.3,AffixDescription
+Affix_Explosive_Name,Взрывной,2.3,AffixNames
+Affix_Explosive_Description,"После смерти взрывается, нанося ~20 урона в небольшом радиусе.",2.3,AffixDescription
+Affix_TimeStop_Name,Остановка,2.3,AffixNames
+Affix_TimeStop_Description,"Когда атакован, ненадолго останавливает время.",2.3,AffixDescription
+Affix_TimeStop_PopText_1,<color=#FFD700>Za Warudo!</color>,2.3,AffixBehavior
+Affix_MagazineCurse_Name,Проклятый Магазин,2.3,AffixNames
+Affix_MagazineCurse_Description,"Когда атакован, заставляет перезаряжаться. Добыча: магазины для разного оружия.",2.3,AffixDescription
+Affix_MagazineCurse_PopText_1,<color=#9B59B6>Перезарядка!</color>,2.3,AffixBehavior
+Affix_MagazineCurse_PopText_2,<color=#9B59B6>Пустой магазин!</color>,2.3,AffixBehavior
+Affix_Knockback_Name,Пинок,2.3,AffixNames
+Affix_Knockback_Description,Атаки отбрасывают,2.3,AffixDescription
+Affix_Knockback_PopText_1,<color=#FF4500>Лети!</color>,2.3,AffixBehavior
+Affix_Phase_Name,Фаза,2.3,AffixNames
+Affix_Phase_Description,"Когда атакован, меняется местами с вами",2.3,AffixDescription
+Affix_Phase_PopText_1,<color=#00FFFF>Фазовый Сдвиг!</color>,2.3,AffixBehavior
+Affix_Revenge_Name,Месть,2.3,AffixNames
+Affix_Revenge_Description,"Когда атакован, отстреливается в ответ.",2.3,AffixDescription
+Affix_Distortion_Name,Искажение,2.3,AffixNames
+Affix_Distortion_Description,"Умеет слегка отклонять пути, искажая их траектории.",2.3,AffixDescription
+Buff_EliteBuff_Distortion_Name,Искажение,2.3,BuffNames
+Affix_MultiShot_Name,Мульти-атака,2.3,AffixNames
+Affix_MultiShot_Description,Выстреливает по две дополнительные пули за атаку.,2.3,AffixDescription
+Affix_Guardian_Name,Защитник,2.3,AffixNames
+Affix_Guardian_Description,"Основное тело неуязвимо, пока жив охранник.",2.3,AffixDescription
+Affix_Guardian_MateSuffix,<color=#FFD700>Охранник</color>,2.3,AffixBehavior
+Affix_Guardian_ImmunePop,<color=#FF9900>НЕУЯЗВИМОСТЬ!</color>,2.3,AffixBehavior
+Affix_Guardian_ShieldBroken,НЕУЯЗВИМОСТЬ СНЯТА!,2.3,AffixBehavior
+Affix_Collector_Name,Коллектор,2.3,AffixNames
+Affix_Collector_Description,Добыча: различные ценности.,2.3,AffixDescription
+Affix_Gunsmith_Name,Оружейник,2.3,AffixNames
+Affix_Gunsmith_Description,Добыча: аксессуары для оружия.,2.3,AffixDescription
+Affix_MimicTear_Name,Мимик-клон,2.3,AffixNames
+Affix_MimicTear_Description,Создаёт иллюзорную копию вашего оружия и экипировки. Иллюзия развеивается после смерти.,2.3,AffixDescription
+Affix_Sticky_Name,Липкий,2.3,AffixNames
+Affix_Sticky_Description,"Когда атакован, заставляет вас выбросить текущее оружие. Добыча: изолента и суперклей.",2.3,AffixDescription
+Affix_Sticky_PopText_1,Кажется я застрял!,2.3,AffixBehavior
+Affix_Sticky_PopText_2,Моё оружие приклеилось...,2.3,AffixBehavior
+Affix_Slime_Name,Слизняк,2.3,AffixNames
+Affix_Slime_Description,"Начинает большим и слабым, но когда получает повреждения, уменьшается и становится сильнее.",2.3,AffixDescription
+Affix_ChickenBro_Name,Куриный Братан,2.3,AffixNames
+Affix_ChickenBro_Description,Призывает цыплят-охранников,2.3,AffixDescription
+Affix_ChickenBro_Summon_Name,<color=#FFD600>Мелкий цыплёнок</color>,2.3,AffixBehavior
+Affix_MandarinDuck_Name,Мандаринка,2.3,AffixNames
+Affix_MandarinDuck_Description,"Жертвы трагичной любви. Ходят парами, разделяя урон.",2.3,AffixDescription
+Affix_MandarinDuck_MateSuffix,<color=#F08080>Партнёр</color>,2.3,AffixBehavior
+Affix_Obscurer_Name,Скрытный,2.3,AffixNames
+Affix_Obscurer_Description,"Скрывает текст всех аффиксов, показывая странный текст вместо них.",2.3,AffixDescription
+Affix_Grenadier_Name,Гренадёр,2.3,AffixNames
+Affix_Grenadier_Description,"Когда атакован, бросает различные гранаты в ответ.",2.3,AffixDescription
+Affix_Hardening_Max,Абсолютная Защита,2.3,AffixBehavior
+Affix_Hardening_Weakened,Защита Ослаблена,2.3,AffixBehavior
+Affix_Hardening_Recover,Восстановление Защиты,2.3,AffixBehavior
+EliteLoot_Fixed,<color=#B0B0B0>Фиксированная Добыча с Элиты</color>,2.3,FromInfoKey
+EliteLoot_Random,<color=#4BC0FF>Случайная Добыча с Элиты</color>,2.3,FromInfoKey
+EliteLoot_Bonus,<color=#FFD24D>Бонус Редкости с Элиты</color>,2.3,FromInfoKey
+Affix_EMP_Name,ЭМИ,2.3,AffixNames
+Affix_EMP_Description,"Электромагнитный импульс, временно вырубающий всю электронику, даже игровой интерфейс.",2.3,AffixDescription
+Buff_EliteBuff_EMP_Name,ЭМИ,2.3,BuffNames
+Affix_EMP_PopText_1,<color=#4D9CFF>▞Э▒М▣И▓ Помехи▒!</color>,2.3,AffixBehavior
+Affix_EMP_PopText_2,<color=#90FF90>Перезагрузка...</color>,2.3,AffixBehavior
+Affix_Tear_Name,Бронебойный,2.3,AffixNames
+Affix_Tear_Description,Атаки временно снижают уровень брони.,2.3,AffixDescription
+Buff_EliteBuff_Tear_Name,Броня Понижена,2.3,BuffNames
+Affix_Tear_PopText_1,<color=#FF0000>Броня Понижена {0:0}%</color>,2.3,AffixBehavior
+Affix_Slippery_Name,Скользкий,2.3,AffixNames
+Affix_Slippery_Description,"При атаке, наделяет вас грацией коровы на льду.",2.3,AffixDescription
+Buff_EliteBuff_Slippery_Name,Скользко,2.3,BuffNames
+Affix_Slippery_PopText_1,<color=#7FE8FF>Скользкооооо~~~</color>,2.3,AffixBehavior
+Affix_Locksmith_Name,Слесарь,2.3,AffixNames
+Affix_Locksmith_Description,Добыча: случайный ключ.,2.3,AffixDescription
+Affix_Overload_Name,Перегрузка,2.3,AffixNames
+Affix_Overload_Description,"Когда атакован, входит в оружейную ярость, увеличивающую продолжительность непрерывной стрельбы.",2.3,AffixDescription
+Affix_Overload_PopText,<color=#FF4500>ПЕРЕГРУЗКА!!!</color>,2.3,AffixBehavior
+Affix_Mimic_Name,Мимик,2.3,AffixNames
+Affix_Mimic_Description,"Сидит в засаде и притворяется припасами, до тех пор, пока не активирован или атакован.",2.3,AffixDescription
+Settings_AffixSpecialSettings_Group,Специальные Настройки Аффиксов,2.3,Groups
+Settings_SplitAffixMaxCloneCount,[Подкрепление] Максимальное количество клонов на экране,2.3,BasicSettings
+Settings_SplitAffixMinFPSThreshold,[Подкрепление] Минимальный порог FPS,2.3,BasicSettings
+Affix_Reflect_Name,Отражение,2.3,AffixNames
+Affix_Reflect_Description,"Периодически создаёт щит, отражающий пули.",2.3,AffixDescription
+Affix_Reflect_PopText,<color=#00BFFF>Отражение!</color>,2.3,AffixBehavior
+Affix_Frozen_Name,Ледяной,2.3,AffixNames
+Affix_Frozen_Description,Шанс заморозить при атаке.,2.3,AffixDescription
+Settings_EnableComboSystem,Включить Комбо-Систему (Внимание! Повышает сложность игры!),2.4,ComboSettings
+Settings_ComboSystemChance,Шанс Появления Комбо-Элиты,2.4,ComboSettings
+Settings_ComboSettings_Group,Настройки Комбинаций Аффиксов (Экспериментальная Система!),2.4,Groups
+Settings_Combo_Prefix,Комбо:,2.4,ComboSettings
+Combo_OmniArtisan_Name,Мастер На Все Руки,2.4,ComboNames
+Combo_HyperColossus_Name,Колосс,2.4,ComboNames
+Combo_PhaseStalker_Name,Сталкер,2.4,ComboNames
+Combo_OverloadSimulacrum_Name,Симулякр,2.4,ComboNames
+Combo_ChaosDevour_Name,Хаотичный,2.4,ComboNames
+Combo_SuppressionField_Name,Полное Подавление,2.4,ComboNames
+Combo_KillzoneBarrage_Name,Огневое Превосходство,2.4,ComboNames
+Combo_ImmortalBloodPact_Name,Лич,2.4,ComboNames

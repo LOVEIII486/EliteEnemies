@@ -727,6 +727,7 @@
       <Content Include="Localization\ChineseTraditional.csv" />
       <Content Include="Localization\English.csv" />
       <Content Include="Localization\LocalizationGuide.md" />
+      <Content Include="Localization\Russian.csv" />
       <Content Include="README.md" />
       <Content Include="Workshop\combo设计.txt" />
       <Content Include="Workshop\description.txt" />
