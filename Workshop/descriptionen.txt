@@ -1,117 +1,119 @@
-﻿[h1]🧠 Elite Enemies[/h1]
+﻿[h1]🧠 Elite Enemies / 精英怪[/h1]
 
 [hr][/hr]
 
-[h2]💀 Mod Introduction[/h2]
-Adds an all-new [b]Elite Enemy System[/b] to “Escape from Duckov”!
-Normal enemies now have a chance to spawn as elite variants with unique [b]affixes[/b] and exclusive loot.
-Elite enemies feature special behaviors, unique stats, visual effects, and prefix-based names, making every fight more varied and exciting!
-All elite stats and mechanics are carefully designed and balanced to bring more surprises without disrupting the original game flow.
+[h2]💀 Mod Description[/h2]
+Adds a brand new [b]Elite Enemy System[/b] to Escape from Tarkov!  
+Normal enemies now have a chance to become elite individuals with unique [b]affixes[/b] and exclusive drops.  
+Elite enemies feature special behaviors, unique stats, visual effects, and prefixed names, making combat more dynamic and exciting!  
+Their attributes and performance are carefully designed and balanced to bring surprises without affecting the original game flow.  
+Temporary feedback group: 1030349064, for bug reports only.
 
 [hr][/hr]
 
-[h2]⚔️ Available Affixes (Sorted by Rarity)</h2]
+[h2]⚔️ Available Affixes (sorted by rarity)[/h2]
 [list]
 [b]【Common】[/b]
-[*][b]Tanky[/b] — Tougher but slower. Loot: Heavy armor of various levels
-[*][b]Swift[/b] — Faster movement speed but more fragile. Loot: Speed totems, stimulants
-[*][b]Berserk[/b] — Higher damage, lower health. Loot: Berserk totems, stimulants
-[*][b]Glass Cannon[/b] — Extremely high damage but extremely low health. Loot: High-grade AP ammo
+[*][b]Tanky[/b] — More durable but slower. Drops: various tiered heavy armor
+[*][b]Swift[/b] — Faster movement but fragile. Drops: Swift Totem, Injectors
+[*][b]Berserk[/b] — Increased damage, lower health. Drops: Assault Totem, Injectors
+[*][b]Glass Cannon[/b] — Very high damage, very low health. Drops: Advanced Armor-Piercing Ammo
 
 [b]【Uncommon】[/b]
-[*][b]Fisherman[/b] — A fisherman on the battlefield. Drops fish, bait, and fishing rods
-[*][b]Chef[/b] — Loves food and drinks, drops edible items
+[*][b]Fisherman[/b] — A battlefield fisherman. Drops various fish, bait, and rods
+[*][b]Chef[/b] — Loves food and drinks. Drops consumables
 [*][b]Talkative[/b] — Constantly taunts during combat
 [*][b]Regeneration[/b] — Recovers ~10 HP per second
-[*][b]Hardening[/b] — Randomly reduces 5%–12% physical damage when hit (up to 50%)
-[*][b]Blindness[/b] — Attacks restrict the player’s vision
-[*][b]Slow[/b] — Applies strong slow effects on hit
-[*][b]Stun[/b] — Attacks stagger the player, greatly reducing weapon control for a short time
+[*][b]Hardening[/b] — Reduces 5–12% physical damage when hit, stacks up to 50%
+[*][b]Blindness[/b] — Attacks limit player vision
+[*][b]Slow[/b] — Attacks apply significant slow effect to players
+[*][b]Stun[/b] — Attacks stun players, temporarily reducing gun control
+[*][b]Tear[/b] — Reduces player armor on hit
+[*][b]Overload[/b] — Enter overload when damaged, greatly extending sustained firing (thanks @取名难)
 
 [b]【Rare】[/b]
-[*][b]Invisible[/b] — Turns invisible and flickers visible periodically
-[*][b]Musician[/b] — Brings instruments into battle; drops musical items
-[*][b]Nine Dragons[/b] — All attributes ×1.3; drops various stimulants
-[*][b]Giant[/b] — Larger model, higher HP, slower movement
+[*][b]Invisible[/b] — Periodically becomes visible while invisible
+[*][b]Musician[/b] — Brings instruments into battle. Drops music items
+[*][b]Nine Dragons[/b] — All stats ×1.3, drops various injectors
+[*][b]Giant[/b] — Enlarged model, higher HP, slower movement
 [*][b]Mini[/b] — Smaller model, lower HP, faster movement
-[*][b]Undead[/b] — Becomes invincible for 2s on low HP and restores 50% HP
-[*][b]Vampirism[/b] — Life-steal on attack (reduced for ranged)
-[*][b]Dung Eater[/b] — A Duckov fan-favorite episode?
-[*][b]Chaos[/b] — Inflicts random debuffs on hit; killing the enemy removes all debuffs
-[*][b]Explosive[/b] — Explodes on death, dealing ~20 AoE damage
-[*][b]Knockback[/b] — Applies strong knockback on hit
+[*][b]Undead[/b] — Invincible for 2s at low health, restores 50% HP
+[*][b]Vampirism[/b] — Attacks drain health; reduced effect for ranged attacks
+[*][b]Dung Eater[/b] — A favorite among Tarkov players?
+[*][b]Chaos[/b] — Attacks inflict random negative effects; kills clear all debuffs
+[*][b]Explosive[/b] — Deals ~20 AoE damage on death
+[*][b]Knockback[/b] — Knocks back players on hit
+[*][b]Slippery[/b] — Attacks make players lose footing
+[*][b]Mimic[/b] — Camouflages as loot box, reveals and ambushes when damaged
+[*][b]Time Stop[/b] — Triggers ~3s time freeze when damaged
 
 [b]【Epic】[/b]
-[*][b]Split[/b] — Summons a weaker clone when low on HP (clone drops only 1 item)
-[*][b]Time Stop[/b] — Triggers ~3 seconds of time stop when taking damage
-[*][b]Magazine Curse[/b] — Forces the player to reload on hit; drops fast-mag components
-[*][b]Phase[/b] — Swaps position with the player on hit
-[*][b]Revenge[/b] — Fires bullets back at the attacker when hurt
-[*][b]Distortion[/b] — Distorts the player, causing bullet deviation
-[*][b]Multi Shot[/b] — Fires two extra bullets when attacking
-[*][b]Guardian[/b] — Gains a high-speed rotating core; invincible while the core exists
-[*][b]Grenadier[/b] — Throws various grenades at the target upon landing attacks
-[*][b]Mimic Tear[/b] — Copies the player’s main weapon, gear, and appearance; enhanced AI and infinite ammo (supports custom models)
+[*][b]Split[/b] — Summons weakened clones at low health (clones drop only 2 items)
+[*][b]Magazine Curse[/b] — Forces reload on hit, drops fast mag components
+[*][b]Phase[/b] — Swaps position with player on hit
+[*][b]Revenge[/b] — Shoots back at attacker when damaged
+[*][b]Distortion[/b] — Causes projectile distortion on player
+[*][b]Multi Shot[/b] — Fires 2 extra bullets per attack
+[*][b]Guardian[/b] — Gains spinning core; invincible while core exists
+[*][b]Grenadier[/b] — Throws grenades on hit
+[*][b]Mimic Tear[/b] — Copies player’s main weapon, gear, appearance; enhanced AI and infinite ammo
+[*][b]EMP Disrupt[/b] — Disables player HUD temporarily
+[*][b]Reflect[/b] — Periodically generates a shield reflecting bullets
+[*][b]Frigid[/b] — Chance to freeze player on hit
 
 [b]【Legendary】[/b]
-[*][b]Collector[/b] — Drops various high-value collectibles
-[*][b]Gunsmith[/b] — Drops high-quality weapon attachments
-[*][b]Sticky[/b] — Makes the player drop their weapon at their feet; drops glue items on kill 【Disabled by default】
-[*][b]Slime[/b] — Truly behaves like a slime! Stats change with body size
-[*][b]ChickenBro[/b] — Summons chick guardians on spawn; drops Kun-Kun relics
-[*][b]Mandarin Duck[/b] — A tragic pair! Spawns in pairs and shares damage
-[*][b]Obscurer[/b] — Randomly gains 1–4 affixes that exceed normal limits, hides all affix names and displays gibberish
+[*][b]Collector[/b] — Drops high-value collectibles
+[*][b]Gunsmith[/b] — Drops high-quality gun parts
+[*][b]Locksmith[/b] — Drops a random key on death
+[*][b]Sticky[/b] — Makes players drop their weapon; kills drop glue items [default off]
+[*][b]Slime[/b] — Truly like a slime! Stats scale with size
+[*][b]ChickenBro[/b] — Spawns chicks at spawn; drops ChickenBro relics
+[*][b]Mandarin Duck[/b] — Appears in pairs, shares damage
+[*][b]Obscurer[/b] — Randomly gets 1–4 affixes beyond the cap; hides affix names, displays garbled text
 [/list]
-
-[hr][/hr]
-
-[b]✨ Compatible with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3600714295]Scav Mode[/url]![/b]
-Affix names and rarity now display properly in Scav Mode.
 
 [hr][/hr]
 
 [h2]🎁 Mod Features[/h2]
 [list]
-[*]💀 [b]Random Elite Generation[/b] — Enemies can spawn with 1–5 affixes, creating highly varied encounters
-[*]🎲 [b]Independent Loot System[/b] — Each affix has its own loot pool and does not affect base-game drops
-[*]🧠 [b]Special Behaviors & Effects[/b] — Many affixes include unique AI or visual effects
-[*]⚙️ [b]Highly Configurable[/b] — Disable any affix, adjust probabilities, control loot multipliers
-[*]🎁 [b]Bonus Reward System[/b] — Rewards scale automatically with affix count, rarity, and boss type
-[*]🌈 [b]Continuously Updated[/b] — More visual effects, affixes, and AI behaviors are coming soon
+[*]💀 [b]Random Elite Generation[/b] — Enemies may spawn with 1–5 affixes, greatly diversifying combat
+[*]🎲 [b]Independent Drop System[/b] — Each affix has its own drop pool; does not affect vanilla drops
+[*]⚙️ [b]Highly Configurable[/b] — Can disable any affix, adjust probability, control drop multipliers
+[*]🎁 [b]Bonus Reward System[/b] — Elite rewards scale with affix count, rarity, and boss type
+[*]🔗 [b]Combo System[/b] — Refreshes elite enemies with specific preset affix combinations for added challenge
 [/list]
 
 [hr][/hr]
 
 [h2]🧩 Known Issues[/h2]
 [list]
-[*]⚠️ Conflicts with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3591373133]Display Name[/url], causing affix display issues  
-Use [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3590948345]Numerical Stats[/url] or this mod’s built-in display system instead.
-[*]⚙️ If the mod fails to load, ensure the correct load order:  
+[*]⚠️ Conflicts with [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3591373133]Display Name[/url], may cause affix display issues  
+Recommended to use [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3590948345]Numerical Stats[/url] or enable the mod’s built-in display system
+[*]⚙️ If the mod cannot be enabled, ensure load order:  
 [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3589088839]HarmonyLib[/url] →  
 [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494]ModSetting[/url] →  
 EliteEnemies
-[*][b]Knockback[/b] may push the player out of the map; use the game’s built-in “unstuck” feature
-[*][b]Guardian[/b] has been patched with a safety fallback; permanent invincibility should no longer occur—please report if it still happens
+[*][b]Knockback[/b] may push players out of the map; use in-game unstuck feature
+[*][b]Mimic[/b] affix has minor conflicts with empty loot box clearing mods, but should not affect normal gameplay
 [/list]
 
 [hr][/hr]
 
-<h2>💡 Notes</h2>
+[h2]💡 Notes[/h2]
 [list]
-[*]Default affix limit is 2, boss elite chance is 0; both can be adjusted in settings
-[*][b]Sticky[/b] is disabled by default and must be enabled manually
-[*]Default balance is tuned for [b]Survival Difficulty[/b]; new saves may want to lower elite chances
-[*]Supports [b]Chinese & English[/b] localization; other languages can be added using the sample files
-[*]Latest version applies drop-rate penalties to [b]Scav[/b] enemies—loot quantity and quality will be lower under the same settings
-[*]On low-end PCs or with many mods installed, [b]wait 2–5 seconds[/b] after entering a map before moving to ensure AI initializes correctly (especially if using teleport mods)
-[*]Due to Steam’s auto-moderation limits, some sections were removed; check the change log for full update details
+[*]Default affix cap is 2; boss elite chance is 0; any affix or elite probability/limit can be adjusted in settings
+[*][b]Sticky[/b] is disabled by default; enable manually if desired
+[*]Default balance based on [b]Survival Difficulty[/b]; for [b]new saves[/b], recommend lowering elite probability
+[*]Supports [b]Chinese-English[/b] localization; other languages can follow sample files to create translation packs
+[*]Latest version applies drop penalties to [b]Scav[/b] enemies; drop rate and quality lower than other enemies under same settings
+[*]On low-spec PCs or with many mods, [b]wait 2–5s on map entry[/b] to stabilize FPS before starting; avoids unpredictable AI issues (e.g., with teleport mods)
+[*]Description page space is limited; some sections were removed to avoid automatic moderation; see changelog for full updates
 [/list]
 
 [hr][/hr]
 
-[h2]🧩 Disclaimer</h2]
+[h2]🧩 Disclaimer[/h2]
 [quote]
-This mod is manually designed with optimized framework and core performance.  
-Some code and documentation were refined with the assistance of AI.  
-The system is continuously being improved—feedback is welcome!
+This mod’s framework was manually designed and core systems optimized, with some code and documentation refined with AI assistance; it is still being improved.  
+Feedback is welcome in the comments to help refine the Elite system!
 [/quote]
