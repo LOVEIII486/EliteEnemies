@@ -241,8 +241,7 @@ namespace EliteEnemies.Settings
             foreach (var kvp in EliteAffixes.Pool)
             {
                 string affixKey = kvp.Key;
-                string displayName = kvp.Value.Name;
-                string description = $"[{displayName}] : {kvp.Value.Description}";
+                string description = $"{kvp.Value.ColoredTag} : {kvp.Value.Description}";
 
                 ModSettingAPI.AddToggle(
                     key: affixKey,

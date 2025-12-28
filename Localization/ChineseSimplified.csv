@@ -166,11 +166,11 @@ Settings_EnableComboSystem,启用 Combo 组合系统 (再次提醒！对于普�
 Settings_ComboSystemChance,Combo 精英怪出现概率,2.4,ComboSettings
 Settings_ComboSettings_Group,精英怪 Combo 组合配置 (实验性系统！非常困难！),2.4,Groups
 Settings_Combo_Prefix,组合：,2.4,ComboSettings
-Combo_omni_artisan_Name,全域匠师,2.4,ComboNames
-Combo_hyper_colossus_Name,超构巨躯,2.4,ComboNames
-Combo_phase_stalker_Name,相位潜猎者,2.4,ComboNames
-Combo_overload_simulacrum_Name,过载映像体,2.4,ComboNames
-Combo_chaos_devour_Name,混沌蚕食,2.4,ComboNames
-Combo_suppression_field_Name,全域抑制场,2.4,ComboNames
-Combo_killzone_barrage_Name,火力绞杀网,2.4,ComboNames
-Combo_immortal_blood_pact_Name,不灭血誓,2.4,ComboNames
+Combo_OmniArtisan_Name,全域匠师,2.4,ComboNames
+Combo_HyperColossus_Name,超构巨躯,2.4,ComboNames
+Combo_PhaseStalker_Name,相位潜猎者,2.4,ComboNames
+Combo_OverloadSimulacrum_Name,过载映像体,2.4,ComboNames
+Combo_ChaosDevour_Name,混沌蚕食,2.4,ComboNames
+Combo_SuppressionField_Name,全域抑制场,2.4,ComboNames
+Combo_KillzoneBarrage_Name,火力绞杀网,2.4,ComboNames
+Combo_ImmortalBloodPact_Name,不灭血誓,2.4,ComboNames

@@ -4,13 +4,13 @@ Settings_NormalEliteChance,普通怪物精英概率,2.3,BasicSettings
 Settings_BossEliteChance,Boss精英概率,2.3,BasicSettings
 Settings_MerchantEliteChance,商人精英概率,2.3,BasicSettings
 Settings_MaxAffixCount,詞條數量上限,2.3,BasicSettings
-Settings_DropRateMultiplier,精英掉落倍率（影響掉落概率）,2.3,BasicSettings
-Settings_ItemQualityBias,物品品質偏好（影響掉落品質，建議在 -0.8 到 +1.5 之間）,2.3,BasicSettings
-Settings_GlobalMultipliers_Group,全局屬性調整,2.3,Groups
-Settings_GlobalHealthMultiplier,全局血量倍率,2.3,BasicSettings
-Settings_GlobalDamageMultiplier,全局傷害倍率,2.3,BasicSettings
-Settings_GlobalSpeedMultiplier,全局速度倍率,2.3,BasicSettings
-Settings_EnableBonusLoot,啟用獎勵掉落,2.3,BasicSettings
+Settings_DropRateMultiplier,精英掉落倍率（影響掉落概率，默認 1 即無懲罰，建議 0.5 至 1）,2.4,BasicSettings
+Settings_ItemQualityBias,物品品質偏好（影響掉落品質，默認 -1.5，建議 -2 至 0.5）,2.4,BasicSettings
+Settings_GlobalMultipliers_Group,全局屬性調整（僅對精英怪生效）,2.4,Groups
+Settings_GlobalHealthMultiplier,全局血量倍率,2.4,BasicSettings
+Settings_GlobalDamageMultiplier,全局傷害倍率,2.4,BasicSettings
+Settings_GlobalSpeedMultiplier,全局速度倍率,2.4,BasicSettings
+Settings_EnableBonusLoot,啟用獎勵掉落（由詞條數量、稀有度、怪物類型加權決定）,2.4,BasicSettings
 Settings_VisualSettings_Group,視覺效果設置,2.3,Groups
 Settings_ShowEliteName,顯示精英敵人名字,2.3,VisualSettings
 Settings_ShowDetailedHealth,顯示精英敵人血量,2.3,VisualSettings
@@ -166,11 +166,11 @@ Settings_EnableComboSystem,啟用 Combo 組合系統（再次提醒！對於普�
 Settings_ComboSystemChance,Combo 精英怪出現機率,2.4,ComboSettings
 Settings_ComboSettings_Group,精英怪 Combo 組合設定（實驗性系統！非常困難！）,2.4,Groups
 Settings_Combo_Prefix,組合：,2.4,ComboSettings
-Combo_omni_artisan_Name,全域匠師,2.4,ComboNames
-Combo_hyper_colossus_Name,超構巨軀,2.4,ComboNames
-Combo_phase_stalker_Name,相位潛獵者,2.4,ComboNames
-Combo_overload_simulacrum_Name,過載映像體,2.4,ComboNames
-Combo_chaos_devour_Name,混沌蠶食,2.4,ComboNames
-Combo_suppression_field_Name,全域抑制場,2.4,ComboNames
-Combo_killzone_barrage_Name,火力絞殺網,2.4,ComboNames
-Combo_immortal_blood_pact_Name,不滅血誓,2.4,ComboNames
+Combo_OmniArtisan_Name,全域匠師,2.4,ComboNames
+Combo_HyperColossus_Name,超構巨軀,2.4,ComboNames
+Combo_PhaseStalker_Name,相位潛獵者,2.4,ComboNames
+Combo_OverloadSimulacrum_Name,過載映像體,2.4,ComboNames
+Combo_ChaosDevour_Name,混沌蠶食,2.4,ComboNames
+Combo_SuppressionField_Name,全域抑制場,2.4,ComboNames
+Combo_KillzoneBarrage_Name,火力絞殺網,2.4,ComboNames
+Combo_ImmortalBloodPact_Name,不滅血誓,2.4,ComboNames

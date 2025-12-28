@@ -4,13 +4,13 @@ Settings_NormalEliteChance,Normal enemy elite chance,2.3,BasicSettings
 Settings_BossEliteChance,Boss elite chance,2.3,BasicSettings
 Settings_MerchantEliteChance,Merchant elite chance,2.3,BasicSettings
 Settings_MaxAffixCount,Max affix count,2.3,BasicSettings
-Settings_DropRateMultiplier,Elite drop rate multiplier (affects overall drop chance),2.3,BasicSettings
-Settings_ItemQualityBias,"Item quality bias (affects quality weighting, recommended -0.8 to +1.5)",2.3,BasicSettings
-Settings_GlobalMultipliers_Group,Global Attribute Adjustment,2.3,Groups
+Settings_DropRateMultiplier,"Elite Drop Chance Multiplier: Default 1, Recommend 0.5–1",2.3,BasicSettings
+Settings_ItemQualityBias,"Elite Item Quality Bias: Default -1.5, Recommend -2–0.5",2.3,BasicSettings
+Settings_GlobalMultipliers_Group,Global Attribute Adjustments (Elite Enemies Only),2.3,Groups
 Settings_GlobalHealthMultiplier,Global Health Multiplier,2.3,BasicSettings
 Settings_GlobalDamageMultiplier,Global Damage Multiplier,2.3,BasicSettings
 Settings_GlobalSpeedMultiplier,Global Speed Multiplier,2.3,BasicSettings
-Settings_EnableBonusLoot,Enable Bonus Loot,2.3,BasicSettings
+Settings_EnableBonusLoot,"Enable Bonus Loot (Weighted by affix count, rarity, and enemy type)",2.3,BasicSettings
 Settings_VisualSettings_Group,Global Visual Settings,2.3,Groups
 Settings_ShowEliteName,Show Elite Enemy Names,2.3,VisualSettings
 Settings_ShowDetailedHealth,Show elite enemy health,2.3,VisualSettings
@@ -166,11 +166,11 @@ Settings_EnableComboSystem,Enable Combo System (Warning! Extremely difficult for
 Settings_ComboSystemChance,Elite Combo Spawn Chance,2.4,ComboSettings
 Settings_ComboSettings_Group,Elite Combo Configuration (Experimental System! Extremely Difficult!),2.4,Groups
 Settings_Combo_Prefix,Combo:,2.4,ComboSettings
-Combo_omni_artisan_Name,Omni Artisan,2.4,ComboNames
-Combo_hyper_colossus_Name,Hyper Colossus,2.4,ComboNames
-Combo_phase_stalker_Name,Phase Stalker,2.4,ComboNames
-Combo_overload_simulacrum_Name,Overload Simulacrum,2.4,ComboNames
-Combo_chaos_devour_Name,Chaos Devourer,2.4,ComboNames
-Combo_suppression_field_Name,Suppression Field,2.4,ComboNames
-Combo_killzone_barrage_Name,Killzone Barrage,2.4,ComboNames
-Combo_immortal_blood_pact_Name,Immortal Blood Pact,2.4,ComboNames
+Combo_OmniArtisan_Name,Omni Artisan,2.4,ComboNames
+Combo_HyperColossus_Name,Hyper Colossus,2.4,ComboNames
+Combo_PhaseStalker_Name,Phase Stalker,2.4,ComboNames
+Combo_OverloadSimulacrum_Name,Overload Simulacrum,2.4,ComboNames
+Combo_ChaosDevour_Name,Chaos Devourer,2.4,ComboNames
+Combo_SuppressionField_Name,Suppression Field,2.4,ComboNames
+Combo_KillzoneBarrage_Name,Killzone Barrage,2.4,ComboNames
+Combo_ImmortalBloodPact_Name,Immortal Blood Pact,2.4,ComboNames
