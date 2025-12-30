@@ -174,3 +174,5 @@ Combo_ChaosDevour_Name,混沌蚕食,2.4,ComboNames
 Combo_SuppressionField_Name,全域抑制场,2.4,ComboNames
 Combo_KillzoneBarrage_Name,火力绞杀网,2.4,ComboNames
 Combo_ImmortalBloodPact_Name,不灭血誓,2.4,ComboNames
+Affix_Nimble_Name,灵活,2.5,AffixNames
+Affix_Nimble_Description,极短的冲刺间隔，身法飘忽不定。且能在开火时高速移动。,2.5,AffixDescription

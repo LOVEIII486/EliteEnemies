@@ -174,3 +174,5 @@ Combo_ChaosDevour_Name,Chaos Devourer,2.4,ComboNames
 Combo_SuppressionField_Name,Suppression Field,2.4,ComboNames
 Combo_KillzoneBarrage_Name,Killzone Barrage,2.4,ComboNames
 Combo_ImmortalBloodPact_Name,Immortal Blood Pact,2.4,ComboNames
+Affix_Nimble_Name,Nimble,2.5,AffixNames
+Affix_Nimble_Description,Extremely short dash cooldown and erratic movement. Can move at high speed while firing.,2.5,AffixDescription

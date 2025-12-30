@@ -681,7 +681,16 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 DamageMultiplier = 0.8f,
                 MoveSpeedMultiplier = 0.8f,
                 Rarity = AffixRarity.Epic
-            }
+            },
+            ["Nimble"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Nimble_Name"),
+                Description = LocalizationManager.GetText("Affix_Nimble_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.2f,
+                Rarity = AffixRarity.Uncommon
+            },
         };
 
 
