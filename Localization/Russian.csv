@@ -174,3 +174,5 @@ Combo_ChaosDevour_Name,Хаотичный,2.4,ComboNames
 Combo_SuppressionField_Name,Полное Подавление,2.4,ComboNames
 Combo_KillzoneBarrage_Name,Огневое Превосходство,2.4,ComboNames
 Combo_ImmortalBloodPact_Name,Лич,2.4,ComboNames
+Affix_Nimble_Name,Проворный,2.5,AffixNames
+Affix_Nimble_Description,"Чрезвычайно короткие интервалы между рывками, непредсказуемые движения",2.5,AffixDescription
