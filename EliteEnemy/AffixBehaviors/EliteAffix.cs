@@ -20,7 +20,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
         {
             [AffixRarity.Common]    = new Color(0.90f, 0.90f, 1.00f),
             [AffixRarity.Uncommon]  = new Color(0.40f, 0.90f, 0.40f),
-            [AffixRarity.Rare]      = new Color(0.45f, 0.70f, 1.00f),
+            [AffixRarity.Rare]      = new Color(0.129f, 0.737f, 1.00f),
             [AffixRarity.Epic]      = new Color(0.78f, 0.31f, 1.00f),
             [AffixRarity.Legendary] = new Color(1.00f, 0.58f, 0.00f),
         };
