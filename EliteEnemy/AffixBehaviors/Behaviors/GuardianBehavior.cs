@@ -16,12 +16,12 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override string AffixName => "Guardian";
         
         private static readonly float OrbitRadius = 2.0f;
-        private static readonly float RotationSpeed = 160f;
+        private static readonly float RotationSpeed = 140f;
         private static readonly float CloneDelay = 0.5f;
         
         private static readonly float PartnerHealthRatio = 0.5f;
         private static readonly float PartnerDamageRatio = 0.5f;
-        private static readonly float PartnerScaleRatio = 0.7f;
+        private static readonly float PartnerScaleRatio = 0.75f;
 
         private static readonly int MaxInvincibleHits = 30; 
 
@@ -29,9 +29,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly float MaxSeparationTime = 3.0f;      
         private float _separationTimer = 0f;
         
-        // 发光控制器
         private EliteGlowController _glowController;
-        private readonly Color _shieldColor = new Color(1.0f, 0.6f, 0.0f); // 金色护盾光
+        private readonly Color _shieldColor = new Color(1.0f, 0.6f, 0.0f);
         private const float FlashDuration = 0.25f;
         
         private float _lastPopTime = -999f;
@@ -46,7 +45,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private int _currentHitCount = 0;
         private bool _isForceBroken = false;
 
-        // 本地化文本
         private readonly Lazy<string> _partnerSuffix = new(() => 
             LocalizationManager.GetText("Affix_Guardian_MateSuffix") ?? "Guardian");
         
@@ -95,7 +93,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             Vector3 spawnPos = _self.transform.position + _self.transform.forward * OrbitRadius;
             
-            // [重构逻辑] 
             // 1. customKeySuffix 使用固定后缀，EggSpawnHelper 会将其同时应用到 name 和 nameKey
             // 2. customDisplayName 传入后缀名，EggSpawnHelper 内部会自动拼接原始名称
             helper.SpawnClone(
@@ -119,7 +116,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             _partner = clone;
 
-            // 分身处于轨道模式，禁用 NavMesh 避免逻辑冲突
             var agent = clone.GetComponent<UnityEngine.AI.NavMeshAgent>();
             if (agent) agent.enabled = false;
 

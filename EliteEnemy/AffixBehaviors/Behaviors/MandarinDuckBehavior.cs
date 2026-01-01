@@ -19,8 +19,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private static readonly float CloneDelay = 0.5f;
         
         private static readonly float PartnerHealthRatio = 1.3f;
-        private static readonly float PartnerDamageRatio = 0.7f;
-        private static readonly float PartnerScaleRatio = 0.8f;
+        private static readonly float PartnerDamageRatio = 0.8f;
+        private static readonly float PartnerScaleRatio = 0.9f;
         
         // 伤害分担比例
         private static readonly float DamageShareRatio = 0.7f; 
