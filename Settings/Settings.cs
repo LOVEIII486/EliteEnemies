@@ -28,6 +28,9 @@ namespace EliteEnemies.Settings
             public const int MaxAffixCountLimit = 5;
             public const int MinAffixWeight = 0;
             public const int MaxAffixWeight = 100;
+            
+            public const float MinVerticalOffset = -200f;
+            public const float MaxVerticalOffset = 200f;
         }
         
         public enum AffixTextDisplayPosition
@@ -59,6 +62,7 @@ namespace EliteEnemies.Settings
         public static bool ShowDetailedHealth { get; private set; }
         public static AffixTextDisplayPosition AffixDisplayPosition { get; private set; } = AffixTextDisplayPosition.Overhead;
         public static int AffixFontSize { get; private set; }
+        public static float AffixVerticalOffset { get; private set; }
 
         // 词条数量权重
         public static int AffixWeight1 { get; private set; }
@@ -150,6 +154,9 @@ namespace EliteEnemies.Settings
             AffixFontSize = ModSettingAPI.GetSavedValue<int>("AffixFontSize", out int fontSize)
                 ? Mathf.Clamp(fontSize, 20, 50)
                 : 20;
+            AffixVerticalOffset = ModSettingAPI.GetSavedValue<float>("AffixVerticalOffset", out float vOffset) 
+                ? Mathf.Clamp(vOffset, ConfigRanges.MinVerticalOffset, ConfigRanges.MaxVerticalOffset) 
+                : 0f;
             
             AffixWeight1 = ModSettingAPI.GetSavedValue<int>("AffixWeight1", out int w1)
                 ? Mathf.Clamp(w1, ConfigRanges.MinAffixWeight, ConfigRanges.MaxAffixWeight)
@@ -207,6 +214,7 @@ namespace EliteEnemies.Settings
             ShowDetailedHealth = false;
             AffixDisplayPosition = AffixTextDisplayPosition.Overhead;
             AffixFontSize = 20;
+            AffixVerticalOffset = 0f;
 
             AffixWeight1 = 50;
             AffixWeight2 = 30;
@@ -339,6 +347,12 @@ namespace EliteEnemies.Settings
         public static void SetAffixFontSize(int value)
         {
             AffixFontSize = Mathf.Clamp(value, 20, 50);
+            NotifyConfigChanged();
+        }
+        
+        public static void SetAffixVerticalOffset(float value)
+        {
+            AffixVerticalOffset = Mathf.Clamp(value, ConfigRanges.MinVerticalOffset, ConfigRanges.MaxVerticalOffset);
             NotifyConfigChanged();
         }
 
@@ -485,6 +499,7 @@ namespace EliteEnemies.Settings
                 ShowDetailedHealth = ShowDetailedHealth,
                 AffixDisplayPosition = AffixDisplayPosition,
                 AffixFontSize = AffixFontSize,
+                AffixVerticalOffset = AffixVerticalOffset,
 
                 DisabledAffixes = GetDisabledAffixBlacklist(),
                 AffixCountWeights = new int[]

@@ -57,6 +57,9 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
         private string _lastHealthText = null;        // 血量文本缓存
         private bool _isElite = false;
         
+        private GameConfig.AffixTextDisplayPosition _lastPositionType;
+        private float _lastVerticalOffset = -999f;
+        
         private StringBuilder _sb = new StringBuilder(64);
 
         private void Awake()
@@ -69,6 +72,7 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             _lastAffixText = null;
             _lastHealthText = null; 
             _cachedTarget = null;
+            _lastVerticalOffset = -999f;
         }
 
         private void LateUpdate()
@@ -164,6 +168,8 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
                 {
                     CreateAffixTextObject();
                 }
+                
+                UpdateAffixContainerTransform();
     
                 if (_affixLabel != null)
                 {
@@ -236,6 +242,25 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             }
         }
         
+        private void UpdateAffixContainerTransform()
+        {
+            if (_affixTextContainer == null) return;
+
+            var currentPosType = EliteEnemyCore.Config.AffixDisplayPosition;
+            var currentOffset = EliteEnemyCore.Config.AffixVerticalOffset;
+            if (currentPosType != _lastPositionType || Mathf.Abs(currentOffset - _lastVerticalOffset) > 0.01f)
+            {
+                // 基础位置：头顶 55，脚底 -125
+                float baseY = (currentPosType == GameConfig.AffixTextDisplayPosition.Overhead) ? 55f : -125f;
+                float finalY = baseY + currentOffset;
+
+                _affixTextContainer.transform.localPosition = new Vector3(0f, finalY, 0f);
+
+                _lastPositionType = currentPosType;
+                _lastVerticalOffset = currentOffset;
+            }
+        }
+        
         private void CreateAffixTextObject()
         {
             bool showAbove = EliteEnemyCore.Config.AffixDisplayPosition == GameConfig.AffixTextDisplayPosition.Overhead;
@@ -246,6 +271,9 @@ namespace EliteEnemies.EliteEnemy.VisualEffects
             _affixTextContainer.transform.localPosition = new Vector3(0f, yOffset, 0f);
             _affixTextContainer.transform.localScale = Vector3.one;
             _affixTextContainer.transform.localRotation = Quaternion.identity;
+            
+            _lastVerticalOffset = -999f;
+            UpdateAffixContainerTransform();
 
             GameObject textObj = new GameObject("AffixText");
             textObj.transform.SetParent(_affixTextContainer.transform);

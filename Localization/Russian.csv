@@ -176,3 +176,4 @@ Combo_KillzoneBarrage_Name,Огневое Превосходство,2.4,ComboNa
 Combo_ImmortalBloodPact_Name,Лич,2.4,ComboNames
 Affix_Nimble_Name,Проворный,2.5,AffixNames
 Affix_Nimble_Description,"Чрезвычайно короткие интервалы между рывками, непредсказуемые движения",2.5,AffixDescription
+Settings_AffixVerticalOffset,Вертикальное смещение отображения аффиксов,2.5,VisualSettings

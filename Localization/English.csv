@@ -176,3 +176,4 @@ Combo_KillzoneBarrage_Name,Killzone Barrage,2.4,ComboNames
 Combo_ImmortalBloodPact_Name,Immortal Blood Pact,2.4,ComboNames
 Affix_Nimble_Name,Nimble,2.5,AffixNames
 Affix_Nimble_Description,Extremely short dash cooldown and erratic movement. Can move at high speed while firing.,2.5,AffixDescription
+Settings_AffixVerticalOffset,Affix Display Vertical Offset,2.5,VisualSettings

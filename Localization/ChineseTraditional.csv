@@ -176,3 +176,4 @@ Combo_KillzoneBarrage_Name,火力絞殺網,2.4,ComboNames
 Combo_ImmortalBloodPact_Name,不滅血誓,2.4,ComboNames
 Affix_Nimble_Name,靈活,2.5,AffixNames
 Affix_Nimble_Description,極短的衝刺間隔，身法飄忽不定。且能在開火時高速移動。,2.5,AffixDescription
+Settings_AffixVerticalOffset,詞綴顯示位置偏移,2.5,VisualSettings

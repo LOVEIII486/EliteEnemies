@@ -148,6 +148,16 @@ namespace EliteEnemies.Settings
                 maxValue: 40,
                 onValueChange: GameConfig.SetAffixFontSize
             );
+            
+            ModSettingAPI.AddSlider(
+                key: "AffixVerticalOffset",
+                description: LocalizationManager.GetText("Settings_AffixVerticalOffset"),
+                defaultValue: GameConfig.AffixVerticalOffset,
+                sliderRange: new Vector2(-200f, 200f),
+                onValueChange: GameConfig.SetAffixVerticalOffset,
+                decimalPlaces: 0,
+                characterLimit: 4
+            );
         }
 
         // 全局属性调整
@@ -350,6 +360,7 @@ namespace EliteEnemies.Settings
                     "ShowEliteName",
                     "ShowDetailedHealth",
                     "AffixDisplayPosition",
+                    "AffixVerticalOffset",
                     "AffixFontSize"
                 },
                 scale: GroupScale,

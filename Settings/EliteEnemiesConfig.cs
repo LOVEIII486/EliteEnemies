@@ -25,6 +25,8 @@ namespace EliteEnemies.Settings
         public GameConfig.AffixTextDisplayPosition AffixDisplayPosition { get; set; } = GameConfig.AffixTextDisplayPosition.Overhead;
         public int AffixFontSize { get; set; } = 20;
         
+        public float AffixVerticalOffset { get; set; } = 0f;
+        
         public int SplitAffixMaxCloneCount { get; set; } = 40;
         public float SplitAffixMinFPSThreshold { get; set; } = 30.0f;
         
