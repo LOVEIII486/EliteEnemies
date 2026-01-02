@@ -25,14 +25,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             [AffixRarity.Legendary] = new Color(1.00f, 0.58f, 0.00f),
         };
         
-        public static Color GetRarityColor(AffixRarity rarity)
+        private static Color GetRarityColor(AffixRarity rarity)
         {
             return RarityColors.TryGetValue(rarity, out Color color) ? color : Color.white;
         }
         
         /// <summary>
         /// 互斥词缀字典：Key = 词缀名，Value = 与该词缀互斥的词缀集合
-        /// 注意：互斥关系是双向的，但只需要在其中一个方向定义即可
         /// </summary>
         public static readonly Dictionary<string, HashSet<string>> MutuallyExclusiveAffixes =
             new Dictionary<string, HashSet<string>>
@@ -41,7 +40,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 ["Slime"] = new HashSet<string> { "Mini","Split" },
                 ["Undead"] = new HashSet<string> { "Explosive" },
                 ["Talkative"] = new HashSet<string> { "Invisible" },
-                // ["Regeneration"] = new HashSet<string> { "Tanky", "Giant" },
+                //["Regeneration"] = new HashSet<string> { "Tanky" },
                 ["Split"] = new HashSet<string> { "MimicTear", "ChickenBro" , "MandarinDuck"},
                 ["MagazineCurse"] = new HashSet<string> { "DungEater","Sticky" },
                 ["Knockback"] = new HashSet<string> { "Phase" },
