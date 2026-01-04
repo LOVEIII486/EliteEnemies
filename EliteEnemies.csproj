@@ -659,6 +659,7 @@
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MultiShotBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\NimbleBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ObscurerBehavior.cs" />
+        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\PhantomBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\PhaseSwapBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\OverloadBehavior.cs" />
         <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ReflectBehavior.cs" />

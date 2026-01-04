@@ -246,7 +246,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 HealthMultiplier = 1.0f,
                 DamageMultiplier = 1.0f,
                 MoveSpeedMultiplier = 1.0f,
-                Rarity = AffixRarity.Rare
+                Rarity = AffixRarity.Uncommon
             }.WithLootGroup(new LootEntry(112, 1, 1, 1f), // 麦克风
                 new LootEntry(124, 1, 1, 1f), // 手鼓
                 new LootEntry(125, 1, 1, 0.6f), // 小号
@@ -690,6 +690,22 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 MoveSpeedMultiplier = 1.2f,
                 Rarity = AffixRarity.Uncommon
             },
+            ["Phantom"] = new AffixData
+            {
+                Name = LocalizationManager.GetText("Affix_Phantom_Name"),
+                Description = LocalizationManager.GetText("Affix_Phantom_Description"),
+                HealthMultiplier = 1.0f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
+                Rarity = AffixRarity.Rare
+            }.WithLootGroup(
+                new LootEntry(679, 1, 1, 0.5f), // 耳机
+                new LootEntry(1252, 1, 1, 0.2f), // 橘子耳机
+                new LootEntry(112, 1, 1, 0.5f), // 麦克风
+                new LootEntry(113, 1, 1, 0.5f), // 收音机
+                new LootEntry(64, 1, 1, 0.6f), // 对讲机
+                new LootEntry(65, 1, 1, 0.2f) // 军用对讲机
+            )
         };
 
 

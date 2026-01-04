@@ -46,6 +46,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             AffixBehaviorManager.RegisterBehavior<ReflectBehavior>();
             AffixBehaviorManager.RegisterBehavior<FrozenBehavior>();
             AffixBehaviorManager.RegisterBehavior<NimbleBehavior>();
+            AffixBehaviorManager.RegisterBehavior<PhantomBehavior>();
 
             Debug.Log($"[EliteEnemies.AffixBehavior] 注册完成，共 {AffixBehaviorManager.Count} 个词缀行为类型");
         }

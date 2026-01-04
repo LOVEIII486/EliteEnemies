@@ -177,3 +177,5 @@ Combo_ImmortalBloodPact_Name,不灭血誓,2.4,ComboNames
 Affix_Nimble_Name,灵活,2.5,AffixNames
 Affix_Nimble_Description,极短的冲刺间隔，身法飘忽不定。且能在开火时高速移动。,2.5,AffixDescription
 Settings_AffixVerticalOffset,词缀显示位置偏移,2.5,VisualSettings
+Affix_Phantom_Name,幻听,2.5,AffixNames
+Affix_Phantom_Description,该单位会干扰玩家感官，周期性产生虚假的脚步声和警觉声。,2.5,AffixDescription

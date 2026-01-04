@@ -177,3 +177,5 @@ Combo_ImmortalBloodPact_Name,Immortal Blood Pact,2.4,ComboNames
 Affix_Nimble_Name,Nimble,2.5,AffixNames
 Affix_Nimble_Description,Extremely short dash cooldown and erratic movement. Can move at high speed while firing.,2.5,AffixDescription
 Settings_AffixVerticalOffset,Affix Display Vertical Offset,2.5,VisualSettings
+Affix_Phantom_Name,Phantom,2.5,AffixNames
+Affix_Phantom_Description,"This unit disrupts player senses, periodically creating fake footsteps and alert sounds behind you.",2.5,AffixDescription
