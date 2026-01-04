@@ -10,17 +10,23 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
     {
         public override string AffixName => "Phantom";
         
-        private const float TRIGGER_DISTANCE = 45f;             // 玩家距离精英怪多少米内开始产生幻听
 
-        private const float TIMER_MIN = 0.5f;                   // 最小间隔
-        private const float TIMER_MAX = 3.0f;                   // 最大间隔
+        private const float TRIGGER_DISTANCE = 50f;             // 激活距离
+
+        // 远距离时的干扰频率
+        private const float TIMER_FAR_MIN = 2.0f;               
+        private const float TIMER_FAR_MAX = 5.0f;
+
+        // 近距离时的干扰频率 
+        private const float TIMER_CLOSE_MIN = 0.5f;             
+        private const float TIMER_CLOSE_MAX = 1.5f;
 
         private const float FAKE_DIST_MIN = 8f;                // 伪造声源距离玩家最小距离
-        private const float FAKE_DIST_MAX = 22f;                // 伪造声源距离玩家最大距离
-        private const float BEHIND_ANGLE_HALF = 100f;            // 后方扇区半角
+        private const float FAKE_DIST_MAX = 20f;               // 伪造声源距离玩家最大距离
+        private const float BEHIND_ANGLE_HALF = 100f;          // 后方扇区半角
 
-        private const float VOICE_CHANCE = 0.3f;                // 产生声纹时，播放叫声的概率
-        private const float SOUND_RADIUS = 15f;                 // 声音传播半径
+        private const float VOICE_CHANCE = 0.3f;              // 语音触发概率
+        private const float SOUND_RADIUS = 15f;                // 声音传播半径
 
         private float _timer;
         private float _nextInterval;
@@ -28,7 +34,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             base.OnEliteInitialized(character);
-            ResetTimer();
+            ResetDynamicTimer(character);
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
@@ -36,16 +42,39 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             var player = CharacterMainControl.Main;
             if (player == null) return;
 
-            float sqrDist = (character.transform.position - player.transform.position).sqrMagnitude;
-            if (sqrDist > TRIGGER_DISTANCE * TRIGGER_DISTANCE) return;
+            float dist = Vector3.Distance(character.transform.position, player.transform.position);
+            
+            if (dist > TRIGGER_DISTANCE) return;
 
             _timer += deltaTime;
             if (_timer >= _nextInterval)
             {
                 TriggerPhantomEffect(player, character);
                 _timer = 0;
-                ResetTimer();
+                ResetDynamicTimer(character);
             }
+        }
+        
+        private void ResetDynamicTimer(CharacterMainControl owner)
+        {
+            var player = CharacterMainControl.Main;
+            if (player == null) 
+            {
+                _nextInterval = TIMER_FAR_MAX;
+                return;
+            }
+
+            float dist = Vector3.Distance(owner.transform.position, player.transform.position);
+            
+            // 计算距离权重系数
+            float t = Mathf.Clamp01(dist / TRIGGER_DISTANCE);
+            
+            float currentMin = Mathf.Lerp(TIMER_CLOSE_MIN, TIMER_FAR_MIN, t);
+            float currentMax = Mathf.Lerp(TIMER_CLOSE_MAX, TIMER_FAR_MAX, t);
+
+            _nextInterval = Random.Range(currentMin, currentMax);
+            
+            // Debug.Log($"[Phantom] 距离: {dist:F1}m, 下次干扰间隔: {_nextInterval:F2}s");
         }
 
         private void TriggerPhantomEffect(CharacterMainControl player, CharacterMainControl owner)
@@ -54,7 +83,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             Vector3 aimDir = player.CurrentAimDirection;
             aimDir.y = 0;
             aimDir.Normalize();
-            
             if (aimDir.sqrMagnitude < 0.1f) aimDir = Vector3.forward;
 
             // 2. 从玩家背后选取一个落点
@@ -97,11 +125,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
                 case AudioManager.VoiceType.Eagle:   return "Char/Voice/vo_eagle_surprise";
                 default:                             return "Char/Voice/vo_duck_surprise";
             }
-        }
-
-        private void ResetTimer()
-        {
-            _nextInterval = Random.Range(TIMER_MIN, TIMER_MAX);
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) { }
