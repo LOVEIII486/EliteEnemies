@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using EliteEnemies.EliteEnemy.AttributeModifier;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors
 {
@@ -9,173 +10,97 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
     /// </summary>
     public interface IAffixBehavior
     {
-        /// <summary>
-        /// 词缀名称
-        /// </summary>
         string AffixName { get; }
-
-        /// <summary>
-        /// 在敌人初始化时调用
-        /// </summary>
         void OnEliteInitialized(CharacterMainControl character);
-
-        /// <summary>
-        /// 在敌人死亡时调用
-        /// </summary>
         void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo);
-
-        /// <summary>
-        /// 清理资源
-        /// </summary>
         void OnCleanup(CharacterMainControl character);
     }
 
     /// <summary>
-    /// 词缀行为基类
+    /// 词缀行为基类 - 纯工具类，不包含隐性自动化逻辑
     /// </summary>
     public abstract class AffixBehaviorBase : IAffixBehavior
     {
         public abstract string AffixName { get; }
 
-        public virtual void OnEliteInitialized(CharacterMainControl character)
+        // --- 默认实现全部留空，允许子类随意覆盖 ---
+        public virtual void OnEliteInitialized(CharacterMainControl character) { }
+        public virtual void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) { }
+        public virtual void OnCleanup(CharacterMainControl character) { }
+        public virtual void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo) { }
+
+        // --- 受保护的助手方法：仅供开发者手动调用 ---
+
+        /// <summary>
+        /// 手动清理该词缀对目标造成的所有 StatModifier 和 AIField 修改
+        /// </summary>
+        protected void ClearBaseModifiers(CharacterMainControl character)
         {
+            if (character != null)
+            {
+                AttributeModifier.AttributeModifier.ClearAll(character, this.AffixName);
+            }
         }
 
-        public virtual void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
+        /// <summary>
+        /// 便捷方法：带入 AffixName 的修改方法
+        /// 注意：使用此方法后，请务必在 OnCleanup 或 OnEliteDeath 中手动调用 ClearBaseModifiers
+        /// </summary>
+        protected void Modify(CharacterMainControl character, string attributeName, float value, bool isMultiplier = true)
         {
+            AttributeModifier.AttributeModifier.Modify(character, attributeName, value, isMultiplier, this.AffixName);
         }
 
-        public virtual void OnCleanup(CharacterMainControl character)
+        /// <summary>
+        /// 便捷方法：应用精英怪三维增强
+        /// 注意：使用此方法后，请务必在 OnCleanup 或 OnEliteDeath 中手动调用 ClearBaseModifiers
+        /// </summary>
+        protected void ApplyPowerup(CharacterMainControl character, float hpMul, float dmgMul, float spdMul)
         {
-        }
-
-        public virtual void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
-        {
+            AttributeModifier.AttributeModifier.Quick.ApplyElitePowerup(character, hpMul, dmgMul, spdMul, this.AffixName);
         }
     }
 
-    /// <summary>
-    /// 支持 Update 的词缀行为接口
-    /// </summary>
+    // --- 接口定义保持不变，确保兼容性 ---
     public interface IUpdateableAffixBehavior : IAffixBehavior
     {
-        /// <summary>
-        /// 每帧更新
-        /// </summary>
         void OnUpdate(CharacterMainControl character, float deltaTime);
     }
 
-    /// <summary>
-    /// 支持战斗事件的词缀行为接口
-    /// </summary>
     public interface ICombatAffixBehavior : IAffixBehavior
     {
-        /// <summary>
-        /// 当精英攻击时触发
-        /// </summary>
         void OnAttack(CharacterMainControl character, DamageInfo damageInfo);
-
-        /// <summary>
-        /// 当精英受伤时触发
-        /// </summary>
         void OnDamaged(CharacterMainControl character, DamageInfo damageInfo);
-
-        /// <summary>
-        /// 当该精英敌人命中玩家时触发
-        /// </summary>
         void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo);
     }
 
-    /// <summary>
-    /// 词缀行为管理器 - 负责注册和创建词缀行为实例
-    /// </summary>
+    // --- 管理器保持不变 ---
     public static class AffixBehaviorManager
     {
-        // 存储词缀名称 -> 行为类型的映射
-        private static readonly Dictionary<string, Type> BehaviorTypes
-            = new Dictionary<string, Type>();
+        private static readonly Dictionary<string, Type> BehaviorTypes = new Dictionary<string, Type>();
 
-        /// <summary>
-        /// 注册词缀行为类型
-        /// </summary>
         public static void RegisterBehavior<T>() where T : IAffixBehavior, new()
         {
-            // 创建临时实例来获取词缀名称
             T tempInstance = new T();
             string affixName = tempInstance.AffixName;
-
-            if (string.IsNullOrEmpty(affixName))
-            {
-                Debug.LogWarning($"[AffixBehaviorManager] Invalid behavior registration: {typeof(T).Name}");
-                return;
-            }
-
-            if (BehaviorTypes.ContainsKey(affixName))
-            {
-                Debug.LogWarning($"[AffixBehaviorManager] Behavior '{affixName}' already registered, replacing...");
-            }
-
+            if (string.IsNullOrEmpty(affixName)) return;
             BehaviorTypes[affixName] = typeof(T);
-            //Debug.Log($"[AffixBehaviorManager] Registered behavior type: {affixName} ({typeof(T).Name})");
         }
 
-        /// <summary>
-        /// 为指定词缀创建新的行为实例
-        /// </summary>
         public static IAffixBehavior CreateBehaviorInstance(string affixName)
         {
-            if (!BehaviorTypes.TryGetValue(affixName, out Type behaviorType))
+            if (BehaviorTypes.TryGetValue(affixName, out Type type))
             {
-                return null;
+                return (IAffixBehavior)Activator.CreateInstance(type);
             }
-
-            try
-            {
-                IAffixBehavior instance = (IAffixBehavior)Activator.CreateInstance(behaviorType);
-                //Debug.Log($"[AffixBehaviorManager] Created new instance of {behaviorType.Name} for affix '{affixName}'");
-                return instance;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError(
-                    $"[AffixBehaviorManager] Failed to create instance of {behaviorType.Name}: {ex.Message}");
-                return null;
-            }
+            return null;
         }
 
-        /// <summary>
-        /// 检查词缀是否已注册
-        /// </summary>
-        public static bool IsRegistered(string affixName)
-        {
-            return BehaviorTypes.ContainsKey(affixName);
-        }
-
-        /// <summary>
-        /// 获取所有注册的词缀名称
-        /// </summary>
-        public static IEnumerable<string> GetAllAffixNames()
-        {
-            return BehaviorTypes.Keys;
-        }
-
-        /// <summary>
-        /// 清空所有注册的行为
-        /// </summary>
-        public static void ClearAll()
-        {
-            BehaviorTypes.Clear();
-            Debug.Log("[AffixBehaviorManager] All behavior types cleared");
-        }
-
-        /// <summary>
-        /// 获取已注册的行为数量
-        /// </summary>
+        public static bool IsRegistered(string affixName) => BehaviorTypes.ContainsKey(affixName);
+        public static IEnumerable<string> GetAllAffixNames() => BehaviorTypes.Keys;
+        public static void ClearAll() => BehaviorTypes.Clear();
         public static int Count => BehaviorTypes.Count;
     }
 
-    public static class AffixBehaviorUtils
-    {
-        
-    }
+    public static class AffixBehaviorUtils { }
 }

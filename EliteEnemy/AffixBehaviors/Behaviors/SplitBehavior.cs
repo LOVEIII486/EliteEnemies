@@ -6,7 +6,6 @@ using HarmonyLib;
 using ItemStatsSystem;
 using UnityEngine;
 using SodaCraft.Localizations;
-using EliteEnemies.DebugTool;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {

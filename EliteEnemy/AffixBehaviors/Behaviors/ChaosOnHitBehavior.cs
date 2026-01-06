@@ -8,21 +8,20 @@ using Random = UnityEngine.Random;
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 词缀：混沌
+    /// 混沌
     /// </summary>
     public class ChaosOnHitBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {
         public override string AffixName => "Chaos";
-        
+
         private static readonly float CooldownSeconds = 0.5f;
+
         // 内置全局冷却，共享
         private static float _lastApplyTime = -999f;
-        
+
         private readonly Lazy<string> _chaosPopTextFmt = new(() =>
             LocalizationManager.GetText(
-                "Affix_Chaos_PopText_1",
-                "<color=#9400D3>混沌侵蚀！{0}</color>"
-            )
+                "Affix_Chaos_PopText_1")
         );
 
         private string ChaosPopTextFmt => _chaosPopTextFmt.Value;
@@ -46,7 +45,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         public void OnAttack(CharacterMainControl attacker, DamageInfo dmg)
         {
         }
-        
+
         public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
         {
             if (Time.time - _lastApplyTime < CooldownSeconds)
@@ -54,10 +53,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             // 从预定义列表中随机挑选一个 Buff
             var pick = NegativeDebuffs[Random.Range(0, NegativeDebuffs.Length)];
             if (!pick) return;
-            
+
             var player = CharacterMainControl.Main;
             player.AddBuff(pick, attacker, 0);
-            
+
             string text = string.Format(ChaosPopTextFmt, pick.DisplayName);
             attacker.PopText(text);
             _lastApplyTime = Time.time;

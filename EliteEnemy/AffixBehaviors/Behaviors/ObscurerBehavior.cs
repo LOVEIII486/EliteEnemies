@@ -1,6 +1,4 @@
-﻿// EliteEnemies/AffixBehaviors/ObscurerBehavior.cs
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors

@@ -1,115 +1,134 @@
 using ItemStatsSystem.Stats;
+using System.Collections.Generic;
 
 namespace EliteEnemies.EliteEnemy.AttributeModifier
 {
     /// <summary>
     /// 统一属性修改器
-    /// 自动分发 Stat 和 AI 字段的修改请求
     /// </summary>
     public static class AttributeModifier
     {
-        // ========== 快捷修改常用属性 ==========
+        private static readonly HashSet<string> AI_FIELDS = new HashSet<string>
+        {
+            AIFieldModifier.Fields.ReactionTime,
+            AIFieldModifier.Fields.BaseReactionTime,
+            AIFieldModifier.Fields.UpdateValueTimer,
+            AIFieldModifier.Fields.PatrolTurnSpeed,
+            AIFieldModifier.Fields.CombatTurnSpeed,
+            AIFieldModifier.Fields.ShootDelay,
+            AIFieldModifier.Fields.ShootCanMove,
+            AIFieldModifier.Fields.SightDistance,
+            AIFieldModifier.Fields.SightAngle,
+            AIFieldModifier.Fields.HearingAbility,
+            AIFieldModifier.Fields.CanDash,
+            AIFieldModifier.Fields.PatrolRange,
+            AIFieldModifier.Fields.CombatMoveRange,
+            AIFieldModifier.Fields.ForgetTime,
+            AIFieldModifier.Fields.HasSkill,
+            AIFieldModifier.Fields.SkillChance,
+            AIFieldModifier.Fields.DefaultWeaponOut
+        };
+
         public static class Quick
         {
             /// <summary>
-            /// 修改血量上限
+            /// 快捷增强精英怪基础属性
             /// </summary>
-            public static void ModifyHealth(CharacterMainControl character, float multiplier, bool healToFull = false)
+            /// <param name="healthMul">血量倍率 (如 2.0)</param>
+            /// <param name="damageMul">伤害倍率 (如 1.5)</param>
+            /// <param name="speedMul">移速倍率 (如 1.2)</param>
+            /// <param name="source">词缀名称 (用于清理)</param>
+            public static void ApplyElitePowerup(CharacterMainControl enemy, float healthMul, float damageMul, float speedMul, object source)
             {
-                // 计算增量：1.5倍 -> 增加0.5
+                if (enemy == null) return;
+
+                if (healthMul > 1.001f) ModifyHealth(enemy, healthMul, source);
+                if (damageMul > 1.001f) ModifyDamage(enemy, damageMul, source);
+                if (speedMul > 1.001f) ModifySpeed(enemy, speedMul, source);
+            }
+
+            /// <summary>
+            /// 修改血量上限并补满
+            /// </summary>
+            public static void ModifyHealth(CharacterMainControl enemy, float multiplier, object source, bool healToFull = true)
+            {
                 float val = multiplier - 1f;
-                StatModifier.AddModifier(character, StatModifier.Attributes.MaxHealth, val, ModifierType.PercentageMultiply);
-                
-                if (healToFull && character?.Health != null)
+                StatModifier.AddModifier(enemy, StatModifier.Attributes.MaxHealth, val, ModifierType.PercentageMultiply, source);
+                if (healToFull && enemy?.Health != null)
                 {
-                    character.Health.SetHealth(character.Health.MaxHealth);
+                    enemy.Health.SetHealth(enemy.Health.MaxHealth);
                 }
             }
 
             /// <summary>
-            /// 修改伤害
+            /// 修改远程与近战伤害
             /// </summary>
-            public static void ModifyDamage(CharacterMainControl character, float multiplier)
+            public static void ModifyDamage(CharacterMainControl enemy, float multiplier, object source)
             {
                 float val = multiplier - 1f;
-                StatModifier.AddModifier(character, StatModifier.Attributes.GunDamageMultiplier, val, ModifierType.PercentageMultiply);
-                StatModifier.AddModifier(character, StatModifier.Attributes.MeleeDamageMultiplier, val, ModifierType.PercentageMultiply);
+                StatModifier.AddModifier(enemy, StatModifier.Attributes.GunDamageMultiplier, val, ModifierType.PercentageMultiply, source);
+                StatModifier.AddModifier(enemy, StatModifier.Attributes.MeleeDamageMultiplier, val, ModifierType.PercentageMultiply, source);
             }
 
             /// <summary>
-            /// 修改移动能力
+            /// 修改移动速度
             /// </summary>
-            public static void ModifySpeed(CharacterMainControl character, float multiplier)
+            public static void ModifySpeed(CharacterMainControl enemy, float multiplier, object source)
             {
+                if (enemy == null) return;
                 float val = multiplier - 1f;
-                StatModifier.AddModifier(character, StatModifier.Attributes.WalkSpeed, val, ModifierType.PercentageMultiply);
-                StatModifier.AddModifier(character, StatModifier.Attributes.RunSpeed, val, ModifierType.PercentageMultiply);
-                StatModifier.AddModifier(character, StatModifier.Attributes.WalkAcc, val, ModifierType.PercentageMultiply);
-                StatModifier.AddModifier(character, StatModifier.Attributes.RunAcc, val, ModifierType.PercentageMultiply);
+                StatModifier.AddModifier(enemy, StatModifier.Attributes.WalkSpeed, val, ModifierType.PercentageMultiply, source);
+                StatModifier.AddModifier(enemy, StatModifier.Attributes.RunSpeed, val, ModifierType.PercentageMultiply, source);
             }
 
             /// <summary>
-            /// 修改护甲
+            /// 强化 AI 反应与行为
             /// </summary>
-            public static void ModifyDefense(CharacterMainControl character, float multiplier)
+            public static void EnhanceAI(CharacterMainControl enemy, bool canMoveShoot, float reactionMultiplier)
             {
-                float val = multiplier - 1f;
-                StatModifier.AddModifier(character, StatModifier.Attributes.HeadArmor, val, ModifierType.PercentageMultiply);
-                StatModifier.AddModifier(character, StatModifier.Attributes.BodyArmor, val, ModifierType.PercentageMultiply);
-            }
-        }
-
-        // ========== 标准属性名称定义 ==========
-        
-        public static class StandardAttributes
-        {
-            // Stat 基础
-            public const string MaxHealth = StatModifier.Attributes.MaxHealth;
-            public const string MoveSpeed = StatModifier.Attributes.WalkSpeed;
-            public const string Damage = StatModifier.Attributes.GunDamageMultiplier;
-            
-            // Stat 防御
-            public const string HeadArmor = StatModifier.Attributes.HeadArmor;
-            public const string BodyArmor = StatModifier.Attributes.BodyArmor;
-
-            // Stat 感知 
-            public const string SightDistance = StatModifier.Attributes.ViewDistance;
-            public const string SightAngle = StatModifier.Attributes.ViewAngle;
-            public const string HearingAbility = StatModifier.Attributes.HearingAbility;
-            
-            // AI 行为 (走 AIFieldModifier)
-            public const string PatrolRange = AIFieldModifier.Fields.PatrolRange;
-            public const string CombatMoveRange = AIFieldModifier.Fields.CombatMoveRange;
-            public const string ForgetTime = AIFieldModifier.Fields.ForgetTime;
-            public const string CanDash = AIFieldModifier.Fields.CanDash;
-        }
-
-        // ========== 核心分发逻辑 =========
-
-        /// <summary>
-        /// 修改属性通用入口
-        /// </summary>
-        /// <returns>如果是 Stat 修改，返回 Modifier 对象；如果是 AI 修改，返回 null</returns>
-        public static object Modify(CharacterMainControl character, string attributeName, float value, bool isMultiplier)
-        {
-            // 1. 优先尝试 Stat 修改
-            if (StatModifier.CanModify(attributeName))
-            {
-                var type = isMultiplier ? ModifierType.PercentageMultiply : ModifierType.Add;
-                // 如果是倍率模式，假设传入的是最终倍率(如1.5)，转换为增量(0.5)
-                float finalValue = isMultiplier ? (value - 1f) : value;
+                if (canMoveShoot)
+                    AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.ShootCanMove, 1.0f);
                 
-                return StatModifier.AddModifier(character, attributeName, finalValue, type);
+                if (reactionMultiplier < 0.99f)
+                    AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.ReactionTime, reactionMultiplier, true);
             }
+        }
+        
+        /// <summary>
+        /// 通用属性修改入口：自动判断是走 Stat 系统还是反射系统
+        /// </summary>
+        /// <param name="character">目标角色</param>
+        /// <param name="attributeName">属性名</param>
+        /// <param name="value">目标数值</param>
+        /// <param name="isMultiplier">是否为倍率模式</param>
+        /// <param name="source">来源标识</param>
+        /// <returns>如果是 Stat 修改，返回 Modifier 对象；如果是 AI 逻辑修改，返回 null</returns>
+        public static object Modify(CharacterMainControl character, string attributeName, float value, bool isMultiplier, object source = null)
+        {
+            if (character == null) return null;
 
-            // 2. 其次尝试 AI 字段修改
-            if (AIFieldModifier.CanModify(attributeName))
+            // 检查是否属于 AI 字段
+            if (AI_FIELDS.Contains(attributeName) || attributeName.Contains("."))
             {
-                AIFieldModifier.ModifyImmediate(character, attributeName, value, isMultiplier);
+                AIFieldModifier.ModifyDelayed(character, attributeName, value, isMultiplier);
                 return null;
             }
 
-            return null;
+            // 作为 Stat 属性处理
+            ModifierType type = isMultiplier ? ModifierType.PercentageMultiply : ModifierType.Add;
+            
+            float finalValue = isMultiplier ? (value - 1f) : value;
+
+            return StatModifier.AddModifier(character, attributeName, finalValue, type, source);
+        }
+
+        /// <summary>
+        /// 统一清理方法
+        /// </summary>
+        public static void ClearAll(CharacterMainControl enemy, object source)
+        {
+            if (enemy == null || source == null) return;
+            StatModifier.RemoveAllModifiersFromSource(enemy, source);
         }
     }
 }

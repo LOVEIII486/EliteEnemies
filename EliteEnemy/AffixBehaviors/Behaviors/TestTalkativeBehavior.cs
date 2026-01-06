@@ -6,7 +6,7 @@ using EliteEnemies.Localization;
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 【话痨】词缀 - 定期在敌人头顶显示随机台词（本地化聚合字段）
+    /// 【话痨】词缀 - 定期在敌人头顶显示随机台词
     /// </summary>
     public class TestTalkativeBehavior : AffixBehaviorBase, IUpdateableAffixBehavior
     {

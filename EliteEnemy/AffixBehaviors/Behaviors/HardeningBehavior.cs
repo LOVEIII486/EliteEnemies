@@ -2,13 +2,12 @@ using System;
 using EliteEnemies.EliteEnemy.AttributeModifier;
 using EliteEnemies.Localization;
 using UnityEngine;
-using ItemStatsSystem.Stats;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
     /// 硬化词条 - 受伤时随机降低物理伤害
-    /// <para>机制：受伤积累减伤 -> 达到上限(60%) -> 持续30秒 -> 疲软10秒(0%) -> 重新积累</para>
+    /// <para>机制：受伤积累减伤 -> 达到上限(50%) -> 持续20秒 -> 疲软10秒(0%) -> 重新积累</para>
     /// </summary>
     public class HardeningBehavior : AffixBehaviorBase, ICombatAffixBehavior, IUpdateableAffixBehavior
     {
@@ -23,7 +22,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         
         private static readonly float MinDamageReduction = 0.05f; // 单次最小减伤 5%
         private static readonly float MaxDamageReduction = 0.15f; // 单次最大减伤 15%
-        private static readonly float MaxTotalReduction = 0.5f;  // 总减伤上限 50%
+        private static readonly float MaxTotalReduction = 0.5f;   // 总减伤上限 50%
         private static readonly float TriggerCooldown = 0.5f;     // 触发CD
         
         private static readonly float DurationMaxHardened = 20f;  // 满层持续时间
@@ -35,8 +34,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private float _accumulatedReduction = 0f;
         private float _lastTriggerTime = -999f;
         private float _stateTimer = 0f;
-        
-        private Modifier _hardeningModifier;
         
         private readonly Lazy<string> _hardeningPopText = new(() => LocalizationManager.GetText("Affix_Hardening_PopText_1")); // "硬化 +{0}%"
         private readonly Lazy<string> _maxStateText = new(() => LocalizationManager.GetText("Affix_Hardening_Max"));
@@ -110,15 +107,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            RemoveHardeningModifier(character);
+            // 利用新框架助手方法一键清理该词缀产生的所有修改
+            ClearBaseModifiers(character);
             ResetState(null);
         }
-
-        public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
-        {
-            OnCleanup(character);
-        }
-        
 
         private void EnterWeakenedState(CharacterMainControl character)
         {
@@ -153,24 +145,21 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             if (character != null)
             {
-                RemoveHardeningModifier(character);
+                ClearBaseModifiers(character);
             }
         }
-        
 
         private void ApplyPhysicsFactorChange(CharacterMainControl character)
         {
-            RemoveHardeningModifier(character);
+            // 每次应用前清理旧的修改，确保计算基准值的准确性
+            ClearBaseModifiers(character);
 
             if (_accumulatedReduction <= 0.001f) { return; }
             
             if (character.CharacterItem == null) return;
             var physicsStat = character.CharacterItem.GetStat(StatModifier.Attributes.ElementFactor_Physics);
             
-            if (physicsStat == null)
-            {
-                return;
-            }
+            if (physicsStat == null) return;
             
             float currentFactor = physicsStat.Value;
             float maxAllowedReduction = currentFactor - MinPhysicsFactorLimit;
@@ -182,21 +171,9 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
             if (finalReduction > 0.001f)
             {
-                _hardeningModifier = StatModifier.AddModifier(
-                    character, 
-                    StatModifier.Attributes.ElementFactor_Physics, 
-                    -finalReduction, // 负数表示减少系数
-                    ModifierType.PercentageMultiply
-                );
-            }
-        }
-
-        private void RemoveHardeningModifier(CharacterMainControl character)
-        {
-            if (_hardeningModifier != null)
-            {
-                StatModifier.RemoveModifier(character, StatModifier.Attributes.ElementFactor_Physics, _hardeningModifier);
-                _hardeningModifier = null;
+                // 应用新框架方法：传入最终倍率 (1.0 - 减伤率)
+                // 内部会自动处理为负值的 PercentageMultiply 修改
+                Modify(character, StatModifier.Attributes.ElementFactor_Physics, 1.0f - finalReduction, true);
             }
         }
 

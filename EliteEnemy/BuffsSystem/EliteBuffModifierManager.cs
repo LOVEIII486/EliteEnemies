@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using EliteEnemies.EliteEnemy.AttributeModifier;
 using ItemStatsSystem;
 using ItemStatsSystem.Stats;
 
@@ -23,7 +24,31 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem
         // 存储每个Buff实例的Modifier
         private Dictionary<int, List<(Stat stat, Modifier modifier)>> _buffModifiers 
             = new Dictionary<int, List<(Stat, Modifier)>>();
+        
+        /// <summary>
+        /// 应用属性修改并自动开启追踪
+        /// </summary>
+        /// <param name="player">目标玩家</param>
+        /// <param name="buff">Buff 实例</param>
+        /// <param name="statName">属性常量 (来自 StatModifier.Attributes)</param>
+        /// <param name="value">增量数值</param>
+        /// <param name="type">修改模式 (默认为百分比乘法)</param>
+        public void ApplyAndTrack(CharacterMainControl player, Duckov.Buffs.Buff buff, string statName, float value, ModifierType type = ModifierType.PercentageMultiply)
+        {
+            if (player?.CharacterItem == null || buff == null) return;
 
+            var modifier = StatModifier.AddModifier(player, statName, value, type);
+
+            if (modifier != null)
+            {
+                var stat = player.CharacterItem.GetStat(statName);
+                if (stat != null)
+                {
+                    TrackModifier(buff.GetInstanceID(), stat, modifier);
+                }
+            }
+        }
+        
         /// <summary>
         /// 追踪Modifier
         /// </summary>

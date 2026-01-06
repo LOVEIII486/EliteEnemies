@@ -65,7 +65,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             CopyPlayerModel(enemy, player);
             EnhanceAIBehavior(enemy);
                 
-            _lootHook = delegate(DamageInfo _) { SafeClearAllDrops(_owner); };
+            _lootHook = delegate(DamageInfo _) { ClearAllDrops(_owner); };
             enemy.BeforeCharacterSpawnLootOnDead += _lootHook;
         }
 
@@ -220,27 +220,50 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         private void EnhanceAIBehavior(CharacterMainControl enemy)
         {
-            StatModifier.AddModifier(enemy, StatModifier.Attributes.TurnSpeed, 0.5f, ModifierType.PercentageMultiply);
-            StatModifier.AddModifier(enemy, StatModifier.Attributes.AimTurnSpeed, 0.5f, ModifierType.PercentageMultiply);
-            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.ShootCanMove, 1f, false);
-            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.CanDash, 1f, false);
+            Modify(enemy, StatModifier.Attributes.ViewDistance, 1.5f, true);
+            Modify(enemy, StatModifier.Attributes.ViewAngle, 1.3f, true);
+            Modify(enemy, StatModifier.Attributes.HearingAbility, 1.5f, true);
+            Modify(enemy, StatModifier.Attributes.TurnSpeed, 1.5f, true);
+            Modify(enemy, StatModifier.Attributes.AimTurnSpeed, 1.5f, true);
+            
+            Modify(enemy, StatModifier.Attributes.GunScatterMultiplier, 0.7f, true);
+            
+            Modify(enemy, AIFieldModifier.Fields.ShootCanMove, 1.0f, false);
+            Modify(enemy, AIFieldModifier.Fields.CanDash, 1.0f, false);
         }
 
-        private void SafeClearAllDrops(CharacterMainControl c)
+        private void ClearAllDrops(CharacterMainControl c)
         {
             if (c?.CharacterItem == null) return;
-            List<Item> buf = new List<Item>();
-            if (c.CharacterItem.Inventory != null) buf.AddRange(c.CharacterItem.Inventory.Where(it => it != null));
-            if (c.CharacterItem.Slots != null) {
-                foreach (var s in c.CharacterItem.Slots) if (s?.Content != null) buf.Add(s.Content);
+            try
+            {
+                List<Item> itemsToDestroy = new List<Item>();
+                if (c.CharacterItem.Inventory != null)
+                    itemsToDestroy.AddRange(c.CharacterItem.Inventory.Where(it => it != null));
+                if (c.CharacterItem.Slots != null)
+                    itemsToDestroy.AddRange(c.CharacterItem.Slots.Where(s => s?.Content != null).Select(s => s.Content));
+                foreach (var it in itemsToDestroy)
+                {
+                    it.DestroyTree();
+                }
             }
-            foreach (var it in buf) it.DestroyTree();
+            catch (Exception e)
+            {
+                Debug.LogWarning($"{LogTag} 清除掉落异常: " + e.Message);
+            }
         }
 
         public override void OnCleanup(CharacterMainControl character)
         {
+            ClearBaseModifiers(character);
+
             if (character != null && _lootHook != null)
+            {
                 character.BeforeCharacterSpawnLootOnDead -= _lootHook;
+            }
+
+            _owner = null;
+            _lootHook = null;
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) => OnCleanup(character);

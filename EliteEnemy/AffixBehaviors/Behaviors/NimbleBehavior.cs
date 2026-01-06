@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using EliteEnemies.EliteEnemy.AttributeModifier;
+﻿using EliteEnemies.EliteEnemy.AttributeModifier;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
@@ -12,18 +11,19 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
-            AIFieldModifier.ModifyDelayed(character, AIFieldModifier.Fields.CanDash, 1.0f);
-            AIFieldModifier.ModifyDelayed(character, AIFieldModifier.Fields.DashCDMin, 0.2f, true);
-            AIFieldModifier.ModifyDelayed(character, AIFieldModifier.Fields.DashCDMax, 0.2f, true);
-
-            AIFieldModifier.ModifyDelayed(character, AIFieldModifier.Fields.BaseReactionTime, 0.5f, true);
-
-            AIFieldModifier.ModifyDelayed(character, AIFieldModifier.Fields.ShootCanMove, 1.0f);
-
-            AIFieldModifier.ModifyDelayed(character, AIFieldModifier.Fields.CombatTurnSpeed, 2.5f, true);
+            Modify(character, AIFieldModifier.Fields.CanDash, 1.0f, false);
+            Modify(character, AIFieldModifier.Fields.DashCDMin, 0.2f, true);
+            Modify(character, AIFieldModifier.Fields.DashCDMax, 0.2f, true);
+            Modify(character, AIFieldModifier.Fields.BaseReactionTime, 0.5f, true);
+            Modify(character, AIFieldModifier.Fields.ShootCanMove, 1.0f, false);
+            Modify(character, AIFieldModifier.Fields.CombatTurnSpeed, 2.5f, true);
         }
-        
+
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) { }
-        public override void OnCleanup(CharacterMainControl character) { }
+
+        public override void OnCleanup(CharacterMainControl character)
+        {
+            ClearBaseModifiers(character);
+        }
     }
-} 
+}

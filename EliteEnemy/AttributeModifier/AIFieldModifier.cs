@@ -12,8 +12,10 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
     public static class AIFieldModifier
     {
         private const string LogTag = "[EliteEnemies.AIFieldModifier]";
-        
-        // 辅助组件：用于在对象激活时启动协程
+
+        // 反射字段缓存
+        private static readonly Dictionary<string, FieldInfo> _fieldCache = new Dictionary<string, FieldInfo>();
+
         private class ModificationApplier : MonoBehaviour
         {
             private void Start()
@@ -23,6 +25,7 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
                 {
                     character.StartCoroutine(ApplyPendingModifications(character));
                 }
+
                 Destroy(this);
             }
         }
@@ -30,8 +33,9 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
         internal static AICharacterController GetAI(CharacterMainControl character)
         {
             if (character == null) return null;
-            var ai = character.GetComponentInChildren<AICharacterController>(true);
-            return ai ?? character.GetComponentInParent<AICharacterController>();
+            if (character.aiCharacterController != null) return character.aiCharacterController;
+            // 通过层级搜索
+            return character.GetComponentInChildren<AICharacterController>(true);
         }
 
         private struct PendingModification
@@ -41,54 +45,55 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             public bool Multiply;
         }
 
-        private static readonly Dictionary<CharacterMainControl, List<PendingModification>> _pendingModifications 
+        private static readonly Dictionary<CharacterMainControl, List<PendingModification>> _pendingModifications
             = new Dictionary<CharacterMainControl, List<PendingModification>>();
 
-        private static readonly HashSet<CharacterMainControl> _processingCharacters = new HashSet<CharacterMainControl>();
+        private static readonly HashSet<CharacterMainControl> _processingCharacters =
+            new HashSet<CharacterMainControl>();
 
-        // ========== AI 字段定义 ==========
         public static class Fields
         {
             public const string ReactionTime = "reactionTime";
             public const string BaseReactionTime = "baseReactionTime";
+            public const string UpdateValueTimer = "updateValueTimer";
+
+            public const string PatrolTurnSpeed = "patrolTurnSpeed";
+            public const string CombatTurnSpeed = "combatTurnSpeed";
+
             public const string ShootDelay = "shootDelay";
             public const string ShootCanMove = "shootCanMove";
+
+            public const string ShootTimeRange = "shootTimeRange";
+            public const string ShootTimeMin = "shootTimeRange.x";
+            public const string ShootTimeMax = "shootTimeRange.y";
+            public const string ShootSpaceRange = "shootTimeSpaceRange";
+            public const string ShootSpaceMin = "shootTimeSpaceRange.x";
+            public const string ShootSpaceMax = "shootTimeSpaceRange.y";
+
             public const string CanDash = "canDash";
-            public const string DefaultWeaponOut = "defaultWeaponOut";
-            public const string CombatTurnSpeed = "combatTurnSpeed";
-            
+            public const string DashCDRange = "dashCoolTimeRange";
+            public const string DashCDMin = "dashCoolTimeRange.x";
+            public const string DashCDMax = "dashCoolTimeRange.y";
+
+            public const string SightDistance = "sightDistance";
+            public const string SightAngle = "sightAngle";
+            public const string HearingAbility = "hearingAbility";
+
             public const string PatrolRange = "patrolRange";
             public const string CombatMoveRange = "combatMoveRange";
             public const string ForgetTime = "forgetTime";
-            
-            public const string ItemSkillChance = "itemSkillChance";
-            public const string ItemSkillCoolTime = "itemSkillCoolTime";
 
-            public const string ShootTimeMin = "shootTimeRange.x";
-            public const string ShootTimeMax = "shootTimeRange.y";
-            public const string ShootSpaceMin = "shootTimeSpaceRange.x";
-            public const string ShootSpaceMax = "shootTimeSpaceRange.y";
-            public const string DashCDMin = "dashCoolTimeRange.x";
-            public const string DashCDMax = "dashCoolTimeRange.y";
-            public const string DashCDRange = "dashCoolTimeRange"; 
+            public const string HasSkill = "hasSkill";
+            public const string SkillChance = "skillSuccessChance";
+            public const string SkillCoolTimeRange = "skillCoolTimeRange";
+            public const string SkillCoolTimeMin = "skillCoolTimeRange.x";
+            public const string SkillCoolTimeMax = "skillCoolTimeRange.y";
+
+            public const string DefaultWeaponOut = "defaultWeaponOut";
         }
 
-        private static readonly HashSet<string> ValidFields = new HashSet<string>
-        {
-            // 原始字段
-            Fields.ReactionTime, Fields.BaseReactionTime, Fields.ShootDelay, Fields.ShootCanMove, 
-            Fields.CanDash, Fields.DefaultWeaponOut, Fields.PatrolRange, Fields.CombatMoveRange, 
-            Fields.ForgetTime, Fields.ItemSkillChance, Fields.ItemSkillCoolTime,
-            // 新增路径字段
-            Fields.ShootTimeMin, Fields.ShootTimeMax, Fields.ShootSpaceMin, Fields.ShootSpaceMax,
-            Fields.DashCDMin, Fields.DashCDMax, Fields.DashCDRange
-        };
-
-        public static bool CanModify(string fieldName) => ValidFields.Contains(fieldName);
-
-        // ========== 延迟修改接口 ==========
-
-        public static void ModifyDelayed(CharacterMainControl character, string fieldPath, float value, bool multiply = false)
+        public static void ModifyDelayed(CharacterMainControl character, string fieldPath, float value,
+            bool multiply = false)
         {
             if (character == null) return;
 
@@ -98,16 +103,11 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             }
 
             _pendingModifications[character].Add(new PendingModification
-            {
-                FieldPath = fieldPath,
-                Value = value,
-                Multiply = multiply
-            });
+                { FieldPath = fieldPath, Value = value, Multiply = multiply });
 
             if (!_processingCharacters.Contains(character))
             {
                 _processingCharacters.Add(character);
-
                 if (character.gameObject.activeInHierarchy)
                     character.StartCoroutine(ApplyPendingModifications(character));
                 else if (character.GetComponent<ModificationApplier>() == null)
@@ -115,23 +115,19 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             }
         }
 
-        // ========== 立即修改接口 ==========
-
-        public static void ModifyImmediate(CharacterMainControl character, string fieldPath, float value, bool multiply = false)
-        {
-            var ai = GetAI(character);
-            if (ai != null) ApplyModification(ai, fieldPath, value, multiply);
-        }
-
         private static IEnumerator ApplyPendingModifications(CharacterMainControl character)
         {
             yield return new WaitForEndOfFrame();
+
             var ai = GetAI(character);
             if (ai != null && _pendingModifications.TryGetValue(character, out var list))
             {
                 foreach (var mod in list)
-                    ApplyModification(ai, mod.FieldPath, mod.Value, mod.Multiply);
+                {
+                    ApplyInternal(ai, mod.FieldPath, mod.Value, mod.Multiply);
+                }
             }
+
             if (character != null)
             {
                 _pendingModifications.Remove(character);
@@ -139,17 +135,13 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
             }
         }
 
-        // ========== 核心核心逻辑：处理分量和类型映射 ==========
-
-        private static void ApplyModification(object target, string fieldPath, float value, bool multiply)
+        private static void ApplyInternal(AICharacterController ai, string fieldPath, float value, bool multiply)
         {
             try
             {
-                Type type = target.GetType();
                 string fieldName = fieldPath;
-                int componentIndex = -1; // -1: 原生, 0: x, 1: y
+                int componentIndex = -1;
 
-                // 路径解析 (支持 field.x 语法)
                 if (fieldPath.Contains("."))
                 {
                     string[] parts = fieldPath.Split('.');
@@ -157,39 +149,41 @@ namespace EliteEnemies.EliteEnemy.AttributeModifier
                     componentIndex = parts[1].ToLower() == "x" ? 0 : 1;
                 }
 
-                FieldInfo field = type.GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.IgnoreCase);
-                if (field == null) return;
+                if (!_fieldCache.TryGetValue(fieldName, out FieldInfo fInfo))
+                {
+                    fInfo = typeof(AICharacterController).GetField(fieldName,
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    _fieldCache[fieldName] = fInfo;
+                }
 
-                // 1. 处理 Vector2 及其子组件
-                if (field.FieldType == typeof(Vector2))
+                if (fInfo == null) return;
+
+                if (fInfo.FieldType == typeof(Vector2))
                 {
-                    Vector2 v2 = (Vector2)field.GetValue(target);
-                    if (componentIndex == 0) v2.x = multiply ? v2.x * value : value;
-                    else if (componentIndex == 1) v2.y = multiply ? v2.y * value : value;
-                    else v2 = multiply ? v2 * value : new Vector2(value, value);
-                    field.SetValue(target, v2);
+                    Vector2 v = (Vector2)fInfo.GetValue(ai);
+                    if (componentIndex == 0) v.x = multiply ? v.x * value : value;
+                    else if (componentIndex == 1) v.y = multiply ? v.y * value : value;
+                    else v = multiply ? v * value : new Vector2(value, value);
+                    fInfo.SetValue(ai, v);
                 }
-                // 2. 处理 Float
-                else if (field.FieldType == typeof(float))
+                else if (fInfo.FieldType == typeof(float))
                 {
-                    float current = (float)field.GetValue(target);
-                    field.SetValue(target, multiply ? current * value : value);
+                    float current = (float)fInfo.GetValue(ai);
+                    fInfo.SetValue(ai, multiply ? current * value : value);
                 }
-                // 3. 恢复 Int 处理逻辑 (修复旧词条失效的关键)
-                else if (field.FieldType == typeof(int))
+                else if (fInfo.FieldType == typeof(bool))
                 {
-                    int current = (int)field.GetValue(target);
-                    field.SetValue(target, multiply ? Mathf.RoundToInt(current * value) : Mathf.RoundToInt(value));
+                    fInfo.SetValue(ai, value > 0.5f);
                 }
-                // 4. 处理 Bool
-                else if (field.FieldType == typeof(bool))
+                else if (fInfo.FieldType == typeof(int))
                 {
-                    field.SetValue(target, value > 0.5f);
+                    int current = (int)fInfo.GetValue(ai);
+                    fInfo.SetValue(ai, multiply ? Mathf.RoundToInt(current * value) : Mathf.RoundToInt(value));
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"{LogTag} 修改 '{fieldPath}' 失败: {ex.Message}");
+                Debug.LogWarning($"{LogTag} 反射修改字段 '{fieldPath}' 失败: {ex.Message}");
             }
         }
     }

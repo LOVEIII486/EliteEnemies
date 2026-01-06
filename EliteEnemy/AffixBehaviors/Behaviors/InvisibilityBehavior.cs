@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using EliteEnemies.EliteEnemy.AttributeModifier;
 using EliteEnemies.Localization;
-using UnityEngine;
 using ItemStatsSystem.Stats;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
@@ -65,17 +63,13 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         /// </summary>
         private void EnhanceAIBehavior(CharacterMainControl enemy)
         {
-            // --- Stat 修改 ---
-            StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewDistance, 0.5f, ModifierType.PercentageMultiply);
-            StatModifier.AddModifier(enemy, StatModifier.Attributes.ViewAngle, 0.3f, ModifierType.PercentageMultiply);
-            StatModifier.AddModifier(enemy, StatModifier.Attributes.HearingAbility, 0.5f, ModifierType.PercentageMultiply);
-            
-            StatModifier.AddModifier(enemy, StatModifier.Attributes.TurnSpeed, 0.3f, ModifierType.PercentageMultiply);
-            StatModifier.AddModifier(enemy, StatModifier.Attributes.AimTurnSpeed, 0.5f, ModifierType.PercentageMultiply);
-
-            // --- AI 字段修改 ---
-            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.CanDash, 1f, false);
-            AIFieldModifier.ModifyDelayed(enemy, AIFieldModifier.Fields.ShootCanMove, 1f, false);
+            Modify(enemy, StatModifier.Attributes.ViewDistance, 1.5f, true);
+            Modify(enemy, StatModifier.Attributes.ViewAngle, 1.3f, true);
+            Modify(enemy, StatModifier.Attributes.HearingAbility, 1.5f, true);
+            Modify(enemy, StatModifier.Attributes.TurnSpeed, 1.3f, true);
+            Modify(enemy, StatModifier.Attributes.AimTurnSpeed, 1.5f, true);
+            Modify(enemy, AIFieldModifier.Fields.CanDash, 1f, false);
+            Modify(enemy, AIFieldModifier.Fields.ShootCanMove, 1f, false);
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
@@ -190,9 +184,11 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public override void OnCleanup(CharacterMainControl character)
         {
+            ClearBaseModifiers(character);
+            
             if (character != null)
             {
-                character.Show(); // 确保死后或移除时可见
+                character.Show();
             }
             
             _isActive = false;

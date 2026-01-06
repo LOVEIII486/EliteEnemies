@@ -82,7 +82,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
             }
 
             // 2. 绑定攻击事件
-            // 监听敌人的射击事件（适用于远程攻击）
+            // 监听敌人的射击事件
             _shootHandler = OnShootHandler;
             _character.OnShootEvent += OnShootHandlerWrapper;
 
@@ -210,7 +210,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
         }
         
         /// <summary>
-        /// 检查是否拥有某种行为（新增方法，修复编译错误）
+        /// 检查是否拥有某种行为
         /// </summary>
         public bool HasBehavior<T>() where T : IAffixBehavior
         {

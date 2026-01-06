@@ -5,7 +5,7 @@ using EliteEnemies.Localization;
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 {
     /// <summary>
-    /// 词缀：弹匣诅咒（Magazine Curse）
+    /// 词缀：弹匣诅咒
     /// </summary>
     public class MagazineCurseBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {

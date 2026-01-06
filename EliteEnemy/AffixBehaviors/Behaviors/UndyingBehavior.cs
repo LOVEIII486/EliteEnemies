@@ -37,13 +37,11 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _triggered = false;
             _isInvincible = false;
             
-            // 监听全局受伤事件 (Health.OnHurt 是静态事件)
             Health.OnHurt += OnGlobalHealthHurt;      
         }
 
         private void OnGlobalHealthHurt(Health health, DamageInfo damageInfo)
         {           
-            // 过滤：只处理自己的受伤事件
             if (_triggered || _owner == null || health != _owner.Health) return;
             
             float threshold = health.MaxHealth * ThresholdRatio;
@@ -57,29 +55,26 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private void TriggerUndying(Health health)
         {
             _triggered = true;
-            
-            // 1. 锁血回血
+    
             float targetHp = health.MaxHealth * HealTargetRatio;
             if (health.CurrentHealth < targetHp)
             {
                 health.SetHealth(targetHp);
             }
-            
-            // 2. 开启无敌
+    
             _originalInvincibleState = health.Invincible; 
             _isInvincible = true;
             _invincibleEndTime = Time.time + InvincibleDuration;
             health.SetInvincible(true);
-            
+    
             _owner.PopText(_popLineStart.Value);
-            
-            AIFieldModifier.ModifyImmediate(_owner, AIFieldModifier.Fields.ShootCanMove, 1f, false);
-            AIFieldModifier.ModifyImmediate(_owner, AIFieldModifier.Fields.CanDash, 1f, false);
+    
+            Modify(_owner, AIFieldModifier.Fields.ShootCanMove, 1f, false);
+            Modify(_owner, AIFieldModifier.Fields.CanDash, 1f, false);
         }
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            // 处理无敌倒计时
             if (_isInvincible)
             {
                 if (Time.time >= _invincibleEndTime)
@@ -104,9 +99,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public override void OnCleanup(CharacterMainControl character)
         {
+            ClearBaseModifiers(character);
+
             Health.OnHurt -= OnGlobalHealthHurt;
             
-            // 确保退出时移除无敌状态
             if (_isInvincible && character != null && character.Health != null)
             {
                 character.Health.SetInvincible(_originalInvincibleState);
@@ -115,11 +111,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             _owner = null;
             _isInvincible = false;
             _triggered = false;
-        }
-
-        public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
-        {
-            OnCleanup(character);
         }
     }
 }

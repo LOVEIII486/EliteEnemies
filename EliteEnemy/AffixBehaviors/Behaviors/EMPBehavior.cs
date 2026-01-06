@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using Duckov.Buffs;
+﻿using Duckov.Buffs;
 using EliteEnemies.EliteEnemy.BuffsSystem;
 
 namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors

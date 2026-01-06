@@ -1,6 +1,6 @@
 ﻿using System;
 using Duckov.Buffs;
-using ItemStatsSystem.Stats;
+using EliteEnemies.EliteEnemy.AttributeModifier;
 using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
@@ -10,37 +10,29 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
     /// </summary>
     public class DistortionEffect : IEliteBuffEffect
     {
-        private const string LogTag = "[EliteEnemies.DistortionEffect]";
         public string BuffName => "EliteBuff_Distortion";
-        
-        private static readonly float BulletSpeedReduction = -0.7f;
+        private static readonly float BulletSpeedReduction = -0.7f; // 减少 70% 速度
         
         public void OnBuffSetup(Buff buff, CharacterMainControl player)
         {
-            if (player == null || player.CharacterItem == null)
-            {
-                Debug.LogWarning($"{LogTag} 玩家或CharacterItem为null");
-                return;
-            }
+            if (player == null) return;
 
             try
             {
                 int buffId = buff.GetInstanceID();
                 
-                var bulletSpeedStat = player.CharacterItem.GetStat("BulletSpeedMultiplier");
-                if (bulletSpeedStat != null)
-                {
-                    var bulletSpeedMod = new Modifier(ModifierType.PercentageMultiply, BulletSpeedReduction, player);
-                    bulletSpeedStat.AddModifier(bulletSpeedMod);
-                    EliteBuffModifierManager.Instance.TrackModifier(buffId, bulletSpeedStat, bulletSpeedMod);
-                }
+                EliteBuffModifierManager.Instance.ApplyAndTrack(
+                    player, 
+                    buff, 
+                    StatModifier.Attributes.BulletSpeedMultiplier, 
+                    BulletSpeedReduction
+                );
 
                 BulletDeflectionTracker.Instance.RegisterDistortedPlayer(player, buffId);
-                
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 应用效果失败: {ex.Message}\n{ex.StackTrace}");
+                Debug.LogError($"[DistortionEffect] 应用失败: {ex.Message}");
             }
         }
 
@@ -55,7 +47,7 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 清理效果失败: {ex.Message}\n{ex.StackTrace}");
+                Debug.LogError($"[DistortionEffect] 清理失败: {ex.Message}");
             }
         }
     }

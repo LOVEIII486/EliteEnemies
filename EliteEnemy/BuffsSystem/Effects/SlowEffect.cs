@@ -1,28 +1,21 @@
 ﻿using Duckov.Buffs;
-using ItemStatsSystem.Stats;
+using EliteEnemies.EliteEnemy.AttributeModifier;
 
 namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
 {
     public class SlowEffect : IEliteBuffEffect
     {
         public string BuffName => "EliteBuff_Slow";
-        private static readonly float WalkSpeedReduction = -0.5f;
-        private static readonly float RunSpeedReduction = -0.5f;
+        private static readonly float SpeedReduction = -0.5f; // 降低 50% 速度
 
         public void OnBuffSetup(Buff buff, CharacterMainControl player)
         {
-            int buffId = buff.GetInstanceID();
-            
-            var walkStat = player.CharacterItem.GetStat("WalkSpeed");
-            var walkMod = new Modifier(ModifierType.PercentageMultiply, WalkSpeedReduction, player);
-            walkStat.AddModifier(walkMod);
-            
-            var runStat = player.CharacterItem.GetStat("RunSpeed");
-            var runMod = new Modifier(ModifierType.PercentageMultiply, RunSpeedReduction, player);
-            runStat.AddModifier(runMod);
+            if (player == null) return;
 
-            EliteBuffModifierManager.Instance.TrackModifier(buffId, walkStat, walkMod);
-            EliteBuffModifierManager.Instance.TrackModifier(buffId, runStat, runMod);
+            var manager = EliteBuffModifierManager.Instance;
+
+            manager.ApplyAndTrack(player, buff, StatModifier.Attributes.WalkSpeed, SpeedReduction);
+            manager.ApplyAndTrack(player, buff, StatModifier.Attributes.RunSpeed, SpeedReduction);
         }
 
         public void OnBuffDestroy(Buff buff, CharacterMainControl player)

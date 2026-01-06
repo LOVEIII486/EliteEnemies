@@ -215,10 +215,13 @@ namespace EliteEnemies.EliteEnemy.Core
         {
             if (!cmc) return;
 
+            // 1. 计算所有词缀带来的总属性倍率 (hp, dmg, spd 均为最终倍率，如 2.0)
             AccumulateFromAffixes(affixes, out float hp, out float dmg, out float spd);
-            AttributeModifier.AttributeModifier.Quick.ModifyHealth(cmc, hp, healToFull: true);
-            AttributeModifier.AttributeModifier.Quick.ModifyDamage(cmc, dmg);
-            AttributeModifier.AttributeModifier.Quick.ModifySpeed(cmc, spd);
+            
+            // 2. 应用基础属性加成
+            AttributeModifier.AttributeModifier.Quick.ApplyElitePowerup(cmc, hp, dmg, spd, "EliteBaseStats");
+
+            // 3. 执行精英化标记逻辑
             TagAsElite(cmc, new List<string>(affixes), ResolveBaseName(cmc));
         }
 

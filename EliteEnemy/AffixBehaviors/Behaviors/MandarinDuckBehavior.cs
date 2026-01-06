@@ -30,7 +30,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
         private float _currentAngle = 0f;
         private bool _hasSpawned = false;
         
-        // 仅保留后缀文本的本地化获取
         private readonly Lazy<string> _partnerSuffix = new(() => 
             LocalizationManager.GetText("Affix_MandarinDuck_MateSuffix") ?? "Partner");
         private string PartnerSuffix => _partnerSuffix.Value;
@@ -119,7 +118,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             
             CharacterMainControl source = damageInfo.fromCharacter;
             
-            // 如果伤害来源是自己（防止循环伤害），设为空
+            // 如果伤害来源是自己，设为空
             if (source == _self) source = null;
 
             DamageInfo sharedDmg = new DamageInfo(source)
@@ -139,23 +138,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
         }
 
-        public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
-        {
-            if (_partner != null && _partner.Health.CurrentHealth > 0)
-            {
-                var agent = _partner.GetComponent<UnityEngine.AI.NavMeshAgent>();
-                if (agent) 
-                {
-                    agent.enabled = true;
-                    // 伴侣在本体死后恢复自由，尝试将其放回导航网格表面
-                    if (UnityEngine.AI.NavMesh.SamplePosition(_partner.transform.position, out var hit, 5.0f, UnityEngine.AI.NavMesh.AllAreas))
-                    {
-                        _partner.transform.position = hit.position;
-                    }
-                }
-            }
-        }
-
+        public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) { }
+        
         public override void OnCleanup(CharacterMainControl character)
         {
             _self = null;

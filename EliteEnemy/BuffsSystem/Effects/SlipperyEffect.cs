@@ -2,7 +2,6 @@
 using Duckov.Buffs;
 using EliteEnemies.EliteEnemy.AttributeModifier;
 using EliteEnemies.Localization;
-using ItemStatsSystem.Stats;
 using UnityEngine;
 
 namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
@@ -25,41 +24,24 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
 
         public void OnBuffSetup(Buff buff, CharacterMainControl player)
         {
-            if (player == null || player.CharacterItem == null)
-            {
-                Debug.LogWarning($"{LogTag} 玩家或CharacterItem为null");
-                return;
-            }
+            if (player == null) return;
 
             try
             {
-                int buffId = buff.GetInstanceID();
+                var manager = EliteBuffModifierManager.Instance;
 
-                ApplyAndTrack(player, buffId, StatModifier.Attributes.WalkAcc, AccReduction);
-                ApplyAndTrack(player, buffId, StatModifier.Attributes.RunAcc, AccReduction);
-                ApplyAndTrack(player, buffId, StatModifier.Attributes.WalkSpeed, SpeedMultiplier*2);
-                ApplyAndTrack(player, buffId, StatModifier.Attributes.RunSpeed, SpeedMultiplier);
+                manager.ApplyAndTrack(player, buff, StatModifier.Attributes.WalkAcc, AccReduction);
+                manager.ApplyAndTrack(player, buff, StatModifier.Attributes.RunAcc, AccReduction);
+
+                // WalkSpeed 增加 40% (即 1.4x)，RunSpeed 降低 30% (即 0.7x)
+                manager.ApplyAndTrack(player, buff, StatModifier.Attributes.WalkSpeed, SpeedMultiplier * 2 - 1f); 
+                manager.ApplyAndTrack(player, buff, StatModifier.Attributes.RunSpeed, SpeedMultiplier - 1f);
+
                 player.PopText(_slipperyPopText.Value);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 应用效果失败: {ex.Message}\n{ex.StackTrace}");
-            }
-        }
-
-        private void ApplyAndTrack(CharacterMainControl player, int buffId, string statName, float value)
-        {
-            var modifier = StatModifier.AddModifier(
-                player,
-                statName,
-                value,
-                ModifierType.PercentageMultiply
-            );
-
-            if (modifier != null)
-            {
-                var stat = player.CharacterItem.GetStat(statName);
-                EliteBuffModifierManager.Instance.TrackModifier(buffId, stat, modifier);
+                Debug.LogError($"{LogTag} 应用效果失败: {ex.Message}");
             }
         }
 
@@ -72,7 +54,7 @@ namespace EliteEnemies.EliteEnemy.BuffsSystem.Effects
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 清理效果失败: {ex.Message}\n{ex.StackTrace}");
+                Debug.LogError($"{LogTag} 清理效果失败: {ex.Message}");
             }
         }
     }
