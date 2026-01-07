@@ -35,7 +35,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             GameplayDataSettings.Buffs.Electric, // Electric
             GameplayDataSettings.Buffs.Burn, // Burning
             GameplayDataSettings.Buffs.Space, // Space
-            GameplayDataSettings.Buffs.Cold
             // 这三个不会自动取消
             // TryAdd(GameplayDataSettings.Buffs.Weight_Overweight);          // Weight 
             // TryAdd(GameplayDataSettings.Buffs.Starve);            // Starve
@@ -72,11 +71,14 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         public override void OnEliteDeath(CharacterMainControl c, DamageInfo dmg)
         {
-            foreach (var buff in NegativeDebuffs)
+            var player = CharacterMainControl.Main;
+            if (player == null) return;
+
+            foreach (var buffPrefab in NegativeDebuffs)
             {
-                if (buff)
+                if (buffPrefab != null)
                 {
-                    CharacterMainControl.Main.RemoveBuffsByTag(buff.ExclusiveTag, false);
+                    player.RemoveBuff(buffPrefab.ID, false);
                 }
             }
         }
