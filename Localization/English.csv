@@ -111,7 +111,7 @@ Affix_Collector_Description,Drops collectibles.,2.3,AffixDescription
 Affix_Gunsmith_Name,Gunsmith,2.3,AffixNames
 Affix_Gunsmith_Description,Drops firearm accessories.,2.3,AffixDescription
 Affix_MimicTear_Name,Mimic Tear,2.3,AffixNames
-Affix_MimicTear_Description,Copies the player's main-hand weapon and gear (will not drop).,2.3,AffixDescription
+Affix_MimicTear_Description,Copy the player's main-hand weapon and equipment (one copy may randomly drop).,2.3,AffixDescription
 Affix_Sticky_Name,Sticky,2.3,AffixNames
 Affix_Sticky_Description,"On first hit, makes the player drop the currently equipped weapon; drops tape and universal glue on death.",2.3,AffixDescription
 Affix_Sticky_PopText_1,Got stuck!,2.3,AffixBehavior

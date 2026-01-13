@@ -739,12 +739,14 @@
       <Content Include="Workshop\info.ini" />
       <Content Include="Workshop\title\en.md" />
       <Content Include="Workshop\title\zh.md" />
+      <Content Include="Workshop\version.txt" />
       <Content Include="Workshop\词条统计.txt" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <PropertyGroup>
       <PostBuildEvent>copy /Y "$(TargetPath)" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\EliteEnemies.dll"
 copy /Y "$(ProjectDir)\Workshop\info.ini" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\info.ini"
+copy /Y "$(ProjectDir)\Workshop\version.txt" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\version.txt"
 xcopy /Y /S /I "$(ProjectDir)Localization\*.csv" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\Localization\"</PostBuildEvent>
     </PropertyGroup>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

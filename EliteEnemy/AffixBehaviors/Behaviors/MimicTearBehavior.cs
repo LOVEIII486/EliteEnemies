@@ -231,25 +231,46 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             Modify(enemy, AIFieldModifier.Fields.ShootCanMove, 1.0f, false);
             Modify(enemy, AIFieldModifier.Fields.CanDash, 1.0f, false);
         }
-
+        
+        // 改为只随机保留一件物品，其他全部销毁
         private void ClearAllDrops(CharacterMainControl c)
         {
             if (c?.CharacterItem == null) return;
             try
             {
-                List<Item> itemsToDestroy = new List<Item>();
+                List<Item> allItems = new List<Item>();
+                
                 if (c.CharacterItem.Inventory != null)
-                    itemsToDestroy.AddRange(c.CharacterItem.Inventory.Where(it => it != null));
-                if (c.CharacterItem.Slots != null)
-                    itemsToDestroy.AddRange(c.CharacterItem.Slots.Where(s => s?.Content != null).Select(s => s.Content));
-                foreach (var it in itemsToDestroy)
                 {
-                    it.DestroyTree();
+                    allItems.AddRange(c.CharacterItem.Inventory.Where(it => it != null));
+                }
+                
+                if (c.CharacterItem.Slots != null)
+                {
+                    allItems.AddRange(c.CharacterItem.Slots.Where(s => s?.Content != null).Select(s => s.Content));
+                }
+
+                allItems = allItems.Distinct().ToList();
+
+                if (allItems.Count > 0)
+                {
+                    int luckyIndex = UnityEngine.Random.Range(0, allItems.Count);
+                    Item luckyItem = allItems[luckyIndex];
+
+                    foreach (var it in allItems)
+                    {
+                        if (it != luckyItem)
+                        {
+                            it.DestroyTree();
+                        }
+                    }
+                    
+                    //Debug.Log($"{LogTag} 仿身泪滴已销毁 {allItems.Count - 1} 件物品，仅保留: {luckyItem.DisplayName}");
                 }
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"{LogTag} 清除掉落异常: " + e.Message);
+                Debug.LogWarning($"{LogTag} 掉落逻辑处理异常: " + e.Message);
             }
         }
 

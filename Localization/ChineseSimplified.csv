@@ -111,7 +111,7 @@ Affix_Collector_Description,掉落各种收藏品,2.3,AffixDescription
 Affix_Gunsmith_Name,枪匠,2.3,AffixNames
 Affix_Gunsmith_Description,掉落枪械配件,2.3,AffixDescription
 Affix_MimicTear_Name,仿身泪滴,2.3,AffixNames
-Affix_MimicTear_Description,复制玩家主手武器与装备（不会掉落）,2.3,AffixDescription
+Affix_MimicTear_Description,复制玩家主手武器与装备（概率随机掉落一件复制品）,2.3,AffixDescription
 Affix_Sticky_Name,粘性,2.3,AffixNames
 Affix_Sticky_Description,首次受击会使玩家掉落当前装备的武器，击杀掉落胶带与万能胶,2.3,AffixDescription
 Affix_Sticky_PopText_1,黏住啦！,2.3,AffixBehavior
