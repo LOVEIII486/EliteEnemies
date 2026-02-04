@@ -39,7 +39,6 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
             else
             {
-                // 稍微前移一点点，避免与枪模型重叠
                 muzzlePos += Vector3.up * 0.1f;
             }
 
@@ -59,8 +58,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             }
 
             // 5. 发射偏转子弹
-            SpawnBullet(character, currentGun, muzzlePos, baseDirection, -25f);
-            SpawnBullet(character, currentGun, muzzlePos, baseDirection, 25f);
+            SpawnBullet(character, currentGun, muzzlePos, baseDirection, -18f);
+            SpawnBullet(character, currentGun, muzzlePos, baseDirection, 18f);
         }
 
         private void SpawnBullet(CharacterMainControl shooter, ItemSetting_Gun gun, Vector3 origin, Vector3 baseDir,
