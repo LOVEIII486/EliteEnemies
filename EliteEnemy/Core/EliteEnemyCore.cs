@@ -199,6 +199,18 @@ namespace EliteEnemies.EliteEnemy.Core
                 {
                     "EnemyPreset_JLab_Melee_Invisable"
                 },
+                ["MandarinDuck"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "EnemyPreset_GunTurret"
+                },
+                ["Guardian"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "EnemyPreset_GunTurret"
+                },
+                ["Slime"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "EnemyPreset_GunTurret"
+                }
             };
         
         public static readonly HashSet<string> UIHiddenPresets = new HashSet<string> 
