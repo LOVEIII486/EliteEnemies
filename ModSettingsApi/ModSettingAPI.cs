@@ -4,15 +4,16 @@ using System.Linq;
 using System.Reflection;
 using Duckov.Modding;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Debug = UnityEngine.Debug;
 
 namespace EliteEnemies.ModSettingsApi
 {
-    public static class ModSettingAPI {
+    public static class ModSettingAPI
+    {
         private const string ADD_DROP_DOWN_LIST = "AddDropDownList";
         private const string ADD_SLIDER = "AddSlider";
         private const string ADD_TOGGLE = "AddToggle";
-        private const string ADD_KEYBINDING = "AddKeybinding";
         private const string GET_VALUE = "GetValue";
         private const string SET_VALUE = "SetValue";
         private const string REMOVE_UI = "RemoveUI";
@@ -23,8 +24,9 @@ namespace EliteEnemies.ModSettingsApi
         private const string ADD_KEYBINDING_WITH_DEFAULT = "AddKeybindingWithDefault";
         private const string ADD_BUTTON = "AddButton";
         private const string ADD_GROUP = "AddGroup";
-        private static float Version = 0.4f;
-        private static readonly Version VERSION = new Version(0, 4, 0);
+        private const string ADD_KEYBINDING_WITH_KEY = "AddKeybindingWithKey";
+        private const string CLEAR = "Clear";
+        private static readonly Version VERSION = new Version(0, 5, 0);
         public const string MOD_NAME = "ModSetting";
         private const string TYPE_NAME = "ModSetting.ModBehaviour";
         private static Type modBehaviour;
@@ -35,11 +37,11 @@ namespace EliteEnemies.ModSettingsApi
         // 缓存委托避免重复反射
         private static Dictionary<string, Delegate> methodCache = new Dictionary<string, Delegate>();
 
-        private static readonly string[] methodNames = new[] {
+        private static readonly string[] methodNames = new[]
+        {
             ADD_DROP_DOWN_LIST,
             ADD_SLIDER,
             ADD_TOGGLE,
-            ADD_KEYBINDING,
             GET_VALUE,
             SET_VALUE,
             REMOVE_UI,
@@ -49,7 +51,9 @@ namespace EliteEnemies.ModSettingsApi
             GET_SAVED_VALUE,
             ADD_KEYBINDING_WITH_DEFAULT,
             ADD_BUTTON,
-            ADD_GROUP
+            ADD_GROUP,
+            ADD_KEYBINDING_WITH_KEY,
+            CLEAR,
         };
 
         /// <summary>
@@ -57,21 +61,26 @@ namespace EliteEnemies.ModSettingsApi
         /// </summary>
         /// <param name="modInfo">mod信息</param>
         /// <returns>是否成功初始化</returns>
-        public static bool Init(ModInfo modInfo) {
+        public static bool Init(ModInfo modInfo)
+        {
             if (IsInit) return true;
-            if (modInfo.name == MOD_NAME) {
+            if (modInfo.name == MOD_NAME)
+            {
                 Debug.LogError("初始化失败，不能使用ModSetting的info进行初始化");
                 return false;
             }
+
             ModSettingAPI.modInfo = modInfo;
             modBehaviour = FindTypeInAssemblies(TYPE_NAME);
             if (modBehaviour == null) return false;
             VersionAvailable();
-            foreach (string methodName in methodNames) {
+            foreach (string methodName in methodNames)
+            {
                 MethodInfo[] methodInfos = modBehaviour.GetMethods(BindingFlags.Public | BindingFlags.Static)
                     .Where(m => m.Name == methodName)
                     .ToArray();
-                if (methodInfos.Length == 0) {
+                if (methodInfos.Length == 0)
+                {
                     Debug.LogError($"{methodName}方法找不到");
                     return false;
                 }
@@ -91,13 +100,19 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="onValueChange">值改变时的回调函数</param>
         /// <returns></returns>
         public static bool AddDropdownList(string key, string description,
-            List<string> options, string defaultValue, Action<string> onValueChange = null) {
+            List<string> options, string defaultValue, Action<string> onValueChange = null)
+        {
             if (!Available(key)) return false;
             Type delegateType = typeof(Action<ModInfo, string, string, List<string>, string, Action<string>>);
             return InvokeMethod(ADD_DROP_DOWN_LIST,
                 ADD_DROP_DOWN_LIST,
                 new object[] { modInfo, key, description, options, defaultValue, onValueChange },
-                delegateType);
+                delegateType,
+                new[]
+                {
+                    typeof(ModInfo), typeof(string), typeof(string), typeof(List<string>), typeof(string),
+                    typeof(Action<string>)
+                });
         }
 
         /// <summary>
@@ -113,9 +128,11 @@ namespace EliteEnemies.ModSettingsApi
         /// <returns></returns>
         public static bool AddSlider(string key, string description,
             float defaultValue, Vector2 sliderRange, Action<float> onValueChange = null, int decimalPlaces = 1,
-            int characterLimit = 5) {
+            int characterLimit = 5)
+        {
             if (!Available(key)) return false;
-            Type[] paramTypes = {
+            Type[] paramTypes =
+            {
                 typeof(ModInfo), typeof(string), typeof(string),
                 typeof(float), typeof(Vector2), typeof(Action<float>), typeof(int), typeof(int)
             };
@@ -123,7 +140,9 @@ namespace EliteEnemies.ModSettingsApi
             return InvokeMethod(ADD_SLIDER + "Float",
                 ADD_SLIDER,
                 new object[]
-                    { modInfo, key, description, defaultValue, sliderRange, onValueChange, decimalPlaces, characterLimit },
+                {
+                    modInfo, key, description, defaultValue, sliderRange, onValueChange, decimalPlaces, characterLimit
+                },
                 delegateType,
                 paramTypes);
         }
@@ -140,9 +159,11 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="characterLimit">输入字符限制</param>
         /// <returns></returns>
         public static bool AddSlider(string key, string description,
-            int defaultValue, int minValue, int maxValue, Action<int> onValueChange = null, int characterLimit = 5) {
+            int defaultValue, int minValue, int maxValue, Action<int> onValueChange = null, int characterLimit = 5)
+        {
             if (!Available(key)) return false;
-            Type[] paramTypes = {
+            Type[] paramTypes =
+            {
                 typeof(ModInfo), typeof(string), typeof(string),
                 typeof(int), typeof(int), typeof(int), typeof(Action<int>), typeof(int)
             };
@@ -163,30 +184,14 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="onValueChange">值改变时的回调函数</param>
         /// <returns></returns>
         public static bool AddToggle(string key, string description,
-            bool enable, Action<bool> onValueChange = null) {
+            bool enable, Action<bool> onValueChange = null)
+        {
             if (!Available(key)) return false;
-            Type delegateType = typeof(Action<ModInfo, string, string, bool, Action<bool>>);
             return InvokeMethod(ADD_TOGGLE,
                 ADD_TOGGLE,
                 new object[] { modInfo, key, description, enable, onValueChange },
-                delegateType);
-        }
-
-        /// <summary>
-        /// 添加一个按键绑定控件，默认值None
-        /// </summary>
-        /// <param name="key">控件key</param>
-        /// <param name="description">描述文本</param>
-        /// <param name="keyCode">当前值</param>
-        /// <param name="onValueChange">值改变时的回调函数</param>
-        /// <returns></returns>
-        public static bool AddKeybinding(string key, string description,
-            KeyCode keyCode, Action<KeyCode> onValueChange = null) {
-            if (!Available(key)) return false;
-            return InvokeMethod(ADD_KEYBINDING,
-                ADD_KEYBINDING,
-                new object[] { modInfo, key, description, keyCode, onValueChange },
-                typeof(Action<ModInfo, string, string, KeyCode, Action<KeyCode>>));
+                typeof(Action<ModInfo, string, string, bool, Action<bool>>),
+                new[] { typeof(ModInfo), typeof(string), typeof(string), typeof(bool), typeof(Action<bool>) });
         }
 
         /// <summary>
@@ -199,12 +204,32 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="onValueChange">值改变时的回调函数</param>
         /// <returns></returns>
         public static bool AddKeybinding(string key, string description,
-            KeyCode keyCode, KeyCode defaultKeyCode, Action<KeyCode> onValueChange = null) {
+            KeyCode keyCode, KeyCode defaultKeyCode = KeyCode.None, Action<KeyCode> onValueChange = null)
+        {
             if (!Available(key)) return false;
             return InvokeMethod(ADD_KEYBINDING_WITH_DEFAULT,
                 ADD_KEYBINDING_WITH_DEFAULT,
                 new object[] { modInfo, key, description, keyCode, defaultKeyCode, onValueChange },
-                typeof(Action<ModInfo, string, string, KeyCode, KeyCode, Action<KeyCode>>));
+                typeof(Action<ModInfo, string, string, KeyCode, KeyCode, Action<KeyCode>>),
+                new[]
+                {
+                    typeof(ModInfo), typeof(string), typeof(string), typeof(KeyCode), typeof(KeyCode),
+                    typeof(Action<KeyCode>)
+                });
+        }
+
+        public static bool AddKeybinding(string key, string description,
+            Key currentKey, Key defaultKey, Action<Key> onValueChange = null)
+        {
+            if (!Available(key)) return false;
+            return InvokeMethod(ADD_KEYBINDING_WITH_KEY,
+                ADD_KEYBINDING_WITH_KEY,
+                new object[] { modInfo, key, description, currentKey, defaultKey, onValueChange },
+                typeof(Action<ModInfo, string, string, Key, Key, Action<Key>>),
+                new[]
+                {
+                    typeof(ModInfo), typeof(string), typeof(string), typeof(Key), typeof(Key), typeof(Action<Key>)
+                });
         }
 
         /// <summary>
@@ -217,12 +242,17 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="onValueChange">值改变时的回调函数</param>
         /// <returns></returns>
         public static bool AddInput(string key, string description,
-            string defaultValue, int characterLimit = 40, Action<string> onValueChange = null) {
+            string defaultValue, int characterLimit = 40, Action<string> onValueChange = null)
+        {
             if (!Available(key)) return false;
             return InvokeMethod(ADD_INPUT,
                 ADD_INPUT,
                 new object[] { modInfo, key, description, defaultValue, characterLimit, onValueChange },
-                typeof(Action<ModInfo, string, string, string, int, Action<string>>));
+                typeof(Action<ModInfo, string, string, string, int, Action<string>>),
+                new[]
+                {
+                    typeof(ModInfo), typeof(string), typeof(string), typeof(string), typeof(int), typeof(Action<string>)
+                });
         }
 
         /// <summary>
@@ -234,12 +264,14 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="onClickButton">点击时的回调函数</param>
         /// <returns></returns>
         public static bool AddButton(string key, string description,
-            string buttonText = "按钮", Action onClickButton = null) {
+            string buttonText = "按钮", Action onClickButton = null)
+        {
             if (!Available(key)) return false;
             return InvokeMethod(ADD_BUTTON,
                 ADD_BUTTON,
                 new object[] { modInfo, key, description, buttonText, onClickButton },
-                typeof(Action<ModInfo, string, string, string, Action>));
+                typeof(Action<ModInfo, string, string, string, Action>),
+                new[] { typeof(ModInfo), typeof(string), typeof(string), typeof(string), typeof(Action) });
         }
 
         /// <summary>
@@ -253,12 +285,18 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="open">是否默认展开</param>
         /// <returns></returns>
         public static bool AddGroup(string key, string description, List<string> keys,
-            float scale = 0.7f, bool topInsert = false, bool open = false) {
+            float scale = 0.7f, bool topInsert = false, bool open = false)
+        {
             if (!Available(key)) return false;
             return InvokeMethod(ADD_GROUP,
                 ADD_GROUP,
                 new object[] { modInfo, key, description, keys, scale, topInsert, open },
-                typeof(Action<ModInfo, string, string, List<string>, float, bool, bool>));
+                typeof(Action<ModInfo, string, string, List<string>, float, bool, bool>),
+                new[]
+                {
+                    typeof(ModInfo), typeof(string), typeof(string), typeof(List<string>), typeof(float), typeof(bool),
+                    typeof(bool)
+                });
         }
 
         /// <summary>
@@ -268,7 +306,8 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="callback">回调函数返回结果</param>
         /// <typeparam name="T">值类型</typeparam>
         /// <returns></returns>
-        public static bool GetValue<T>(string key, Action<T> callback = null) {
+        public static bool GetValue<T>(string key, Action<T> callback = null)
+        {
             if (!Available(key)) return false;
             MethodInfo methodInfo = GetStaticPublicMethodInfo(GET_VALUE);
             if (methodInfo == null) return false;
@@ -285,7 +324,8 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="callback">回调函数返回是否成功</param>
         /// <typeparam name="T">值类型</typeparam>
         /// <returns></returns>
-        public static bool SetValue<T>(string key, T value, Action<bool> callback = null) {
+        public static bool SetValue<T>(string key, T value, Action<bool> callback = null)
+        {
             if (!Available(key)) return false;
             MethodInfo methodInfo = GetStaticPublicMethodInfo(SET_VALUE);
             if (methodInfo == null) return false;
@@ -298,7 +338,8 @@ namespace EliteEnemies.ModSettingsApi
         /// 检查是否存在此mod的配置文件
         /// </summary>
         /// <returns></returns>
-        public static bool HasConfig() {
+        public static bool HasConfig()
+        {
             if (!Available()) return false;
             MethodInfo methodInfo = GetStaticPublicMethodInfo(HAS_CONFIG);
             if (methodInfo == null) return false;
@@ -312,7 +353,8 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="value">保存的值</param>
         /// <typeparam name="T">值类型</typeparam>
         /// <returns></returns>
-        public static bool GetSavedValue<T>(string key, out T value) {
+        public static bool GetSavedValue<T>(string key, out T value)
+        {
             value = default;
             if (!Available(key)) return false;
             MethodInfo methodInfo = GetStaticPublicMethodInfo(GET_SAVED_VALUE);
@@ -332,12 +374,14 @@ namespace EliteEnemies.ModSettingsApi
         /// <param name="key">控件key</param>
         /// <param name="callback">回调函数返回操作结果</param>
         /// <returns></returns>
-        public static bool RemoveUI(string key, Action<bool> callback = null) {
+        public static bool RemoveUI(string key, Action<bool> callback = null)
+        {
             if (!Available(key)) return false;
             return InvokeMethod(REMOVE_UI,
                 REMOVE_UI,
                 new object[] { modInfo, key, callback },
-                typeof(Action<ModInfo, string, Action<bool>>));
+                typeof(Action<ModInfo, string, Action<bool>>),
+                new[] { typeof(ModInfo), typeof(string), typeof(Action<bool>) });
         }
 
         /// <summary>
@@ -345,58 +389,86 @@ namespace EliteEnemies.ModSettingsApi
         /// </summary>
         /// <param name="callback">回调函数返回操作结果</param>
         /// <returns></returns>
-        public static bool RemoveMod(Action<bool> callback = null) {
+        public static bool RemoveMod(Action<bool> callback = null)
+        {
             if (!Available()) return false;
-            Type delegateType = typeof(Action<ModInfo, Action<bool>>);
-            return InvokeMethod(REMOVE_MOD, REMOVE_MOD, new object[] { modInfo, callback }, delegateType);
+            return InvokeMethod(REMOVE_MOD,
+                REMOVE_MOD,
+                new object[] { modInfo, callback },
+                typeof(Action<ModInfo, Action<bool>>),
+                new[] { typeof(ModInfo), typeof(Action<bool>) });
         }
 
-        private static bool Available() {
+        /// <summary>
+        /// 移除所有UI，不包括标题，用于切换语言更新UI
+        /// </summary>
+        /// <param name="callback">回调函数返回操作结果</param>
+        /// <returns></returns>
+        public static bool Clear(Action<bool> callback = null)
+        {
+            if (!Available()) return false;
+            return InvokeMethod(CLEAR,
+                CLEAR,
+                new object[] { modInfo, callback },
+                typeof(Action<ModInfo, Action<bool>>),
+                new[] { typeof(ModInfo), typeof(Action<bool>) });
+        }
+
+        private static bool Available()
+        {
             return IsInit && modInfo.displayName != null && modInfo.name != null;
         }
 
-        private static bool Available(string key) {
+        private static bool Available(string key)
+        {
             return IsInit && modInfo.displayName != null && modInfo.name != null && key != null;
         }
 
-        private static bool VersionAvailable() {
+        private static bool VersionAvailable()
+        {
             FieldInfo versionField = modBehaviour.GetField("VERSION", BindingFlags.Public | BindingFlags.Static);
-            if (versionField != null && versionField.FieldType == typeof(float)) {
+            if (versionField != null && versionField.FieldType == typeof(float))
+            {
                 Version modSettingVersion = (Version)versionField.GetValue(null);
-                if (modSettingVersion!=VERSION) {
+                if (modSettingVersion != VERSION)
+                {
                     Debug.LogWarning($"警告:ModSetting的版本:{modSettingVersion} (API的版本:{VERSION}),新功能将无法使用");
                     return false;
                 }
+
                 return true;
             }
 
             return false;
         }
 
-        private static Type FindTypeInAssemblies(string typeName) {
+        private static Type FindTypeInAssemblies(string typeName)
+        {
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (Assembly assembly in assemblies) {
-                if (assembly.FullName.Contains(MOD_NAME)) {
-                    Debug.Log($"找到{MOD_NAME}相关程序集: {assembly.FullName}");
-                }
-
+            foreach (Assembly assembly in assemblies)
+            {
                 Type type = assembly.GetType(typeName);
                 if (type != null) return type;
             }
 
-            Debug.Log("找不到程序集");
+            Debug.LogWarning($"(Mod:{modInfo.displayName})找不到ModSetting程序集");
             return null;
         }
 
-        private static MethodInfo GetStaticPublicMethodInfo(string methodName, Type[] parameterTypes = null) {
+        private static MethodInfo GetStaticPublicMethodInfo(string methodName, Type[] parameterTypes = null)
+        {
             if (!IsInit) return null;
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Static;
-            if (parameterTypes != null) {
-                MethodInfo[] methodInfos = modBehaviour.GetMethods(bindingFlags).Where(m => m.Name == methodName).ToArray();
-                return methodInfos.Where(methodInfo => {
+            if (parameterTypes != null)
+            {
+                MethodInfo[] methodInfos =
+                    modBehaviour.GetMethods(bindingFlags).Where(m => m.Name == methodName).ToArray();
+                return methodInfos.Where(methodInfo =>
+                {
                     ParameterInfo[] parameters = methodInfo.GetParameters();
                     if (parameters.Length != parameterTypes.Length) return false;
-                    for (int i = 0; i < parameters.Length; i++) {
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
                         // 处理参数类型匹配（包括继承和接口实现）
                         if (!IsParameterTypeMatch(parameters[i].ParameterType, parameterTypes[i]))
                             return false;
@@ -404,13 +476,16 @@ namespace EliteEnemies.ModSettingsApi
 
                     return true;
                 }).FirstOrDefault();
-            } else {
+            }
+            else
+            {
                 MethodInfo methodInfo = modBehaviour.GetMethod(methodName, bindingFlags);
                 return methodInfo;
             }
         }
 
-        private static bool IsParameterTypeMatch(Type parameterType, Type providedType) {
+        private static bool IsParameterTypeMatch(Type parameterType, Type providedType)
+        {
             // 精确匹配
             if (parameterType == providedType)
                 return true;
@@ -424,21 +499,32 @@ namespace EliteEnemies.ModSettingsApi
         }
 
         private static bool InvokeMethod(string cacheKey, string methodName, object[] parameters, Type delegateType,
-            Type[] paramTypes = null) {
-            if (!methodCache.ContainsKey(cacheKey)) {
+            Type[] paramTypes)
+        {
+            if (!methodCache.ContainsKey(cacheKey))
+            {
                 MethodInfo method = GetStaticPublicMethodInfo(methodName, paramTypes);
-                if (method == null) return false;
+                if (method == null)
+                {
+                    Debug.LogError($"找不到此方法{methodName},无法调用");
+                    return false;
+                }
+
                 // 创建委托
                 methodCache[cacheKey] = Delegate.CreateDelegate(delegateType, method);
             }
 
-            try {
+            try
+            {
                 methodCache[cacheKey].DynamicInvoke(parameters);
                 return true;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Debug.LogError($"委托调用{methodName}失败: {ex.Message}");
                 return false;
             }
         }
+
     }
 }
