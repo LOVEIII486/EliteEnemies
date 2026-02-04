@@ -81,23 +81,30 @@ namespace EliteEnemies.EliteEnemy.Core
             "EnemyPreset_Animal_Wolf", "EnemyPreset_Animal_Wolf_Farm", "EnemyPreset_Boss_Deng_Wolf",
             "EnemyPreset_Mushroom", "EnemyPreset_StormCreature", "EnemyPreset_StormCreature_Virus",
             "EnemyPreset_Storm_MonsterClimb", "SpawnPreset_Animal_Jinitaimei",
+            "EnemyPreset_Animal_Bear", "EnemyPreset_Animal_Bear_Gun",
+            "EnemyPreset_Animal_Ghost", "EnemyPreset_Animal_Wolf_Ice",
+            "EnemyPreset_Zombie",
 
-            // 常规敌人 (Scav/USEC/Raider/Prison)
+            // 常规敌人
             "EnemyPreset_Scav", "EnemyPreset_Scav_Elete", "EnemyPreset_Scav_Farm",
             "EnemyPreset_Scav_low", "EnemyPreset_Scav_low_ak74", "EnemyPreset_Scav_Melee",
             "EnemyPreset_USEC_Farm", "EnemyPreset_USEC_HiddenWareHouse", "EnemyPreset_USEC_Low",
             "EnemyPreset_JLab_Raider", "EnemyPreset_Prison_Melee", "EnemyPreset_Prison_Pistol",
+            "EnemyPreset_Scav_Ice", "EnemyPreset_USEC_Ice", "EnemyPreset_SnowPMC",
+            "EnemyPreset_Storm_Raider", 
 
-            // 机械与特殊
+            // 特殊敌人
             "EnemyPreset_Spider_Rifle", "EnemyPreset_Spider_Rifle_JLab", "EnemyPreset_Spider_Rifle_Strong",
             "EnemyPreset_Spider_Ring", "EnemyPreset_Spider_RotateShoot", "EnemyPreset_Drone_Rifle",
             "EnemyPreset_Football_1", "EnemyPreset_Football_2", "EnemyPreset_JLab_Melee_Invisable",
+            "EnemyPreset_GunTurret",
 
             // Boss 随从
             "EnemyPreset_Boss_ShortEagle_Elete", // 这个是矮鸭召唤的雇佣兵
             "EnemyPreset_Boss_3Shot_Child", "EnemyPreset_Boss_BALeader_Child", "EnemyPreset_Boss_Fly_Child",
             "EnemyPreset_Boss_Speedy_Child", "EnemyPreset_Boss_Storm_1_Child", "EnemyPreset_Boss_XING_Child",
-            "EnemyPreset_BossMelee_SchoolBully_Child"
+            "EnemyPreset_BossMelee_SchoolBully_Child",
+            "EnemyPreset_Boss_Speedy_Ice_Child"
         };
 
         /// <summary>
@@ -113,7 +120,12 @@ namespace EliteEnemies.EliteEnemy.Core
             "EnemyPreset_Boss_Storm_1_BreakArmor", "EnemyPreset_Boss_Storm_2_Poison",
             "EnemyPreset_Boss_Storm_3_Fire", "EnemyPreset_Boss_Storm_4_Electric", "EnemyPreset_Boss_Storm_5_Space",
             "EnemyPreset_Boss_Vida", "EnemyPreset_Boss_XING", "EnemyPreset_BossMelee_SchoolBully",
-            "EnemyPreset_Melee_UltraMan", "EnemyPreset_Spider_Scare", "EnemyPreset_Prison_Boss"
+            "EnemyPreset_Melee_UltraMan", "EnemyPreset_Spider_Scare", "EnemyPreset_Prison_Boss",
+            "EnemyPreset_Boss_Hunter",
+            "EnemyPreset_Boss_Snow_BigIce", "EnemyPreset_Boss_Snow_Fleeze", "EnemyPreset_Boss_Snow_Igny",
+            "EnemyPreset_Boss_Speedy_Ice", "EnemyPreset_Boss_WolfKing_Ice"
+            
+            
         };
 
         /// <summary>
@@ -121,7 +133,7 @@ namespace EliteEnemies.EliteEnemy.Core
         /// </summary>
         internal static readonly HashSet<string> MerchantPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "EnemyPreset_Merchant_Myst", "EnemyPreset_Merchant_Myst0"
+            "EnemyPreset_Merchant_Myst", "EnemyPreset_Merchant_Myst0", "EnemyPreset_Merchant_Jeff"
         };
 
         /// <summary>
@@ -134,15 +146,16 @@ namespace EliteEnemies.EliteEnemy.Core
                 "DummyEnemyCharacterRandomPresetLv 0", "DummyEnemyCharacterRandomPresetLv 1",
                 "DummyEnemyCharacterRandomPresetLv 2", "DummyEnemyCharacterRandomPresetLv 3",
                 "DummyEnemyCharacterRandomPresetLv 4", "DummyEnemyCharacterRandomPresetLv 5",
-                "EnemyPreset_Basement", "EnemyPreset_LittleBoss",
+                "EnemyPreset_Basement", "EnemyPreset_LittleBoss", "EnemyPreset_Scav_Test",
 
                 // 队友与宠物
-                "MatePreset_PMC", "PetPreset_NormalPet",
+                "MatePreset_PMC", "PetPreset_NormalPet", "EnemyPreset_VehicleTest",
                 
                 // 其他NPC
                 "EnemyPreset_Merchant_Test", 
                 "EnemyPreset_QuestGiver_Fo", 
-                "EnemyPreset_QuestGiver_XiaoMing"
+                "EnemyPreset_QuestGiver_XiaoMing",
+                //"EnemyPreset_Merchant_Jeff"
             };
         
         // 自动注册的外部预设
@@ -170,7 +183,8 @@ namespace EliteEnemies.EliteEnemy.Core
                     "EnemyPreset_Boss_BALeader_Child", 
                     "EnemyPreset_Boss_3Shot_Child", 
                     "EnemyPreset_Boss_Speedy_Child",
-                    "EnemyPreset_Boss_Storm_1_Child"
+                    "EnemyPreset_Boss_Storm_1_Child",
+                    "EnemyPreset_Boss_Speedy_Ice_Child"
                 },
             };
 
