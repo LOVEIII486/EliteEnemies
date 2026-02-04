@@ -346,8 +346,8 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 Name = LocalizationManager.GetText("Affix_MimicTear_Name", "仿身泪滴"),
                 Description = LocalizationManager.GetText("Affix_MimicTear_Description", "复制玩家主手武器与装备（不会掉落）"),
                 HealthMultiplier = 1.5f,
-                DamageMultiplier = 1.1f,
-                MoveSpeedMultiplier = 1.1f,
+                DamageMultiplier = 1.0f,
+                MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Epic,
             }.WithRandomLootRange(3, 6, 1, 1f, new[] { "Luxury" }),
             ["Split"] = new AffixData
@@ -659,7 +659,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors
                 Name = LocalizationManager.GetText("Affix_Mimic_Name"),
                 Description = LocalizationManager.GetText("Affix_Mimic_Description"),
                 HealthMultiplier = 1.2f,
-                DamageMultiplier = 1.2f,
+                DamageMultiplier = 1.1f,
                 MoveSpeedMultiplier = 1.0f,
                 Rarity = AffixRarity.Rare
             },

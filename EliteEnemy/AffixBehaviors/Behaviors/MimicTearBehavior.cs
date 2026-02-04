@@ -226,7 +226,7 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
             Modify(enemy, StatModifier.Attributes.TurnSpeed, 1.5f, true);
             Modify(enemy, StatModifier.Attributes.AimTurnSpeed, 1.5f, true);
             
-            Modify(enemy, StatModifier.Attributes.GunScatterMultiplier, 0.7f, true);
+            Modify(enemy, StatModifier.Attributes.GunScatterMultiplier, 0.8f, true);
             
             Modify(enemy, AIFieldModifier.Fields.ShootCanMove, 1.0f, false);
             Modify(enemy, AIFieldModifier.Fields.CanDash, 1.0f, false);
