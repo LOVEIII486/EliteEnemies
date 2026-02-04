@@ -195,6 +195,10 @@ namespace EliteEnemies.EliteEnemy.Core
                 {
                     "EnemyPreset_Boss_Kamakoto_Special"
                 },
+                ["Explosive"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "EnemyPreset_JLab_Melee_Invisable"
+                },
             };
         
         public static readonly HashSet<string> UIHiddenPresets = new HashSet<string> 

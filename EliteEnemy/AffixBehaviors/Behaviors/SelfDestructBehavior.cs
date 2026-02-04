@@ -12,10 +12,10 @@ namespace EliteEnemies.EliteEnemy.AffixBehaviors.Behaviors
 
         // 基础配置
         private static readonly float ExplosionRadius = 5f;       // 爆炸半径
-        private static readonly float MinExplosionDamage = 15f;   // 最低保底伤害
-        private static readonly float MaxExplosionDamage = 40f;   // 最高伤害
-        private static readonly float DamagePercentOfMaxHp = 0.35f; // 伤害倍率：造成玩家最大生命值 35% 的伤害
-        private static readonly float ArmorPiercing = 10f;        // 破甲值
+        private static readonly float MinExplosionDamage = 12f;   // 最低保底伤害
+        private static readonly float MaxExplosionDamage = 35f;   // 最高伤害
+        private static readonly float DamagePercentOfMaxHp = 0.30f; // 伤害倍率：造成玩家最大生命值 30% 的伤害
+        private static readonly float ArmorPiercing = 2f;        // 破甲值
         private static readonly float ExplosionForce = 5f;        // 爆炸冲击力
         private static readonly int WeaponItemID = 24;            // 武器ID（用于伤害来源标识）
         
