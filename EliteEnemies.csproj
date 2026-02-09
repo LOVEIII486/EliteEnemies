@@ -691,6 +691,7 @@
         <Compile Include="EliteEnemy\ComboSystem\EliteComboRegistry.cs" />
         <Compile Include="EliteEnemy\Core\EggSpawnHelper.cs" />
         <Compile Include="EliteEnemy\Core\EliteEnemyCorePatches.cs" />
+        <Compile Include="EliteEnemy\Core\NPCPresetNames.cs" />
         <Compile Include="EliteEnemy\LootSystem\EliteLootSystem.cs" />
         <Compile Include="EliteEnemy\LootSystem\LootItemHelper.cs" />
         <Compile Include="EliteEnemy\VisualEffects\EliteGlowController.cs" />

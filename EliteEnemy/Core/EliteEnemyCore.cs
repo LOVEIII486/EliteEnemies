@@ -72,95 +72,33 @@ namespace EliteEnemies.EliteEnemy.Core
 
         #region 预设集合
 
-        /// <summary>
-        /// 普通敌人预设
-        /// </summary>
-        internal static readonly HashSet<string> EligiblePresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            // 动物与生物
-            "EnemyPreset_Animal_Wolf", "EnemyPreset_Animal_Wolf_Farm", "EnemyPreset_Boss_Deng_Wolf",
-            "EnemyPreset_Mushroom", "EnemyPreset_StormCreature", "EnemyPreset_StormCreature_Virus",
-            "EnemyPreset_Storm_MonsterClimb", "SpawnPreset_Animal_Jinitaimei",
-            "EnemyPreset_Animal_Bear", "EnemyPreset_Animal_Bear_Gun",
-            "EnemyPreset_Animal_Ghost", "EnemyPreset_Animal_Wolf_Ice",
-            "EnemyPreset_Zombie",
-
-            // 常规敌人
-            "EnemyPreset_Scav", "EnemyPreset_Scav_Elete", "EnemyPreset_Scav_Farm",
-            "EnemyPreset_Scav_low", "EnemyPreset_Scav_low_ak74", "EnemyPreset_Scav_Melee",
-            "EnemyPreset_USEC_Farm", "EnemyPreset_USEC_HiddenWareHouse", "EnemyPreset_USEC_Low",
-            "EnemyPreset_JLab_Raider", "EnemyPreset_Prison_Melee", "EnemyPreset_Prison_Pistol",
-            "EnemyPreset_Scav_Ice", "EnemyPreset_USEC_Ice", "EnemyPreset_SnowPMC",
-            "EnemyPreset_Storm_Raider", 
-
-            // 特殊敌人
-            "EnemyPreset_Spider_Rifle", "EnemyPreset_Spider_Rifle_JLab", "EnemyPreset_Spider_Rifle_Strong",
-            "EnemyPreset_Spider_Ring", "EnemyPreset_Spider_RotateShoot", "EnemyPreset_Drone_Rifle",
-            "EnemyPreset_Football_1", "EnemyPreset_Football_2", "EnemyPreset_JLab_Melee_Invisable",
-            "EnemyPreset_GunTurret",
-
-            // Boss 随从
-            "EnemyPreset_Boss_ShortEagle_Elete", // 这个是矮鸭召唤的雇佣兵
-            "EnemyPreset_Boss_3Shot_Child", "EnemyPreset_Boss_BALeader_Child", "EnemyPreset_Boss_Fly_Child",
-            "EnemyPreset_Boss_Speedy_Child", "EnemyPreset_Boss_Storm_1_Child", "EnemyPreset_Boss_XING_Child",
-            "EnemyPreset_BossMelee_SchoolBully_Child",
-            "EnemyPreset_Boss_Speedy_Ice_Child"
-        };
-
-        /// <summary>
-        /// Boss 级预设
-        /// </summary>
-        internal static readonly HashSet<string> BossPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "EnemyPreset_Boss_3Shot", "EnemyPreset_Boss_Arcade", "EnemyPreset_Boss_BALeader",
-            "EnemyPreset_Boss_Deng", "EnemyPreset_Boss_Fly", "EnemyPreset_Boss_Grenade",
-            "EnemyPreset_Boss_Red", "EnemyPreset_Boss_Roadblock", "EnemyPreset_Boss_RPG",
-            "EnemyPreset_Boss_SenorEngineer", "EnemyPreset_Boss_ServerGuardian", "EnemyPreset_Boss_ShortEagle", 
-            "EnemyPreset_Boss_Shot", "EnemyPreset_Boss_Speedy",
-            "EnemyPreset_Boss_Storm_1_BreakArmor", "EnemyPreset_Boss_Storm_2_Poison",
-            "EnemyPreset_Boss_Storm_3_Fire", "EnemyPreset_Boss_Storm_4_Electric", "EnemyPreset_Boss_Storm_5_Space",
-            "EnemyPreset_Boss_Vida", "EnemyPreset_Boss_XING", "EnemyPreset_BossMelee_SchoolBully",
-            "EnemyPreset_Melee_UltraMan", "EnemyPreset_Spider_Scare", "EnemyPreset_Prison_Boss",
-            "EnemyPreset_Boss_Hunter",
-            "EnemyPreset_Boss_Snow_BigIce", "EnemyPreset_Boss_Snow_Fleeze", "EnemyPreset_Boss_Snow_Igny",
-            "EnemyPreset_Boss_Speedy_Ice", "EnemyPreset_Boss_WolfKing_Ice"
-            
-            
-        };
-
-        /// <summary>
-        /// 商人 预设
-        /// </summary>
-        internal static readonly HashSet<string> MerchantPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "EnemyPreset_Merchant_Myst", "EnemyPreset_Merchant_Myst0", "EnemyPreset_Merchant_Jeff"
-        };
-
-        /// <summary>
-        /// 强制忽略的通用预设
-        /// </summary>
-        internal static readonly HashSet<string> IgnoredGenericPresets =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                // 占位符/测试怪
-                "DummyEnemyCharacterRandomPresetLv 0", "DummyEnemyCharacterRandomPresetLv 1",
-                "DummyEnemyCharacterRandomPresetLv 2", "DummyEnemyCharacterRandomPresetLv 3",
-                "DummyEnemyCharacterRandomPresetLv 4", "DummyEnemyCharacterRandomPresetLv 5",
-                "EnemyPreset_Basement", "EnemyPreset_LittleBoss", "EnemyPreset_Scav_Test",
-
-                // 队友与宠物
-                "MatePreset_PMC", "PetPreset_NormalPet", "EnemyPreset_VehicleTest",
-                
-                // 其他NPC
-                "EnemyPreset_Merchant_Test", 
-                "EnemyPreset_QuestGiver_Fo", 
-                "EnemyPreset_QuestGiver_XiaoMing",
-                //"EnemyPreset_Merchant_Jeff"
-            };
+        internal static readonly HashSet<string> EligiblePresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        internal static readonly HashSet<string> BossPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        internal static readonly HashSet<string> MerchantPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        internal static readonly HashSet<string> IgnoredGenericPresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        internal static readonly HashSet<string> ExternalEligiblePresets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         
-        // 自动注册的外部预设
-        internal static readonly HashSet<string> ExternalEligiblePresets =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        static EliteEnemyCore()
+        {
+            BossPresets.UnionWith(NPCPresetNames.Boss.All);
+            MerchantPresets.UnionWith(NPCPresetNames.Merchant.All);
+
+            EligiblePresets.UnionWith(NPCPresetNames.Enemies.All);
+            EligiblePresets.UnionWith(NPCPresetNames.Animal.All);
+            EligiblePresets.UnionWith(NPCPresetNames.Minions.All);
+            // 测试炮台是否兼容精英化系统
+            EligiblePresets.Add(NPCPresetNames.Special.GunTurret);
+
+            IgnoredGenericPresets.UnionWith(NPCPresetNames.Test.All);
+            IgnoredGenericPresets.UnionWith(NPCPresetNames.Unknown.All);
+            IgnoredGenericPresets.UnionWith(NPCPresetNames.Special.All);
+            IgnoredGenericPresets.UnionWith(NPCPresetNames.Vehicle.All);
+            IgnoredGenericPresets.UnionWith(NPCPresetNames.Quest.All);
+            // 测试炮台是否兼容精英化系统
+            IgnoredGenericPresets.Remove(NPCPresetNames.Special.GunTurret);
+
+            Debug.Log($"{LogTag} 预设白名单初始化完成。普通敌人: {EligiblePresets.Count}, Boss: {BossPresets.Count}, 商人: {MerchantPresets.Count}, 忽略: {IgnoredGenericPresets.Count}");
+        }
         
         #endregion
         
@@ -171,21 +109,40 @@ namespace EliteEnemies.EliteEnemy.Core
             {
                 ["MimicTear"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "EnemyPreset_Scav", 
-                    "EnemyPreset_Scav_Elete", 
-                    "EnemyPreset_Scav_Farm", 
-                    "EnemyPreset_Scav_low", 
-                    "EnemyPreset_Scav_low_ak74",
-                    "EnemyPreset_USEC_Farm", 
-                    "EnemyPreset_USEC_HiddenWareHouse", 
-                    "EnemyPreset_USEC_Low",
-                    "EnemyPreset_JLab_Raider",
-                    "EnemyPreset_Boss_BALeader_Child", 
-                    "EnemyPreset_Boss_3Shot_Child", 
-                    "EnemyPreset_Boss_Speedy_Child",
-                    "EnemyPreset_Boss_Storm_1_Child",
-                    "EnemyPreset_Boss_Speedy_Ice_Child"
+                    NPCPresetNames.Enemies.Scav,
+                    NPCPresetNames.Enemies.ScavElite,
+                    NPCPresetNames.Enemies.ScavFarm,
+                    NPCPresetNames.Enemies.ScavIce,
+                    NPCPresetNames.Enemies.ScavLow,
+                    NPCPresetNames.Enemies.ScavLowAK,
+                    NPCPresetNames.Enemies.ScavSnow,
+                    
+                    NPCPresetNames.Enemies.USECFarm,
+                    NPCPresetNames.Enemies.USECHidden,
+                    NPCPresetNames.Enemies.USECLow,
+                    NPCPresetNames.Enemies.USECIce,
+                    NPCPresetNames.Enemies.USECIceMilitary,
+                    NPCPresetNames.Enemies.USECSnowMilitary,
+                    
+                    NPCPresetNames.Enemies.Raider,
+                    NPCPresetNames.Minions.BALeaderChild,
+                    NPCPresetNames.Minions.ThreeShotChild,
+                    NPCPresetNames.Minions.SpeedyChild,
+                    NPCPresetNames.Minions.Storm1Child,
+                    NPCPresetNames.Minions.SpeedyIceChild
                 },
+                ["MandarinDuck"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    NPCPresetNames.Special.GunTurret
+                },
+                ["Guardian"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    NPCPresetNames.Special.GunTurret
+                },
+                ["Slime"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    NPCPresetNames.Special.GunTurret
+                }
             };
 
         internal static readonly Dictionary<string, HashSet<string>> AffixPresetBlacklist =
@@ -197,25 +154,13 @@ namespace EliteEnemies.EliteEnemy.Core
                 },
                 ["Explosive"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    "EnemyPreset_JLab_Melee_Invisable"
-                },
-                ["MandarinDuck"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    "EnemyPreset_GunTurret"
-                },
-                ["Guardian"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    "EnemyPreset_GunTurret"
-                },
-                ["Slime"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    "EnemyPreset_GunTurret"
+                    NPCPresetNames.Enemies.JLabInvisible
                 }
             };
         
         public static readonly HashSet<string> UIHiddenPresets = new HashSet<string> 
         { 
-            "EnemyPreset_JLab_Melee_Invisable"
+            NPCPresetNames.Enemies.JLabInvisible
         };
         
         #endregion
