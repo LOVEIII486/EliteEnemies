@@ -82,8 +82,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             _modItemIdBlacklist.Clear();
 
             // 1. “三角鸭武器和配件扩展2.6.2”
-            _modItemIdBlacklist.Add(12013);
-            _modItemIdBlacklist.Add(12014);
+            //_modItemIdBlacklist.Add(12013);
+            //_modItemIdBlacklist.Add(12014);
 
             // 2. “ArcaneEra(beta)” ID 范围：421455000-421455033
             for (int id = 421455000; id <= 421455033; id++)
@@ -177,13 +177,12 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             Item item = null;
             try
             {
-                // 注意：这里仅用于检测属性，检测完即销毁
                 item = ItemAssetsCollection.InstantiateSync(itemId);
                 if (item == null) return false;
                 
                 // item.Initialize();
 
-                // 2. 检查名称和描述黑名单 (仅检查通用前缀)
+                // 2. 检查名称和描述黑名单
                 string name = item.DisplayName ?? "";
                 string desc = item.Description ?? "";
                 
@@ -238,10 +237,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             }
         }
 
-        // ========== 查询接口  ==========
-
         /// <summary>
-        /// 检查物品ID是否在白名单缓存中（通过了黑名单检查且初始化完成）
+        /// 检查物品ID是否在白名单缓存中
         /// </summary>
         public bool IsItemWhitelisted(int itemId)
         {
@@ -271,7 +268,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         }
 
         /// <summary>
-        /// 按品质权重创建物品（支持品质偏好和标签过滤）
+        /// 按品质权重创建物品
         /// </summary>
         public Item CreateItemWithTagsWeighted(int minQuality = 1, int maxQuality = 7, Tag[] requiredTags = null)
         {
@@ -317,7 +314,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             }
         }
 
-        // ========== 创建物品辅助方法 ==========
 
         private Item CreateItemFromQuality(int quality)
         {
