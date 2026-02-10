@@ -82,8 +82,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             _modItemIdBlacklist.Clear();
 
             // 1. “三角鸭武器和配件扩展2.6.2”
-            //_modItemIdBlacklist.Add(12013);
-            //_modItemIdBlacklist.Add(12014);
+            _modItemIdBlacklist.Add(12013);
+            _modItemIdBlacklist.Add(12014);
 
             // 2. “ArcaneEra(beta)” ID 范围：421455000-421455033
             for (int id = 421455000; id <= 421455033; id++)
@@ -173,6 +173,8 @@ namespace EliteEnemies.EliteEnemy.LootSystem
             {
                 return false;
             }
+            
+            // if (itemId >= 10000 && itemId <= 13000) return false;
 
             Item item = null;
             try
