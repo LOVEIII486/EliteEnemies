@@ -76,8 +76,6 @@ namespace EliteEnemies.EliteEnemy.LootSystem
         {
             if (Verbose) Debug.Log($"{LogTag} LootItemHelper 被销毁");
         }
-
-        // ========== 初始化核心逻辑 ==========
         
         private void InitializeModIdBlacklist()
         {
@@ -183,7 +181,7 @@ namespace EliteEnemies.EliteEnemy.LootSystem
                 item = ItemAssetsCollection.InstantiateSync(itemId);
                 if (item == null) return false;
                 
-                item.Initialize();
+                // item.Initialize();
 
                 // 2. 检查名称和描述黑名单 (仅检查通用前缀)
                 string name = item.DisplayName ?? "";
