@@ -87,7 +87,7 @@ namespace EliteEnemies.EliteEnemy.Core
             EligiblePresets.UnionWith(NPCPresetNames.Animal.All);
             EligiblePresets.UnionWith(NPCPresetNames.Minions.All);
             // 测试炮台是否兼容精英化系统
-            EligiblePresets.Add(NPCPresetNames.Special.GunTurret);
+            //EligiblePresets.Add(NPCPresetNames.Special.GunTurret);
 
             IgnoredGenericPresets.UnionWith(NPCPresetNames.Test.All);
             IgnoredGenericPresets.UnionWith(NPCPresetNames.Unknown.All);
@@ -95,7 +95,7 @@ namespace EliteEnemies.EliteEnemy.Core
             IgnoredGenericPresets.UnionWith(NPCPresetNames.Vehicle.All);
             IgnoredGenericPresets.UnionWith(NPCPresetNames.Quest.All);
             // 测试炮台是否兼容精英化系统
-            IgnoredGenericPresets.Remove(NPCPresetNames.Special.GunTurret);
+            //IgnoredGenericPresets.Remove(NPCPresetNames.Special.GunTurret);
 
             Debug.Log($"{LogTag} 预设白名单初始化完成。普通敌人: {EligiblePresets.Count}, Boss: {BossPresets.Count}, 商人: {MerchantPresets.Count}, 忽略: {IgnoredGenericPresets.Count}");
         }
