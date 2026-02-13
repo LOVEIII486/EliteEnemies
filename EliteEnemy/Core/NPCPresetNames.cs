@@ -81,6 +81,9 @@
             public const string Tagilla = "EnemyPreset_Boss_Tagilla"; // Tagilla
             public const string TagillaBasaka = "EnemyPreset_Boss_Tagilla_Basaka"; // Tagilla
             public const string WolfKingIce = "EnemyPreset_Boss_WolfKing_Ice"; // 雪原狼王
+            public const string Hunter = "EnemyPreset_Boss_Hunter"; // 猎户，使用弩箭
+            public const string PMCLeader = "EnemyPreset_Boss_PMCLeader"; // 呆头鹅，军事基地
+            public const string Blue = "EnemyPreset_Boss_Blue"; // ??? 蓝色，实验区
             
             public static readonly string[] All = 
             { 
@@ -92,7 +95,8 @@
                 Storm1, Storm2, Storm3, Storm4, Storm5,
                 XING,
                 SnowBigIce, SpeedyIce,
-                Alex, Killa, KillaBasaka, SnowFleeze, SnowIgny, SnowMan, SnowMan2, Tagilla, TagillaBasaka, WolfKingIce
+                Alex, Killa, KillaBasaka, SnowFleeze, SnowIgny, SnowMan, SnowMan2, Tagilla, TagillaBasaka, WolfKingIce,
+                Hunter, PMCLeader, Blue
             };
         }
         
@@ -190,6 +194,8 @@
             public const string StormCreatureVirus = "EnemyPreset_StormCreature_Virus" ; // 风暴？
             public const string StormMonsterClimb = "EnemyPreset_Storm_MonsterClimb" ; // 风暴虫
             
+            public const string Drone = "EnemyPreset_Drone_Rifle"; // 侦察机
+            
             public static readonly string[] All = 
             { 
                 Scav, ScavElite, ScavFarm, ScavIce, ScavLow, ScavLowAK, ScavMelee, ScavSnow, ColdStorageScav,
@@ -200,7 +206,8 @@
                 Football1, Football2,
                 PrisonMelee, PrisonPistol,
                 JLabInvisible,
-                StormCreature, StormCreatureVirus, StormMonsterClimb
+                StormCreature, StormCreatureVirus, StormMonsterClimb,
+                Drone
             };
         }
         
@@ -234,22 +241,19 @@
         {
             public const string BoomCar = "EnemyPreset_BoomCar"; // 炸弹小车
             public const string SnowPMC = "EnemyPreset_SnowPMC"; // 煤球
-            public const string Drone = "EnemyPreset_Drone_Rifle"; // 侦察机
+            
             public const string GunTurret = "EnemyPreset_GunTurret"; // 自动炮台
             public const string Pet = "PetPreset_NormalPet"; // 宠物
             
-            public static readonly string[] All = { BoomCar, SnowPMC, Drone, GunTurret, Pet };
+            public static readonly string[] All = { BoomCar, SnowPMC, GunTurret, Pet };
         }
 
         public static class Unknown
         {
             public const string MatePMC = "MatePreset_PMC"; // 雇佣兵，未知
-            public const string Hunter = "EnemyPreset_Boss_Hunter"; // 猎户，使用弩箭
-            public const string PMCLeader = "EnemyPreset_Boss_PMCLeader"; // 呆头鹅 没见过
-            public const string Blue = "EnemyPreset_Boss_Blue"; // ??? 蓝色，可能是废案
             public const string LittleBoss = "EnemyPreset_LittleBoss"; // 小Boss，似乎是矮鸭废案
             
-            public static readonly string[] All = { MatePMC, Hunter, PMCLeader, Blue, LittleBoss };
+            public static readonly string[] All = { MatePMC, LittleBoss };
         }
 
         public static class Test
