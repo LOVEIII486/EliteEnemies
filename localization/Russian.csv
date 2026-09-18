@@ -170,7 +170,7 @@ EliteEnemies_Affix_Reflect_Name,Отражение,2.3,AffixNames
 EliteEnemies_Affix_Reflect_Description,"Периодически создаёт щит, отражающий пули.",2.3,AffixDescription
 EliteEnemies_Affix_Reflect_PopText,<color=#00BFFF>Отражение!</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Frozen_Name,Ледяной,2.3,AffixNames
-EliteEnemies_Affix_Frozen_Description,Шанс заморозить при атаке.,2.3,AffixDescription
+EliteEnemies_Affix_Frozen_Description,Попадания накладывают слой «Холода» (не чаще раза в 0.5 с). На 5 слоях игрок замораживается; после разморозки иммунитет 15 с.,2.6,AffixDescription
 EliteEnemies_Settings_EnableComboSystem,Включить Комбо-Систему (Внимание! Повышает сложность игры!),2.4,ComboSettings
 EliteEnemies_Settings_ComboSystemChance,Шанс Появления Комбо-Элиты,2.4,ComboSettings
 EliteEnemies_Settings_ComboSettings_Group,Настройки Комбинаций Аффиксов (Экспериментальная Система!),2.4,Groups
@@ -188,3 +188,5 @@ EliteEnemies_Affix_Nimble_Description,"Чрезвычайно короткие �
 EliteEnemies_Settings_AffixVerticalOffset,Вертикальное смещение отображения аффиксов,2.5,VisualSettings
 EliteEnemies_Affix_Phantom_Name,Галлюцинация,2.5,AffixNames
 EliteEnemies_Affix_Phantom_Description,"Этот противник мешает чувствам игрока, периодически создавая ложные звуки шагов и сигналы тревоги за вашей спиной.",2.5,AffixDescription
+EliteEnemies_Buff_EliteBuff_Chill_Name,Холод,2.6,BuffNames
+EliteEnemies_Buff_EliteBuff_Chill_Description,Скорость передвижения снижена на 8% за слой. На 5 слоях цель замораживается.,2.6,BuffDescriptions

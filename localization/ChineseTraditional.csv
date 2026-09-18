@@ -170,7 +170,7 @@ EliteEnemies_Affix_Reflect_Name,反彈,2.3,AffixNames
 EliteEnemies_Affix_Reflect_Description,週期性生成護盾，將受到的子彈反彈回攻擊者,2.3,AffixDescription
 EliteEnemies_Affix_Reflect_PopText,<color=#00BFFF>反彈！</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Frozen_Name,嚴寒,2.3,AffixNames
-EliteEnemies_Affix_Frozen_Description,攻擊命中時有概率凍結玩家（15秒冷卻時間）,2.3,AffixDescription
+EliteEnemies_Affix_Frozen_Description,命中玩家時疊加寒冷（每 0.5 秒最多一層），疊滿 5 層後凍結；凍結結束後 15 秒內免疫,2.6,AffixDescription
 EliteEnemies_Settings_EnableComboSystem,啟用 Combo 組合系統（再次提醒！對於普通玩家非常困難！）,2.4,ComboSettings
 EliteEnemies_Settings_ComboSystemChance,Combo 精英怪出現機率,2.4,ComboSettings
 EliteEnemies_Settings_ComboSettings_Group,精英怪 Combo 組合設定（實驗性系統！非常困難！）,2.4,Groups
@@ -188,3 +188,5 @@ EliteEnemies_Affix_Nimble_Description,極短的衝刺間隔，身法飄忽不定
 EliteEnemies_Settings_AffixVerticalOffset,詞綴顯示位置偏移,2.5,VisualSettings
 EliteEnemies_Affix_Phantom_Name,幻聽,2.5,AffixNames
 EliteEnemies_Affix_Phantom_Description,該單位會干擾玩家感官，週期性在背後產生虛假的戰鬥聲與驚叫聲。,2.5,AffixDescription
+EliteEnemies_Buff_EliteBuff_Chill_Name,寒冷,2.6,BuffNames
+EliteEnemies_Buff_EliteBuff_Chill_Description,移動速度降低 8%（每層），疊滿 5 層後凍結,2.6,BuffDescriptions

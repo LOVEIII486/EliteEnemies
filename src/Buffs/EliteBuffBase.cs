@@ -105,21 +105,53 @@ namespace EliteEnemies.Buffs
                 var baseBuff = GameplayDataSettings.Buffs?.BaseBuff;
                 if (baseBuff == null)
                 {
+                    // ⚠ 这里刻意**不写 return**：往下的 LogExclusiveTag 在"拿不到 BaseBuff"
+                    //   时更要打——那时标签全是 C# 默认值，而这行日志正是用来确认
+                    //   "默认值是不是我们以为的那个"的。原来的 return 会把日志一起跳过。
                     Debug.LogWarning($"{LogTag} 拿不到 BaseBuff，{BuffName} 将使用默认的 icon/特效");
-                    return;
                 }
-
-                icon = baseBuff.icon;
-                description = baseBuff.description;
-                buffFxPfb = baseBuff.buffFxPfb;
-                exclusiveTag = baseBuff.exclusiveTag;
-                exclusiveTagPriority = baseBuff.exclusiveTagPriority;
-                hide = baseBuff.hide;
-                displayInExtraView = baseBuff.displayInExtraView;
+                else
+                {
+                    icon = baseBuff.icon;
+                    description = baseBuff.description;
+                    buffFxPfb = baseBuff.buffFxPfb;
+                    exclusiveTag = baseBuff.exclusiveTag;
+                    exclusiveTagPriority = baseBuff.exclusiveTagPriority;
+                    hide = baseBuff.hide;
+                    displayInExtraView = baseBuff.displayInExtraView;
+                }
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"{LogTag} 复制 BaseBuff 的表现层字段失败（不影响功能）: {ex.Message}");
+            }
+
+            LogExclusiveTag();
+        }
+
+        /// <summary>
+        /// 把「从 BaseBuff 抄到了什么互斥标签」打进启动日志。
+        ///
+        /// <para><b>为什么要打</b>：<see cref="ConfigureTemplate"/> 抄的是一组**资产上的**值，
+        /// 代码里看不到它们是什么。其中 <c>exclusiveTag</c> 是唯一一个「抄错了会静默改变行为」的：
+        /// 它不是 <c>NotExclusive</c> 时，<c>CharacterMainControl.AddBuff</c>
+        /// （<c>TeamSoda.Duckov.Core/CharacterMainControl.cs:2652-2681</c>）会对**同标签**的 Buff
+        /// 做互斥裁决——优先级低的一方被直接丢弃，不报错、不留日志。
+        /// 而本模组所有 Buff 的标签都抄自同一个 BaseBuff，于是它们会**彼此顶掉**。</para>
+        ///
+        /// <para>实测（2026-09-18）实机可同时挂多个精英 Buff，据此判断 BaseBuff 的标签是
+        /// <c>NotExclusive</c>；这行日志是为了让这个判断**每次启动都能被复核**，而不是靠记忆。</para>
+        /// </summary>
+        private void LogExclusiveTag()
+        {
+            Debug.Log($"{LogTag} {BuffName} 互斥标签={exclusiveTag} 优先级={exclusiveTagPriority}（抄自 BaseBuff）");
+
+            if (exclusiveTag != BuffExclusiveTags.NotExclusive)
+            {
+                Debug.LogWarning($"{LogTag} {BuffName} 的互斥标签是 {exclusiveTag}，不是 NotExclusive——" +
+                                 "它会与**同标签的其它 Buff**互斥（`CharacterMainControl.cs:2652-2681`）。" +
+                                 "本模组所有 Buff 的标签都抄自同一个 BaseBuff，因此会彼此顶掉；" +
+                                 "请核实 BaseBuff 资产上配的到底是什么标签。");
             }
         }
 

@@ -1,75 +1,49 @@
-﻿using Duckov.Buffs;
-using Duckov.Utilities;
+using EliteEnemies.Buffs;
+using EliteEnemies.Buffs.Effects;
 using UnityEngine;
-using System;
-using System.Collections.Generic;
 
 namespace EliteEnemies.Affixes.Behaviors
 {
     /// <summary>
-    /// 冻结
+    /// 严寒：命中玩家时叠加一层「寒冷」，叠满 5 层后转化为冻结。
+    ///
+    /// <para>叠加、减速与「满层转冻结」都在 <see cref="ChillBuff"/> 里——那个 Buff 挂在
+    /// **玩家**身上，层数累计与"是哪个精英打的"无关（两个精英各打两下就该叠到 4 层）。
+    /// 记在行为类里的话，每个精英各记各的，永远叠不满。</para>
     /// </summary>
     public class FrozenBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {
         public override string AffixName => "Frozen";
 
-        private Buff _frozenPrefab;
-        
-        private const float TriggerChance = 0.33f;
-        private const float CooldownDuration = 15f;
-        private float _lastTriggerTime = -999f;
+        /// <summary>
+        /// 两次叠层之间的最短间隔，**每个精英各算各的**。
+        ///
+        /// <para>⚠ 不节流的话霰弹枪一枪就能叠满：<c>OnHitPlayer</c> 是**每颗弹丸**各触发一次
+        /// （补丁打在 <c>DamageReceiver.Hurt</c> 上，见 <c>DamageReceiverPatches.cs</c>，
+        /// 而游戏对每颗弹丸都会走一遍 <c>Hurt</c>）。机枪同理。</para>
+        /// </summary>
+        private const float StackInterval = 0.5f;
 
-        public override void OnEliteInitialized(CharacterMainControl character)
-        {
-            _frozenPrefab = FindOriginBuffPrefab(1127);
-            if (_frozenPrefab == null)
-            {
-                Debug.LogError($"[EliteEnemies.FrozenBehavior] 无法找到1127Buff");
-            }
-        }
+        /// <summary>上次成功叠层的时刻。初值取一个远早于 <c>Time.time</c> 的值，保证第一次命中必定叠上。</summary>
+        private float _lastStackTime = -999f;
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
+
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
 
         public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
         {
-            if (_frozenPrefab == null || CharacterMainControl.Main == null || CharacterMainControl.Main.Health.IsDead)
-                return;
+            if (Time.time < _lastStackTime + StackInterval) return;
 
-            if (Time.time < _lastTriggerTime + CooldownDuration)
-                return;
+            // 冻结免疫中（冻结期间 + 冻结结束后 15 秒）不再叠寒冷，见 ChillBuff.IsFreezeImmune。
+            // ⚠ 这一条**必须**有，否则会连锁冻结：冻结期间寒冷照叠，满层后同 ID 走刷新分支，
+            //   把冻结时长重新刷满——只要精英持续命中，玩家就永远出不来。
+            if (ChillBuff.IsFreezeImmune(CharacterMainControl.Main)) return;
 
-            if (UnityEngine.Random.value > TriggerChance)
-                return;
+            // 施加失败（玩家不存在等）时**不**推进计时——否则那一次间隔白等。
+            if (!EliteBuffs.ApplyToPlayer<ChillBuff>(attacker)) return;
 
-            CharacterMainControl.Main.AddBuff(_frozenPrefab, attacker);
-            
-            _lastTriggerTime = Time.time;
+            _lastStackTime = Time.time;
         }
-        
-        private Buff FindOriginBuffPrefab(int id)
-        {
-            try
-            {
-                var buffsData = GameplayDataSettings.Buffs;
-                if (buffsData == null) return null;
-
-                // allBuffs 是私有 List<Buff>（TeamSoda.Duckov.Core/Duckov/Utilities/GameplayDataSettings.cs:347），
-                // 由 publicizer 在编译期公开，直接访问。
-                List<Buff> list = buffsData.allBuffs;
-                if (list != null)
-                {
-                    return list.Find(b => b.ID == id);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[EliteEnemies.FrozenBehavior] 读取 Buff 列表失败: {ex}");
-            }
-            return null;
-        }
-
-
-
     }
 }
