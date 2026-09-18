@@ -122,7 +122,16 @@
      SHA-256  <第 5 步的哈希>
    EOF
    ```
-   打过之后 `git describe --tags` 返回的就是版本号。
+   打过之后 `git describe --tags` 返回的就是版本号。**核对它指对了没有时要小心**——
+   annotated tag 会多一层对象：
+
+   ```bash
+   git rev-parse v2.1.0             # ✗ 这是**标签对象**自己的哈希，不是提交
+   git rev-parse 'v2.1.0^{commit}'  # ✓ 这才是它指向的提交，应与第 5 步的 SHA 相同
+   ```
+
+   > 这个坑实测踩过：拿 `git rev-parse v2.1.0` 去比 DLL 内嵌的 SHA，两个长哈希不一样，
+   > 差点以为标签打错了。标签本身没问题，是查法少了 `^{commit}`。
 
 7. **重扫 VirusTotal，替换工坊页链接**：`workshop/description/zh.md` 里那条检测报告链接
    指向的是**某个具体文件**的哈希，每次发版都变。拿第 5 步的 SHA-256 重扫、替换链接，
