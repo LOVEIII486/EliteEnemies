@@ -1,761 +1,464 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
-            Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{8E08C82B-F9A6-4EA1-B5DE-2953AE943AC4}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>EliteEnemies</RootNamespace>
-        <AssemblyName>EliteEnemies</AssemblyName>
-        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <LangVersion>9</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>x64</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>x64</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <ItemGroup>
-        <Reference Include="0Harmony">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\0Harmony.dll</HintPath>
-        </Reference>
-        <Reference Include="ALINE">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\ALINE.dll</HintPath>
-        </Reference>
-        <Reference Include="andywiecko.BurstTriangulator">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\andywiecko.BurstTriangulator.dll</HintPath>
-        </Reference>
-        <Reference Include="Animancer">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Animancer.dll</HintPath>
-        </Reference>
-        <Reference Include="Animancer.FSM">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Animancer.FSM.dll</HintPath>
-        </Reference>
-        <Reference Include="Assembly-CSharp">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Assembly-CSharp.dll</HintPath>
-        </Reference>
-        <Reference Include="AstarPathfindingProject">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\AstarPathfindingProject.dll</HintPath>
-        </Reference>
-        <Reference Include="BakeryRuntimeAssembly">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\BakeryRuntimeAssembly.dll</HintPath>
-        </Reference>
-        <Reference Include="Bilibili.BDS">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Bilibili.BDS.dll</HintPath>
-        </Reference>
-        <Reference Include="Cinemachine">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Cinemachine.dll</HintPath>
-        </Reference>
-        <Reference Include="Clipper2Lib">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Clipper2Lib.dll</HintPath>
-        </Reference>
-        <Reference Include="com.rlabrecque.steamworks.net">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
-        </Reference>
-        <Reference Include="DemiLib">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\DemiLib.dll</HintPath>
-        </Reference>
-        <Reference Include="DOTween">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\DOTween.dll</HintPath>
-        </Reference>
-        <Reference Include="DOTween.Modules">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\DOTween.Modules.dll</HintPath>
-        </Reference>
-        <Reference Include="DOTweenPro">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\DOTweenPro.dll</HintPath>
-        </Reference>
-        <Reference Include="DOTweenPro.Scripts">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\DOTweenPro.Scripts.dll</HintPath>
-        </Reference>
-        <Reference Include="Drawing">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Drawing.dll</HintPath>
-        </Reference>
-        <Reference Include="EasySave3">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\EasySave3.dll</HintPath>
-        </Reference>
-        <Reference Include="ECM2">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\ECM2.dll</HintPath>
-        </Reference>
-        <Reference Include="Eflatun.SceneReference">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Eflatun.SceneReference.dll</HintPath>
-        </Reference>
-        <Reference Include="EPO">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\EPO.dll</HintPath>
-        </Reference>
-        <Reference Include="EPODemo">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\EPODemo.dll</HintPath>
-        </Reference>
-        <Reference Include="EPOHDRP">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\EPOHDRP.dll</HintPath>
-        </Reference>
-        <Reference Include="EPOURP">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\EPOURP.dll</HintPath>
-        </Reference>
-        <Reference Include="EPOUtilities">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\EPOUtilities.dll</HintPath>
-        </Reference>
-        <Reference Include="FlexReader">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\FlexReader.dll</HintPath>
-        </Reference>
-        <Reference Include="FMODUnity">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\FMODUnity.dll</HintPath>
-        </Reference>
-        <Reference Include="FMODUnityResonance">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\FMODUnityResonance.dll</HintPath>
-        </Reference>
-        <Reference Include="FOW">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\FOW.dll</HintPath>
-        </Reference>
-        <Reference Include="HBAO.Demo.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\HBAO.Demo.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="HBAO.Demo.Universal.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\HBAO.Demo.Universal.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="HBAO.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\HBAO.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="HBAO.Universal.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\HBAO.Universal.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="ICSharpCode.SharpZipLib">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\ICSharpCode.SharpZipLib.dll</HintPath>
-        </Reference>
-        <Reference Include="ItemStatsSystem">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\ItemStatsSystem.dll</HintPath>
-        </Reference>
-        <Reference Include="KAnimationCore.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\KAnimationCore.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="LeTai.TranslucentImage">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\LeTai.TranslucentImage.dll</HintPath>
-        </Reference>
-        <Reference Include="LeTai.TranslucentImage.Demo">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\LeTai.TranslucentImage.Demo.dll</HintPath>
-        </Reference>
-        <Reference Include="LeTai.TranslucentImage.UniversalRP">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\LeTai.TranslucentImage.UniversalRP.dll</HintPath>
-        </Reference>
-        <Reference Include="LeTai.TrueShadow">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\LeTai.TrueShadow.dll</HintPath>
-        </Reference>
-        <Reference Include="MeshCombineStudio.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\MeshCombineStudio.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="MeshExtension">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\MeshExtension.dll</HintPath>
-        </Reference>
-        <Reference Include="MiniExcel">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\MiniExcel.dll</HintPath>
-        </Reference>
-        <Reference Include="Mono.Security">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Mono.Security.dll</HintPath>
-        </Reference>
-        <Reference Include="mscorlib">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\mscorlib.dll</HintPath>
-        </Reference>
-        <Reference Include="netstandard">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\netstandard.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="NodeCanvas">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\NodeCanvas.dll</HintPath>
-        </Reference>
-        <Reference Include="PackageTools">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\PackageTools.dll</HintPath>
-        </Reference>
-        <Reference Include="ParadoxNotion">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\ParadoxNotion.dll</HintPath>
-        </Reference>
-        <Reference Include="Pathfinding.Ionic.Zip.Reduced">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Pathfinding.Ionic.Zip.Reduced.dll</HintPath>
-        </Reference>
-        <Reference Include="Plugins">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Plugins.dll</HintPath>
-        </Reference>
-        <Reference Include="Razer.WyvrnSDK.Editor">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Razer.WyvrnSDK.Editor.dll</HintPath>
-        </Reference>
-        <Reference Include="Razer.WyvrnSDK.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Razer.WyvrnSDK.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="Razer.WyvrnSDK.Tests">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Razer.WyvrnSDK.Tests.dll</HintPath>
-        </Reference>
-        <Reference Include="sc.modeling.splines.runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\sc.modeling.splines.runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="ShapesRuntime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\ShapesRuntime.dll</HintPath>
-        </Reference>
-        <Reference Include="ShapesSamples">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\ShapesSamples.dll</HintPath>
-        </Reference>
-        <Reference Include="Sirenix.OdinInspector.Attributes">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Sirenix.OdinInspector.Attributes.dll</HintPath>
-        </Reference>
-        <Reference Include="Sirenix.Serialization">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Sirenix.Serialization.dll</HintPath>
-        </Reference>
-        <Reference Include="Sirenix.Serialization.Config">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Sirenix.Serialization.Config.dll</HintPath>
-        </Reference>
-        <Reference Include="Sirenix.Utilities">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Sirenix.Utilities.dll</HintPath>
-        </Reference>
-        <Reference Include="SodaLocalization">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\SodaLocalization.dll</HintPath>
-        </Reference>
-        <Reference Include="SymmetryBreak.TastyGrassShader">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\SymmetryBreak.TastyGrassShader.dll</HintPath>
-        </Reference>
-        <Reference Include="SymmetryBreakStudio.TastyGrassShader.Examples">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\SymmetryBreakStudio.TastyGrassShader.Examples.dll</HintPath>
-        </Reference>
-        <Reference Include="System"/>
-        <Reference Include="System.Collections">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Collections.dll</HintPath>
-        </Reference>
-        <Reference Include="System.ComponentModel.Composition">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.ComponentModel.Composition.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Configuration">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Configuration.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Core"/>
-        <Reference Include="System.Data"/>
-        <Reference Include="System.Data.DataSetExtensions">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Data.DataSetExtensions.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Drawing">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Drawing.dll</HintPath>
-        </Reference>
-        <Reference Include="System.EnterpriseServices">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.EnterpriseServices.dll</HintPath>
-        </Reference>
-        <Reference Include="System.IO.Compression">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.IO.Compression.dll</HintPath>
-        </Reference>
-        <Reference Include="System.IO.Compression.FileSystem">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.IO.Compression.FileSystem.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Net.Http">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Net.Http.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Numerics">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Numerics.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Runtime.Extensions">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Runtime.Extensions.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Runtime.InteropServices">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Runtime.InteropServices.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Runtime.Serialization">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Runtime.Serialization.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Security">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Security.dll</HintPath>
-        </Reference>
-        <Reference Include="System.ServiceModel.Internals">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.ServiceModel.Internals.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Transactions">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Transactions.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Xml"/>
-        <Reference Include="System.Xml.Linq">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\System.Xml.Linq.dll</HintPath>
-        </Reference>
-        <Reference Include="TeamSoda.Duckov.Core">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\TeamSoda.Duckov.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="TeamSoda.Duckov.Utilities">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\TeamSoda.Duckov.Utilities.dll</HintPath>
-        </Reference>
-        <Reference Include="TeamSoda.MiniLocalizor">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\TeamSoda.MiniLocalizor.dll</HintPath>
-        </Reference>
-        <Reference Include="UISplineRenderer">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UISplineRenderer.dll</HintPath>
-        </Reference>
-        <Reference Include="UniTask">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UniTask.dll</HintPath>
-        </Reference>
-        <Reference Include="UniTask.Addressables">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UniTask.Addressables.dll</HintPath>
-        </Reference>
-        <Reference Include="UniTask.DOTween">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UniTask.DOTween.dll</HintPath>
-        </Reference>
-        <Reference Include="UniTask.Linq">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UniTask.Linq.dll</HintPath>
-        </Reference>
-        <Reference Include="UniTask.TextMeshPro">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UniTask.TextMeshPro.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.2D.Tilemap.Extras">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.2D.Tilemap.Extras.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Addressables">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Addressables.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Burst">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Burst.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Burst.Unsafe">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Burst.Unsafe.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Collections">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Collections.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Collections.LowLevel.ILSupport">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.InputSystem">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.InputSystem.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.InputSystem.ForUI">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.InputSystem.ForUI.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Mathematics">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Mathematics.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.MemoryProfiler">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.MemoryProfiler.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Polybrush">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Polybrush.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.ProBuilder">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.ProBuilder.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.ProBuilder.Csg">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.ProBuilder.Csg.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.ProBuilder.KdTree">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.ProBuilder.KdTree.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.ProBuilder.Poly2Tri">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.ProBuilder.Poly2Tri.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.ProBuilder.Stl">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.ProBuilder.Stl.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Profiling.Core">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Profiling.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Recorder">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Recorder.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Recorder.Base">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Recorder.Base.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.RenderPipelines.Core.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.RenderPipelines.ShaderGraph.ShaderGraphLibrary.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.RenderPipelines.Universal.Config.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.RenderPipelines.Universal.Config.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.RenderPipelines.Universal.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.RenderPipelines.Universal.Shaders">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.RenderPipelines.Universal.Shaders.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.ResourceManager">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.ResourceManager.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.ScriptableBuildPipeline">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.ScriptableBuildPipeline.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Splines">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Splines.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.TextMeshPro">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.TextMeshPro.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.Timeline">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.Timeline.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.VisualScripting.Antlr3.Runtime">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.VisualScripting.Core">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.VisualScripting.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.VisualScripting.Flow">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.VisualScripting.Flow.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.VisualScripting.State">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\Unity.VisualScripting.State.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AccessibilityModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.AccessibilityModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AIModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.AIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AndroidJNIModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.AndroidJNIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AnimationModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ARModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ARModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AssetBundleModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AudioModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ClothModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ClusterInputModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ClusterInputModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ClusterRendererModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ClusterRendererModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ContentLoadModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ContentLoadModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CrashReportingModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.CrashReportingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.DirectorModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.DSPGraphModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.DSPGraphModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.GameCenterModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.GIModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.GIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.GridModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.GridModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.HotReloadModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.HotReloadModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ImageConversionModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.IMGUIModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.InputLegacyModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.InputModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.InputModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.JSONSerializeModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.LocalizationModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.LocalizationModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.NVIDIAModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.NVIDIAModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ParticleSystemModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.PerformanceReportingModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.PerformanceReportingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.Physics2DModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.PhysicsModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ProfilerModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ProfilerModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.PropertiesModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.PropertiesModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ScreenCaptureModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SharedInternalsModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SpriteMaskModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SpriteShapeModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.SpriteShapeModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.StreamingModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.StreamingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SubstanceModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.SubstanceModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SubsystemsModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.SubsystemsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TerrainModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TerrainPhysicsModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TextCoreFontEngineModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TextCoreTextEngineModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TextRenderingModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TilemapModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.TilemapModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TLSModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.TLSModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UI">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UI.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UIElementsModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UIModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UmbraModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UmbraModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityAnalyticsCommonModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityAnalyticsModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityConnectModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityConnectModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityCurlModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityCurlModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityTestProtocolModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityTestProtocolModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestAudioModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestTextureModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestWWWModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VehiclesModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VFXModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.VFXModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VideoModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VirtualTexturingModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.VirtualTexturingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VRModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.VRModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.WindModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.WindModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.XRModule">
-          <HintPath>E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Managed\UnityEngine.XRModule.dll</HintPath>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="DebugTool\LootAlgorithmVerifier.cs" />
-        <Compile Include="DebugTool\LootCacheDumper.cs" />
-        <Compile Include="DebugTool\PresetKeyLogger.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\BehaviorsPatches\ReflectPatch.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\BehaviorsPatches\SlimeLootboxPhysicsPatch.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BerserkBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\BlindnessBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChaosOnHitBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ChickenBroBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DistortionBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\DungEaterBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\EMPBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\FrozenBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GigantificationBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GrenadierBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\GuardianBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\HardeningBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\InvisibilityBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\KnockbackBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MagazineCurseBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MandarinDuckBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MimicBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MimicTearBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MiniaturationBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\MultiShotBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\NimbleBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ObscurerBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\PhantomBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\PhaseSwapBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\OverloadBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\ReflectBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RevengeBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\RegenerationBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SelfDestructBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SlimeBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SlipperyBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SlowBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\SplitBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\StickyBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\StunBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\TearBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\TestTalkativeBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\TimeStopBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\UndyingBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\Behaviors\VampirismBehavior.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\EliteBehaviorHelper.cs" />
-        <Compile Include="EliteEnemy\AttributeModifier\AIFieldModifier.cs" />
-        <Compile Include="EliteEnemy\AttributeModifier\AttributeModifier.cs" />
-        <Compile Include="EliteEnemy\AttributeModifier\StatModifier.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\DistortionEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\EMPEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\SlipperyEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\TearEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\EliteBuffFactory.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Patches\BulletDistortionPatch.cs" />
-        <Compile Include="EliteEnemy\ComboSystem\EliteComboDefinition.cs" />
-        <Compile Include="EliteEnemy\ComboSystem\EliteComboRegistry.cs" />
-        <Compile Include="EliteEnemy\Core\EggSpawnHelper.cs" />
-        <Compile Include="EliteEnemy\Core\EliteEnemyCorePatches.cs" />
-        <Compile Include="EliteEnemy\Core\NPCPresetNames.cs" />
-        <Compile Include="EliteEnemy\LootSystem\EliteLootSystem.cs" />
-        <Compile Include="EliteEnemy\LootSystem\LootItemHelper.cs" />
-        <Compile Include="EliteEnemy\VisualEffects\EliteGlowController.cs" />
-        <Compile Include="EliteEnemy\VisualEffects\EliteHealthBarSystem.cs" />
-        <Compile Include="ModSettingsApi\ModSettingAPI.cs" />
-        <Compile Include="Settings\EliteEnemiesConfig.cs" />
-        <Compile Include="Settings\SettingsUIRegistration.cs" />
-        <Compile Include="DebugTool\EliteEnemyTracker.cs" />
-        <Compile Include="DebugTool\SpawnHelper.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\AffixBehaviorRegistration.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\EliteAffix.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\EliteBehaviorComponent.cs" />
-        <Compile Include="EliteEnemy\AffixBehaviors\IAffixBehavior.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\BlindnessEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\DungEaterEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\SlowEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\Effects\StunEffect.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\EliteBuffModifierManager.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\EliteBuffPatches.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\EliteBuffRegistry.cs" />
-        <Compile Include="EliteEnemy\BuffsSystem\IEliteBuffEffect.cs" />
-        <Compile Include="EliteEnemy\Core\EliteEnemyCore.cs" />
-        <Compile Include="HarmonyLoad.cs" />
-        <Compile Include="Localization\LocalizationManager.cs" />
-        <Compile Include="ModBehaviour.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="Settings\Settings.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <EmbeddedResource Include="0Harmony.dll" />
-    </ItemGroup>
-    <ItemGroup>
-      <Content Include=".gitignore" />
-      <Content Include="LICENSE" />
-      <Content Include="Localization\ChineseSimplified.csv" />
-      <Content Include="Localization\ChineseTraditional.csv" />
-      <Content Include="Localization\English.csv" />
-      <Content Include="Localization\LocalizationGuide.md" />
-      <Content Include="Localization\Russian.csv" />
-      <Content Include="README.md" />
-      <Content Include="Workshop\combo设计.txt" />
-      <Content Include="Workshop\description.txt" />
-      <Content Include="Workshop\descriptionen.txt" />
-      <Content Include="Workshop\description\en.md" />
-      <Content Include="Workshop\description\zh.md" />
-      <Content Include="Workshop\info.ini" />
-      <Content Include="Workshop\title\en.md" />
-      <Content Include="Workshop\title\zh.md" />
-      <Content Include="Workshop\version.txt" />
-      <Content Include="Workshop\词条统计.txt" />
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
-    <PropertyGroup>
-      <PostBuildEvent>copy /Y "$(TargetPath)" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\EliteEnemies.dll"
-copy /Y "$(ProjectDir)\Workshop\info.ini" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\info.ini"
-copy /Y "$(ProjectDir)\Workshop\version.txt" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\version.txt"
-xcopy /Y /S /I "$(ProjectDir)Localization\*.csv" "E:\Game\Steam\steamapps\common\Escape from Duckov\Duckov_Data\Mods\EliteEnemies\Localization\"</PostBuildEvent>
-    </PropertyGroup>
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-         Other similar extension points exist, see Microsoft.Common.targets.
-    <Target Name="BeforeBuild">
-    </Target>
-    <Target Name="AfterBuild">
-    </Target>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      ══ 调试工具的编译期开关 ══
+
+      默认**不定义** ELITE_DEBUG ⇒ `src/DebugTools` 里的工具全部是关的。
+      要打开（开发期）：
+          dotnet build -p:EliteDebug=true
+
+      ⚠ 为什么不用 `#if DEBUG`（即「Debug 配置自动打开」）：
+        本工程的部署（DeployToGame）挂在 Build 目标上，而 `dotnet build` 默认就是
+        Debug 配置——那样写的话，平时一条 `dotnet build` 就会把**开着调试工具的版本
+        直接部署进游戏**。那是比现在写死 false 更危险的默认值。
+
+      ⚠ 也不要把这里的 `Condition` 改成 `'$(Configuration)' == 'Debug'`：同上。
+        如果你确实想要「Debug 配置打开、Release 关闭」，就必须**同时**把部署限制到
+        Release（给 DeployToGame 加 `Condition="'$(Configuration)' == 'Release'"`），
+        否则两者的组合仍然是「一构建就发布一个带调试工具的版本」。
     -->
+    <DefineConstants Condition="'$(EliteDebug)' == 'true'">$(DefineConstants);ELITE_DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      程序集名和根命名空间取 EliteEnemies。
+
+      ⚠ 真正的契约不是「等于文件夹名」，而是**等于 workshop\info.ini 的 name**。
+         ModManager.ActivateMod 用
+             Assembly.LoadFrom(dllPath).GetType(name + ".ModBehaviour")
+         定位入口（TeamSoda.Duckov.Core/Duckov/Modding/ModManager.cs:445），
+         其中 name 来自 info.ini 的 name 键；dllPath 也由同一个值拼出
+             Path.Combine(path, name + ".dll")   （ModInfo.cs:30）
+         即 **name 一个值同时决定 DLL 文件名与入口类型全名**，文件夹名不参与。
+         类型查找是 Assembly.GetType 的精确匹配，**大小写敏感**。
+
+      所以这里三者（info.ini 的 name / AssemblyName / RootNamespace）取同一值，
+      是为了改动时不遗漏；构建期 GenerateModInfo 会强制校验前两者的关系。
+    -->
+    <AssemblyName>EliteEnemies</AssemblyName>
+    <RootNamespace>EliteEnemies</RootNamespace>
+
+    <!--
+      ⭐ 版本号的**唯一来源**。全工程只有这一处允许写版本号。
+
+      info.ini 的 version 由构建期从 workshop\info.ini.template 的 @VERSION@ 生成，
+      不需要、也不允许手工维护——见下方 GenerateModInfo。
+      发版时只改这一行，然后 dotnet build 即可。
+    -->
+    <Version>2.0.0</Version>
+
+    <Product>Elite Enemies</Product>
+    <!-- 旧的 Properties\AssemblyInfo.cs 已删除（SDK 自动生成同名特性，留着会 CS0579 重复）。
+         这里补回其中有价值的部分。 -->
+    <Company>LOVEIII486</Company>
+    <Copyright>Copyright © 2025 LOVEIII486</Copyright>
+    <Description>精英怪模组 for Escape From Duckov</Description>
+
+    <!-- 模组由 Assembly.LoadFrom 载入 Unity 的 Mono。
+         .deps.json 是 .NET Core 的程序集解析清单，Mono 下毫无作用，纯属噪音。 -->
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <!--
+    排除 tools\ 下的源码。
+    SDK 风格工程默认把项目目录下所有 .cs 都纳入编译，而 tools\ 放的是
+    独立的开发辅助工具（有自己的 csproj），不参与模组构建。
+    漏了这行的话，工具的 Program.cs 会被编译进 EliteEnemies.dll。
+  -->
+  <ItemGroup>
+    <Compile Remove="tools\**" />
+    <None Remove="tools\**" />
+  </ItemGroup>
+
+  <ItemGroup Label="包">
+    <!--
+      HarmonyX。
+
+      ⚠ 注意：NuGet **不会**把 0Harmony.dll 复制进 bin\。
+         Lib.Harmony 2.3.3 对 netstandard2.0 只发一个 `_._` 占位文件，该目录下
+         **没有**运行时程序集；包内真正的运行时程序集在 lib\net35|net452|net472|net48|net5.0…
+         这些按旧 TFM 分的目录里（没有 netstandard2.1 目录）。
+
+      因此部署**不能**依赖 $(TargetDir)0Harmony.dll —— 它永远不存在，
+      基于 Exists() 的部署判定会**静默跳过**，表现为「构建全绿、模组目录里却没有 0Harmony.dll」。
+      本工程历史上就栽在这上面：模组目录里那份是 2024-03-29 手工放进去的旧文件，
+      此后每次构建都没再更新过它，升级 Lib.Harmony 也不会生效。
+
+      正确做法：用 GeneratePathProperty 拿到包根目录（$(PkgLib_Harmony)），
+      在部署目标里显式取 lib\net472\0Harmony.dll。
+
+      ── 为什么是 2.4.1 的 net472 ─────────────────────────────────────────
+      备用份只在玩家**没订阅** Harmony 前置模组时才启用。选版本与 flavor
+      的唯一标准是：让「有前置」与「无前置」两种运行环境**完全等同**，
+      否则会出现只在少数玩家身上复现的差异。
+
+      实测（2026-09-17）：创意工坊前置模组 HarmonyLoadMod（3589088839）
+      分发的 0Harmony.dll，与 NuGet `Lib.Harmony 2.4.1` 的
+      **lib\net472** flavor **md5 逐字节相同**（2afc09f2cd4cba05d85cc7c4f7d62edb，
+      2,456,064 字节）。其 ProductVersion 为
+      2.4.1.0+789df191bbaf6610232d50e7ef7dddc0d2812549。
+
+      ⚠ 别选 net48：net472 与 net48 两份**文件大小相同**（都是 2,456,064），
+      极易误判为同一个文件，但内容不同——net48 那份的 TargetFramework 标的是
+      .NETFramework v4.8，与前置模组分发的不是同一个构建。
+
+      本工程历史上用的是 2.3.3 的 net48，与前置模组版本不一致，
+      属于本次一并修正的对齐问题。
+    -->
+    <PackageReference Include="Lib.Harmony" Version="2.4.1">
+      <GeneratePathProperty>true</GeneratePathProperty>
+    </PackageReference>
+
+    <!--
+      Publicizer —— 本项目的基础设施，不是可选项。
+
+      【项目基调】游戏程序集里大量 [SerializeField] private 字段与 internal 成员，
+      正常引用拿不到。我们**统一**用 Publicizer 在编译期把它们公开，
+      从而**禁止**为访问这些成员而写运行时反射。
+
+      三条路的取舍（这是本项目的硬性约定）：
+
+        | 手段              | 编译期 | 运行时   | 改名后       |
+        |───────────────────|────────|──────────|──────────────|
+        | 反射 GetField     | 通过   | 有开销   | **静默失效** |
+        | Publicizer        | 通过   | 零开销   | **编译报错** |
+        | Harmony Patch     | 通过   | 有开销   | 编译报错     |
+
+      → **凡是 Publicizer 能解决的，一律用 Publicizer 直接访问。**
+      → 需要改变游戏行为时才用 Harmony。反射只剩极少数例外，清单见
+        ..\Docs\agent\03-编码规范.md §2.3（本节末尾的注释只重复这一点，不列举）。
+
+      PrivateAssets=all：本项目是模组不是库，Publicizer 不应流向引用者。
+    -->
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!--
+    ════════════════════════════════════════════════════════════════════════════
+    项目基调：禁止随处制造反射
+    ════════════════════════════════════════════════════════════════════════════
+
+    本工程历史上有 55 处反射，其中 18 处是「用字符串字面量找成员」，例如
+    GetField("buffs")、GetProperty("CurrentModelInfo")、GetMethod("InitializeCustomModel")。
+    这类代码的问题是**改名即静默失效**：游戏更新后不报错，只是行为悄悄变错，
+    而且往往几个月后才有玩家反馈，排查成本极高。
+
+    最刺眼的一例：Item.GetCharacterItem() 本来是 **public** 方法
+    （ItemStatsSystem/ItemStatsSystem/Item.cs:752），却在三处各自反射调用
+    （SplitBehavior.cs:190、SlimeLootboxPhysicsPatch.cs:51、EliteLootSystem.cs:386）。
+
+    ── 允许的反射：唯一权威定义在 03 §2.3 ────────────────────────────────
+      **本文不列举。** 允许（A 类）、禁止（D 类）、以及「确实违规、但消除它要改
+      当前任务范围之外的文件」时的保留档写法，一律以
+          ..\Docs\agent\03-编码规范.md  §2.3
+      为准，且每处例外都必须在代码里写明理由。
+
+      曾有另一份列举在这里（也有一份在 AGENT.md §3.2），两份都漏了
+      A2「引用编译期无法引用的类型（第三方可选依赖 / 运行时加载的程序集）」，
+      而那恰是模组场景最常用的一类。同一份清单多一个副本就多一次漂移，
+      所以这里只留指针。AGENT.md §3.2 同步改为指针。
+
+    ── 无论哪一档，这三条始终成立 ────────────────────────────────────────
+      × 对 Publicizer 已公开的成员再用 GetField/SetValue/GetMethod/Invoke
+      × **推测性反射**：写 GetMethod("可能叫这个名字") 然后 ?.Invoke(...)
+        找不到就静默跳过。必须先在反编译源码里确认签名存在，再写。
+        （游戏自有程序集里找不到就是不存在；第三方程序集见 03 §2.3 的 A2。）
+      × 需要 Hook 行为时用反射手动调用，而不是 Harmony Patch
+
+    新增反射前先自问：Publicizer 能不能解决？能就改用它。
+  -->
+  <ItemGroup Label="Publicizer">
+    <!--
+      Publicize 的 Include 匹配的是**程序集文件名**（不含扩展名），不是命名空间。
+
+      IncludeVirtualMembers=false
+        —— 不公开 virtual 成员。公开了会改变补丁匹配面，干扰 Harmony 的定位。
+      IncludeCompilerGeneratedMembers=false
+        —— 不动编译器生成成员（闭包、状态机等）。它们不是稳定契约，公开了也没有意义。
+    -->
+    <Publicize Include="TeamSoda.Duckov.Core"
+               IncludeVirtualMembers="false"
+               IncludeCompilerGeneratedMembers="false" />
+    <Publicize Include="TeamSoda.Duckov.Utilities"
+               IncludeVirtualMembers="false"
+               IncludeCompilerGeneratedMembers="false" />
+    <!--
+      ⚠ 名字是 ItemStatsSystem，**没有** TeamSoda. 前缀。
+         反编译出来的源码目录叫 TeamSoda.ItemStatsSystem，容易顺手写错——
+         但 Publicize 匹配的是**程序集文件名**，写错了不会报错，
+         只会静默不生成影子副本，于是你以为公开了、实际编译期仍拿不到私有成员。
+    -->
+    <Publicize Include="ItemStatsSystem"
+               IncludeVirtualMembers="false"
+               IncludeCompilerGeneratedMembers="false" />
+    <!--
+      TeamSoda.MiniLocalizor —— 只为拿 CSVFileLocalizor 内部那个私有字典的**键**。
+
+      为什么需要它：本模组要把自己的 CSV 全量推给游戏本地化器，因此必须知道"有哪些键"，
+      而 CSVFileLocalizor 只暴露 Get/GetEntry/HasKey，**没有枚举键的 API**。
+      没有这一步的话只能自己再扫一遍 CSV 文件 —— 那就是"同一个文件读两遍"。
+      Publicizer 之后直接读 provider.dic.Keys 即可：**一次读取、零手写解析**，
+      而且字段改名会编译报错（反射那条路会静默失效）。
+
+      与上面三个同样的取舍：IncludeVirtualMembers=false 不改补丁匹配面。
+    -->
+    <Publicize Include="TeamSoda.MiniLocalizor"
+               IncludeVirtualMembers="false"
+               IncludeCompilerGeneratedMembers="false" />
+  </ItemGroup>
+
+  <!--
+    游戏程序集。
+
+    清单由实际 using 反推得出，不是把 Managed\ 下 237 个 DLL 全引用一遍。
+    HintPath 一律基于 $(DuckovManagedDir)，换机器只改 Directory.Build.props 一处。
+
+    写法说明：名字直接列在 Reference 的 Include 里（分号分隔），%(Identity)
+    即该 Reference 自身，无歧义。**不要**改写成
+        <GameAssembly Include="..."/>
+        <Reference Include="@(GameAssembly)"><HintPath>...%(Identity).dll</HintPath></Reference>
+    那种跨 item 列表的转换命令行 MSBuild 能求值，但 IDE 的项目模型解析不出来，
+    会让全部引用显示为无法解析。
+
+    注意命名空间与程序集名不同名的情况——
+      SodaCraft.Localizations -> SodaLocalization.dll
+      NodeCanvas.Framework    -> NodeCanvas.dll
+      TMPro                   -> Unity.TextMeshPro.dll
+      UnityEngine.AI          -> UnityEngine.AIModule.dll
+      UnityEngine.InputSystem -> Unity.InputSystem.dll
+  -->
+  <ItemGroup Label="游戏程序集">
+    <Reference Include="Assembly-CSharp;TeamSoda.Duckov.Core;TeamSoda.Duckov.Utilities;TeamSoda.MiniLocalizor;SodaLocalization;ItemStatsSystem;NodeCanvas;ParadoxNotion;ECM2">
+      <HintPath>$(DuckovManagedDir)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.CoreModule;UnityEngine.AIModule;UnityEngine.UIModule;UnityEngine.IMGUIModule;UnityEngine.InputLegacyModule;UnityEngine.UI;UnityEngine.PhysicsModule;UnityEngine.AudioModule;UnityEngine.AnimationModule;UnityEngine.ParticleSystemModule;UnityEngine.TextRenderingModule;Unity.TextMeshPro;Unity.InputSystem">
+      <HintPath>$(DuckovManagedDir)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- 传递依赖：本模组代码不直接用，但游戏类型的公开签名里出现了它们的类型，
+         编译器要求必须能解析（CS0012）。
+         FMODUnity               <- PhantomBehavior 用到 EventInstance
+         Sirenix.OdinInspector.Attributes <- MimicTearBehavior 用到 ISelfValidator
+         ParadoxNotion           <- GraphOwner 实际定义在这里，不在 NodeCanvas.dll -->
+    <Reference Include="FMODUnity;Sirenix.OdinInspector.Attributes;UniTask;Newtonsoft.Json;DOTween">
+      <HintPath>$(DuckovManagedDir)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    ════════════════════════════════════════════════════════════════════════════
+    info.ini：生成而非手工维护
+    ════════════════════════════════════════════════════════════════════════════
+
+    历史：旧项目栽过一次，info.ini 写 1.6.6、version.txt 写 1.6.2，两个数字各自漂移。
+    当时的对策是构建期比对两者、不一致就 fail —— 能拦住错版被发出去，
+    但**仍然要手工改 info.ini**，只是改错了会被拦下。
+
+    现在改为：info.ini 是**构建产物**，由 workshop\info.ini.template 生成，
+    其中的 @VERSION@ 在构建期替换为 $(Version)。
+    于是 <Version> 成为全工程唯一的版本来源，物理上不存在第二个数字可改——
+    「忘记改」从「会被拦住」变成「不可能发生」。
+
+    为什么用模板生成，而不是构建时改写 workshop\info.ini：
+      后者会让构建去修改一个被 git 跟踪的源文件，副作用意外（IDE 里文件莫名变动）、
+      容易干扰增量构建，而且改完还得提交，等于把问题换个地方。
+
+    生成的 info.ini 放在 obj\ 下，不进版本控制。
+  -->
+  <PropertyGroup>
+    <_InfoIniTemplate>$(MSBuildProjectDirectory)\workshop\info.ini.template</_InfoIniTemplate>
+    <!--
+      ⚠ 这里不能用 $(IntermediateOutputPath)：它在**项目级属性求值**阶段还是空的
+        （该属性由 SDK 的 common targets 稍后才设置），于是路径会退化成相对的
+        "info.ini"，把生成物写到仓库根目录去。
+        $(BaseIntermediateOutputPath) 由 Sdk.props 更早设置，求值期即可用。
+    -->
+    <_GeneratedInfoIni>$(BaseIntermediateOutputPath)info.ini</_GeneratedInfoIni>
+  </PropertyGroup>
+
+  <!--
+    挂在 BeforeBuild 而不是 Build：MSBuild 的 Build 目标体在其依赖（CoreBuild ->
+    CoreCompile）之后才执行，挂 Build 会导致生成跑在编译之后，DeployToGame 取不到它。
+  -->
+  <!--
+    ⚠ 本目标**刻意不加 Inputs/Outputs**。
+      加了的话 MSBuild 只比较「模板文件 vs 产物文件」的时间戳，
+      而 $(Version) 变了并不会让模板变新 → 目标被判定为最新而跳过 →
+      生成出来的 info.ini 仍带着**旧版本号**。那正好是本机制要消灭的问题。
+      本目标只做几次字符串替换，开销可忽略；重复写入由 WriteOnlyWhenDifferent 抑制。
+  -->
+  <Target Name="GenerateModInfo" BeforeTargets="BeforeBuild">
+
+    <Error Condition="!Exists('$(_InfoIniTemplate)')"
+           Text="缺少 workshop\info.ini.template。info.ini 现在由它生成，模板本身必须存在。" />
+
+    <PropertyGroup>
+      <_TemplateText>$([System.IO.File]::ReadAllText('$(_InfoIniTemplate)'))</_TemplateText>
+
+      <!-- 剔除注释行。游戏侧解析器把任何非空、非 [ 开头的行都按 key=value 读
+           （ModManager.cs:347-361），注释行一旦含等号就会被当成多余的键。 -->
+      <_TemplateText>$([System.Text.RegularExpressions.Regex]::Replace($(_TemplateText), '(?m)^\s*;.*\r?\n', ''))</_TemplateText>
+
+      <!-- 版本号唯一来源：csproj 的 <Version> -->
+      <_TemplateText>$(_TemplateText.Replace('@VERSION@', '$(Version)'))</_TemplateText>
+
+      <!-- 三个必需键。缺任一个模组都不会出现在游戏列表里：
+           name 缺失 → TryProcessModFolder 直接 return false（ModManager.cs:304）
+           displayName / description 缺失 → 只报 LogError（:309 / :314），
+           模组仍会出现但显示异常，故在此一并拦下。 -->
+      <_IniName>$([System.Text.RegularExpressions.Regex]::Match($(_TemplateText), '(?m)^\s*name\s*=\s*([^\r\n]+)').Groups[1].Value.Trim())</_IniName>
+      <_IniDisplayName>$([System.Text.RegularExpressions.Regex]::Match($(_TemplateText), '(?m)^\s*displayName\s*=\s*([^\r\n]+)').Groups[1].Value.Trim())</_IniDisplayName>
+      <_IniDescription>$([System.Text.RegularExpressions.Regex]::Match($(_TemplateText), '(?m)^\s*description\s*=\s*([^\r\n]+)').Groups[1].Value.Trim())</_IniDescription>
+      <_IniVersion>$([System.Text.RegularExpressions.Regex]::Match($(_TemplateText), '(?m)^\s*version\s*=\s*([^\r\n]+)').Groups[1].Value.Trim())</_IniVersion>
+    </PropertyGroup>
+
+    <Error Condition="'$(_IniName)' == ''"
+           Text="info.ini.template 缺少 name 键（或该行为空）。没有 name，ModManager.TryProcessModFolder 直接返回 false（ModManager.cs:304），模组不会出现在游戏列表里。" />
+    <Error Condition="'$(_IniDisplayName)' == ''"
+           Text="info.ini.template 缺少 displayName 键（或该行为空）。" />
+    <Error Condition="'$(_IniDescription)' == ''"
+           Text="info.ini.template 缺少 description 键（或该行为空）。" />
+
+    <!-- 生成物里的版本必须就是 $(Version)。若此处不符，说明模板里还有硬编码的版本号没换成 @VERSION@ -->
+    <Error Condition="'$(_IniVersion)' != '$(Version)'"
+           Text="生成出的 info.ini 版本号为 '$(_IniVersion)'，与 csproj 的 &lt;Version&gt; '$(Version)' 不符。请检查模板里是否残留了硬编码的版本号（应写 @VERSION@）。" />
+
+    <!-- 程序集名必须等于 info.ini 的 name：游戏用 name 拼 DLL 路径（ModInfo.cs:30）
+         并查找入口类型 &lt;name&gt;.ModBehaviour（ModManager.cs:445）。 -->
+    <Error Condition="'$(_IniName)' != '$(AssemblyName)'"
+           Text="info.ini.template 的 name = '$(_IniName)' 与程序集名 '$(AssemblyName)' 不一致。二者必须相同，否则模组加载失败。" />
+
+    <!-- RootNamespace 不是游戏侧要求，只是本项目「三者一致」的约定，降级为警告 -->
+    <Warning Condition="'$(_IniName)' != '$(RootNamespace)'"
+             Text="RootNamespace = '$(RootNamespace)' 与 info.ini 的 name = '$(_IniName)' 不一致。游戏不要求二者相等，但本项目约定 name / AssemblyName / RootNamespace 取同一值，以免改动时漏同步。" />
+
+    <WriteLinesToFile File="$(_GeneratedInfoIni)" Lines="$(_TemplateText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+
+    <Message Importance="high" Text="GenerateModInfo: 由模板生成 info.ini（version = $(Version)）" />
+  </Target>
+
+  <!--
+    部署：构建后把产物同步到 <游戏>\Duckov_Data\Mods\EliteEnemies\。
+    以 -p:DeployToGame=false 关闭。游戏目录不存在时自动跳过。
+  -->
+  <Target Name="DeployToGame" AfterTargets="Build"
+          Condition="'$(DeployToGame)' != 'false' and Exists('$(DuckovGameDir)')">
+    <PropertyGroup>
+      <_ModDir>$(DuckovModsDir)\EliteEnemies</_ModDir>
+      <!-- 本地化 CSV 的部署目标。注意：**游戏侧不读这个目录**——游戏只读
+           StreamingAssets\Localization\<语言>.csv。这份 CSV 由模组自己的加载器读取，
+           部署到同名子目录只是本项目的约定（大小写敏感：Localization，非 localization）。 -->
+      <_ModLocDir>$(_ModDir)\Localization</_ModLocDir>
+      <!--
+        0Harmony.dll 部署到 libs\ 子目录，**故意不放在模组根目录**。
+
+        原因：AppDomain.AssemblyResolve 只在常规解析失败后才触发。
+        若 0Harmony.dll 与 EliteEnemies.dll 同目录，Assembly.LoadFrom 探测同目录
+        必然成功，HarmonyResolver 就没有机会介入，「优先复用已加载的 HarmonyLib」
+        也就无法实现——结果必然是与 Harmony 前置模组各持一份、互不可见。
+        放进子目录正是为了让常规探测失败，把控制权交给解析器。
+
+        参见 src/Infrastructure/HarmonyResolver.cs。
+      -->
+      <_ModLibDir>$(_ModDir)\libs</_ModLibDir>
+
+      <!-- 0Harmony.dll 的来源。见文件顶部「包」一节：它**不在** bin\ 里，
+           必须从 NuGet 包内显式取。 -->
+      <_HarmonyDll>$(PkgLib_Harmony)\lib\net472\0Harmony.dll</_HarmonyDll>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(_ModDir);$(_ModLocDir);$(_ModLibDir)" />
+
+    <ItemGroup>
+      <_Deploy Include="$(TargetPath)" />
+      <!-- info.ini 是构建产物，由 GenerateModInfo 从模板生成到 obj\ 下。
+           不部署 workshop\info.ini —— 那个文件已不存在（版本号只允许有一个来源）。 -->
+      <_Deploy Include="$(_GeneratedInfoIni)" Condition="Exists('$(_GeneratedInfoIni)')" />
+      <!-- 模组列表预览图。ModManager.TryProcessModFolder 只认模组目录下的 preview.png，
+           缺了不报错，只是模组列表里没有图。 -->
+      <_Deploy Include="$(MSBuildProjectDirectory)\workshop\preview.png" Condition="Exists('$(MSBuildProjectDirectory)\workshop\preview.png')" />
+      <!-- 译者指南：随模组一起分发，放在 Localization\ 子目录、与 CSV 并排
+           （译者打开那个文件夹就是为了改 CSV，指南放在同一处才找得到）。
+           ⚠ 它是**给玩家/译者看的文档**，不是构建输入——源文件在 workshop\ 下。 -->
+      <_DeployCsv Include="$(MSBuildProjectDirectory)\workshop\LocalizationGuide.md"
+                  Condition="Exists('$(MSBuildProjectDirectory)\workshop\LocalizationGuide.md')" />
+      <_DeployCsv Include="$(MSBuildProjectDirectory)\localization\*.csv" />
+      <_DeployLib Include="$(_HarmonyDll)" Condition="Exists('$(_HarmonyDll)')" />
+    </ItemGroup>
+
+    <!-- 找不到 Harmony 就不再静默跳过：以前这里靠 Exists() 判定，结果构建全绿、
+         模组目录里却始终是手工放的旧文件。改为显式报错。 -->
+    <Error Condition="!Exists('$(_HarmonyDll)')"
+           Text="找不到 0Harmony.dll：'$(_HarmonyDll)'。请确认 Lib.Harmony 已还原（dotnet restore）。" />
+
+    <Copy SourceFiles="@(_Deploy)" DestinationFolder="$(_ModDir)" />
+    <Copy SourceFiles="@(_DeployCsv)" DestinationFolder="$(_ModLocDir)" />
+    <Copy SourceFiles="@(_DeployLib)" DestinationFolder="$(_ModLibDir)" />
+
+    <Message Importance="high" Text="DeployToGame: -> $(_ModDir)" />
+  </Target>
+
+  <!--
+    由 workshop\description\*.md 生成工坊页要贴的 BBCode。
+
+    ⚠ **为什么挂在构建上**：产物在 artifacts\ 下，而那个目录是 .gitignore 的
+      ⇒ 改了 md 却忘了重新生成时，**git status 看不出来**，产物就那么静默过期了
+      （实际踩过：md 是 20:03 改的，bbcode 还停在 20:01）。
+      这个工具本来只有一个手工命令（跑 tools\MdToBbcode 那个工程），
+      没有谁提醒你跑它。现在改成构建的一部分，改了描述就一定是新的。
+
+    用 -p:WorkshopBbcode=false 关掉（只想编译部署模组、不关心工坊材料时）。
+
+    ⚠ **ContinueOnError**：工具在遇到"转换不了的写法"（如 Markdown 表格）时会返回
+      非零并打出 ❌——那是**工坊页会出错**的信号，值得看见；但它不该阻断**模组**
+      的编译部署，两者是不相干的事。所以只让它在构建输出里叫，不让它拦路。
+  -->
+  <Target Name="GenerateWorkshopBbcode" AfterTargets="Build"
+          Condition="'$(WorkshopBbcode)' != 'false'">
+    <!--
+      ⚠ 两个 <Exec> 都显式声明子进程的 stdout/stderr 是 UTF-8。**别删。**
+
+      现象：不声明时，它们的中文输出在构建日志里变成 `鐢熸垚 …`（"生成"），
+      而且偶尔还带一个 `?`（如 `124 琛?`）——那不是"显示得难看"，是**真的丢了字符**。
+
+      原因：两个工具都**刻意**输出 UTF-8
+        · tools\gen-affix-overview.py 里有 sys.stdout.reconfigure(encoding="utf-8")
+        · .NET 那个工具在 stdout 被重定向时默认也是 UTF-8
+      而 Exec 捕获子进程输出时**按本机 ANSI/OEM 代码页解码**（中文系统上 = 936/GBK）
+      ⇒ "生成"的 UTF-8 字节 E7 94 9F E6 88 90 被拆成 鐢 / 熸 / 垚，再以 UTF-8 写进日志。
+
+      ⚠ 别反过来"让工具吐 GBK"：GBK 表里没有的字符（如 `⚠`）会直接抛
+        UnicodeEncodeError，换到 UTF-8 代码页的机器上又反过来。
+        这里声明的是"**这个子进程讲 UTF-8**"，与机器代码页无关——跨机器都成立。
+
+      ⚠ 参数名是 **`StdOutEncoding` / `StdErrEncoding`**。
+        别照着 ToolTask 的属性名猜成 `StandardOutputEncoding` / `StandardErrorEncoding`——
+        那两个名字 MSBuild 里有（ToolTask 上确实有同名属性），但 **`Exec` 不暴露它们**，
+        写下去会直接 MSB4064 报错（"Exec 任务不支持该参数"，2026-09-18 实测）。
+        **属性名 ≠ 任务参数名**，照猜必错——查参数名请查 MSBuild 官方文档的 Exec 任务页。
+
+      注：本项只影响**日志**。产物由工具自己以 UTF-8 写文件，与此无关。
+    -->
+    <Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)\tools\MdToBbcode&quot; --configuration Release"
+          StdOutEncoding="UTF-8" StdErrEncoding="UTF-8"
+          ContinueOnError="true" />
+    <!--
+      《词缀总览》独立指南：数据全部从 EliteAffixes.cs 与物品库读，不手抄。
+      需要 py（Windows 的 Python 启动器）；没有时 ContinueOnError 只会警告，
+      不影响模组本身的构建。
+    -->
+    <Exec Command="py &quot;$(MSBuildProjectDirectory)\tools\gen-affix-overview.py&quot;"
+          StdOutEncoding="UTF-8" StdErrEncoding="UTF-8"
+          ContinueOnError="true" />
+  </Target>
 
 </Project>

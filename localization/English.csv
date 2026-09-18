@@ -1,0 +1,190 @@
+key,value,version,sheet
+EliteEnemies_Settings_BasicSettings_Group,Elite enemy settings,2.3,Groups
+EliteEnemies_Settings_NormalEliteChance,Normal enemy elite chance,2.3,BasicSettings
+EliteEnemies_Settings_BossEliteChance,Boss elite chance,2.3,BasicSettings
+EliteEnemies_Settings_MerchantEliteChance,Merchant elite chance,2.3,BasicSettings
+EliteEnemies_Settings_MaxAffixCount,Max affix count,2.3,BasicSettings
+EliteEnemies_Settings_DropRateMultiplier,Elite loot multiplier (1.0 = default),2.3,BasicSettings
+EliteEnemies_Settings_ItemQualityTier,Loot quality tier (higher = better),2.3,BasicSettings
+EliteEnemies_Settings_GlobalMultipliers_Group,Global Attribute Adjustments (Elite Enemies Only),2.3,Groups
+EliteEnemies_Settings_GlobalHealthMultiplier,Global Health Multiplier,2.3,BasicSettings
+EliteEnemies_Settings_GlobalDamageMultiplier,Global Damage Multiplier,2.3,BasicSettings
+EliteEnemies_Settings_GlobalSpeedMultiplier,Global Speed Multiplier,2.3,BasicSettings
+EliteEnemies_Settings_EnableBonusLoot,"Enable Bonus Loot (Weighted by affix count, rarity, and enemy type)",2.3,BasicSettings
+EliteEnemies_Settings_VisualSettings_Group,Global Visual Settings,2.3,Groups
+EliteEnemies_Settings_ShowEliteName,Show Elite Enemy Names,2.3,VisualSettings
+EliteEnemies_Settings_ShowDetailedHealth,Show elite enemy health,2.3,VisualSettings
+EliteEnemies_Settings_AffixDisplayPosition,Affix Display Position,2.3,VisualSettings
+EliteEnemies_Settings_AffixFontSize,Affix Font Size,2.3,VisualSettings
+EliteEnemies_Settings_AffixCountWeights_Group,Affix Count Weights (higher = more common; tiers above Max Affix Count have no effect),2.3,Groups
+EliteEnemies_Settings_AffixWeight1,Weight for 1 affix (Recommended: 30-70),2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight2,Weight for 2 affixes (Recommended: 20-50),2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight3,Weight for 3 affixes (Recommended: 10-30),2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight4,Weight for 4 affixes (Recommended: 1-10),2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight5,Weight for 5 affixes (Recommended: 0-5),2.3,BasicSettings
+EliteEnemies_Settings_AffixToggles_Group,Affix toggles,2.3,Groups
+EliteEnemies_Affix_Tanky_Name,Tanky,2.3,AffixNames
+EliteEnemies_Affix_Tanky_Description,Tougher but slower. Drops: Heavy armor and ammo.,2.3,AffixDescription
+EliteEnemies_Affix_Swift_Name,Swift,2.3,AffixNames
+EliteEnemies_Affix_Swift_Description,"Moves quickly but is fragile. Drops: Agility Totem, Speed Injector.",2.3,AffixDescription
+EliteEnemies_Affix_Berserk_Name,Berserk,2.3,AffixNames
+EliteEnemies_Affix_Berserk_Description,"Stronger attacks but slightly lower health. Drops: Assault Totem, Adrenaline Injector",2.3,AffixDescription
+EliteEnemies_Affix_Berserk_PopText_1,<color=#DC143C>ENRAGED!!!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_GlassCannon_Name,Glass Cannon,2.3,AffixNames
+EliteEnemies_Affix_GlassCannon_Description,Extremely high damage but very fragile. Drops: Special AP rounds.,2.3,AffixDescription
+EliteEnemies_Affix_Fisherman_Name,Fisherman,2.3,AffixNames
+EliteEnemies_Affix_Fisherman_Description,"Drops various fish, bait, and fishing rods.",2.3,AffixDescription
+EliteEnemies_Affix_Chef_Name,Chef,2.3,AffixNames
+EliteEnemies_Affix_Chef_Description,"Loves food and drinks; drops canned goods, water, sweets and other supplies.",2.3,AffixDescription
+EliteEnemies_Affix_Talkative_Name,Talkative,2.3,AffixNames
+EliteEnemies_Affix_Talkative_Description,Constantly shouts random lines or taunts during combat.,2.3,AffixDescription
+EliteEnemies_Affix_Talkative_Messages,I'm elite!|You call that aim?|Ha! You almost had me!|I could do this all day!|Your bullets tickle!|Let’s make this interesting!|Is that fear I see?|Not bad... but not enough!|Another one bites the dust!,2.3,AffixBehavior
+EliteEnemies_Affix_Regeneration_Name,Regeneration,2.3,AffixNames
+EliteEnemies_Affix_Regeneration_Description,"Continuously regenerates HP, about 10 per second.",2.3,AffixDescription
+EliteEnemies_Affix_Hardening_Name,Hardening,2.3,AffixNames
+EliteEnemies_Affix_Hardening_Description,"Reduce 5%-15% physical damage per hit, max 50%.",2.3,AffixDescription
+EliteEnemies_Affix_Hardening_PopText_1,<color=#B2B2B2>Hardened +{0}</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Blindness_Name,Blindness,2.3,AffixNames
+EliteEnemies_Affix_Blindness_Description,Attacks limit player vision for 7 seconds.,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Blindness_Name,Blindness,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Blindness_Description,Vision range and angle are greatly reduced.,2.3,BuffDescriptions
+EliteEnemies_Affix_Slow_Name,Slowness,2.3,AffixNames
+EliteEnemies_Affix_Slow_Description,Attacks apply a slowing effect.,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Slow_Name,Slowness,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Slow_Description,Movement speed reduced by 50%.,2.3,BuffDescriptions
+EliteEnemies_Affix_Stun_Name,Stun,2.3,AffixNames
+EliteEnemies_Affix_Stun_Description,Attacks stun the player and reduce weapon control.,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Stun_Name,Stun,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Stun_Description,Recoil control reduced by 70%.,2.3,BuffDescriptions
+EliteEnemies_Affix_Invisible_Name,Invisible,2.3,AffixNames
+EliteEnemies_Affix_Invisible_Description,Turns invisible; briefly reveals and flickers every few seconds.,2.3,AffixDescription
+EliteEnemies_Affix_Invisible_Messages,Did you just see me?|Don't blink — I'm gone again!|Shh... nothing happened.|Illusion? Or am I just that fast?|I'm right behind you... just kidding!,2.3,AffixBehavior
+EliteEnemies_Affix_Musician_Name,Musician,2.3,AffixNames
+EliteEnemies_Affix_Musician_Description,A weirdo who brings instruments to battle; drops instruments.,2.3,AffixDescription
+EliteEnemies_Affix_NineDragons_Name,Nine Dragons,2.3,AffixNames
+EliteEnemies_Affix_NineDragons_Description,All attributes ×1.3; drops various injectors.,2.3,AffixDescription
+EliteEnemies_Affix_Giant_Name,Giant,2.3,AffixNames
+EliteEnemies_Affix_Giant_Description,Becomes larger; max HP increases but movement speed decreases.,2.3,AffixDescription
+EliteEnemies_Affix_Mini_Name,Mini,2.3,AffixNames
+EliteEnemies_Affix_Mini_Description,Becomes smaller; slightly lower HP but slightly higher movement speed.,2.3,AffixDescription
+EliteEnemies_Affix_Undead_Name,Undead,2.3,AffixNames
+EliteEnemies_Affix_Undead_Description,"On low HP, becomes invulnerable for 2.5 s and restores to 50% HP.",2.3,AffixDescription
+EliteEnemies_Affix_Undead_PopText_1,Not going down that easily!,2.3,AffixBehavior
+EliteEnemies_Affix_Undead_PopText_2,Weakened... but not dead!,2.3,AffixBehavior
+EliteEnemies_Affix_Vampirism_Name,Vampirism,2.3,AffixNames
+EliteEnemies_Affix_Vampirism_Description,Heals when attacking (reduced effect at range).,2.3,AffixDescription
+EliteEnemies_Affix_Vampirism_PopText_1,<color=#DC143C>Life Steal! +{0}</color>,2.3,AffixBehavior
+EliteEnemies_Affix_DungEater_Name,Dung Eater,2.3,AffixNames
+EliteEnemies_Affix_DungEater_Description,The most beloved episode among Duckov players ?,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_DungEater_Name,Dung Eater,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_DungEater_Description,Makes you vomit on the spot.,2.3,BuffDescriptions
+EliteEnemies_Affix_Chaos_Name,Chaos,2.3,AffixNames
+EliteEnemies_Affix_Chaos_Description,Attacks inflict random abnormal effects.,2.3,AffixDescription
+EliteEnemies_Affix_Chaos_PopText_1,<color=#9400D3>Chaos Corruption! {0}</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Split_Name,Split,2.3,AffixNames
+EliteEnemies_Affix_Split_Description,"When low, summons several weaker clones.",2.3,AffixDescription
+EliteEnemies_Affix_Explosive_Name,Explosive,2.3,AffixNames
+EliteEnemies_Affix_Explosive_Description,"Explodes in a small radius on death, dealing ~10-30 damage (based on player max HP).",2.3,AffixDescription
+EliteEnemies_Affix_TimeStop_Name,Time Stop,2.3,AffixNames
+EliteEnemies_Affix_TimeStop_Description,Slows time to 30% for about 3 s when hit.,2.3,AffixDescription
+EliteEnemies_Affix_TimeStop_PopText_1,<color=#FFD700>Za Warudo!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_MagazineCurse_Name,Magazine Curse,2.3,AffixNames
+EliteEnemies_Affix_MagazineCurse_Description,Forces the player to reload when hit; drops various fast magazine attachments.,2.3,AffixDescription
+EliteEnemies_Affix_MagazineCurse_PopText_1,<color=#9B59B6>Magazine Curse!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_MagazineCurse_PopText_2,<color=#9B59B6>Forced Reload!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Knockback_Name,Knockback,2.3,AffixNames
+EliteEnemies_Affix_Knockback_Description,Attacks apply strong knockback.,2.3,AffixDescription
+EliteEnemies_Affix_Knockback_PopText_1,<color=#FF4500>Show off? Let me send you flying!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Phase_Name,Phase,2.3,AffixNames
+EliteEnemies_Affix_Phase_Description,Swaps positions with the player on hit.,2.3,AffixDescription
+EliteEnemies_Affix_Phase_PopText_1,<color=#00FFFF>Phase Shift!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Revenge_Name,Revenge,2.3,AffixNames
+EliteEnemies_Affix_Revenge_Description,When damaged the enemy retaliates by firing bullets at the attacker.,2.3,AffixDescription
+EliteEnemies_Affix_Distortion_Name,Distortion,2.3,AffixNames
+EliteEnemies_Affix_Distortion_Description,Attacks distort player bullets into curved trajectories.,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Distortion_Name,Distortion,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Distortion_Description,Bullet speed reduced by 70%; your own bullets are deflected.,2.3,BuffDescriptions
+EliteEnemies_Affix_MultiShot_Name,Multi-Shot,2.3,AffixNames
+EliteEnemies_Affix_MultiShot_Description,Fires two additional bullets on attack.,2.3,AffixDescription
+EliteEnemies_Affix_Guardian_Name,Guardian,2.3,AffixNames
+EliteEnemies_Affix_Guardian_Description,The main body is completely invincible while the clone is alive.,2.3,AffixDescription
+EliteEnemies_Affix_Guardian_MateSuffix,<color=#FFD700>Guardian Core</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Guardian_ImmunePop,<color=#FF9900>IMMUNE!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Guardian_ShieldBroken,SHIELD BROKEN!,2.3,AffixBehavior
+EliteEnemies_Affix_Collector_Name,Collector,2.3,AffixNames
+EliteEnemies_Affix_Collector_Description,Drops collectibles.,2.3,AffixDescription
+EliteEnemies_Affix_Gunsmith_Name,Gunsmith,2.3,AffixNames
+EliteEnemies_Affix_Gunsmith_Description,Drops firearm accessories.,2.3,AffixDescription
+EliteEnemies_Affix_MimicTear_Name,Mimic Tear,2.3,AffixNames
+EliteEnemies_Affix_MimicTear_Description,Copy the player's main-hand weapon and equipment (one random copy drops).,2.3,AffixDescription
+EliteEnemies_Affix_Sticky_Name,Sticky,2.3,AffixNames
+EliteEnemies_Affix_Sticky_Description,"On first hit, makes the player drop the currently equipped weapon; drops tape and universal glue on death.",2.3,AffixDescription
+EliteEnemies_Affix_Sticky_PopText_1,Got stuck!,2.3,AffixBehavior
+EliteEnemies_Affix_Sticky_PopText_2,My weapon got glued...,2.3,AffixBehavior
+EliteEnemies_Affix_Slime_Name,Slime,2.3,AffixNames
+EliteEnemies_Affix_Slime_Description,"Starts huge but weak, shrinks and gains damage as health drops.",2.3,AffixDescription
+EliteEnemies_Affix_ChickenBro_Name,Chicken Bro,2.3,AffixNames
+EliteEnemies_Affix_ChickenBro_Description,Summons a chicken guard upon spawning.,2.3,AffixDescription
+EliteEnemies_Affix_ChickenBro_Summon_Name,<color=#FFD600>Little Chick</color>,2.3,AffixBehavior
+EliteEnemies_Affix_MandarinDuck_Name,Mandarin Duck,2.3,AffixNames
+EliteEnemies_Affix_MandarinDuck_Description,What a pair of ill-fated lovers!,2.3,AffixDescription
+EliteEnemies_Affix_MandarinDuck_MateSuffix,<color=#F08080>Partner</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Obscurer_Name,Obscurer,2.3,AffixNames
+EliteEnemies_Affix_Obscurer_Description,Hides all affix names showing garbled text.,2.3,AffixDescription
+EliteEnemies_Affix_Grenadier_Name,Grenadier,2.3,AffixNames
+EliteEnemies_Affix_Grenadier_Description,Throws a grenade at the target on hit.,2.3,AffixDescription
+EliteEnemies_Affix_Hardening_Max,Absolute Defense,2.3,AffixBehavior
+EliteEnemies_Affix_Hardening_Weakened,Defense Collapse,2.3,AffixBehavior
+EliteEnemies_Affix_Hardening_Recover,Armor Reformation,2.3,AffixBehavior
+EliteEnemies_EliteLoot_Fixed,<color=#B0B0B0>Elite Fixed Drop</color>,2.3,FromInfoKey
+EliteEnemies_EliteLoot_Random,<color=#4BC0FF>Elite Random Drop</color>,2.3,FromInfoKey
+EliteEnemies_EliteLoot_Bonus,<color=#FFD24D>Elite Rarity Bonus</color>,2.3,FromInfoKey
+EliteEnemies_LootSource,Elite Reward Drop,2.3,FromInfoKey
+EliteEnemies_Affix_EMP_Name,EMP Disrupt,2.3,AffixNames
+EliteEnemies_Affix_EMP_Description,"Attacks disrupt electronic devices, disabling the player's HUD.",2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_EMP_Name,EMP,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_EMP_Description,Disrupts your HUD; it flickers then recovers piece by piece.,2.3,BuffDescriptions
+EliteEnemies_Affix_EMP_PopText_1,<color=#4D9CFF>▞E▒M▣P▓ Interference▒!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_EMP_PopText_2,<color=#90FF90>HUD rebooting...</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Tear_Name,Tear,2.3,AffixNames
+EliteEnemies_Affix_Tear_Description,Hits weaken the player's armor.,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Tear_Name,Tear,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Tear_Description,Armor reduced by a random 10%-40%.,2.3,BuffDescriptions
+EliteEnemies_Affix_Tear_PopText_1,<color=#FF0000>Armor Shredded {0:0}%</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Slippery_Name,Slippery,2.3,AffixNames
+EliteEnemies_Affix_Slippery_Description,"Attacks cause the player's footing to lose friction, making movement feel like sliding on ice.",2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Slippery_Name,Slippery,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Slippery_Description,Acceleration greatly reduced: you move faster but struggle to stop.,2.3,BuffDescriptions
+EliteEnemies_Affix_Slippery_PopText_1,<color=#7FE8FF>So slippery~~~</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Locksmith_Name,Locksmith,2.3,AffixNames
+EliteEnemies_Affix_Locksmith_Description,Drops a random key upon death.,2.3,AffixDescription
+EliteEnemies_Affix_Overload_Name,Overload,2.3,AffixNames
+EliteEnemies_Affix_Overload_Description,"After taking damage, enters an overload state that greatly extends continuous firing duration",2.3,AffixDescription
+EliteEnemies_Affix_Overload_PopText,<color=#FF4500>WEAPON OVERLOAD!!!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Mimic_Name,Mimic,2.3,AffixNames
+EliteEnemies_Affix_Mimic_Description,Disguises as a supply crate. Reveals itself and attacks when damaged or when the player opens it,2.3,AffixDescription
+EliteEnemies_Settings_AffixSpecialSettings_Group,Affix Special Settings,2.3,Groups
+EliteEnemies_Settings_SplitAffixMaxCloneCount,[Split] Maximum On-Screen Clone Limit,2.3,BasicSettings
+EliteEnemies_Settings_SplitAffixMinFPSThreshold,[Split] Minimum FPS Cutoff Threshold,2.3,BasicSettings
+EliteEnemies_Affix_Reflect_Name,Reflect,2.3,AffixNames
+EliteEnemies_Affix_Reflect_Description,Periodically generates a shield that reflects incoming bullets back to the attacker,2.3,AffixDescription
+EliteEnemies_Affix_Reflect_PopText,<color=#00BFFF>Reflect!</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Frozen_Name,Frigid,2.3,AffixNames
+EliteEnemies_Affix_Frozen_Description,Attacks have a chance to freeze the player on hit (15s Cooldown).,2.3,AffixDescription
+EliteEnemies_Settings_EnableComboSystem,Enable Combo System (Warning! Extremely difficult for casual players!),2.4,ComboSettings
+EliteEnemies_Settings_ComboSystemChance,Elite Combo Spawn Chance,2.4,ComboSettings
+EliteEnemies_Settings_ComboSettings_Group,Elite Combo Configuration (Experimental System! Extremely Difficult!),2.4,Groups
+EliteEnemies_Settings_Combo_Prefix,Combo:,2.4,ComboSettings
+EliteEnemies_Combo_OmniArtisan_Name,Omni Artisan,2.4,ComboNames
+EliteEnemies_Combo_HyperColossus_Name,Hyper Colossus,2.4,ComboNames
+EliteEnemies_Combo_PhaseStalker_Name,Phase Stalker,2.4,ComboNames
+EliteEnemies_Combo_OverloadSimulacrum_Name,Overload Simulacrum,2.4,ComboNames
+EliteEnemies_Combo_ChaosDevour_Name,Chaos Devourer,2.4,ComboNames
+EliteEnemies_Combo_SuppressionField_Name,Suppression Field,2.4,ComboNames
+EliteEnemies_Combo_KillzoneBarrage_Name,Killzone Barrage,2.4,ComboNames
+EliteEnemies_Combo_ImmortalBloodPact_Name,Immortal Blood Pact,2.4,ComboNames
+EliteEnemies_Affix_Nimble_Name,Nimble,2.5,AffixNames
+EliteEnemies_Affix_Nimble_Description,Extremely short dash cooldown and erratic movement. Can move at high speed while firing.,2.5,AffixDescription
+EliteEnemies_Settings_AffixVerticalOffset,Affix Display Vertical Offset,2.5,VisualSettings
+EliteEnemies_Affix_Phantom_Name,Phantom,2.5,AffixNames
+EliteEnemies_Affix_Phantom_Description,"This unit disrupts player senses, periodically creating fake combat sounds and screams behind you.",2.5,AffixDescription

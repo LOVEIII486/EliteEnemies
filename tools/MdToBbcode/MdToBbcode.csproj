@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    开发辅助工具，不属于模组本体，也不加入 EliteEnemies.sln，
+    免得 dotnet build 每次都顺带编译它。
+
+    用法（在仓库根目录）：
+        dotnet run 加上项目参数指向 tools\MdToBbcode
+
+    为什么是独立的 .NET 工具而不是 PowerShell 脚本：
+    本机 PowerShell 执行策略为 Undefined（Windows 客户端默认即 Restricted），
+    .ps1 文件无法直接运行，要跑就得绕过执行策略——那等于关掉一道安全控制，
+    不该为生成一份文档而做这个取舍。控制台工具只需要已装好的 SDK。
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- 工具只在本机跑，用当前 SDK 的 TFM 即可；与模组的 netstandard2.1 无关 -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MdToBbcode</AssemblyName>
+    <RootNamespace>MdToBbcode</RootNamespace>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+</Project>

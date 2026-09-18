@@ -1,0 +1,61 @@
+# Elite Enemies — 代码风格约定
+# 风格取自本仓库既有代码：4 空格、Allman 大括号、CRLF、UTF-8 BOM。
+#
+# 多数风格规则设为 suggestion 而非 warning：迁移来的代码尚未统一，
+# 设成 warning 会在 IDE 里刷出大量提示，淹没真正的编译警告。
+
+root = true
+
+[*]
+charset = utf-8-bom
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Markdown 用行尾双空格表示换行，不能裁掉
+[*.md]
+trim_trailing_whitespace = false
+
+# MSBuild / XML 惯例是 2 空格
+[*.{xml,csproj,props,targets,config,ini}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+# CSV 是本地化数据，任何字符都可能有意义
+[*.csv]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+[*.cs]
+
+# --- 本仓库既有风格 ---
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = false
+
+# using 置顶，System 排最前
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:suggestion
+
+# --- 现代 C# 写法（suggestion：迁移代码尚未全部跟进）---
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_prefer_braces = when_multiline:suggestion
+csharp_style_prefer_switch_expression = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equals = true:suggestion
+
+# 注意：本文件不覆盖任何 CSxxxx 编译诊断的严重性。
+# CS0618（Unity 6 过时 API）等是重构期真实的工作项，降级会把它从构建输出里藏掉。
+#
+# 另外，以下两条无法用编译器静态拦截，只能靠约定与审查：
+#   - 默认接口方法（C# 8）
+#   - 静态抽象接口成员（C# 11）
+# 它们在 Unity 的 Mono 上编译能过、运行时会炸。

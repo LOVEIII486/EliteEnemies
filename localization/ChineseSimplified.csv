@@ -1,0 +1,190 @@
+key,value,version,sheet
+EliteEnemies_Settings_BasicSettings_Group,精英敌人设置,2.3,Groups
+EliteEnemies_Settings_NormalEliteChance,普通怪物精英概率,2.3,BasicSettings
+EliteEnemies_Settings_BossEliteChance,Boss精英概率,2.3,BasicSettings
+EliteEnemies_Settings_MerchantEliteChance,商人精英概率,2.3,BasicSettings
+EliteEnemies_Settings_MaxAffixCount,词条数量上限,2.3,BasicSettings
+EliteEnemies_Settings_DropRateMultiplier,精英掉落倍率（1.0 为原样）,2.3,BasicSettings
+EliteEnemies_Settings_ItemQualityTier,掉落品质档位（越高越好）,2.3,BasicSettings
+EliteEnemies_Settings_GlobalMultipliers_Group,全局属性调整（仅对精英怪生效）,2.3,Groups
+EliteEnemies_Settings_GlobalHealthMultiplier,全局血量倍率,2.3,BasicSettings
+EliteEnemies_Settings_GlobalDamageMultiplier,全局伤害倍率,2.3,BasicSettings
+EliteEnemies_Settings_GlobalSpeedMultiplier,全局速度倍率,2.3,BasicSettings
+EliteEnemies_Settings_EnableBonusLoot,启用奖励掉落（由词条数量、稀有度、怪物类型加权决定）,2.3,BasicSettings
+EliteEnemies_Settings_VisualSettings_Group,视觉效果设置,2.3,Groups
+EliteEnemies_Settings_ShowEliteName,显示精英敌人词缀,2.3,VisualSettings
+EliteEnemies_Settings_ShowDetailedHealth,显示精英敌人血量,2.3,VisualSettings
+EliteEnemies_Settings_AffixDisplayPosition,"词缀显示位置(Overhead=头顶, Underfoot=脚底)",2.3,VisualSettings
+EliteEnemies_Settings_AffixFontSize,词缀字体大小,2.3,VisualSettings
+EliteEnemies_Settings_AffixCountWeights_Group,词条数量权重（数值越大越常见；超过「最大词条数」的档位不会生效）,2.3,Groups
+EliteEnemies_Settings_AffixWeight1,1个词条的权重（推荐：30-70）,2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight2,2个词条的权重（推荐：20-50）,2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight3,3个词条的权重（推荐：10-30）,2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight4,4个词条的权重（推荐：1-10）,2.3,BasicSettings
+EliteEnemies_Settings_AffixWeight5,5个词条的权重（推荐：0-5）,2.3,BasicSettings
+EliteEnemies_Settings_AffixToggles_Group,词条开关,2.3,Groups
+EliteEnemies_Affix_Tanky_Name,肉盾,2.3,AffixNames
+EliteEnemies_Affix_Tanky_Description,更耐打但行动迟缓。掉落：重型防弹衣、弹药,2.3,AffixDescription
+EliteEnemies_Affix_Swift_Name,迅捷,2.3,AffixNames
+EliteEnemies_Affix_Swift_Description,移动迅速但较为脆弱。掉落：轻盈图腾、提速针剂,2.3,AffixDescription
+EliteEnemies_Affix_Berserk_Name,狂暴,2.3,AffixNames
+EliteEnemies_Affix_Berserk_Description,攻击力更强但生命略低。掉落：进击图腾、热血针剂,2.3,AffixDescription
+EliteEnemies_Affix_Berserk_PopText_1,<color=#DC143C>怒了！！！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_GlassCannon_Name,玻璃大炮,2.3,AffixNames
+EliteEnemies_Affix_GlassCannon_Description,伤害极高但极其脆弱。掉落：特种穿甲弹,2.3,AffixDescription
+EliteEnemies_Affix_Fisherman_Name,钓鱼佬,2.3,AffixNames
+EliteEnemies_Affix_Fisherman_Description,掉落各种鱼类、鱼饵与鱼竿,2.3,AffixDescription
+EliteEnemies_Affix_Chef_Name,厨子,2.3,AffixNames
+EliteEnemies_Affix_Chef_Description,喜欢美食与饮品，掉落罐头、水、甜点等补给物资,2.3,AffixDescription
+EliteEnemies_Affix_Talkative_Name,话痨,2.3,AffixNames
+EliteEnemies_Affix_Talkative_Description,战斗中会不断发表随机台词或嘲讽,2.3,AffixDescription
+EliteEnemies_Affix_Talkative_Messages,我是精英！|来战啊！|你打不过我的！|哈哈哈！|太弱了！,2.3,AffixBehavior
+EliteEnemies_Affix_Regeneration_Name,再生,2.3,AffixNames
+EliteEnemies_Affix_Regeneration_Description,持续回复生命，每秒回复约 10 点生命值,2.3,AffixDescription
+EliteEnemies_Affix_Hardening_Name,硬化,2.3,AffixNames
+EliteEnemies_Affix_Hardening_Description,受伤时随机降低 5%-15% 物理伤害，最多50%,2.3,AffixDescription
+EliteEnemies_Affix_Hardening_PopText_1,<color=#B2B2B2>硬化 +{0}</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Blindness_Name,致盲,2.3,AffixNames
+EliteEnemies_Affix_Blindness_Description,攻击使玩家视野受限7秒,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Blindness_Name,致盲,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Blindness_Description,视野距离与视野角度大幅下降,2.3,BuffDescriptions
+EliteEnemies_Affix_Slow_Name,迟缓,2.3,AffixNames
+EliteEnemies_Affix_Slow_Description,攻击施加减速效果,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Slow_Name,迟缓,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Slow_Description,移动速度降低 50%,2.3,BuffDescriptions
+EliteEnemies_Affix_Stun_Name,震慑,2.3,AffixNames
+EliteEnemies_Affix_Stun_Description,攻击震慑玩家，枪械控制力下降,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Stun_Name,震慑,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Stun_Description,后坐力控制降低 70%,2.3,BuffDescriptions
+EliteEnemies_Affix_Invisible_Name,隐身,2.3,AffixNames
+EliteEnemies_Affix_Invisible_Description,获得隐身状态，每隔数秒会短暂显形并闪烁几下,2.3,AffixDescription
+EliteEnemies_Affix_Invisible_Messages,你刚才是不是看到我了？|别眨眼，我又消失啦～|嘘……什么都没发生。|幻觉？还是我太快了？|我就在你背后……开玩笑的。,2.3,AffixBehavior
+EliteEnemies_Affix_Musician_Name,音乐家,2.3,AffixNames
+EliteEnemies_Affix_Musician_Description,带着乐器上战场的奇葩，掉落乐器,2.3,AffixDescription
+EliteEnemies_Affix_NineDragons_Name,九龙拉棺,2.3,AffixNames
+EliteEnemies_Affix_NineDragons_Description,全属性提升 1.3 倍，掉落各种针剂,2.3,AffixDescription
+EliteEnemies_Affix_Giant_Name,巨大化,2.3,AffixNames
+EliteEnemies_Affix_Giant_Description,敌人变得更大，生命值提升但移动速度降低,2.3,AffixDescription
+EliteEnemies_Affix_Mini_Name,迷你,2.3,AffixNames
+EliteEnemies_Affix_Mini_Description,敌人变得更小，生命略低但移速略微提升,2.3,AffixDescription
+EliteEnemies_Affix_Undead_Name,不死,2.3,AffixNames
+EliteEnemies_Affix_Undead_Description,残血时短暂无敌 2.5 秒，并恢复至 50% 生命,2.3,AffixDescription
+EliteEnemies_Affix_Undead_PopText_1,还没那么容易倒下！,2.3,AffixBehavior
+EliteEnemies_Affix_Undead_PopText_2,萎了！,2.3,AffixBehavior
+EliteEnemies_Affix_Vampirism_Name,吸血,2.3,AffixNames
+EliteEnemies_Affix_Vampirism_Description,攻击时回复一定比例自身生命值（远程效果减弱）,2.3,AffixDescription
+EliteEnemies_Affix_Vampirism_PopText_1,<color=#DC143C>吸血回复！+{0}</color>,2.3,AffixBehavior
+EliteEnemies_Affix_DungEater_Name,食粪者,2.3,AffixNames
+EliteEnemies_Affix_DungEater_Description,鸭科夫玩家最喜欢的一集？,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_DungEater_Name,食粪者,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_DungEater_Description,当场呕吐,2.3,BuffDescriptions
+EliteEnemies_Affix_Chaos_Name,混沌,2.3,AffixNames
+EliteEnemies_Affix_Chaos_Description,攻击随机产生异常效果,2.3,AffixDescription
+EliteEnemies_Affix_Chaos_PopText_1,<color=#9400D3>混沌侵蚀！{0}</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Split_Name,分裂,2.3,AffixNames
+EliteEnemies_Affix_Split_Description,敌人残血时召唤数个更弱的分身,2.3,AffixDescription
+EliteEnemies_Affix_Explosive_Name,自爆,2.3,AffixNames
+EliteEnemies_Affix_Explosive_Description,死亡后引发小范围爆炸，造成约 10-30 点伤害（依据玩家最大生命值）,2.3,AffixDescription
+EliteEnemies_Affix_TimeStop_Name,时停,2.3,AffixNames
+EliteEnemies_Affix_TimeStop_Description,受伤时使时间流速降至 30%，持续约 3 秒,2.3,AffixDescription
+EliteEnemies_Affix_TimeStop_PopText_1,<color=#FFD700>砸瓦鲁多！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_MagazineCurse_Name,弹匣诅咒,2.3,AffixNames
+EliteEnemies_Affix_MagazineCurse_Description,受伤时强制玩家换弹，掉落各种快速弹匣组件,2.3,AffixDescription
+EliteEnemies_Affix_MagazineCurse_PopText_1,<color=#9B59B6>弹匣诅咒！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_MagazineCurse_PopText_2,<color=#9B59B6>被迫换弹！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Knockback_Name,击飞,2.3,AffixNames
+EliteEnemies_Affix_Knockback_Description,攻击产生强力击退,2.3,AffixDescription
+EliteEnemies_Affix_Knockback_PopText_1,<color=#FF4500>装逼我让你飞起来！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Phase_Name,相位,2.3,AffixNames
+EliteEnemies_Affix_Phase_Description,命中玩家时与玩家交换位置,2.3,AffixDescription
+EliteEnemies_Affix_Phase_PopText_1,<color=#00FFFF>相位移形！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Revenge_Name,报复,2.3,AffixNames
+EliteEnemies_Affix_Revenge_Description,受伤时会向攻击者发射火箭弹反击,2.3,AffixDescription
+EliteEnemies_Affix_Distortion_Name,扭曲,2.3,AffixNames
+EliteEnemies_Affix_Distortion_Description,攻击使玩家子弹偏转形成弧形,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Distortion_Name,扭曲,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Distortion_Description,子弹速度降低 70%，你射出的子弹会偏转,2.3,BuffDescriptions
+EliteEnemies_Affix_MultiShot_Name,多重射击,2.3,AffixNames
+EliteEnemies_Affix_MultiShot_Description,攻击时额外发射两枚子弹,2.3,AffixDescription
+EliteEnemies_Affix_Guardian_Name,守护,2.3,AffixNames
+EliteEnemies_Affix_Guardian_Description,分身存活期间，本体处于“完全无敌”状态。,2.3,AffixDescription
+EliteEnemies_Affix_Guardian_MateSuffix,<color=#FFD700>守护核心</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Guardian_ImmunePop,<color=#FF9900>免疫！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Guardian_ShieldBroken,护盾破碎！,2.3,AffixBehavior
+EliteEnemies_Affix_Collector_Name,收藏家,2.3,AffixNames
+EliteEnemies_Affix_Collector_Description,掉落各种收藏品,2.3,AffixDescription
+EliteEnemies_Affix_Gunsmith_Name,枪匠,2.3,AffixNames
+EliteEnemies_Affix_Gunsmith_Description,掉落枪械配件,2.3,AffixDescription
+EliteEnemies_Affix_MimicTear_Name,仿身泪滴,2.3,AffixNames
+EliteEnemies_Affix_MimicTear_Description,复制玩家主手武器与装备（随机掉落其中一件）,2.3,AffixDescription
+EliteEnemies_Affix_Sticky_Name,粘性,2.3,AffixNames
+EliteEnemies_Affix_Sticky_Description,首次受击会使玩家掉落当前装备的武器，击杀掉落胶带与万能胶,2.3,AffixDescription
+EliteEnemies_Affix_Sticky_PopText_1,黏住啦！,2.3,AffixBehavior
+EliteEnemies_Affix_Sticky_PopText_2,武器被粘掉了…,2.3,AffixBehavior
+EliteEnemies_Affix_Slime_Name,史莱姆,2.3,AffixNames
+EliteEnemies_Affix_Slime_Description,初始巨大但虚弱，随血量降低逐渐缩小并增强伤害，会周期性跳跃,2.3,AffixDescription
+EliteEnemies_Affix_ChickenBro_Name,鸡哥,2.3,AffixNames
+EliteEnemies_Affix_ChickenBro_Description,出生时召唤小鸡护卫,2.3,AffixDescription
+EliteEnemies_Affix_ChickenBro_Summon_Name,<color=#FFD600>鸡弟</color>,2.3,AffixBehavior
+EliteEnemies_Affix_MandarinDuck_Name,鸳鸯,2.3,AffixNames
+EliteEnemies_Affix_MandarinDuck_Description,真是一对苦命鸳鸯！,2.3,AffixDescription
+EliteEnemies_Affix_MandarinDuck_MateSuffix,<color=#F08080>伴侣</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Obscurer_Name,封弊者,2.3,AffixNames
+EliteEnemies_Affix_Obscurer_Description,隐藏所有词条名称显示为乱码,2.3,AffixDescription
+EliteEnemies_Affix_Grenadier_Name,掷弹手,2.3,AffixNames
+EliteEnemies_Affix_Grenadier_Description,攻击命中时会向目标投掷手雷,2.3,AffixDescription
+EliteEnemies_Affix_Hardening_Max,绝对防御,2.3,AffixBehavior
+EliteEnemies_Affix_Hardening_Weakened,防御崩溃,2.3,AffixBehavior
+EliteEnemies_Affix_Hardening_Recover,装甲重组,2.3,AffixBehavior
+EliteEnemies_EliteLoot_Fixed,<color=#B0B0B0>精英怪固定掉落</color>,2.3,FromInfoKey
+EliteEnemies_EliteLoot_Random,<color=#4BC0FF>精英怪随机掉落</color>,2.3,FromInfoKey
+EliteEnemies_EliteLoot_Bonus,<color=#FFD24D>精英怪稀有度奖励</color>,2.3,FromInfoKey
+EliteEnemies_LootSource,精英怪奖励掉落,2.3,FromInfoKey
+EliteEnemies_Affix_EMP_Name,电磁干扰,2.3,AffixNames
+EliteEnemies_Affix_EMP_Description,攻击会干扰电子设备，使玩家 HUD 失效,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_EMP_Name,EMP,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_EMP_Description,HUD 受到干扰，短暂失灵后逐个恢复,2.3,BuffDescriptions
+EliteEnemies_Affix_EMP_PopText_1,<color=#4D9CFF>▞电▒磁▣干▓扰▒！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_EMP_PopText_2,<color=#90FF90>HUD重启中...</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Tear_Name,撕裂,2.3,AffixNames
+EliteEnemies_Affix_Tear_Description,命中玩家削弱玩家护甲,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Tear_Name,撕裂,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Tear_Description,护甲随机削弱 10%~40%,2.3,BuffDescriptions
+EliteEnemies_Affix_Tear_PopText_1,<color=#FF0000>护甲撕裂 {0:0}%</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Slippery_Name,打滑,2.3,AffixNames
+EliteEnemies_Affix_Slippery_Description,攻击会使玩家脚底失去摩擦力，移动如同在冰面上。,2.3,AffixDescription
+EliteEnemies_Buff_EliteBuff_Slippery_Name,打滑,2.3,BuffNames
+EliteEnemies_Buff_EliteBuff_Slippery_Description,加速度大幅降低：走得更快，但很难停下,2.3,BuffDescriptions
+EliteEnemies_Affix_Slippery_PopText_1,<color=#7FE8FF>好滑~~~</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Locksmith_Name,锁匠,2.3,AffixNames
+EliteEnemies_Affix_Locksmith_Description,死亡时会掉落一把随机钥匙。,2.3,AffixDescription
+EliteEnemies_Affix_Overload_Name,过载,2.3,AffixNames
+EliteEnemies_Affix_Overload_Description,受伤后进入过载状态，持续射击时间大幅延长,2.3,AffixDescription
+EliteEnemies_Affix_Overload_PopText,<color=#FF4500>武器过载！！！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Mimic_Name,拟态,2.3,AffixNames
+EliteEnemies_Affix_Mimic_Description,伪装成补给箱，在受伤或被玩家开箱时显形并突袭,2.3,AffixDescription
+EliteEnemies_Settings_AffixSpecialSettings_Group,词缀特殊设置,2.3,Groups
+EliteEnemies_Settings_SplitAffixMaxCloneCount,[分裂] 最大同屏数量限制,2.3,BasicSettings
+EliteEnemies_Settings_SplitAffixMinFPSThreshold,[分裂] 最低帧率熔断值,2.3,BasicSettings
+EliteEnemies_Affix_Reflect_Name,反弹,2.3,AffixNames
+EliteEnemies_Affix_Reflect_Description,周期性生成护盾，将受到的子弹反弹回攻击者,2.3,AffixDescription
+EliteEnemies_Affix_Reflect_PopText,<color=#00BFFF>反弹！</color>,2.3,AffixBehavior
+EliteEnemies_Affix_Frozen_Name,严寒,2.3,AffixNames
+EliteEnemies_Affix_Frozen_Description,攻击命中时有概率冻结玩家（15秒冷却时间）,2.3,AffixDescription
+EliteEnemies_Settings_EnableComboSystem,启用 Combo 组合系统 (再次提醒！对于普通玩家非常困难！),2.4,ComboSettings
+EliteEnemies_Settings_ComboSystemChance,Combo 精英怪出现概率,2.4,ComboSettings
+EliteEnemies_Settings_ComboSettings_Group,精英怪 Combo 组合配置 (实验性系统！非常困难！),2.4,Groups
+EliteEnemies_Settings_Combo_Prefix,组合：,2.4,ComboSettings
+EliteEnemies_Combo_OmniArtisan_Name,全域匠师,2.4,ComboNames
+EliteEnemies_Combo_HyperColossus_Name,超构巨躯,2.4,ComboNames
+EliteEnemies_Combo_PhaseStalker_Name,相位潜猎者,2.4,ComboNames
+EliteEnemies_Combo_OverloadSimulacrum_Name,过载映像体,2.4,ComboNames
+EliteEnemies_Combo_ChaosDevour_Name,混沌蚕食,2.4,ComboNames
+EliteEnemies_Combo_SuppressionField_Name,全域抑制场,2.4,ComboNames
+EliteEnemies_Combo_KillzoneBarrage_Name,火力绞杀网,2.4,ComboNames
+EliteEnemies_Combo_ImmortalBloodPact_Name,不灭血誓,2.4,ComboNames
+EliteEnemies_Affix_Nimble_Name,灵活,2.5,AffixNames
+EliteEnemies_Affix_Nimble_Description,极短的冲刺间隔，身法飘忽不定。且能在开火时高速移动。,2.5,AffixDescription
+EliteEnemies_Settings_AffixVerticalOffset,词缀显示位置偏移,2.5,VisualSettings
+EliteEnemies_Affix_Phantom_Name,幻听,2.5,AffixNames
+EliteEnemies_Affix_Phantom_Description,该单位会干扰玩家感官，周期性产生虚假的战斗声与惊叫声。,2.5,AffixDescription

@@ -12,11 +12,23 @@
 仓库包含以下核心模块：
 
 - 精英词条逻辑与数值系统  
-- 战斗行为与特殊效果 
+- 战斗行为与特殊效果  
+- 词条组合（Combo）系统  
+- Buff / 状态效果框架  
 - 独立掉落池与词条专属掉落配置  
 - ModSetting 配置项与设置界面  
 - 多语言本地化文件
 - 调试工具等辅助功能
+
+编译与部署（需要 .NET SDK 8.0+，目标框架 `netstandard2.1`）：
+
+```bash
+dotnet build
+```
+
+编译产物会自动部署到 `<游戏>\Duckov_Data\Mods\EliteEnemies\`。
+游戏路径可用 `-p:DuckovGameDir=...` 或环境变量 `DUCKOV_GAME_DIR` 指定；
+只想编译、不部署，加 `-p:DeployToGame=false`。
 
 ---
 

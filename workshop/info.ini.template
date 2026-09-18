@@ -1,0 +1,20 @@
+; info.ini 的源模板。真正的 info.ini 是构建产物，不纳入版本控制。
+;
+; 为什么要有模板：版本号只允许有一个来源，即 EliteEnemies.csproj 的 <Version>。
+; 构建时把下面那行 @VERSION@ 替换为实际版本号，生成 info.ini 再部署。
+; 于是「改了 csproj 忘了改 info.ini」这件事物理上不可能发生。
+;
+; 本文件里以分号开头的行都是注释，构建时会从生成的 info.ini 中剔除
+; （游戏侧的解析器把任何非空、非 [ 开头的行都按 key=value 读，
+;   注释行一旦含等号就会被当成一个多余的键，所以生成时要滤掉）。
+;
+; 游戏侧依据：ModManager.cs:304 读 name、:309 读 displayName、:314 读 description，
+; 三者缺任一个模组都不会出现在游戏列表里；且 name 还同时决定 DLL 文件名
+; （ModInfo.cs:30）与入口类型全名（ModManager.cs:445）。
+
+name = EliteEnemies
+displayName = 精英怪 / EliteEnemies
+description = 随机生成带词条的精英怪 by LOVEIII486
+version = @VERSION@
+tags =
+publishedFileId = 3602009885

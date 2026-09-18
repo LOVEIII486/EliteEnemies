@@ -1,35 +1,39 @@
-﻿# --- 编译产物 ---
-/bin/
-/obj/
+# --- 编译产物 ---
+# 不锚定根目录：tools\ 下的辅助工具项目也会产生 bin\obj，
+# 而 /bin/ 这种写法只匹配根目录，会把那些产物放进提交。
+bin/
+obj/
 
-# 如果有 Debug/Release 子目录，也可以单独写
-# /Debug/
-# /Release/
+# --- Python ---
+# tools\ 下的分析脚本会产生字节码缓存，它不是源码，不该入库。
+__pycache__/
+*.pyc
 
-# --- Unity 常规 ---
-/Library/
-/Temp/
-/Logs/
-/UserSettings/
-MemoryCaptures/
-
-# --- Rider / JetBrains ---
+# --- IDE ---
+/.vs/
 /.idea/
+/*.user
+/*.userprefs
 /*.sln.DotSettings.user
 
-# --- VS / Resharper 之类 ---
-/.vs/
-/*.user
-*.userprefs
+# --- 本地路径覆盖（每台机器不同，不进版本控制） ---
+/Directory.Build.props.user
 
-# --- 备份 / 压缩包 / 历史文件 ---
+# --- 备份 / 压缩包 ---
 *.7z
 *.zip
 *.rar
 *.bak
 
-# --- 其他你不想提交的文件（按需补充） ---
-# ModSettingsApi/ModSetting.dll
-# 0Harmony.dll
-# 这些如果你改成 submodule 或别处提供，可以忽略
-/ModSettingsApi/ModSetting.dll
+# 工坊 BBCode 等生成物（由 tools\MdToBbcode 产生）
+/artifacts/
+
+# --- Agent / 开发过程文档（不进版本控制） ---
+# 这些是给 AI agent 与本地开发用的工作文档（项目指南、模块审查、重构计划…），
+# **不是模组的一部分**，公开仓库里也不需要它们——README 只放给人看的内容。
+#
+# ⚠ 三个目标**都曾经被跟踪过**：只写进 .gitignore 对已跟踪的文件无效，
+#   必须配一次 `git rm --cached`（保留工作区文件）才真正取消跟踪。
+/docs/
+/AGENT.md
+/CLAUDE.md

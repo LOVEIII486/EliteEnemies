@@ -1,0 +1,51 @@
+<Project>
+
+  <!--
+    机器相关路径集中在这里，全解决方案只此一处。
+    旧 csproj 把这些写死成 197 条 <HintPath>，且全部指向已不存在的 E: 盘。
+
+    覆盖优先级：命令行 -p:DuckovGameDir=... > 环境变量 DUCKOV_GAME_DIR > 下面的默认值
+  -->
+  <PropertyGroup>
+    <DuckovGameDir Condition="'$(DuckovGameDir)' == '' and '$(DUCKOV_GAME_DIR)' != ''">$(DUCKOV_GAME_DIR)</DuckovGameDir>
+    <DuckovGameDir Condition="'$(DuckovGameDir)' == ''">D:\Game\Steam\steamapps\common\Escape from Duckov</DuckovGameDir>
+
+    <DuckovDataDir>$(DuckovGameDir)\Duckov_Data</DuckovDataDir>
+    <DuckovManagedDir>$(DuckovDataDir)\Managed</DuckovManagedDir>
+    <DuckovModsDir>$(DuckovDataDir)\Mods</DuckovModsDir>
+  </PropertyGroup>
+
+  <!--
+    目标框架：netstandard2.1。
+
+    运行时是 Unity 的 Mono，它实现的正是 netstandard 2.1 —— 游戏 Managed\ 下就摆着
+    netstandard.dll 2.1.0.0。而且 UnityEngine.*.dll 这批引擎模块本身就是按
+    netstandard 2.1 编译的，用同档 TFM 才能对齐。
+
+    不能用的：
+      - net5.0/net8.0/net10.0 —— .NET Core 血统，产物引用 System.Runtime 8.0.0.0 等
+        宿主不存在的程序集，Assembly.LoadFrom 当场 FileNotFoundException。
+        （net9/net10 与 net48 是并行分支，不是新旧版本关系。）
+      - net48 —— 能编译，但要对齐 netstandard 2.1 的引擎模块得手工纠正引用
+        （CS1705），且 .NET Framework 参考程序集没有 ReadOnlySpan<T>，
+        Unity 6 的 Span 重载会引发 CS0518。netstandard2.1 天然没有这些问题。
+
+    本仓库其他模组（CombatMaid / QuackCore / TarkovStimulants 等 11 个）均用
+    netstandard2.1 并已实际构建发布，此处与之一致。
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+
+    <!-- 取确定值而非 latest：latest 随 SDK 升级漂移，未来可能引入运行时
+         （Unity 的 Mono）不支持的语言特性。10 已远超本项目所需。 -->
+    <LangVersion>10</LangVersion>
+
+    <Nullable>disable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- 产物落在 bin\Debug\ 而不是 bin\Debug\net48\ -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+</Project>
