@@ -11,7 +11,7 @@ Temporary feedback group: 1030349064 (bug reports only).
 
 ## ⚔️ Available Affixes
 
-**53** affixes across five rarity tiers. To stay within Steam's description length limit, only 3 highlights are listed per tier.
+**53** affixes across five rarity tiers. To stay within Steam's description length limit, only 3 affixes are listed per tier.
 **Full descriptions, stat multipliers and loot tables for every affix:**
 https://steamcommunity.com/workshop/filedetails/discussion/3602009885/671726388306336723/
 
@@ -50,12 +50,8 @@ https://steamcommunity.com/workshop/filedetails/discussion/3602009885/6717263883
 * 🔗 **Combo System** — Refreshes elites with specific preset affix combinations for added challenge
 
 ## 🧩 Known Issues
-* ⚠️ Conflicts with [Display Name](https://steamcommunity.com/sharedfiles/filedetails/?id=3591373133), causing affix display issues  
-  Recommended alternatives: use [Numerical Stats](https://steamcommunity.com/sharedfiles/filedetails/?id=3590948345) or enable the built-in display system
-* ⚙️ If the mod fails to load, ensure correct load order:  
-  [HarmonyLib](https://steamcommunity.com/sharedfiles/filedetails/?id=3589088839) →  
-  [ModSetting](https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494) →  
-  EliteEnemies
+* ⚠️ Conflicts with [Display Name](https://steamcommunity.com/sharedfiles/filedetails/?id=3591373133), causing affix display issues; recommended alternatives: use [Numerical Stats](https://steamcommunity.com/sharedfiles/filedetails/?id=3590948345) or enable the built-in display system
+* ⚙️ If the mod fails to load, ensure correct load order: [HarmonyLib](https://steamcommunity.com/sharedfiles/filedetails/?id=3589088839) → [ModSetting](https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494) → EliteEnemies
 * **Knockback** may push players out of bounds — use the game's built-in unstuck function
 * **Mimic** has minor conflicts with mods that clear empty loot boxes, but should not affect normal gameplay
 
@@ -67,10 +63,9 @@ https://steamcommunity.com/workshop/filedetails/discussion/3602009885/6717263883
 * The workshop page has character limits; to avoid being caught by the automated review, some sections were removed — check the changelog for full details
 
 ## 🛡️ Security
-* Since the last Steam Workshop incident, this mod has repeatedly been accused of "containing a virus" — **that claim is false**.
-* A multi-engine scanning entry point: [VirusTotal](https://www.virustotal.com/gui/home/upload) — just upload this mod's `EliteEnemies.dll` to check it yourself.
+* Since the last Steam Workshop incident, many unrelated mods have been falsely accused of containing viruses. This mod is **fully open-source and unobfuscated** — feel free to inspect it at any time.
+* A multi-engine scanning entry point: [VirusTotal](https://www.virustotal.com/gui/home/upload) — just upload the mod's DLL file to check it yourself.
 * You are welcome to verify it yourself: scan the mod folder with your antivirus, or upload the DLL to any multi-engine scanning service.
-* This mod is **fully open-source and unobfuscated**, with no hidden behavior — feel free to inspect it at any time.
 
 ## 🧩 Credits
 > This mod's multilingual text and some of its code were produced with AI assistance; development is still ongoing.  

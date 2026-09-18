@@ -11,7 +11,7 @@
 
 ## ⚔️ 当前可用词条
 
-共 **53** 个词条，按稀有度分五档。为避免介绍页超出字数上限，下面每组只列 3 个代表作。
+共 **53** 个词条，按稀有度分五档。为避免介绍页超出字数上限，下面每组只列 3 个词条。
 **全部词条的完整效果说明、属性倍率与掉落一览请见**：
 https://steamcommunity.com/workshop/filedetails/discussion/3602009885/671726388306336723/
 
@@ -50,10 +50,8 @@ https://steamcommunity.com/workshop/filedetails/discussion/3602009885/6717263883
 * 🔗 **Combo系统** — 刷新特定词条组合的精英怪，增加挑战性
 
 ## 🧩 已知问题
-* ⚠️ 与 [Display Name](https://steamcommunity.com/sharedfiles/filedetails/?id=3591373133) 冲突，会导致词条显示异常  
-  建议使用 [Numerical Stats](https://steamcommunity.com/sharedfiles/filedetails/?id=3590948345) 或启用本模组内置显示系统。
-* ⚙️ 若模组无法启用，请确保加载顺序正确：  
-  [HarmonyLib](https://steamcommunity.com/sharedfiles/filedetails/?id=3589088839) → [ModSetting](https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494) → EliteEnemies
+* ⚠️ 与 [Display Name](https://steamcommunity.com/sharedfiles/filedetails/?id=3591373133) 冲突，会导致词条显示异常，建议使用 [Numerical Stats](https://steamcommunity.com/sharedfiles/filedetails/?id=3590948345) 或启用本模组内置显示系统。
+* ⚙️ 若模组无法启用，请确保加载顺序正确：[HarmonyLib](https://steamcommunity.com/sharedfiles/filedetails/?id=3589088839) → [ModSetting](https://steamcommunity.com/sharedfiles/filedetails/?id=3595729494) → EliteEnemies
 * **击飞** 可能会导致玩家到地图外，请使用游戏内自带的脱离卡死功能
 * **拟态** 词条与清空地图空箱子的模组有少量冲突，但应当不影响游戏正常运行
 
@@ -65,10 +63,9 @@ https://steamcommunity.com/workshop/filedetails/discussion/3602009885/6717263883
 * 介绍页面字数有限，为防止被弱智自动审核夹了，不得已删掉了几个板块，详细更新内容请查阅改动说明
 
 ## 🛡️ 安全性说明
-* 自上次创意工坊事件以来，本人的许多无关模组都被诬陷造谣带有病毒。
-* 提供一个第三方多引擎检测入口：[VirusTotal](https://www.virustotal.com/gui/home/upload) —— 把本模组的 `EliteEnemies.dll` 传上去即可自查。
+* 自上次创意工坊事件以来，许多无关模组都被诬陷造谣带有病毒，本模组**完全开源、无任何混淆**，欢迎随时审查！
+* 提供一个第三方多引擎检测入口：[VirusTotal](https://www.virustotal.com/gui/home/upload) —— 把模组的DLL文件传上去即可自查。
 * 呼吁大家自行使用病毒检测工具排查已订阅的模组，不要订阅带混淆的模组，避免遭受恶意者的攻击。
-* 此外模组**完全开源、无任何混淆**，欢迎随时审查！
 
 ## 🧩 声明
 > 本模组多语言文本翻译和部分代码由 AI 辅助修改和美化，目前仍在持续完善中。  
