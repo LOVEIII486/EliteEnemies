@@ -149,6 +149,27 @@
 
 8. **推送**（对外可见，动手前确认）：`git push` + `git push origin v2.1.0`。
 
+9. **上传后确认工坊标签还在** ⚠ **这一条是踩出来的**：上传器会把条目的 tags
+   **整个替换**——**留空就等于清空**。曾经因为没填，写好的分类标签全被覆盖，
+   模组一度不属于任何类别。
+
+   本模组在工坊页应勾选：**Gameplay** / **Companion & NPC** / **Loot & Economy**
+   （可选：Visual Enhancements）。
+
+   不用打开 Steam 就能自查：
+   ```bash
+   curl -s -X POST "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/" \
+        -d "itemcount=1&publishedfileids[0]=3602009885"
+   ```
+   看返回里的 `tags`——除了 Steam 自动加的 `Mod`，还应当有上面那几个。
+   （2026-09-19 查过：当时只剩 `Mod`，其余全没了。）
+
+   > 该游戏工坊开放的标签共 14 个（`steamcommunity.com/app/3167020/workshop/`
+   > 左侧筛选栏是权威列表）：
+   > Weapon / Equipment & Gear / Loot & Economy / Quality of Life / Cheats & Exploits /
+   > Visual Enhancements / Sound / Quest & Progression / Companion & NPC / Collectibles /
+   > Gameplay / Multiplayer & Co-op / Utility / Medical & Survival
+
 > **本工程不对外公布文件哈希**（2026-09-18 定的）：
 > 工坊页不贴 VirusTotal 检测报告链接，改为请玩家自行检测
 > （`workshop\description\*.md` 的「安全性说明」一节）。
