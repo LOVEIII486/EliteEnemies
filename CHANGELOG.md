@@ -149,19 +149,27 @@
 
 8. **推送**（对外可见，动手前确认）：`git push` + `git push origin v2.1.0`。
 
-9. **上传后确认工坊标签还在** ⚠ **这一条是踩出来的**：上传器会把条目的 tags
-   **整个替换**——**留空就等于清空**。曾经因为没填，写好的分类标签全被覆盖，
-   模组一度不属于任何类别。
+9. **上传后把工坊分类标签写回去** ⚠ **每次发版都要做，不是一次性的。**
 
-   本模组在工坊页应勾选：**Gameplay** / **Companion & NPC** / **Loot & Economy**
-   （可选：Visual Enhancements）。
+   游戏的上传器**每次上传都会**把条目的 tags 覆盖成 `["Mod"]`：
+   `SteamWorkshopManager.cs:225` 在按 `info.ini` 的 `tags` 设过一次之后，
+   **紧接着又无条件 `SetItemTags(handle, ["Mod"])` 一次**——两次作用在同一个
+   handle 上，而 Steam 那边是**覆盖**语义，后写的赢。所以 `info.ini` 里填什么都没用，
+   分类标签上传完必然全丢，模组就不属于任何类别。工坊**网页端没有编辑标签的入口**，
+   两条常规途径都堵着。
+
+   **做法**：用 `dotnet build -p:EliteDebug=true` 构建并部署 → 进游戏按 **F8**
+   （`src\DebugTools\WorkshopTagFixer.cs`）→ 日志里会打 `✅ 标签已写入：…`。
+   要改标签就改那个文件里的字符串数组再重编。
 
    不用打开 Steam 就能自查：
    ```bash
    curl -s -X POST "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/" \
         -d "itemcount=1&publishedfileids[0]=3602009885"
    ```
-   看返回里的 `tags`——除了 Steam 自动加的 `Mod`，还应当有上面那几个。
+   看返回里的 `tags`——除了 Steam 自动加的 `Mod`，还应当有
+   **Gameplay / Companion & NPC / Loot & Economy**。
+   （2026-09-19 实测：被覆盖后只剩 `Mod`。）
    （2026-09-19 查过：当时只剩 `Mod`，其余全没了。）
 
    > 该游戏工坊开放的标签共 14 个（`steamcommunity.com/app/3167020/workshop/`

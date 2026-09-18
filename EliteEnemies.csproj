@@ -252,6 +252,21 @@
       <HintPath>$(DuckovManagedDir)\%(Identity).dll</HintPath>
       <Private>false</Private>
     </Reference>
+
+    <!--
+      只给 `src\DebugTools\WorkshopTagFixer.cs` 用（F8 设工坊标签）。
+
+      ⚠ 它**只在该文件里有引用**，而那个文件整体受编译期开关 `EliteDebug` 约束，
+        默认构建（`dotnet build`）不会实例化它。留着这条引用是因为：
+        游戏的上传器每次上传都会把工坊标签覆盖成 ["Mod"]（见那个文件的注释），
+        所以**每次发版之后都要再设一遍**——这不是一次性的活。
+
+      游戏自己就用这个程序集（SteamWorkshopManager），必然存在。
+    -->
+    <Reference Include="com.rlabrecque.steamworks.net">
+      <HintPath>$(DuckovManagedDir)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <!--

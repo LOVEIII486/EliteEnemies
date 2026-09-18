@@ -343,8 +343,12 @@ namespace EliteEnemies
             var logger = _debugToolObject.AddComponent<EliteEnemies.DebugTools.PresetKeyLogger>();
             logger.dumpKey = KeyCode.F9;
 
+            // 工坊标签修正工具 (F8)：游戏上传器每次上传都会把标签覆盖成 ["Mod"]，
+            // 这个工具把分类标签写回去。**每次发版后都要按一次**。
+            _debugToolObject.AddComponent<EliteEnemies.DebugTools.WorkshopTagFixer>();
+
             DontDestroyOnLoad(_debugToolObject);
-            Debug.Log($"{LogTag} 调试工具已初始化: F9 (预设清单), F10 (掉落信息)");
+            Debug.Log($"{LogTag} 调试工具已初始化: F8 (工坊标签), F9 (预设清单), F10 (掉落信息)");
         }
 
         /// <summary>
