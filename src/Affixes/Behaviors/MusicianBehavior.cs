@@ -61,12 +61,15 @@ namespace EliteEnemies.Affixes.Behaviors
         /// 相对原版音量。走 <c>EventInstance.setVolume</c>（FMOD 按实例缩放），
         /// 不动 <c>bus:/Master/SFX</c>——那是全游戏音效的总线，碰它会连枪声脚步一起改小。
         ///
-        /// <para><b>为什么是 1.0</b>：这里原先是 0.45（用户要求"稍低一点"），实机反馈偏小，
-        /// 先回到原版音量做基准。⚠ 敌人通常离玩家 10~20m，会再吃一层 3D 距离衰减，
-        /// 而原版卡祖笛是玩家自己拿在手上吹的（几乎无衰减）——所以"回到 1.0"未必就够响。
-        /// 真要补偿距离衰减，可以设成大于 1 的值（FMOD 允许），见 <see cref="LogVolume"/> 打出的实测比值。</para>
+        /// <para><b>为什么是 2.5</b>：原版卡祖笛是玩家**拿在手里**吹的（几乎无距离衰减），
+        /// 而这个事件的内建音量只有 0.316（≈ -10dB，实测），搬到十几二十米外的敌人身上，
+        /// 实机反馈"敌人在屏幕边缘就听不到了"。2.5 约合 +8dB，用来补偿那段距离。</para>
+        ///
+        /// <para>⚠ <b>这个数是按听感定的，不是算出来的</b>：<c>getVolume</c> 的
+        /// <c>finalvolume</c> 实测**不反映 3D 距离衰减**（8.9m 与 26.0m 读到同一个值），
+        /// 所以拿不到衰减曲线，只能以耳朵为准。嫌吵就调小、嫌轻就调大，一处常量。</para>
         /// </summary>
-        private const float VolumeScale = 1f;
+        private const float VolumeScale = 2.5f;
 
         // ═══════════════ 乐句 ═══════════════
 
@@ -74,11 +77,18 @@ namespace EliteEnemies.Affixes.Behaviors
         private const float TriggerDistance = 30f;
 
         /// <summary>
-        /// 一段乐句吹多少个音（随机区间，含两端）。
+        /// 一段乐句吹整首还是只吹一段。
         ///
-        /// <para>8~14 是"听得出是哪首歌"的下限：小星星整句 7 个音、两只老虎
-        /// 「两只老虎，两只老虎，跑得快」是 11 个音。再短就只剩个动机，认不出来。</para>
+        /// <para><b>为什么改成整首</b>：最初是随机吹 8~14 个音，实机反馈"听不清"——
+        /// 片段太短就只剩个动机。现在一首吹完（《小星星》42 个音 ≈ 14 秒，
+        /// 其余 7~10 秒），保证听得出是哪首。</para>
+        ///
+        /// <para>嫌长就把它设成 <c>false</c>，会退回"随机吹若干音"的行为；
+        /// 或者改下面那个区间。</para>
         /// </summary>
+        private const bool PlayWholeTune = true;
+
+        /// <summary><see cref="PlayWholeTune"/> 为 <c>false</c> 时，每次吹多少个音（随机区间，含两端）。</summary>
         private const int NotesPerPhraseMin = 8;
         private const int NotesPerPhraseMax = 14;
 
@@ -128,11 +138,9 @@ namespace EliteEnemies.Affixes.Behaviors
         private static readonly HashSet<string> LoggedTunes = new HashSet<string>(System.StringComparer.Ordinal);
 
         /// <summary>
-        /// 音量诊断还能打几条。每段乐句消耗 2 条（句首 + 句末），所以 10 条 = 5 段乐句。
-        /// 取样点分散在一局里的不同距离上（乐句只在进入触发距离后开始），
-        /// 攒几条就能看出"到底有没有距离衰减"。
+        /// 音量诊断还能打几条。每段乐句消耗 1 条（只在句末取，见 <see cref="LogVolume"/>）。
         /// </summary>
-        private static int _volumeLogsLeft = 10;
+        private static int _volumeLogsLeft = 3;
 
         // ═══════════════ 运行状态 ═══════════════
 
@@ -215,7 +223,9 @@ namespace EliteEnemies.Affixes.Behaviors
             MusicianTunes.Tune tune = MusicianTunes.All[Random.Range(0, MusicianTunes.All.Length)];
             _phraseNotes = tune.Notes;
             _phraseCursor = 0;
-            _notesLeft = Mathf.Min(Random.Range(NotesPerPhraseMin, NotesPerPhraseMax + 1), _phraseNotes.Length);
+            _notesLeft = PlayWholeTune
+                ? _phraseNotes.Length
+                : Mathf.Min(Random.Range(NotesPerPhraseMin, NotesPerPhraseMax + 1), _phraseNotes.Length);
 
             audio.SetParameterByName(_pitchParameter, NoteValue(_phraseNotes[0].Semitone));
 
@@ -236,7 +246,6 @@ namespace EliteEnemies.Affixes.Behaviors
             _kazoo.Value.setVolume(VolumeScale);
             VerifyPitchOnce(NoteValue(_phraseNotes[0].Semitone));
             LogTuneOnce(tune, _notesLeft);
-            LogVolume(character, "句首");
             _noteRemaining = _phraseNotes[0].Beats * SecondsPerBeat;
         }
 
@@ -273,20 +282,21 @@ namespace EliteEnemies.Affixes.Behaviors
         }
 
         /// <summary>
-        /// 打几条音量诊断，用来判断"3D 距离衰减到底吃掉了多少"。
+        /// 打一条音量诊断，只为记录这个事件的**内建音量**。
         ///
-        /// <para><c>getVolume(out volume, out finalvolume)</c> 的第二个值是**算进所有衰减之后**
-        /// 的实际音量。两者一比就知道该把 <see cref="VolumeScale"/> 补偿到多少——
-        /// 与其反复调参，不如把它测出来。</para>
-        ///
-        /// <para>⚠ <b>句首与句末各取一次，缺一不可</b>：第一版只在**句首**取样，
-        /// 结果 3.5m 与 30.0m 都报 <c>1.000</c>，看起来像"完全没有距离衰减"。
-        /// 但那个位置**可能是假象**——事件刚 <c>start()</c>、还没经过一次 FMOD 的
-        /// <c>system.update()</c>，3D 衰减未必已经算上。句末取样（事件已跑 2~5 秒）才作数：
-        /// 两次一比，「真的没衰减」和「句首还没算」就能分开。</para>
+        /// <para>⚠ <b>它测不出距离衰减，别再指望它</b>（2026-09-18 实测）：</para>
+        /// <list type="bullet">
+        /// <item><b>句首取样恒为 <c>1.000</c></b>——事件刚 <c>start()</c>、还没经过一次 FMOD 的
+        /// <c>system.update()</c>，衰减根本没算上。第一版只取句首，于是得出了
+        /// "完全没有距离衰减"的错误结论。</item>
+        /// <item><b>句末取样恒为 <c>0.316</c></b>（= 事件内建音量，≈ -10dB），
+        /// 8.9m 与 26.0m 读到的是同一个值。也就是说 <c>finalvolume</c>
+        /// <b>不反映 3D 距离衰减</b>。</item>
+        /// </list>
+        /// <para>结论：距离衰减只能**靠耳朵**判断，拿不到曲线。<see cref="VolumeScale"/> 就是据此定的。
+        /// 留着这条只为记下内建音量，好在换事件时有个对照。</para>
         /// </summary>
-        /// <param name="when">取样点标记，只用于日志可读性。</param>
-        private void LogVolume(CharacterMainControl character, string when)
+        private void LogVolume(CharacterMainControl character)
         {
             if (_volumeLogsLeft <= 0 || !_kazoo.HasValue) return;
             _volumeLogsLeft--;
@@ -298,8 +308,8 @@ namespace EliteEnemies.Affixes.Behaviors
                 ? Vector3.Distance(character.transform.position, player.transform.position)
                 : -1f;
 
-            Debug.Log($"[EliteEnemies.Musician] 音量诊断[{when}]：设定={setVolume:F3} 实际={finalVolume:F3} " +
-                      $"距离={dist:F1}m（实际/设定 = 距离衰减倍数）");
+            Debug.Log($"[EliteEnemies.Musician] 音量诊断：设定={setVolume:F3} 实际={finalVolume:F3} " +
+                      $"距离={dist:F1}m（⚠ 实际值不含 3D 距离衰减，见本方法注释）");
         }
 
         private void TickPhrase(CharacterMainControl character, float deltaTime)
@@ -312,7 +322,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (_notesLeft <= 0 || _phraseNotes == null || _phraseCursor >= _phraseNotes.Length)
             {
-                LogVolume(character, "句末");
+                LogVolume(character);   // 只在句末取——句首那个位置读到的是假象，见方法注释
                 StopKazoo();
                 _cooldownRemaining = Random.Range(CooldownMin, CooldownMax);
                 return;
