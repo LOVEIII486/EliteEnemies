@@ -99,9 +99,7 @@ Temporary feedback group: 1030349064 (bug reports only).
 
 ## 🛡️ Security
 * Since the last Steam Workshop incident, this mod has repeatedly been accused of "containing a virus" — **that claim is false**.
-* A third-party multi-engine scan report is now provided: [VirusTotal report](https://www.virustotal.com/gui/file/198bbf9f32b857211ee7ad3acdd7db9bd677981befa0a7af5cf95e0c14feccb6/detection)  
-  The hash shown at the top of the report is the fingerprint of the scanned file — you can compare it against the `EliteEnemies.dll` you downloaded.
-* You are welcome to verify it yourself as well: scan the mod folder with your antivirus, or upload the DLL to any multi-engine scanning service.
+* You are welcome to verify it yourself: scan the mod folder with your antivirus, or upload the DLL to any multi-engine scanning service.
 * This mod is **fully open-source and unobfuscated**, with no hidden behavior — feel free to inspect it at any time.
 
 ## 🧩 Credits
