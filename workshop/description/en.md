@@ -9,67 +9,18 @@ Temporary feedback group: 1030349064 (bug reports only).
 
 ---
 
-## ⚔️ Available Affixes (Sorted by Rarity)
+## ⚔️ Available Affixes
 
-### **【Common】**
-* **Tanky** — More durable but slower. Drops: heavy armor of various tiers
-* **Swift** — Faster movement but more fragile. Drops: Agility Totem, speed stimulants
-* **Berserk** — Higher attack, lower HP. Drops: Rage Totem, stimulants
-* **Glass Cannon** — Extremely high damage, extremely low HP. Drops: high-grade AP ammo
+**53** affixes across five rarity tiers. To stay within Steam's description length limit, only a few highlights are listed per tier.
 
-### **【Uncommon】**
-* **Fisherman** — A fisherman on the battlefield; drops fish, bait, and fishing rods
-* **Chef** — Loves food and drinks; drops canned food, water, and other supplies
-* **Talkative** — Constantly shouts taunts during battle
-* **Regeneration** — Recovers about 10 HP per second
-* **Hardening** — Reduces physical damage taken by 5–15% randomly when hit, stacking up to 50%
-* **Blindness** — Attacks obscure the player's vision
-* **Slowness** — Attacks apply a strong slowing effect
-* **Stun** — Attacks heavily disrupt player recoil control
-* **Tear** — Attacks reduce the player's armor
-* **Overload** — Enters overload when damaged, greatly extending sustained fire (idea by @取名难)
-* **Nimble** — Very short dash cooldown and unpredictable footwork; can also move fast while firing
-* **Musician** — Brings instruments into battle; drops music-related items
+**Full descriptions, stat multipliers and loot tables:**
+https://steamcommunity.com/workshop/filedetails/discussion/3602009885/671726388306336723/
 
-### **【Rare】**
-* **Invisible** — Turns invisible and flickers into view periodically
-* **Nine Dragons** — All stats ×1.3; drops various stimulants
-* **Giant** — Larger model, more HP, slower movement
-* **Mini** — Smaller model, lower HP, faster movement
-* **Undead** — Becomes invincible for 2.5 seconds at low HP and restores 50% HP
-* **Vampirism** — Attacks drain HP (weaker effect at long range)
-* **Dung Eater** — Duckov players' favorite episode?
-* **Chaos** — Attacks apply random debuffs; killing it removes the debuffs it applied
-* **Explosive** — Explodes on death for ~10–30 damage (based on player max HP)
-* **Knockback** — Knocks the player back on hit
-* **Slippery** — Attacks make the player lose their footing
-* **Mimic** — Disguises itself as a supply crate; reveals itself and ambushes when damaged or when the player opens it
-* **Time Stop** — On taking damage, slows time to 30% for about 3 seconds
-* **Phantom** — Disrupts the player's senses with fake combat sounds and screams
-* **Distortion** — Distorts the player, causing their bullets to curve
-
-### **【Epic】**
-* **Split** — Summons weakened clones at low HP (clones drop only 2 items)
-* **Magazine Curse** — Forces the player to reload when damaged; drops fast-mag components
-* **Phase** — Swaps positions with the player on hit
-* **Revenge** — Fires rockets back at the attacker when damaged
-* **Multi-Shot** — Fires two extra bullets per attack
-* **Guardian** — Gains a rotating guardian core; invincible while the core exists
-* **Grenadier** — Throws grenades at the target when attacks land
-* **Mimic Tear** — Copies the player's primary weapon, gear, and appearance; enhanced AI, infinite ammo
-* **EMP Disrupt** — Attacks disrupt electronics, temporarily disabling the player's HUD
-* **Reflect** — Periodically generates a shield that reflects bullets back at the attacker
-* **Frigid** — Chance to freeze the player on hit
-
-### **【Legendary】**
-* **Collector** — Drops various high-value collectibles
-* **Gunsmith** — Drops quality weapon attachments
-* **Locksmith** — Drops a random key on death
-* **Sticky** — Makes the player drop weapons at their feet; drops glue items on death (disabled by default)
-* **Slime** — Behaves like a real slime! Stats change with body size
-* **Chicken Bro** — Summons chick minions on spawn; drops KunKun relics
-* **Mandarin Duck** — Always appears in pairs; they share damage
-* **Obscurer** — Randomly gains 1–4 affixes beyond normal limits, hides all affix names, and displays garbled text instead
+* **【Common】4** — Tanky, Berserk, Glass Cannon, Swift
+* **【Uncommon】12** — Musician, Talkative, Regeneration, Hardening
+* **【Rare】17** — Mimic, Undead, Chaos, Time Stop
+* **【Epic】11** — Mimic Tear, Guardian, Frigid, Phase
+* **【Legendary】9** — Slime, Obscurer, Thief, Mandarin Duck
 
 ---
 

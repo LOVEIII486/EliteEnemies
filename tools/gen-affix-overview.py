@@ -25,12 +25,18 @@ r"""
 
 ## 数据来源（每条都可追溯）
 
-| 列 | 来源 |
+| 内容 | 来源 |
 |---|---|
 | 中文名 / 稀有度 / 三个乘数 | `EliteAffixes.cs` 的 `AffixData` |
 | 掉落物品名 | `..\\Docs\\ItemDatabase原版.xlsx`（ID → 显示名） |
 | 掉落标签名 | 同一张表的 `TagsZH` 列 |
+| 英文名（词条说明里的括号） | `localization\\English.csv` |
+| **效果说明的措辞** | **`workshop\\affix-notes.txt`（手写）** |
 | 版本号 | `EliteEnemies.csproj` 的 `<Version>`（全工程唯一来源） |
+
+⚠ **只有效果说明是手写的**，其余全部来自代码/资产。手写意味着它会漂移，
+所以 `load_notes()` 会校验"词条表与说明文件**一一对应**"并在不一致时**中止**——
+能挡的是 key 拼错、词条增删忘了同步；**措辞有没有跟上代码的行为改动，机器判不了**。
 
 ## ⚠ 两个必须知道的口径
 
@@ -178,6 +184,55 @@ def parse_affixes(names):
     return out, warned_tags
 
 
+def load_notes(affixes):
+    """读 `workshop\\affix-notes.txt`（**手写**），返回 {词条key: 说明}。
+
+    ⚠ 措辞是作者手写的，生成器判不了"它有没有跟上代码"——那是人工核对的事。
+       能查的是**结构性**的不一致，而且查不到就**中止**，不静默：
+
+         · key 拼错 / 词条已被删 → "文件里有、代码里没有"
+         · 新增词条忘了写说明   → "代码里有、文件里漏了"
+         · 同一个 key 写了两遍
+
+       这三条恰好是手写文件最容易出的错，而且都是**静默**的（少一条说明，
+       总览里就少一个词条，没人会发现）。
+    """
+    path = os.path.join(ROOT, r"workshop\affix-notes.txt")
+    notes, dup = {}, []
+    for lineno, raw in enumerate(open(path, encoding='utf-8-sig').read().split('\n'), 1):
+        line = raw.strip()
+        if not line or line.startswith('#'):
+            continue
+        if '=' not in line:
+            raise SystemExit("✗ affix-notes.txt:%d 不是 「key = 说明」的形式：%s" % (lineno, raw))
+        k, v = line.split('=', 1)
+        k, v = k.strip(), v.strip()
+        if k in notes:
+            dup.append(k)
+        notes[k] = v
+
+    keys = [a["key"] for a in affixes]
+    problems = []
+    if dup:
+        problems.append("重复的 key：%s" % "、".join(sorted(set(dup))))
+    unknown = sorted(k for k in notes if k not in keys)
+    missing = sorted(k for k in keys if k not in notes)
+    if unknown:
+        problems.append("affix-notes.txt 里有、代码里没有（key 拼错或词条已删）：%s" % "、".join(unknown))
+    if missing:
+        problems.append("代码里有、affix-notes.txt 里漏了（新增词条忘了写说明）：%s" % "、".join(missing))
+    if problems:
+        raise SystemExit("✗ affix-notes.txt 与词条表对不上：\n  - " + "\n  - ".join(problems))
+
+    return notes
+
+
+def load_en_names():
+    """读 `localization\\English.csv`，返回 {本地化key: 值}。总览里要在中文名后标英文名。"""
+    path = os.path.join(ROOT, r'localization\English.csv')
+    return {r['key']: r['value'] for r in csv.DictReader(open(path, encoding='utf-8-sig'))}
+
+
 def main():
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -210,18 +265,44 @@ def main():
             return "、".join(parts[:3]) + " 等 %d 项" % len(parts)
         return "、".join(parts)
 
+    notes = load_notes(affixes)
+    en_names = load_en_names()
+
     body = ["[h1]⚔️ 精英敌人词缀总览（v%s）[/h1]" % version, "",
-            "[i]本帖整理 v%s 的全部 %d 个精英词缀：属性倍率、稀有度与掉落。[/i]" % (version, len(affixes)),
-            "[i]数据由模组代码自动生成，与游戏内实际数值一致；标注「动态」的见文末备注。[/i]",
-            "", "[hr][/hr]", "", "[h2]📜 词缀属性与掉落一览[/h2]", "",
-            "[table]",
-            "[tr][th]词缀[/th][th]稀有度[/th][th]生命×[/th][th]伤害×[/th][th]移速×[/th][th]掉落[/th][/tr]"]
+            "[i]本帖整理 v%s 的全部 %d 个精英词缀：效果说明、属性倍率、稀有度与掉落。[/i]" % (version, len(affixes)),
+            "[i]属性倍率与掉落由模组代码自动生成，与游戏内实际数值一致；标注「动态」的见文末备注。[/i]",
+            ""]
 
     # 按稀有度分组显示。⚠ 词条表（`EliteAffixes.Pool`）的字典顺序是**交错的**
     # ——普通/罕见/稀有/罕见/稀有/史诗… 直接照抄会让读者以为分组坏了。
     # 组内保持文件原序（那才是作者摆放的顺序）。
     rank = {"Common": 0, "Uncommon": 1, "Rare": 2, "Epic": 3, "Legendary": 4}
     affixes = sorted(affixes, key=lambda a: rank.get(a.get("rarity", ""), 9))
+
+    # ── 第一节：词条说明（效果文案，来自手写的 affix-notes.txt）──
+    #
+    # ⚠ 与下面那张表**刻意分成两节**：说明是散文（要读的），表是数据（要查的）。
+    #   挤进同一张表会把每格撑得很长，两边都难用。
+    body += ["[hr][/hr]", "", "[h2]📜 词条说明[/h2]", ""]
+
+    last_rarity = None
+    for a in affixes:
+        rar = RARITY_ZH.get(a.get("rarity", ""), a.get("rarity", "?"))
+        if rar != last_rarity:
+            if last_rarity is not None:
+                body.append("")
+            in_group = sum(1 for x in affixes if RARITY_ZH.get(x.get("rarity", ""), "?") == rar)
+            body.append("[b]【%s】 %d 个[/b]" % (rar, in_group))
+            last_rarity = rar
+
+        en = en_names.get("EliteEnemies_Affix_%s_Name" % a["key"], "")
+        label = "%s（%s）" % (a["name"], en) if en else a["name"]
+        body.append("* [b]%s[/b] — %s" % (label, notes[a["key"]]))
+
+    # ── 第二节：属性与掉落一览（从代码生成）──
+    body += ["", "[hr][/hr]", "", "[h2]📊 词缀属性与掉落一览[/h2]", "",
+             "[table]",
+             "[tr][th]词缀[/th][th]稀有度[/th][th]生命×[/th][th]伤害×[/th][th]移速×[/th][th]掉落[/th][/tr]"]
 
     last_rarity = None
     for a in affixes:
