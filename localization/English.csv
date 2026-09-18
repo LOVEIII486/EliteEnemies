@@ -60,7 +60,7 @@ EliteEnemies_Affix_Invisible_Name,Invisible,2.3,AffixNames
 EliteEnemies_Affix_Invisible_Description,Turns invisible; briefly reveals and flickers every few seconds.,2.3,AffixDescription
 EliteEnemies_Affix_Invisible_Messages,Did you just see me?|Don't blink — I'm gone again!|Shh... nothing happened.|Illusion? Or am I just that fast?|I'm right behind you... just kidding!,2.3,AffixBehavior
 EliteEnemies_Affix_Musician_Name,Musician,2.3,AffixNames
-EliteEnemies_Affix_Musician_Description,A weirdo who brings instruments to battle. Plays a kazoo when the player is near; drops instruments.,2.6,AffixDescription
+EliteEnemies_Affix_Musician_Description,A weirdo who brings instruments to battle. Plays tunes on a kazoo when the player is near; drops instruments.,2.6,AffixDescription
 EliteEnemies_Affix_NineDragons_Name,Nine Dragons,2.3,AffixNames
 EliteEnemies_Affix_NineDragons_Description,All attributes ×1.3; drops various injectors.,2.3,AffixDescription
 EliteEnemies_Affix_Giant_Name,Giant,2.3,AffixNames

@@ -60,7 +60,7 @@ EliteEnemies_Affix_Invisible_Name,隐身,2.3,AffixNames
 EliteEnemies_Affix_Invisible_Description,获得隐身状态，每隔数秒会短暂显形并闪烁几下,2.3,AffixDescription
 EliteEnemies_Affix_Invisible_Messages,你刚才是不是看到我了？|别眨眼，我又消失啦～|嘘……什么都没发生。|幻觉？还是我太快了？|我就在你背后……开玩笑的。,2.3,AffixBehavior
 EliteEnemies_Affix_Musician_Name,音乐家,2.3,AffixNames
-EliteEnemies_Affix_Musician_Description,带着乐器上战场的奇葩，玩家靠近时随机吹响卡祖笛，掉落乐器,2.6,AffixDescription
+EliteEnemies_Affix_Musician_Description,带着乐器上战场的奇葩，玩家靠近时随机吹奏曲子，掉落乐器,2.6,AffixDescription
 EliteEnemies_Affix_NineDragons_Name,九龙拉棺,2.3,AffixNames
 EliteEnemies_Affix_NineDragons_Description,全属性提升 1.3 倍，掉落各种针剂,2.3,AffixDescription
 EliteEnemies_Affix_Giant_Name,巨大化,2.3,AffixNames

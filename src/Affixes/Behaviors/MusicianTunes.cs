@@ -92,6 +92,105 @@ namespace EliteEnemies.Affixes.Behaviors
             N(0), N(7), N(0, 2f),
         });
 
+        /// <summary>
+        /// 欢乐颂（贝多芬第九交响曲第四乐章主题，1824）。**公有领域**。
+        /// <code>
+        /// 3 3 4 5 | 5 4 3 2 | 1 1 2 3 | 3. 2 2-
+        /// 3 3 4 5 | 5 4 3 2 | 1 1 2 3 | 2. 1 1-
+        /// </code>
+        /// </summary>
+        private static readonly Tune OdeToJoy = new Tune("欢乐颂", new[]
+        {
+            N(4), N(4), N(5), N(7),
+            N(7), N(5), N(4), N(2),
+            N(0), N(0), N(2), N(4),
+            N(4, 1.5f), N(2, 0.5f), N(2, 2f),
+            N(4), N(4), N(5), N(7),
+            N(7), N(5), N(4), N(2),
+            N(0), N(0), N(2), N(4),
+            N(2, 1.5f), N(0, 0.5f), N(0, 2f),
+        });
+
+        /// <summary>
+        /// 铃儿响叮当（Jingle Bells，James Lord Pierpont，1857）。**公有领域**。
+        /// <code>
+        /// 3 3 3 | 3 3 3 | 3 5 1 2 3- | 4 4 4 4 4 3 3 | 3 3 2 2 1 2 5-
+        /// </code>
+        /// </summary>
+        private static readonly Tune JingleBells = new Tune("铃儿响叮当", new[]
+        {
+            N(4), N(4), N(4),
+            N(4), N(4), N(4),
+            N(4), N(7), N(0), N(2), N(4, 2f),
+            N(5), N(5), N(5), N(5), N(5), N(4), N(4),
+            N(4), N(4), N(2), N(2), N(0), N(2), N(7, 2f),
+        });
+
+        /// <summary>
+        /// 生日快乐。曲调出自 Patty &amp; Mildred Hill 的《Good Morning to All》（1893），**公有领域**
+        /// （美国 2016 年判决定案；旋律本身 1893 年即已发表）。
+        /// <code>
+        /// 5 5 6 5 1̇ 7- | 5 5 6 5 2̇ 1̇- | 5 5 5̇ 3̇ 1̇ 7 6 | 4̇ 4̇ 3̇ 1̇ 2̇ 1̇-
+        /// </code>
+        /// <para>⚠ 第三、四句（<c>7 6</c> 与 <c>4̇ 4̇ 3̇ 1̇ 2̇ 1̇</c>）我把握不如前两句足。</para>
+        /// </summary>
+        private static readonly Tune HappyBirthday = new Tune("生日快乐", new[]
+        {
+            N(7), N(7), N(9), N(7), N(12), N(11, 2f),
+            N(7), N(7), N(9), N(7), N(14), N(12, 2f),
+            N(7), N(7), N(19), N(16), N(12), N(11), N(9),
+            N(17), N(17), N(16), N(12), N(14), N(12, 2f),
+        });
+
+        /// <summary>
+        /// 玛丽有只小羊羔（Mary Had a Little Lamb，1830 年代美国童谣）。**公有领域**。
+        /// <code>
+        /// 3 2 1 2 | 3 3 3- | 2 2 2- | 3 5 5-
+        /// 3 2 1 2 | 3 3 3 3 | 2 2 3 2 | 1-
+        /// </code>
+        /// </summary>
+        private static readonly Tune MaryLamb = new Tune("玛丽有只小羊羔", new[]
+        {
+            N(4), N(2), N(0), N(2),
+            N(4), N(4), N(4, 2f),
+            N(2), N(2), N(2, 2f),
+            N(4), N(7), N(7, 2f),
+            N(4), N(2), N(0), N(2),
+            N(4), N(4), N(4), N(4),
+            N(2), N(2), N(4), N(2),
+            N(0, 4f),
+        });
+
+        /// <summary>
+        /// 划船歌（Row, Row, Row Your Boat，1852 年美国歌曲）。**公有领域**。
+        /// <code>
+        /// 1 1 1 2 3 | 3 2 3 4 5 | 1̇ 1̇ 1̇ 5 5 5 | 3 3 3 1 1 1 | 5 4 3 2 1-
+        /// </code>
+        /// </summary>
+        private static readonly Tune RowYourBoat = new Tune("划船歌", new[]
+        {
+            N(0), N(0), N(0), N(2), N(4),
+            N(4), N(2), N(4), N(5), N(7),
+            N(12), N(12), N(12), N(7), N(7), N(7),
+            N(4), N(4), N(4), N(0), N(0), N(0),
+            N(7), N(5), N(4), N(2), N(0, 2f),
+        });
+
+        /// <summary>
+        /// 伦敦桥（London Bridge Is Falling Down，英国传统童谣）。**公有领域**。
+        /// <code>
+        /// 5 6 5 4 3 4 5 | 2 3 4 | 3 4 5 | 5 6 5 4 3 4 5 | 2 5 3 1-
+        /// </code>
+        /// </summary>
+        private static readonly Tune LondonBridge = new Tune("伦敦桥", new[]
+        {
+            N(7), N(9), N(7), N(5), N(4), N(5), N(7),
+            N(2), N(4), N(5),
+            N(4), N(5), N(7),
+            N(7), N(9), N(7), N(5), N(4), N(5), N(7),
+            N(2), N(7), N(4), N(0, 2f),
+        });
+
         // ⚠ Lemon（米津玄師，2018）——**有版权的商业作品，不是公有领域**。
         //
         //   模组作者已知悉并接受这个风险（2026-09-18 明确确认），故此处留位。
@@ -105,7 +204,11 @@ namespace EliteEnemies.Affixes.Behaviors
         //
         //   ⚠ 注意：本模组整体采用的许可证**不覆盖**这段旋律（它本来也不归模组授权）。
 
-        /// <summary>可供随机挑选的曲目池。</summary>
-        public static readonly Tune[] All = { Twinkle, TwoTigers };
+        /// <summary>可供随机挑选的曲目池。<b>⚠ 必须声明在所有曲目之后</b>，理由见上面的说明。</summary>
+        public static readonly Tune[] All =
+        {
+            Twinkle, TwoTigers, OdeToJoy, JingleBells,
+            HappyBirthday, MaryLamb, RowYourBoat, LondonBridge,
+        };
     }
 }

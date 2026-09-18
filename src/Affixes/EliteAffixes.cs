@@ -97,7 +97,7 @@ namespace EliteEnemies.Affixes
         ["Musician"] = new AffixData
         {
             Name = new LocalizedText("EliteEnemies_Affix_Musician_Name", "音乐家"),
-            Description = new LocalizedText("EliteEnemies_Affix_Musician_Description", "带着乐器上战场的奇葩，玩家靠近时随机吹响卡祖笛，掉落乐器"),
+            Description = new LocalizedText("EliteEnemies_Affix_Musician_Description", "带着乐器上战场的奇葩，玩家靠近时随机吹奏曲子，掉落乐器"),
             HealthMultiplier = 1.0f,
             DamageMultiplier = 1.0f,
             MoveSpeedMultiplier = 1.0f,
