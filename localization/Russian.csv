@@ -198,4 +198,4 @@ EliteEnemies_Affix_AmmoEater_Name,Пожиратель патронов,2.7,Affi
 EliteEnemies_Affix_AmmoEater_Description,Попадания вырывают патроны прямо из магазина игрока.,2.7,AffixDescription
 EliteEnemies_Affix_Thief_Name,Вор,2.7,AffixNames
 EliteEnemies_Affix_Thief_Description,Крадёт предмет из рюкзака игрока при попадании. Убийство даёт два.,2.7,AffixDescription
-EliteEnemies_Affix_Thief_PopText,Это теперь моё!,2.7,AffixBehavior
+EliteEnemies_Affix_Thief_PopText,Теперь моё: <color=#{0}>{1}</color>,2.7,AffixBehavior

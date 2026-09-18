@@ -198,4 +198,4 @@ EliteEnemies_Affix_AmmoEater_Name,Ammo Eater,2.7,AffixNames
 EliteEnemies_Affix_AmmoEater_Description,Hits devour rounds straight from the player's magazine.,2.7,AffixDescription
 EliteEnemies_Affix_Thief_Name,Thief,2.7,AffixNames
 EliteEnemies_Affix_Thief_Description,Steals an item from the player's backpack on hit. Killing it drops two.,2.7,AffixDescription
-EliteEnemies_Affix_Thief_PopText,This is mine now!,2.7,AffixBehavior
+EliteEnemies_Affix_Thief_PopText,Mine now: <color=#{0}>{1}</color>,2.7,AffixBehavior
