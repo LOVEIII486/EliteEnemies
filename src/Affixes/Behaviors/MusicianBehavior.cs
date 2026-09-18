@@ -43,12 +43,24 @@ namespace EliteEnemies.Affixes.Behaviors
         /// </summary>
         private const string FallbackPitchParameter = "parameter:/Kazoo/Pitch";
 
-        /// <summary>同上的音量/强度参数。<b>必须给上再 Post</b>——默认是 0，声音被它门控。</summary>
+        /// <summary>同上的音量/强度参数。</summary>
+        /// <remarks>
+        /// 实测（2026-09-18 的 Player.log）：这个参数的默认值是 <b>1</b>（量程 0~1），
+        /// 所以之前注释里"默认 0、声音被它门控"的说法是错的——不设它也有声。
+        /// 仍然显式设成 1，只为不受别处改动影响。
+        /// </remarks>
         private const string FallbackIntensityParameter = "parameter:/Kazoo/Intensity";
 
-        /// <summary>相对原版音量。走 <c>EventInstance.setVolume</c>（FMOD 按实例缩放），
-        /// 不动 <c>bus:/Master/SFX</c>——那是全游戏音效的总线，碰它会连枪声脚步一起改小。</summary>
-        private const float VolumeScale = 0.45f;
+        /// <summary>
+        /// 相对原版音量。走 <c>EventInstance.setVolume</c>（FMOD 按实例缩放），
+        /// 不动 <c>bus:/Master/SFX</c>——那是全游戏音效的总线，碰它会连枪声脚步一起改小。
+        ///
+        /// <para><b>为什么是 1.0</b>：这里原先是 0.45（用户要求"稍低一点"），实机反馈偏小，
+        /// 先回到原版音量做基准。⚠ 敌人通常离玩家 10~20m，会再吃一层 3D 距离衰减，
+        /// 而原版卡祖笛是玩家自己拿在手上吹的（几乎无衰减）——所以"回到 1.0"未必就够响。
+        /// 真要补偿距离衰减，可以设成大于 1 的值（FMOD 允许），见 <see cref="LogVolume"/> 打出的实测比值。</para>
+        /// </summary>
+        private const float VolumeScale = 1f;
 
         // ═══════════════ 乐句 ═══════════════
 
@@ -69,16 +81,22 @@ namespace EliteEnemies.Affixes.Behaviors
 
         // ═══════════════ 旋律 ═══════════════
 
-        /// <summary>音阶级数。5 级 ≈ 五声音阶，怎么随机都不会难听。</summary>
-        private const int ScaleSteps = 5;
+        /// <summary>
+        /// 音阶：小调五声的半音偏移。
+        ///
+        /// <para>实测（<c>Player.log</c>）音高参数量程是 <c>-24 ~ 24</c>、默认 <c>0</c>，
+        /// 这就是**半音**——所以音阶可以直接按半音写，不必再按量程比例摊开。
+        /// 小调五声 (<c>0 3 5 7 10</c>) 怎么随机都不会难听，跨度也只有一个八度不到。</para>
+        /// </summary>
+        private static readonly int[] PentatonicSemitones = { 0, 3, 5, 7, 10 };
 
         /// <summary>
-        /// 旋律占用参数量程的**比例**，以参数默认值为中心。
-        ///
-        /// <para>用它而不是写死音高数值，是因为这个参数的单位未知（可能是半音，也可能是 0~1）。
-        /// 取量程的一个比例，无论哪种单位都能落在合理音域里；默认值则是"这把卡祖笛本来的音高"，
-        /// 旋律绕着它走最自然。</para>
+        /// 判定"这个参数的单位是半音"的阈值：量程跨度小于一个八度就认为不是半音
+        /// （例如归一化的 0~1），改用按比例摊开的音阶。
         /// </summary>
+        private const float SemitoneRangeThreshold = 12f;
+
+        /// <summary>非半音参数时，旋律占用量程的比例（以参数默认值为中心）。</summary>
         private const float MelodySpanRatio = 0.3f;
 
         /// <summary>下一个音走级进的概率（其余为小跳），避免旋律变成乱跳。</summary>
@@ -89,10 +107,12 @@ namespace EliteEnemies.Affixes.Behaviors
         private static bool _probed;
         private static string _pitchParameter = FallbackPitchParameter;
         private static string _intensityParameter = FallbackIntensityParameter;
-        private static float _pitchLow;
-        private static float _pitchHigh;
+
+        /// <summary>音阶每一级对应的参数值。由探测结果构建，见 <see cref="BuildScale"/>。</summary>
+        private static float[] _noteValues = { 0f, 3f, 5f, 7f, 10f };
 
         private static bool _postFailedLogged;
+        private static int _volumeLogsLeft = 3;
 
         // ═══════════════ 运行状态 ═══════════════
 
@@ -103,7 +123,7 @@ namespace EliteEnemies.Affixes.Behaviors
         private float _noteRemaining;
         /// <summary>本乐句还剩几个音符（含当前这个）。</summary>
         private int _notesLeft;
-        /// <summary>当前音级，<c>0..ScaleSteps-1</c>。</summary>
+        /// <summary>当前音级，<c>0.._noteValues.Length-1</c>。</summary>
         private int _noteIndex;
 
         // ═══════════════════════════════════════════════════════════════
@@ -164,13 +184,12 @@ namespace EliteEnemies.Affixes.Behaviors
             AudioObject audio = AudioObject.GetOrCreate(go);
 
             // 顺序有讲究：SetParameterByName 会把参数**缓存**在这个 AudioObject 上，
-            // 随后 Post 的 ApplyParameters 会把它带给新事件。反过来的话，
-            // 事件已经以 Intensity=0 起播了，那一下是哑的。
+            // 随后 Post 的 ApplyParameters 会把它带给新事件。
             audio.SetParameterByName(_intensityParameter, 1f);
 
-            _noteIndex = Random.Range(0, ScaleSteps);
+            _noteIndex = Random.Range(0, _noteValues.Length);
             _notesLeft = Random.Range(NotesPerPhraseMin, NotesPerPhraseMax + 1);
-            audio.SetParameterByName(_pitchParameter, NoteValue(_noteIndex));
+            audio.SetParameterByName(_pitchParameter, _noteValues[_noteIndex]);
 
             _kazoo = AudioManager.Post(KazooEvent, go);
 
@@ -187,7 +206,31 @@ namespace EliteEnemies.Affixes.Behaviors
             }
 
             _kazoo.Value.setVolume(VolumeScale);
+            LogVolume(character);
             _noteRemaining = Random.Range(NoteDurationMin, NoteDurationMax);
+        }
+
+        /// <summary>
+        /// 打几条音量诊断（全程最多 <c>3</c> 条），用来判断"3D 距离衰减吃掉了多少"。
+        ///
+        /// <para><c>getVolume(out volume, out finalvolume)</c> 的第二个值是**算进所有衰减之后**的
+        /// 实际音量。两者一比就知道该把 <see cref="VolumeScale"/> 补偿到多少——
+        /// 与其反复调参，不如把它测出来。</para>
+        /// </summary>
+        private void LogVolume(CharacterMainControl character)
+        {
+            if (_volumeLogsLeft <= 0 || !_kazoo.HasValue) return;
+            _volumeLogsLeft--;
+
+            if (_kazoo.Value.getVolume(out float setVolume, out float finalVolume) != FMOD.RESULT.OK) return;
+
+            CharacterMainControl player = CharacterMainControl.Main;
+            float dist = player != null
+                ? Vector3.Distance(character.transform.position, player.transform.position)
+                : -1f;
+
+            Debug.Log($"[EliteEnemies.Musician] 音量诊断：设定={setVolume:F3} 实际={finalVolume:F3} " +
+                      $"距离={dist:F1}m（实际/设定 = 距离衰减倍数）");
         }
 
         private void TickPhrase(CharacterMainControl character, float deltaTime)
@@ -205,7 +248,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
             _noteIndex = NextNoteIndex(_noteIndex);
             AudioObject.GetOrCreate(character.gameObject)
-                       .SetParameterByName(_pitchParameter, NoteValue(_noteIndex));
+                       .SetParameterByName(_pitchParameter, _noteValues[_noteIndex]);
             _noteRemaining = Random.Range(NoteDurationMin, NoteDurationMax);
         }
 
@@ -215,24 +258,20 @@ namespace EliteEnemies.Affixes.Behaviors
         /// </summary>
         private static int NextNoteIndex(int current)
         {
+            int steps = _noteValues.Length;
+            if (steps <= 1) return 0;
+
             bool stepwise = Random.value < StepwiseChance;
             int distance = stepwise ? 1 : 2;
             int direction = Random.value < 0.5f ? -1 : 1;
             int step = distance * direction;
 
             int next = current + step;
-            if (next < 0 || next >= ScaleSteps)
+            if (next < 0 || next >= steps)
             {
                 next = current - step;   // 反弹，而不是夹取（夹取会连着两次同音）
             }
-            return Mathf.Clamp(next, 0, ScaleSteps - 1);
-        }
-
-        /// <summary>把音级映射成参数值——落在探测到的音域内，见 <see cref="MelodySpanRatio"/>。</summary>
-        private static float NoteValue(int index)
-        {
-            float t = ScaleSteps <= 1 ? 0.5f : (float)index / (ScaleSteps - 1);
-            return Mathf.Lerp(_pitchLow, _pitchHigh, t);
+            return Mathf.Clamp(next, 0, steps - 1);
         }
 
         /// <summary>停掉当前乐句。**幂等**——<c>OnCleanup</c> 可能被走到两次（基类约定）。</summary>
@@ -287,7 +326,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 {
                     Debug.LogWarning($"[EliteEnemies.Musician] FMOD 里找不到事件 {KazooEvent}，" +
                                      $"将退回游戏自己的参数名写法（{FallbackPitchParameter}）");
-                    ApplyFallbackRange();
+                    BuildScale(-24f, 24f, 0f);
                     return true;
                 }
 
@@ -295,11 +334,22 @@ namespace EliteEnemies.Affixes.Behaviors
                 string pitchName = null, intensityName = null;
                 float pitchMin = 0f, pitchMax = 0f, pitchDefault = 0f;
 
+                // 名字匹配不上时的兜底：本事件上"量程最宽的那个参数"就是音高。
+                // 实测 2026-09-18：两个参数分别是 ±24（音高）与 0~1（强度），量程差得很开，
+                // 这个判据不会认错。留着它是因为**名字匹配这条路实测失败过**——
+                // 见下面关于 StringWrapper 的注释。
+                float widestSpan = -1f, widestMin = 0f, widestMax = 0f, widestDefault = 0f;
+
                 for (int i = 0; i < count; i++)
                 {
                     if (desc.getParameterDescriptionByIndex(i, out PARAMETER_DESCRIPTION p) != FMOD.RESULT.OK) continue;
 
-                    string name = p.name.ToString();
+                    // ⚠ 必须用**隐式转换**取名字，不能写 p.name.ToString()：
+                    //   FMOD.StringWrapper 有 implicit operator string，但**没有重写 ToString()**，
+                    //   所以 ToString() 返回的是类型名 "FMOD.StringWrapper"。
+                    //   这个坑实测踩过——第一版就是这么写的，于是名字永远匹配不上，
+                    //   静默退回了游戏那套本来就坏的写法，旋律一直没响。
+                    string name = p.name;
                     Debug.Log($"[EliteEnemies.Musician] {KazooEvent} 参数：name='{name}' " +
                               $"min={p.minimum} max={p.maximum} default={p.defaultvalue} type={p.type}");
 
@@ -316,52 +366,85 @@ namespace EliteEnemies.Affixes.Behaviors
                     {
                         intensityName = name;
                     }
+
+                    float span = p.maximum - p.minimum;
+                    if (span > widestSpan)
+                    {
+                        widestSpan = span;
+                        widestMin = p.minimum;
+                        widestMax = p.maximum;
+                        widestDefault = p.defaultvalue;
+                    }
                 }
 
-                if (pitchName == null || pitchMax <= pitchMin)
+                bool byRange = false;
+                if ((pitchName == null || pitchMax <= pitchMin) && widestSpan >= SemitoneRangeThreshold)
                 {
-                    Debug.LogWarning($"[EliteEnemies.Musician] {KazooEvent} 上没有可用的音高参数" +
-                                     $"（找到 {count} 个参数），将退回游戏自己的参数名写法");
-                    ApplyFallbackRange();
+                    // 名字没匹配上，但有个量程明显是半音的参数 → 按量程认它
+                    byRange = true;
+                    pitchMin = widestMin;
+                    pitchMax = widestMax;
+                    pitchDefault = widestDefault;
+                }
+
+                if (pitchMax <= pitchMin)
+                {
+                    Debug.LogWarning($"[EliteEnemies.Musician] {KazooEvent} 上认不出音高参数" +
+                                     $"（找到 {count} 个参数，最宽量程 {widestSpan}），" +
+                                     $"将退回游戏自己的参数名写法（音高不会变化）");
+                    BuildScale(-24f, 24f, 0f);
                     return true;
                 }
 
-                _pitchParameter = pitchName;
-                SetMelodyRange(pitchMin, pitchMax, pitchDefault);
+                if (pitchName != null) _pitchParameter = pitchName;
                 if (intensityName != null) _intensityParameter = intensityName;
 
-                Debug.Log($"[EliteEnemies.Musician] 卡祖笛音高参数='{_pitchParameter}'，" +
-                          $"旋律音域 [{_pitchLow:F2}, {_pitchHigh:F2}]（共 {ScaleSteps} 级）");
+                BuildScale(pitchMin, pitchMax, pitchDefault);
+
+                Debug.Log($"[EliteEnemies.Musician] 卡祖笛音高参数='{_pitchParameter}'" +
+                          $"（{(byRange ? "按量程认定，名字没匹配上" : "按名字匹配")}），" +
+                          $"参数量程 [{pitchMin}, {pitchMax}] 默认 {pitchDefault}；" +
+                          $"旋律音阶 [{string.Join(", ", System.Array.ConvertAll(_noteValues, v => v.ToString("F1")))}]");
                 return true;
             }
             catch (System.Exception ex)
             {
                 Debug.LogWarning($"[EliteEnemies.Musician] 探测卡祖笛参数失败，将退回游戏自己的写法: {ex.Message}");
-                ApplyFallbackRange();
+                BuildScale(-24f, 24f, 0f);
                 return true;
             }
         }
 
         /// <summary>
-        /// 以参数默认值为中心、取量程的 <see cref="MelodySpanRatio"/> 作为旋律音域，
-        /// 并夹回参数允许的范围内。
+        /// 由参数量程构建音阶。
+        ///
+        /// <para>量程跨度 ≥ 一个八度 → 认定单位是**半音**，直接用小调五声（实测正是这种情况）。
+        /// 否则单位未知（例如归一化的 0~1），只能退而求其次：以默认值为中心、按量程比例摊开。</para>
         /// </summary>
-        private static void SetMelodyRange(float min, float max, float center)
+        private static void BuildScale(float min, float max, float center)
         {
+            int steps = PentatonicSemitones.Length;
+
+            if (max - min >= SemitoneRangeThreshold)
+            {
+                _noteValues = new float[steps];
+                for (int i = 0; i < steps; i++)
+                {
+                    _noteValues[i] = Mathf.Clamp(center + PentatonicSemitones[i], min, max);
+                }
+                return;
+            }
+
             float half = (max - min) * MelodySpanRatio * 0.5f;
-            _pitchLow = Mathf.Clamp(center - half, min, max);
-            _pitchHigh = Mathf.Clamp(center + half, min, max);
+            float low = Mathf.Clamp(center - half, min, max);
+            float high = Mathf.Clamp(center + half, min, max);
+
+            _noteValues = new float[steps];
+            for (int i = 0; i < steps; i++)
+            {
+                _noteValues[i] = Mathf.Lerp(low, high, (float)i / (steps - 1));
+            }
         }
 
-        /// <summary>
-        /// 探测走不通时的兜底音域。
-        /// 取 <c>-16..16</c> 是按游戏那句 <c>点积 × 24 / maxScale(15)</c> 的量级估的
-        /// （<c>ItemAgent_Kazoo.cs:90</c>）——反正是兜底，探测成功就用不到它。
-        /// </summary>
-        private static void ApplyFallbackRange()
-        {
-            _pitchLow = -16f;
-            _pitchHigh = 16f;
-        }
     }
 }
