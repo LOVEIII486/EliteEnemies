@@ -190,3 +190,12 @@ EliteEnemies_Affix_Phantom_Name,Галлюцинация,2.5,AffixNames
 EliteEnemies_Affix_Phantom_Description,"Этот противник мешает чувствам игрока, периодически создавая ложные звуки шагов и сигналы тревоги за вашей спиной.",2.5,AffixDescription
 EliteEnemies_Buff_EliteBuff_Chill_Name,Холод,2.6,BuffNames
 EliteEnemies_Buff_EliteBuff_Chill_Description,Скорость передвижения снижена на 8% за слой. На 5 слоях цель замораживается.,2.6,BuffDescriptions
+EliteEnemies_Affix_Fester_Name,Гниль,2.7,AffixNames
+EliteEnemies_Affix_Fester_Description,Попадания вдвое снижают лечение игрока на 10 сек.,2.7,AffixDescription
+EliteEnemies_Buff_EliteBuff_Fester_Name,Гниль,2.7,BuffNames
+EliteEnemies_Buff_EliteBuff_Fester_Description,Получаемое лечение снижено вдвое.,2.7,BuffDescriptions
+EliteEnemies_Affix_AmmoEater_Name,Пожиратель патронов,2.7,AffixNames
+EliteEnemies_Affix_AmmoEater_Description,Попадания вырывают патроны прямо из магазина игрока.,2.7,AffixDescription
+EliteEnemies_Affix_Thief_Name,Вор,2.7,AffixNames
+EliteEnemies_Affix_Thief_Description,Крадёт предмет из рюкзака игрока при попадании. Убийство даёт два.,2.7,AffixDescription
+EliteEnemies_Affix_Thief_PopText,Это теперь моё!,2.7,AffixBehavior

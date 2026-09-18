@@ -1,6 +1,6 @@
 [h1]⚔️ 精英敌人词缀总览（v2.1.0）[/h1]
 
-[i]本帖整理 v2.1.0 的全部 50 个精英词缀：属性倍率、稀有度与掉落。[/i]
+[i]本帖整理 v2.1.0 的全部 53 个精英词缀：属性倍率、稀有度与掉落。[/i]
 [i]数据由模组代码自动生成，与游戏内实际数值一致；标注「动态」的见文末备注。[/i]
 
 [hr][/hr]
@@ -42,6 +42,8 @@
 [tr][td][b]打滑[/b][/td][td]稀有[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]—[/td][/tr]
 [tr][td][b]拟态[/b][/td][td]稀有[/td][td]1.0[/td][td]1.1[/td][td]1.0[/td][td]—[/td][/tr]
 [tr][td][b]幻听[/b][/td][td]稀有[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]耳机、橘子耳机、麦克风 等 6 项[/td][/tr]
+[tr][td][b]溃伤[/b][/td][td]稀有[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]—[/td][/tr]
+[tr][td][b]噬弹[/b][/td][td]稀有[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]—[/td][/tr]
 [tr][td][/td][td][/td][td][/td][td][/td][td][/td][td][/td][/tr]
 [tr][td][b]仿身泪滴[/b][/td][td]史诗[/td][td]1.2[/td][td]0.8[/td][td]1.0[/td][td]随机：奢侈品[/td][/tr]
 [tr][td][b]分裂[/b][/td][td]史诗[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]随机：图腾、随机：弹药[/td][/tr]
@@ -63,6 +65,7 @@
 [tr][td][b]鸳鸯[/b][/td][td]传说[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]随机：配件[/td][/tr]
 [tr][td][b]封弊者[/b][/td][td]传说[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]随机：小游戏物品、随机：武器[/td][/tr]
 [tr][td][b]锁匠[/b][/td][td]传说[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]随机：钥匙[/td][/tr]
+[tr][td][b]小偷[/b][/td][td]传说[/td][td]1.0[/td][td]1.0[/td][td]1.0[/td][td]—[/td][/tr]
 [/table]
 
 [hr][/hr]

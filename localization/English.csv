@@ -190,3 +190,12 @@ EliteEnemies_Affix_Phantom_Name,Phantom,2.5,AffixNames
 EliteEnemies_Affix_Phantom_Description,"This unit disrupts player senses, periodically creating fake combat sounds and screams behind you.",2.5,AffixDescription
 EliteEnemies_Buff_EliteBuff_Chill_Name,Chill,2.6,BuffNames
 EliteEnemies_Buff_EliteBuff_Chill_Description,Movement speed reduced by 8% per layer. At 5 layers the target is frozen.,2.6,BuffDescriptions
+EliteEnemies_Affix_Fester_Name,Fester,2.7,AffixNames
+EliteEnemies_Affix_Fester_Description,Hits halve the player's healing for 10s.,2.7,AffixDescription
+EliteEnemies_Buff_EliteBuff_Fester_Name,Fester,2.7,BuffNames
+EliteEnemies_Buff_EliteBuff_Fester_Description,Healing received is halved.,2.7,BuffDescriptions
+EliteEnemies_Affix_AmmoEater_Name,Ammo Eater,2.7,AffixNames
+EliteEnemies_Affix_AmmoEater_Description,Hits devour rounds straight from the player's magazine.,2.7,AffixDescription
+EliteEnemies_Affix_Thief_Name,Thief,2.7,AffixNames
+EliteEnemies_Affix_Thief_Description,Steals an item from the player's backpack on hit. Killing it drops two.,2.7,AffixDescription
+EliteEnemies_Affix_Thief_PopText,This is mine now!,2.7,AffixBehavior

@@ -190,3 +190,12 @@ EliteEnemies_Affix_Phantom_Name,幻聽,2.5,AffixNames
 EliteEnemies_Affix_Phantom_Description,該單位會干擾玩家感官，週期性在背後產生虛假的戰鬥聲與驚叫聲。,2.5,AffixDescription
 EliteEnemies_Buff_EliteBuff_Chill_Name,寒冷,2.6,BuffNames
 EliteEnemies_Buff_EliteBuff_Chill_Description,移動速度降低 8%（每層），疊滿 5 層後凍結,2.6,BuffDescriptions
+EliteEnemies_Affix_Fester_Name,潰傷,2.7,AffixNames
+EliteEnemies_Affix_Fester_Description,命中玩家後 10 秒內，治療效果減半,2.7,AffixDescription
+EliteEnemies_Buff_EliteBuff_Fester_Name,潰傷,2.7,BuffNames
+EliteEnemies_Buff_EliteBuff_Fester_Description,治療效果減半,2.7,BuffDescriptions
+EliteEnemies_Affix_AmmoEater_Name,噬彈,2.7,AffixNames
+EliteEnemies_Affix_AmmoEater_Description,命中玩家時啃掉其彈匣中的子彈,2.7,AffixDescription
+EliteEnemies_Affix_Thief_Name,小偷,2.7,AffixNames
+EliteEnemies_Affix_Thief_Description,命中時偷走玩家背包裡的一件物品，擊殺它會掉落兩件,2.7,AffixDescription
+EliteEnemies_Affix_Thief_PopText,這個歸我了！,2.7,AffixBehavior

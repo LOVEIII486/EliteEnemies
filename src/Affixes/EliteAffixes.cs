@@ -561,7 +561,36 @@ namespace EliteEnemies.Affixes
             new LootEntry(113, 1, 1, 0.5f), // 收音机
             new LootEntry(64, 1, 1, 0.6f), // 对讲机
             new LootEntry(65, 1, 1, 0.2f) // 军用对讲机
-        )
+        ),
+        ["Fester"] = new AffixData
+        {
+            Name = new LocalizedText("EliteEnemies_Affix_Fester_Name", "溃伤"),
+            Description = new LocalizedText("EliteEnemies_Affix_Fester_Description", "命中玩家后 10 秒内，治疗效果减半"),
+            HealthMultiplier = 1.0f,
+            DamageMultiplier = 1.0f,
+            MoveSpeedMultiplier = 1.0f,
+            Rarity = AffixRarity.Rare
+        },
+        ["AmmoEater"] = new AffixData
+        {
+            Name = new LocalizedText("EliteEnemies_Affix_AmmoEater_Name", "噬弹"),
+            Description = new LocalizedText("EliteEnemies_Affix_AmmoEater_Description", "命中玩家时啃掉其弹匣中的子弹"),
+            HealthMultiplier = 1.0f,
+            DamageMultiplier = 1.0f,
+            MoveSpeedMultiplier = 1.0f,
+            Rarity = AffixRarity.Rare
+        },
+        // 小偷的强度全在"偷"这件事上，所以三围不额外加成——
+        // 免得"能抢你东西的敌人"同时还打不死
+        ["Thief"] = new AffixData
+        {
+            Name = new LocalizedText("EliteEnemies_Affix_Thief_Name", "小偷"),
+            Description = new LocalizedText("EliteEnemies_Affix_Thief_Description", "命中时偷走玩家背包里的一件物品，击杀它会掉落两件"),
+            HealthMultiplier = 1.0f,
+            DamageMultiplier = 1.0f,
+            MoveSpeedMultiplier = 1.0f,
+            Rarity = AffixRarity.Legendary
+        }
     };
 
 
