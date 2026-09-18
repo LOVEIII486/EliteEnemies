@@ -139,8 +139,10 @@ namespace EliteEnemies.Buffs
         /// 做互斥裁决——优先级低的一方被直接丢弃，不报错、不留日志。
         /// 而本模组所有 Buff 的标签都抄自同一个 BaseBuff，于是它们会**彼此顶掉**。</para>
         ///
-        /// <para>实测（2026-09-18）实机可同时挂多个精英 Buff，据此判断 BaseBuff 的标签是
-        /// <c>NotExclusive</c>；这行日志是为了让这个判断**每次启动都能被复核**，而不是靠记忆。</para>
+        /// <para><b>已实测确认（2026-09-18 的 <c>Player.log</c>）</b>：9 个 Buff（含寒冷的
+        /// <c>EliteBuff_Chill</c>）全部打印 <c>互斥标签=NotExclusive 优先级=0</c>——
+        /// 即 BaseBuff 的标签就是 <c>NotExclusive</c>，**本模组的 Buff 彼此不互斥，可以共存**。
+        /// 这行日志留着，是为了让这个结论**每次启动都能被复核**，而不是靠记忆。</para>
         /// </summary>
         private void LogExclusiveTag()
         {

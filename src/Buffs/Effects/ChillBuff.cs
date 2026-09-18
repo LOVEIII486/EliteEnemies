@@ -32,7 +32,7 @@ namespace EliteEnemies.Buffs.Effects
         private const float SpeedReductionPerLayer = -0.08f;
 
         /// <summary>冻结结束之后的免疫时长（秒）。</summary>
-        public const float FreezeImmunitySeconds = 15f;
+        public const float FreezeImmunitySeconds = 10f;
 
         private const string LogTag = "[EliteEnemies.ChillBuff]";
 
@@ -44,7 +44,7 @@ namespace EliteEnemies.Buffs.Effects
         ///
         /// <para>纯静态的一个 float，**刻意不做场景卸载清理**：它不持有任何对象引用（没有
         /// <c>BulletDeflectionTracker</c> 那类"攒着已销毁的引用"的泄漏问题），而且判据是
-        /// <c>Time.time</c>——它跨场景只增不减，所以残留值自己会在 15 秒内失效。</para>
+        /// <c>Time.time</c>——它跨场景只增不减，所以残留值自己会在 <see cref="FreezeImmunitySeconds"/> 秒内失效。</para>
         /// </summary>
         private static float _lastSeenFrozenAt = -999f;
 
@@ -62,7 +62,7 @@ namespace EliteEnemies.Buffs.Effects
         /// （<c>CharacterBuffManager.cs:51-55</c>），冻结时长被重新刷满。
         /// 只要精英持续命中（每 0.5 秒一次就够），玩家就**永远出不来**。</para>
         ///
-        /// <para><b>为什么冻结期间也算免疫</b>：只免"结束后的 15 秒"是不够的。冻结期间寒冷会
+        /// <para><b>为什么冻结期间也算免疫</b>：只免"结束后的那几秒"是不够的。冻结期间寒冷会
         /// 一路叠回满层并停在那里，冰一化开，下一次命中立刻把它兑换成新的冻结——
         /// 免疫窗口等于形同虚设。</para>
         ///
@@ -101,7 +101,7 @@ namespace EliteEnemies.Buffs.Effects
             //   玩家下一次被命中就立刻再次冻结——等于永远出不来。
             //
             //   这是防连锁冻结的**第一半**（别让寒冷以满层驻留），
-            //   第二半是 IsFreezeImmune（冻结期间与结束后 15 秒内根本不叠）。
+            //   第二半是 IsFreezeImmune（冻结期间与结束后 FreezeImmunitySeconds 秒内根本不叠）。
             //   两半都要：只做这里，冻结期间寒冷仍会叠到 4 层、冰一化开就补满；
             //   只做那里，一旦免疫判断被人改错就退化成永久冻结。
             //

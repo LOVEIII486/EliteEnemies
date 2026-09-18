@@ -35,7 +35,8 @@ namespace EliteEnemies.Affixes.Behaviors
         {
             if (Time.time < _lastStackTime + StackInterval) return;
 
-            // 冻结免疫中（冻结期间 + 冻结结束后 15 秒）不再叠寒冷，见 ChillBuff.IsFreezeImmune。
+            // 冻结免疫中（冻结期间 + 冻结结束后 ChillBuff.FreezeImmunitySeconds 秒）不再叠寒冷，
+            // 见 ChillBuff.IsFreezeImmune。
             // ⚠ 这一条**必须**有，否则会连锁冻结：冻结期间寒冷照叠，满层后同 ID 走刷新分支，
             //   把冻结时长重新刷满——只要精英持续命中，玩家就永远出不来。
             if (ChillBuff.IsFreezeImmune(CharacterMainControl.Main)) return;

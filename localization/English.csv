@@ -170,7 +170,7 @@ EliteEnemies_Affix_Reflect_Name,Reflect,2.3,AffixNames
 EliteEnemies_Affix_Reflect_Description,Periodically generates a shield that reflects incoming bullets back to the attacker,2.3,AffixDescription
 EliteEnemies_Affix_Reflect_PopText,<color=#00BFFF>Reflect!</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Frozen_Name,Frigid,2.3,AffixNames
-EliteEnemies_Affix_Frozen_Description,Hits stack a layer of Chill on the player (at most one per 0.5s). At 5 layers the player is frozen; after the freeze ends the player is immune for 15s.,2.6,AffixDescription
+EliteEnemies_Affix_Frozen_Description,Hits stack a layer of Chill on the player (at most one per 0.5s). At 5 layers the player is frozen; after the freeze ends the player is immune for 10s.,2.6,AffixDescription
 EliteEnemies_Settings_EnableComboSystem,Enable Combo System (Warning! Extremely difficult for casual players!),2.4,ComboSettings
 EliteEnemies_Settings_ComboSystemChance,Elite Combo Spawn Chance,2.4,ComboSettings
 EliteEnemies_Settings_ComboSettings_Group,Elite Combo Configuration (Experimental System! Extremely Difficult!),2.4,Groups

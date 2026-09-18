@@ -170,7 +170,7 @@ EliteEnemies_Affix_Reflect_Name,Отражение,2.3,AffixNames
 EliteEnemies_Affix_Reflect_Description,"Периодически создаёт щит, отражающий пули.",2.3,AffixDescription
 EliteEnemies_Affix_Reflect_PopText,<color=#00BFFF>Отражение!</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Frozen_Name,Ледяной,2.3,AffixNames
-EliteEnemies_Affix_Frozen_Description,Попадания накладывают слой «Холода» (не чаще раза в 0.5 с). На 5 слоях игрок замораживается; после разморозки иммунитет 15 с.,2.6,AffixDescription
+EliteEnemies_Affix_Frozen_Description,Попадания накладывают слой «Холода» (не чаще раза в 0.5 с). На 5 слоях игрок замораживается; после разморозки иммунитет 10 с.,2.6,AffixDescription
 EliteEnemies_Settings_EnableComboSystem,Включить Комбо-Систему (Внимание! Повышает сложность игры!),2.4,ComboSettings
 EliteEnemies_Settings_ComboSystemChance,Шанс Появления Комбо-Элиты,2.4,ComboSettings
 EliteEnemies_Settings_ComboSettings_Group,Настройки Комбинаций Аффиксов (Экспериментальная Система!),2.4,Groups

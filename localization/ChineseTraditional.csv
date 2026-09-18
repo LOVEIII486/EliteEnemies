@@ -170,7 +170,7 @@ EliteEnemies_Affix_Reflect_Name,反彈,2.3,AffixNames
 EliteEnemies_Affix_Reflect_Description,週期性生成護盾，將受到的子彈反彈回攻擊者,2.3,AffixDescription
 EliteEnemies_Affix_Reflect_PopText,<color=#00BFFF>反彈！</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Frozen_Name,嚴寒,2.3,AffixNames
-EliteEnemies_Affix_Frozen_Description,命中玩家時疊加寒冷（每 0.5 秒最多一層），疊滿 5 層後凍結；凍結結束後 15 秒內免疫,2.6,AffixDescription
+EliteEnemies_Affix_Frozen_Description,命中玩家時疊加寒冷（每 0.5 秒最多一層），疊滿 5 層後凍結；凍結結束後 10 秒內免疫,2.6,AffixDescription
 EliteEnemies_Settings_EnableComboSystem,啟用 Combo 組合系統（再次提醒！對於普通玩家非常困難！）,2.4,ComboSettings
 EliteEnemies_Settings_ComboSystemChance,Combo 精英怪出現機率,2.4,ComboSettings
 EliteEnemies_Settings_ComboSettings_Group,精英怪 Combo 組合設定（實驗性系統！非常困難！）,2.4,Groups
