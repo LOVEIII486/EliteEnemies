@@ -60,7 +60,7 @@ EliteEnemies_Affix_Invisible_Name,Невидимка,2.3,AffixNames
 EliteEnemies_Affix_Invisible_Description,"Становится невидимым, проявляясь для атак каждые несколько секунд.",2.3,AffixDescription
 EliteEnemies_Affix_Invisible_Messages,"Тссс.. ты ничего не видел|Ты меня видел?|Истина где-то рядом|Угадай, где я :)|Смотри не потеряй меня",2.3,AffixBehavior
 EliteEnemies_Affix_Musician_Name,Музыкант,2.3,AffixNames
-EliteEnemies_Affix_Musician_Description,"Чудак, который всюду таскает с собой музыкальные инструменты.",2.3,AffixDescription
+EliteEnemies_Affix_Musician_Description,"Чудак, который всюду таскает с собой музыкальные инструменты. Играет на казу, когда игрок рядом; из него выпадают инструменты.",2.6,AffixDescription
 EliteEnemies_Affix_NineDragons_Name,Девять Драконов,2.3,AffixNames
 EliteEnemies_Affix_NineDragons_Description,Все аттрибуты ×1.3. Добыча: различные инъекторы.,2.3,AffixDescription
 EliteEnemies_Affix_Giant_Name,Гигант,2.3,AffixNames

@@ -60,7 +60,7 @@ EliteEnemies_Affix_Invisible_Name,隱身,2.3,AffixNames
 EliteEnemies_Affix_Invisible_Description,獲得隱身狀態，每隔數秒會短暫顯形並閃爍幾下,2.3,AffixDescription
 EliteEnemies_Affix_Invisible_Messages,你剛才是不是看到我了？|別眨眼，我又消失啦～|噓……什麼都沒發生。|幻覺？還是我太快了？|我就在你背後……開玩笑的。,2.3,AffixBehavior
 EliteEnemies_Affix_Musician_Name,音樂家,2.3,AffixNames
-EliteEnemies_Affix_Musician_Description,帶著樂器上戰場的奇葩，掉落樂器,2.3,AffixDescription
+EliteEnemies_Affix_Musician_Description,帶著樂器上戰場的奇葩，玩家靠近時隨機吹響卡祖笛，掉落樂器,2.6,AffixDescription
 EliteEnemies_Affix_NineDragons_Name,九龍拉棺,2.3,AffixNames
 EliteEnemies_Affix_NineDragons_Description,全屬性提升 1.3 倍，掉落各種針劑,2.3,AffixDescription
 EliteEnemies_Affix_Giant_Name,巨大化,2.3,AffixNames
