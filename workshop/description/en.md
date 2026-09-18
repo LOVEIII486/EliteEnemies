@@ -11,16 +11,34 @@ Temporary feedback group: 1030349064 (bug reports only).
 
 ## ⚔️ Available Affixes
 
-**53** affixes across five rarity tiers. To stay within Steam's description length limit, only a few highlights are listed per tier.
-
-**Full descriptions, stat multipliers and loot tables:**
+**53** affixes across five rarity tiers. To stay within Steam's description length limit, only 3 highlights are listed per tier.
+**Full descriptions, stat multipliers and loot tables for every affix:**
 https://steamcommunity.com/workshop/filedetails/discussion/3602009885/671726388306336723/
 
-* **【Common】4** — Tanky, Berserk, Glass Cannon, Swift
-* **【Uncommon】12** — Musician, Talkative, Regeneration, Hardening
-* **【Rare】17** — Mimic, Undead, Chaos, Time Stop
-* **【Epic】11** — Mimic Tear, Guardian, Frigid, Phase
-* **【Legendary】9** — Slime, Obscurer, Thief, Mandarin Duck
+### **【Common】（4）**
+* **Tanky** — Tougher but slower. Drops: Heavy armor and ammo.
+* **Berserk** — Stronger attacks but slightly lower health. Drops: Assault Totem, Adrenaline Injector
+* **Glass Cannon** — Extremely high damage but very fragile. Drops: Special AP rounds.
+
+### **【Uncommon】（12）**
+* **Musician** — A weirdo who brings instruments to battle. Plays tunes on a kazoo when the player is near; drops instruments.
+* **Regeneration** — Continuously regenerates HP, about 10 per second.
+* **Blindness** — Attacks limit player vision for 7 seconds.
+
+### **【Rare】（17）**
+* **Mimic** — Disguises as a supply crate. Reveals itself and attacks when damaged or when the player opens it
+* **Undead** — On low HP, becomes invulnerable for 2.5 s and restores to 50% HP.
+* **Chaos** — Attacks inflict random abnormal effects.
+
+### **【Epic】（11）**
+* **Mimic Tear** — Copy the player's main-hand weapon and equipment (one random copy drops).
+* **Frigid** — Hits stack a layer of Chill on the player (at most one per 0.5s). At 5 layers the player is frozen; after the freeze ends the player is immune for 10s.
+* **Guardian** — The main body is completely invincible while the clone is alive.
+
+### **【Legendary】（9）**
+* **Slime** — Starts huge but weak, shrinks and gains damage as health drops.
+* **Obscurer** — Hides all affix names showing garbled text.
+* **Thief** — Steals an item from the player's backpack on hit. Killing it drops two.
 
 ---
 
@@ -50,6 +68,7 @@ https://steamcommunity.com/workshop/filedetails/discussion/3602009885/6717263883
 
 ## 🛡️ Security
 * Since the last Steam Workshop incident, this mod has repeatedly been accused of "containing a virus" — **that claim is false**.
+* A multi-engine scanning entry point: [VirusTotal](https://www.virustotal.com/gui/home/upload) — just upload this mod's `EliteEnemies.dll` to check it yourself.
 * You are welcome to verify it yourself: scan the mod folder with your antivirus, or upload the DLL to any multi-engine scanning service.
 * This mod is **fully open-source and unobfuscated**, with no hidden behavior — feel free to inspect it at any time.
 

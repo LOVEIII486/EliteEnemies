@@ -81,11 +81,12 @@ MD_ITEM_RES = [
 ]
 MD_GROUP_RES = [
     re.compile(r'^\[b\]【(.+?)】.*\[/b\]$'),                            # bbcode 总览
-    re.compile(r'^###\s+\*\*【(.+?)】\*\*'),                            # markdown
+    re.compile(r'^###\s+\*\*【(.+?)】'),                                # markdown（后面可能跟数量）
 ]
 
-# 简介页（代表作清单）：`* **【普通】4 个** — 肉盾、狂暴、…` / `* **【Common】4** — Tanky, …`
-CONDENSED_RE = re.compile(r'^\*\s+\*\*【(.+?)】\s*(\d+)\s*个?\*\*\s*—\s*(.+)$')
+# 简介页的分组标题：`### **【普通】（共 4 个）**` / `### **【Common】（4）**`
+# 中英写法不同，所以只认「括号里出现的第一个数字」，不认"个"字。
+PAGE_GROUP_RE = re.compile(r'^###\s+\*\*【(.+?)】（[^）\d]*(\d+)[^）]*）\*\*')
 
 
 def load_csv(path):
@@ -240,46 +241,71 @@ def main():
             print("  · %-16s\n      工坊页: %s\n      游戏内: %s" % (k, m["desc"], v))
         print("  （共 %d 条措辞不同）" % n)
 
-    # ── F 简介页的代表作清单 ─────────────────────────────────────
+    # ── F 简介页的代表作 ─────────────────────────────────────────
     #
-    # description 页现在每组只列几个代表作 + 一个数量。这两样都会腐烂：
-    #   · 数量在**每次新增/删除词条**时都要改——忘了改没人会发现；
-    #   · 词条改名后，代表作里会挂着一个不存在的名字。
-    # 所以对它的要求只有两条：名字真实存在、数量与代码一致。
-    print("\n【F】简介页代表作：名字必须真实存在，数量必须与代码一致")
+    # description 页每组只列 3 个代表作（带描述）+ 一个数量。**四样都会腐烂**，
+    # 而且每一样都不会报错：
+    #   · 数量：每次增删词条都得改，忘了改没人发现；
+    #   · 名字：词条改名后，代表作里挂着一个不存在的名字；
+    #   · 归组：稀有度调整后，词条还留在原来那一档里；
+    #   · 描述：它是从总览那份措辞抄过来的，抄漏一个字就成了"两处说法"。
+    # 所以逐项对，权威文本按语言分开取：
+    #   zh.md → 总览页那条（也就是 affix-notes.txt 的措辞）
+    #   en.md → English.csv 的词条描述（游戏内英文文本）
+    print("\n【F】简介页代表作：名字 / 稀有度 / 数量 / 描述 逐项核对")
     n = 0
-    for lang, names in (("zh.md", {code[k]["name_key"]: zh_csv.get(code[k]["name_key"]) for k in code}),
-                        ("en.md", {code[k]["name_key"]: en_csv.get(code[k]["name_key"]) for k in code})):
-        valid = {v for v in names.values() if v}
+    for lang in ("zh.md", "en.md"):
         p_page = os.path.join(root, "workshop", "description", lang)
         if not os.path.exists(p_page):
             fail("  X 找不到 %s" % p_page); n += 1
             continue
 
-        text = open(p_page, encoding="utf-8").read()
+        if lang == "zh.md":
+            authority = lambda k: (md.get(k) or {}).get("desc")
+        else:
+            authority = lambda k: en_csv.get(code[k]["desc_key"])
+
+        cur_group = cur_count = None
         seen_groups = 0
-        for line in text.split("\n"):
-            m = CONDENSED_RE.match(line)
-            if not m:
+        listed = set()
+        for i, line in enumerate(open(p_page, encoding="utf-8").read().split("\n"), 1):
+            g = PAGE_GROUP_RE.match(line)
+            if g:
+                cur_group, cur_count = g.group(1).strip(), int(g.group(2))
+                seen_groups += 1
+                want = sum(1 for k in code
+                           if cur_group in (RARITY_ZH.get(code[k]["rarity"]), code[k]["rarity"]))
+                if want != cur_count:
+                    fail("  X %s:%d 【%s】写着 %d 个，代码里是 %d 个"
+                         % (lang, i, cur_group, cur_count, want)); n += 1
                 continue
-            seen_groups += 1
-            label, count, listed = m.group(1).strip(), int(m.group(2)), m.group(3)
 
-            # 数量：拿这个稀有度在代码里的真实条数对（两种语言的分组名都要认）
-            want = sum(1 for k in code if RARITY_ZH.get(code[k]["rarity"]) == label
-                       or code[k]["rarity"] == label)
-            if want != count:
-                fail("  X %s 【%s】写着 %d 个，代码里是 %d 个" % (lang, label, count, want)); n += 1
+            b = next((m for m in (r.match(line) for r in MD_ITEM_RES) if m), None)
+            if not b or cur_group is None:
+                continue
 
-            # 名字：中英用相同的分隔符
-            sep = '、' if lang == 'zh.md' else ','
-            for name in (x.strip() for x in listed.split(sep)):
-                if name and name not in valid:
-                    fail("  X %s 【%s】里的 '%s' 不是任何词条的名字（改名了？）"
-                         % (lang, label, name)); n += 1
+            eng, desc = b.group(2).strip(), b.group(3).strip()
+            key = next((k for k in code if en_csv.get(code[k]["name_key"]) == eng), None)
+            if key is None:
+                fail("  X %s:%d '%s' 不是任何词条的英文名（改名了？）" % (lang, i, eng)); n += 1
+                continue
+
+            if key in listed:
+                fail("  X %s:%d '%s' 在同一页里列了两次" % (lang, i, eng)); n += 1
+            listed.add(key)
+
+            want_rar = RARITY_ZH.get(code[key]["rarity"])
+            if cur_group not in (want_rar, code[key]["rarity"]):
+                fail("  X %s:%d '%s' 归在【%s】，代码里是【%s】"
+                     % (lang, i, eng, cur_group, want_rar)); n += 1
+
+            want_desc = authority(key)
+            if want_desc and desc != want_desc:
+                fail("  X %s:%d '%s' 的描述与权威文本不一致\n        页面: %s\n        权威: %s"
+                     % (lang, i, eng, desc, want_desc)); n += 1
 
         if seen_groups == 0:
-            fail("  X %s 里一条代表作都没解析到——页面格式变了？" % lang); n += 1
+            fail("  X %s 里一个分组标题都没解析到——页面格式变了？" % lang); n += 1
 
     if not n:
         print("  OK 全部一致")
