@@ -149,40 +149,29 @@
 
 8. **推送**（对外可见，动手前确认）：`git push` + `git push origin v2.1.0`。
 
-9. **确认工坊分类标签还在**（正常发版**不需要额外操作**——标签由 `info.ini` 带着走）
+### 两条不必再操心的（记录下来只为"别再折腾"）
 
-   标签的来源是 `workshop\info.ini.template` 的 `tags` 行（逗号分隔，
-   游戏侧用 `tags.Split(",")` 切），构建时生成进 `info.ini`，上传时由游戏读走。
+> **一、工坊分类标签：不需要任何额外操作，也不需要每次检查。**
+>
+> 它由 `workshop\info.ini.template` 的 `tags` 行带着走（逗号分隔，游戏侧
+> `tags.Split(",")` 切），构建时生成进 `info.ini`，上传时由游戏读走。
+> **2026-09-19 实测生效**，当前值 `Gameplay,Companion & NPC,Loot & Economy`。
+>
+> ⚠ 唯一要守住的是**那行不能是空的**。`ModManager.cs:291/295` 的解析是
+> `if (num >= 1 && num + 1 < text.Length)`——值部分为空的行会被**整行跳过**，
+> 于是 `tags` 键不存在、取默认 `""`，而设标签那段是
+> `if (!string.IsNullOrWhiteSpace(tags))`，直接跳过 ⇒ 条目只剩 Steam 补的
+> `["Mod"]`。（作者的就丢过一次，起因正是模板里那行原本是空的 `tags =`。）
+>
+> 曾经为此写过一个 F8 手动工具，**已删除**——不需要手动做。
+>
+> 顺带把一处源码上的疑惑记在这里，免得日后有人重新纠结：
+> `SteamWorkshopManager.cs:225` 在按 `info.ini` 设完之后又**无条件**
+> `SetItemTags(handle, ["Mod"])` 一次（已反编译**安装的那份** DLL 确认）。
+> 单看代码像是"后写的赢、标签必被覆盖"，但实测标签留得住——
+> **以实测为准，那段代码不构成威胁。**
 
-   ⚠ **那一行绝不能是空的。** `ModManager.cs:291/295` 的解析是
-   `if (num >= 1 && num + 1 < text.Length)`——**值部分为空的行会被整行跳过**，
-   于是 `tags` 这个键根本不存在、取默认 `""`，而设标签那段是
-   `if (!string.IsNullOrWhiteSpace(tags))`，直接跳过。
-   结果就是**上传后条目只剩 Steam 补的 `["Mod"]`，分类标签全丢**
-   （作者的就丢过一次，起因正是模板里那行原本是空的 `tags =`）。
-
-   不用打开 Steam 就能自查：
-   ```bash
-   curl -s -X POST "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/" \
-        -d "itemcount=1&publishedfileids[0]=3602009885"
-   ```
-   看返回里的 `tags`——除了 `Mod`，还应当有
-   **Gameplay / Companion & NPC / Loot & Economy**。
-   （2026-09-19 实测：条目一度只剩 `Mod`。）
-
-   > ⚠ 还有一处**未解**：`SteamWorkshopManager.cs:225` 在按 `info.ini` 设完之后
-   > 又无条件 `SetItemTags(handle, ["Mod"])` 一次（反编译的是**安装的那份** DLL）。
-   > 按理后写的赢，但抽样同游戏 20 个模组，18 个都带着真实分类标签——
-   > 说明标签留得住。两种读法无法从源码判死，**下次上传时顺手验一下**
-   > 上面那条 `tags` 有没有 Gameplay 即可。
-
-   > 该游戏工坊开放的标签共 14 个（`steamcommunity.com/app/3167020/workshop/`
-   > 左侧筛选栏是权威列表）：
-   > Weapon / Equipment & Gear / Loot & Economy / Quality of Life / Cheats & Exploits /
-   > Visual Enhancements / Sound / Quest & Progression / Companion & NPC / Collectibles /
-   > Gameplay / Multiplayer & Co-op / Utility / Medical & Survival
-
-> **本工程不对外公布文件哈希**（2026-09-18 定的）：
+> **二、本工程不对外公布文件哈希**（2026-09-18 定的）：
 > 工坊页不贴 VirusTotal 检测报告链接，改为请玩家自行检测
 > （`workshop\description\*.md` 的「安全性说明」一节）。
 > 因此发版时**不需要**重扫、也**不需要**留档发布产物——
