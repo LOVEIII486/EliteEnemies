@@ -149,28 +149,32 @@
 
 8. **推送**（对外可见，动手前确认）：`git push` + `git push origin v2.1.0`。
 
-9. **上传后把工坊分类标签写回去** ⚠ **每次发版都要做，不是一次性的。**
+9. **确认工坊分类标签还在**（正常发版**不需要额外操作**——标签由 `info.ini` 带着走）
 
-   游戏的上传器**每次上传都会**把条目的 tags 覆盖成 `["Mod"]`：
-   `SteamWorkshopManager.cs:225` 在按 `info.ini` 的 `tags` 设过一次之后，
-   **紧接着又无条件 `SetItemTags(handle, ["Mod"])` 一次**——两次作用在同一个
-   handle 上，而 Steam 那边是**覆盖**语义，后写的赢。所以 `info.ini` 里填什么都没用，
-   分类标签上传完必然全丢，模组就不属于任何类别。工坊**网页端没有编辑标签的入口**，
-   两条常规途径都堵着。
+   标签的来源是 `workshop\info.ini.template` 的 `tags` 行（逗号分隔，
+   游戏侧用 `tags.Split(",")` 切），构建时生成进 `info.ini`，上传时由游戏读走。
 
-   **做法**：用 `dotnet build -p:EliteDebug=true` 构建并部署 → 进游戏按 **F8**
-   （`src\DebugTools\WorkshopTagFixer.cs`）→ 日志里会打 `✅ 标签已写入：…`。
-   要改标签就改那个文件里的字符串数组再重编。
+   ⚠ **那一行绝不能是空的。** `ModManager.cs:291/295` 的解析是
+   `if (num >= 1 && num + 1 < text.Length)`——**值部分为空的行会被整行跳过**，
+   于是 `tags` 这个键根本不存在、取默认 `""`，而设标签那段是
+   `if (!string.IsNullOrWhiteSpace(tags))`，直接跳过。
+   结果就是**上传后条目只剩 Steam 补的 `["Mod"]`，分类标签全丢**
+   （作者的就丢过一次，起因正是模板里那行原本是空的 `tags =`）。
 
    不用打开 Steam 就能自查：
    ```bash
    curl -s -X POST "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/" \
         -d "itemcount=1&publishedfileids[0]=3602009885"
    ```
-   看返回里的 `tags`——除了 Steam 自动加的 `Mod`，还应当有
+   看返回里的 `tags`——除了 `Mod`，还应当有
    **Gameplay / Companion & NPC / Loot & Economy**。
-   （2026-09-19 实测：被覆盖后只剩 `Mod`。）
-   （2026-09-19 查过：当时只剩 `Mod`，其余全没了。）
+   （2026-09-19 实测：条目一度只剩 `Mod`。）
+
+   > ⚠ 还有一处**未解**：`SteamWorkshopManager.cs:225` 在按 `info.ini` 设完之后
+   > 又无条件 `SetItemTags(handle, ["Mod"])` 一次（反编译的是**安装的那份** DLL）。
+   > 按理后写的赢，但抽样同游戏 20 个模组，18 个都带着真实分类标签——
+   > 说明标签留得住。两种读法无法从源码判死，**下次上传时顺手验一下**
+   > 上面那条 `tags` 有没有 Gameplay 即可。
 
    > 该游戏工坊开放的标签共 14 个（`steamcommunity.com/app/3167020/workshop/`
    > 左侧筛选栏是权威列表）：
