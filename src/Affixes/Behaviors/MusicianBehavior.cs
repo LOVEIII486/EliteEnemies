@@ -34,22 +34,24 @@ namespace EliteEnemies.Affixes.Behaviors
         private const string KazooEvent = "SFX/Special/Kazoo";
 
         /// <summary>
-        /// 游戏自己的参数名写法（<c>AudioManager.cs:703</c> 会再拼上 <c>"parameter:/"</c>）。
+        /// 探测失败时（FMOD 未就绪、事件找不到）用的音高参数名。
         ///
-        /// <para>⚠ 这个 <c>"parameter:/"</c> 前缀<b>不是 FMOD 的标准写法</b>，
-        /// 所以它很可能一直是个静默失败——不报错，只是那个参数从未生效。
-        /// 我们**优先用探测到的真实参数名**，只有探测失败时才退回这个字符串
-        /// （退回时行为与游戏完全一致：一样不生效，但至少不会更糟）。</para>
+        /// <para><b>实测真名就是 <c>Pitch</c></b>（2026-09-18 的 Player.log，
+        /// <c>PARAMETER_DESCRIPTION.name</c> 直接给出来的）——<b>没有</b> <c>Kazoo/</c> 这一层。</para>
+        ///
+        /// <para>⚠ 而游戏自己传的是 <c>"parameter:/Kazoo/Pitch"</c>
+        /// （<c>AudioManager.cs:703</c> 给 key 拼了个 <c>"parameter:/"</c> 前缀）。
+        /// 那个字符串**不是 FMOD 的标准写法**，所以原版卡祖笛的音高多半一直静默失效——
+        /// 玩家晃鼠标时音高其实并不跟着走。我们不再沿用它。</para>
         /// </summary>
-        private const string FallbackPitchParameter = "parameter:/Kazoo/Pitch";
+        private const string FallbackPitchParameter = "Pitch";
 
-        /// <summary>同上的音量/强度参数。</summary>
+        /// <summary>同上的强度参数。真名就是 <c>Intensity</c>（量程 0~1、默认 1）。</summary>
         /// <remarks>
-        /// 实测（2026-09-18 的 Player.log）：这个参数的默认值是 <b>1</b>（量程 0~1），
-        /// 所以之前注释里"默认 0、声音被它门控"的说法是错的——不设它也有声。
-        /// 仍然显式设成 1，只为不受别处改动影响。
+        /// 默认值是 <b>1</b> 而不是 0——所以早先注释里"默认 0、声音被它门控"的说法是错的，
+        /// 不设它也有声。仍然显式设成 1，只为不受别处改动影响。
         /// </remarks>
-        private const string FallbackIntensityParameter = "parameter:/Kazoo/Intensity";
+        private const string FallbackIntensityParameter = "Intensity";
 
         /// <summary>
         /// 相对原版音量。走 <c>EventInstance.setVolume</c>（FMOD 按实例缩放），
@@ -65,7 +67,7 @@ namespace EliteEnemies.Affixes.Behaviors
         // ═══════════════ 乐句 ═══════════════
 
         /// <summary>玩家进入这个距离才开始吹。</summary>
-        private const float TriggerDistance = 20f;
+        private const float TriggerDistance = 30f;
 
         /// <summary>一段乐句里的音符数（随机区间，含两端）。</summary>
         private const int NotesPerPhraseMin = 4;
@@ -111,8 +113,17 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <summary>音阶每一级对应的参数值。由探测结果构建，见 <see cref="BuildScale"/>。</summary>
         private static float[] _noteValues = { 0f, 3f, 5f, 7f, 10f };
 
+        /// <summary>音高验证是否已做过（见 <see cref="VerifyPitchOnce"/>），只做一次。</summary>
+        private static bool _pitchVerified;
+
         private static bool _postFailedLogged;
-        private static int _volumeLogsLeft = 3;
+
+        /// <summary>
+        /// 音量诊断还能打几条。
+        /// 取样点分散在一局里的不同距离上（乐句只在进入触发距离后开始），
+        /// 攒几条就能看出"到底有没有距离衰减"。
+        /// </summary>
+        private static int _volumeLogsLeft = 10;
 
         // ═══════════════ 运行状态 ═══════════════
 
@@ -206,8 +217,29 @@ namespace EliteEnemies.Affixes.Behaviors
             }
 
             _kazoo.Value.setVolume(VolumeScale);
+            VerifyPitchOnce();
             LogVolume(character);
             _noteRemaining = Random.Range(NoteDurationMin, NoteDurationMax);
+        }
+
+        /// <summary>
+        /// 第一次设音高时，直接在实例上再设一遍并核对 <c>RESULT</c>。
+        ///
+        /// <para><b>为什么要这一下</b>：<c>AudioObject.SetParameterByName</c> 是 <c>void</c>，
+        /// 返回值被丢掉——参数名写错时**不报错、不留日志**，只是音高不变，从听感上很难和
+        /// "音高变了但幅度小"区分开。本工程已经在这条路上栽过两次（名字取不出、名字规则写错），
+        /// 所以把"设进去了没有"变成日志里看得见的一行。只核对一次，不刷屏。</para>
+        /// </summary>
+        private void VerifyPitchOnce()
+        {
+            if (_pitchVerified || !_kazoo.HasValue) return;
+            _pitchVerified = true;
+
+            FMOD.RESULT result = _kazoo.Value.setParameterByName(_pitchParameter, _noteValues[_noteIndex]);
+            Debug.Log(result == FMOD.RESULT.OK
+                ? $"[EliteEnemies.Musician] 音高参数 '{_pitchParameter}' 设置成功（RESULT.OK），旋律会变调"
+                : $"[EliteEnemies.Musician] ⚠ 音高参数 '{_pitchParameter}' 设置失败：{result}——" +
+                  "旋律**不会**变调，参数名仍然不对");
         }
 
         /// <summary>
@@ -336,9 +368,12 @@ namespace EliteEnemies.Affixes.Behaviors
 
                 // 名字匹配不上时的兜底：本事件上"量程最宽的那个参数"就是音高。
                 // 实测 2026-09-18：两个参数分别是 ±24（音高）与 0~1（强度），量程差得很开，
-                // 这个判据不会认错。留着它是因为**名字匹配这条路实测失败过**——
-                // 见下面关于 StringWrapper 的注释。
+                // 这个判据不会认错。留着它是因为**名字匹配这条路实测失败过两次**
+                // （先是 StringWrapper 取不出名字，后是名字规则写错）——
+                // 更重要的是：判定出"哪个是音高"之后**必须把它的真名带出来**，
+                // 否则设参数时又得退回那个错的兜底名。
                 float widestSpan = -1f, widestMin = 0f, widestMax = 0f, widestDefault = 0f;
+                string widestName = null;
 
                 for (int i = 0; i < count; i++)
                 {
@@ -353,16 +388,17 @@ namespace EliteEnemies.Affixes.Behaviors
                     Debug.Log($"[EliteEnemies.Musician] {KazooEvent} 参数：name='{name}' " +
                               $"min={p.minimum} max={p.maximum} default={p.defaultvalue} type={p.type}");
 
-                    // 用 EndsWith 而不是等值比较：这样不管真实名字是 "Kazoo/Pitch"
-                    // 还是游戏那套带前缀的写法，都能匹配上
-                    if (name.EndsWith("Kazoo/Pitch"))
+                    // ⚠ 匹配规则实测纠正过：真实名字是 **'Pitch' / 'Intensity'**，
+                    //   **没有** "Kazoo/" 这一层（那个前缀只存在于游戏自己拼的字符串里）。
+                    //   所以按名字结尾匹配，Path 与 "Kazoo/Pitch" 两种形态都能覆盖。
+                    if (name.EndsWith("Pitch"))
                     {
                         pitchName = name;
                         pitchMin = p.minimum;
                         pitchMax = p.maximum;
                         pitchDefault = p.defaultvalue;
                     }
-                    else if (name.EndsWith("Kazoo/Intensity"))
+                    else if (name.EndsWith("Intensity"))
                     {
                         intensityName = name;
                     }
@@ -374,6 +410,7 @@ namespace EliteEnemies.Affixes.Behaviors
                         widestMin = p.minimum;
                         widestMax = p.maximum;
                         widestDefault = p.defaultvalue;
+                        widestName = name;
                     }
                 }
 
@@ -396,7 +433,12 @@ namespace EliteEnemies.Affixes.Behaviors
                     return true;
                 }
 
+                // ★ 一定要把**真名**带出去：走"按量程认定"这条路时 pitchName 是 null，
+                //   若不接上 widestName，设参数就会退回兜底名——那样即使认对了量程，
+                //   参数名仍然是错的，音高照样不会变。
                 if (pitchName != null) _pitchParameter = pitchName;
+                else if (widestName != null) _pitchParameter = widestName;
+
                 if (intensityName != null) _intensityParameter = intensityName;
 
                 BuildScale(pitchMin, pitchMax, pitchDefault);
