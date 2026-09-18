@@ -128,7 +128,7 @@ namespace EliteEnemies.Affixes.Behaviors
         private static readonly HashSet<string> LoggedTunes = new HashSet<string>(System.StringComparer.Ordinal);
 
         /// <summary>
-        /// 音量诊断还能打几条。
+        /// 音量诊断还能打几条。每段乐句消耗 2 条（句首 + 句末），所以 10 条 = 5 段乐句。
         /// 取样点分散在一局里的不同距离上（乐句只在进入触发距离后开始），
         /// 攒几条就能看出"到底有没有距离衰减"。
         /// </summary>
@@ -236,7 +236,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _kazoo.Value.setVolume(VolumeScale);
             VerifyPitchOnce(NoteValue(_phraseNotes[0].Semitone));
             LogTuneOnce(tune, _notesLeft);
-            LogVolume(character);
+            LogVolume(character, "句首");
             _noteRemaining = _phraseNotes[0].Beats * SecondsPerBeat;
         }
 
@@ -273,13 +273,20 @@ namespace EliteEnemies.Affixes.Behaviors
         }
 
         /// <summary>
-        /// 打几条音量诊断（全程最多 <c>3</c> 条），用来判断"3D 距离衰减吃掉了多少"。
+        /// 打几条音量诊断，用来判断"3D 距离衰减到底吃掉了多少"。
         ///
-        /// <para><c>getVolume(out volume, out finalvolume)</c> 的第二个值是**算进所有衰减之后**的
-        /// 实际音量。两者一比就知道该把 <see cref="VolumeScale"/> 补偿到多少——
+        /// <para><c>getVolume(out volume, out finalvolume)</c> 的第二个值是**算进所有衰减之后**
+        /// 的实际音量。两者一比就知道该把 <see cref="VolumeScale"/> 补偿到多少——
         /// 与其反复调参，不如把它测出来。</para>
+        ///
+        /// <para>⚠ <b>句首与句末各取一次，缺一不可</b>：第一版只在**句首**取样，
+        /// 结果 3.5m 与 30.0m 都报 <c>1.000</c>，看起来像"完全没有距离衰减"。
+        /// 但那个位置**可能是假象**——事件刚 <c>start()</c>、还没经过一次 FMOD 的
+        /// <c>system.update()</c>，3D 衰减未必已经算上。句末取样（事件已跑 2~5 秒）才作数：
+        /// 两次一比，「真的没衰减」和「句首还没算」就能分开。</para>
         /// </summary>
-        private void LogVolume(CharacterMainControl character)
+        /// <param name="when">取样点标记，只用于日志可读性。</param>
+        private void LogVolume(CharacterMainControl character, string when)
         {
             if (_volumeLogsLeft <= 0 || !_kazoo.HasValue) return;
             _volumeLogsLeft--;
@@ -291,7 +298,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 ? Vector3.Distance(character.transform.position, player.transform.position)
                 : -1f;
 
-            Debug.Log($"[EliteEnemies.Musician] 音量诊断：设定={setVolume:F3} 实际={finalVolume:F3} " +
+            Debug.Log($"[EliteEnemies.Musician] 音量诊断[{when}]：设定={setVolume:F3} 实际={finalVolume:F3} " +
                       $"距离={dist:F1}m（实际/设定 = 距离衰减倍数）");
         }
 
@@ -305,6 +312,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (_notesLeft <= 0 || _phraseNotes == null || _phraseCursor >= _phraseNotes.Length)
             {
+                LogVolume(character, "句末");
                 StopKazoo();
                 _cooldownRemaining = Random.Range(CooldownMin, CooldownMax);
                 return;
