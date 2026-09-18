@@ -16,5 +16,22 @@ name = EliteEnemies
 displayName = 精英怪 / EliteEnemies
 description = 随机生成带词条的精英怪 by LOVEIII486
 version = @VERSION@
-tags =
+; 工坊分类标签。**逗号分隔**（游戏侧 SteamWorkshopManager 用 tags.Split(",") 切，
+; 每段再 Trim）。取值应取自工坊筛选栏开放的那些，写别的 Steam 会收但筛选栏点不到。
+;
+; ★ **这一行必须非空**，否则标签会被清掉——实测过的机制：
+;   ModManager.cs:291/295 的解析是 `if (num >= 1 && num + 1 < text.Length)`，
+;   **值部分为空的行会被整行跳过**，于是 tags 这个键根本不存在，
+;   取默认值 ""，而设置标签那段是 `if (!string.IsNullOrWhiteSpace(tags))`，
+;   直接跳过 → 上传后条目只剩 Steam 补的 ["Mod"]。
+;   （作者的分类标签就是这么没的：模板里那一行原本是空的 `tags =`。）
+;
+; ⚠ 还有一个**未解的矛盾**，下次上传时正好一并验掉：
+;   SteamWorkshopManager.cs:225 在按本行设完之后，**又无条件 SetItemTags(["Mod"])**
+;   一次（已反编译安装的那份 TeamSoda.Duckov.Core.dll 确认，不是过期的源码树）。
+;   两次调用作用在同一个 handle 上，按理后写的赢——但抽样 20 个同游戏模组，
+;   18 个都带着真实分类标签，说明标签确实留得住。
+;   ⇒ 下次上传后用 GetPublishedFileDetails 查 tags 即可定论。
+;   若发现仍被覆盖，兜底是 src\DebugTools\WorkshopTagFixer.cs（F8）。
+tags = Gameplay,Companion & NPC,Loot & Economy
 publishedFileId = 3602009885
