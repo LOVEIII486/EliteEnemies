@@ -1,7 +1,11 @@
+using System.Collections.Generic;
 using Duckov;
 using FMOD.Studio;
 using FMODUnity;
 using UnityEngine;
+
+// ⚠ 刻意**不写** `using System;`：那会把 System.Random 引进来，
+//   与 UnityEngine.Random 撞名（CS0104）。下面按 System.StringComparer 全限定使用。
 
 // ⚠ 刻意**不写** `using FMOD;`：那会把 FMOD.Debug 与 FMOD.RESULT 引进全局，
 //   前者与 UnityEngine.Debug 撞名（CS0104），后者与 FMODUnity.STOP_MODE 一起
@@ -69,13 +73,17 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <summary>玩家进入这个距离才开始吹。</summary>
         private const float TriggerDistance = 30f;
 
-        /// <summary>一段乐句里的音符数（随机区间，含两端）。</summary>
-        private const int NotesPerPhraseMin = 4;
-        private const int NotesPerPhraseMax = 9;
+        /// <summary>
+        /// 一段乐句吹多少个音（随机区间，含两端）。
+        ///
+        /// <para>8~14 是"听得出是哪首歌"的下限：小星星整句 7 个音、两只老虎
+        /// 「两只老虎，两只老虎，跑得快」是 11 个音。再短就只剩个动机，认不出来。</para>
+        /// </summary>
+        private const int NotesPerPhraseMin = 8;
+        private const int NotesPerPhraseMax = 14;
 
-        /// <summary>单个音符的时长（随机区间，秒）。</summary>
-        private const float NoteDurationMin = 0.16f;
-        private const float NoteDurationMax = 0.38f;
+        /// <summary>每拍多少秒。曲目里的时值都以"拍"为单位，实际秒数 = 拍数 × 本值。</summary>
+        private const float SecondsPerBeat = 0.3f;
 
         /// <summary>两次乐句之间的静默时长（随机区间，秒）。</summary>
         private const float CooldownMin = 1f;
@@ -84,25 +92,19 @@ namespace EliteEnemies.Affixes.Behaviors
         // ═══════════════ 旋律 ═══════════════
 
         /// <summary>
-        /// 音阶：小调五声的半音偏移。
+        /// 整首曲子整体升降的半音数。
         ///
-        /// <para>实测（<c>Player.log</c>）音高参数量程是 <c>-24 ~ 24</c>、默认 <c>0</c>，
-        /// 这就是**半音**——所以音阶可以直接按半音写，不必再按量程比例摊开。
-        /// 小调五声 (<c>0 3 5 7 10</c>) 怎么随机都不会难听，跨度也只有一个八度不到。</para>
+        /// <para>曲目本身按"简谱 1 = 0"记谱，音域大致 0~11 半音。卡祖笛的自然音高就是 0，
+        /// 所以默认不移调。想让它更尖、更有喜感，把它调大（例如 <c>12</c> 高八度）即可——
+        /// 参数量程 ±24，留有余量。</para>
         /// </summary>
-        private static readonly int[] PentatonicSemitones = { 0, 3, 5, 7, 10 };
+        private const int RootSemitone = 0;
 
         /// <summary>
-        /// 判定"这个参数的单位是半音"的阈值：量程跨度小于一个八度就认为不是半音
-        /// （例如归一化的 0~1），改用按比例摊开的音阶。
+        /// 判定"这个参数的单位是半音"的阈值：量程跨度小于一个八度就认为不是半音。
+        /// 用于参数探测里按量程认音高参数，见 <see cref="ProbeKazooParameters"/>。
         /// </summary>
         private const float SemitoneRangeThreshold = 12f;
-
-        /// <summary>非半音参数时，旋律占用量程的比例（以参数默认值为中心）。</summary>
-        private const float MelodySpanRatio = 0.3f;
-
-        /// <summary>下一个音走级进的概率（其余为小跳），避免旋律变成乱跳。</summary>
-        private const float StepwiseChance = 0.7f;
 
         // ═══════════════ 探测结果（进程内一次） ═══════════════
 
@@ -110,13 +112,17 @@ namespace EliteEnemies.Affixes.Behaviors
         private static string _pitchParameter = FallbackPitchParameter;
         private static string _intensityParameter = FallbackIntensityParameter;
 
-        /// <summary>音阶每一级对应的参数值。由探测结果构建，见 <see cref="BuildScale"/>。</summary>
-        private static float[] _noteValues = { 0f, 3f, 5f, 7f, 10f };
+        /// <summary>探测到的音高参数量程，用来把音符夹进合法范围（正常情况用不到）。</summary>
+        private static float _pitchMin = -24f;
+        private static float _pitchMax = 24f;
 
         /// <summary>音高验证是否已做过（见 <see cref="VerifyPitchOnce"/>），只做一次。</summary>
         private static bool _pitchVerified;
 
         private static bool _postFailedLogged;
+
+        /// <summary>已经打过"正在吹哪首"日志的曲名（每首只报一次，不刷屏）。</summary>
+        private static readonly HashSet<string> LoggedTunes = new HashSet<string>(System.StringComparer.Ordinal);
 
         /// <summary>
         /// 音量诊断还能打几条。
@@ -134,8 +140,10 @@ namespace EliteEnemies.Affixes.Behaviors
         private float _noteRemaining;
         /// <summary>本乐句还剩几个音符（含当前这个）。</summary>
         private int _notesLeft;
-        /// <summary>当前音级，<c>0.._noteValues.Length-1</c>。</summary>
-        private int _noteIndex;
+        /// <summary>本次乐句所吹曲目的音符序列（从头开始截取）。</summary>
+        private MusicianTunes.Note[] _phraseNotes;
+        /// <summary>下一个要吹的音在 <see cref="_phraseNotes"/> 里的下标。</summary>
+        private int _phraseCursor;
 
         // ═══════════════════════════════════════════════════════════════
 
@@ -198,9 +206,15 @@ namespace EliteEnemies.Affixes.Behaviors
             // 随后 Post 的 ApplyParameters 会把它带给新事件。
             audio.SetParameterByName(_intensityParameter, 1f);
 
-            _noteIndex = Random.Range(0, _noteValues.Length);
-            _notesLeft = Random.Range(NotesPerPhraseMin, NotesPerPhraseMax + 1);
-            audio.SetParameterByName(_pitchParameter, _noteValues[_noteIndex]);
+            // 随机挑一首，**从曲首**吹起。
+            // 从曲首是因为"认得出是哪首歌"全靠开头那几个音；随机起点会把它毁掉。
+            // 想要更多变化的话，改这里让起点在 [0, 长度-片段] 里随机即可。
+            MusicianTunes.Tune tune = MusicianTunes.All[Random.Range(0, MusicianTunes.All.Length)];
+            _phraseNotes = tune.Notes;
+            _phraseCursor = 0;
+            _notesLeft = Mathf.Min(Random.Range(NotesPerPhraseMin, NotesPerPhraseMax + 1), _phraseNotes.Length);
+
+            audio.SetParameterByName(_pitchParameter, NoteValue(_phraseNotes[0].Semitone));
 
             _kazoo = AudioManager.Post(KazooEvent, go);
 
@@ -217,9 +231,22 @@ namespace EliteEnemies.Affixes.Behaviors
             }
 
             _kazoo.Value.setVolume(VolumeScale);
-            VerifyPitchOnce();
+            VerifyPitchOnce(NoteValue(_phraseNotes[0].Semitone));
+            LogTuneOnce(tune, _notesLeft);
             LogVolume(character);
-            _noteRemaining = Random.Range(NoteDurationMin, NoteDurationMax);
+            _noteRemaining = _phraseNotes[0].Beats * SecondsPerBeat;
+        }
+
+        /// <summary>把音符的半音数换算成参数值，并夹进探测到的合法量程。</summary>
+        private static float NoteValue(int semitone)
+            => Mathf.Clamp(RootSemitone + semitone, _pitchMin, _pitchMax);
+
+        /// <summary>每首曲子只报一次"正在吹哪首"——这是核对曲目有没有按预期被选中的唯一线索。</summary>
+        private static void LogTuneOnce(MusicianTunes.Tune tune, int noteCount)
+        {
+            if (!LoggedTunes.Add(tune.Name)) return;
+            Debug.Log($"[EliteEnemies.Musician] 开始吹奏《{tune.Name}》（本次取前 {noteCount} 个音，" +
+                      $"全曲 {tune.Notes.Length} 个音）");
         }
 
         /// <summary>
@@ -230,12 +257,12 @@ namespace EliteEnemies.Affixes.Behaviors
         /// "音高变了但幅度小"区分开。本工程已经在这条路上栽过两次（名字取不出、名字规则写错），
         /// 所以把"设进去了没有"变成日志里看得见的一行。只核对一次，不刷屏。</para>
         /// </summary>
-        private void VerifyPitchOnce()
+        private void VerifyPitchOnce(float pitchValue)
         {
             if (_pitchVerified || !_kazoo.HasValue) return;
             _pitchVerified = true;
 
-            FMOD.RESULT result = _kazoo.Value.setParameterByName(_pitchParameter, _noteValues[_noteIndex]);
+            FMOD.RESULT result = _kazoo.Value.setParameterByName(_pitchParameter, pitchValue);
             Debug.Log(result == FMOD.RESULT.OK
                 ? $"[EliteEnemies.Musician] 音高参数 '{_pitchParameter}' 设置成功（RESULT.OK），旋律会变调"
                 : $"[EliteEnemies.Musician] ⚠ 音高参数 '{_pitchParameter}' 设置失败：{result}——" +
@@ -271,39 +298,19 @@ namespace EliteEnemies.Affixes.Behaviors
             if (_noteRemaining > 0f) return;
 
             _notesLeft--;
-            if (_notesLeft <= 0)
+            _phraseCursor++;
+
+            if (_notesLeft <= 0 || _phraseNotes == null || _phraseCursor >= _phraseNotes.Length)
             {
                 StopKazoo();
                 _cooldownRemaining = Random.Range(CooldownMin, CooldownMax);
                 return;
             }
 
-            _noteIndex = NextNoteIndex(_noteIndex);
+            MusicianTunes.Note note = _phraseNotes[_phraseCursor];
             AudioObject.GetOrCreate(character.gameObject)
-                       .SetParameterByName(_pitchParameter, _noteValues[_noteIndex]);
-            _noteRemaining = Random.Range(NoteDurationMin, NoteDurationMax);
-        }
-
-        /// <summary>
-        /// 下一个音级：以级进为主、偶尔小跳，撞到音阶边界就反弹。
-        /// <b>绝不原地重复</b>——重复音会让旋律听起来像卡住了。
-        /// </summary>
-        private static int NextNoteIndex(int current)
-        {
-            int steps = _noteValues.Length;
-            if (steps <= 1) return 0;
-
-            bool stepwise = Random.value < StepwiseChance;
-            int distance = stepwise ? 1 : 2;
-            int direction = Random.value < 0.5f ? -1 : 1;
-            int step = distance * direction;
-
-            int next = current + step;
-            if (next < 0 || next >= steps)
-            {
-                next = current - step;   // 反弹，而不是夹取（夹取会连着两次同音）
-            }
-            return Mathf.Clamp(next, 0, steps - 1);
+                       .SetParameterByName(_pitchParameter, NoteValue(note.Semitone));
+            _noteRemaining = note.Beats * SecondsPerBeat;
         }
 
         /// <summary>停掉当前乐句。**幂等**——<c>OnCleanup</c> 可能被走到两次（基类约定）。</summary>
@@ -324,6 +331,8 @@ namespace EliteEnemies.Affixes.Behaviors
             _kazoo = null;
             _noteRemaining = 0f;
             _notesLeft = 0;
+            _phraseNotes = null;
+            _phraseCursor = 0;
         }
 
         private bool IsPlaying()
@@ -358,7 +367,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 {
                     Debug.LogWarning($"[EliteEnemies.Musician] FMOD 里找不到事件 {KazooEvent}，" +
                                      $"将退回游戏自己的参数名写法（{FallbackPitchParameter}）");
-                    BuildScale(-24f, 24f, 0f);
+                    SetPitchRange(-24f, 24f);
                     return true;
                 }
 
@@ -429,7 +438,7 @@ namespace EliteEnemies.Affixes.Behaviors
                     Debug.LogWarning($"[EliteEnemies.Musician] {KazooEvent} 上认不出音高参数" +
                                      $"（找到 {count} 个参数，最宽量程 {widestSpan}），" +
                                      $"将退回游戏自己的参数名写法（音高不会变化）");
-                    BuildScale(-24f, 24f, 0f);
+                    SetPitchRange(-24f, 24f);
                     return true;
                 }
 
@@ -441,51 +450,33 @@ namespace EliteEnemies.Affixes.Behaviors
 
                 if (intensityName != null) _intensityParameter = intensityName;
 
-                BuildScale(pitchMin, pitchMax, pitchDefault);
+                SetPitchRange(pitchMin, pitchMax);
 
                 Debug.Log($"[EliteEnemies.Musician] 卡祖笛音高参数='{_pitchParameter}'" +
                           $"（{(byRange ? "按量程认定，名字没匹配上" : "按名字匹配")}），" +
-                          $"参数量程 [{pitchMin}, {pitchMax}] 默认 {pitchDefault}；" +
-                          $"旋律音阶 [{string.Join(", ", System.Array.ConvertAll(_noteValues, v => v.ToString("F1")))}]");
+                          $"参数量程 [{pitchMin}, {pitchMax}] 默认 {pitchDefault}，" +
+                          $"曲目整体移调 {RootSemitone} 半音");
                 return true;
             }
             catch (System.Exception ex)
             {
                 Debug.LogWarning($"[EliteEnemies.Musician] 探测卡祖笛参数失败，将退回游戏自己的写法: {ex.Message}");
-                BuildScale(-24f, 24f, 0f);
+                SetPitchRange(-24f, 24f);
                 return true;
             }
         }
 
         /// <summary>
-        /// 由参数量程构建音阶。
+        /// 记下音高参数的合法量程，用来把曲目里的音符夹进去。
         ///
-        /// <para>量程跨度 ≥ 一个八度 → 认定单位是**半音**，直接用小调五声（实测正是这种情况）。
-        /// 否则单位未知（例如归一化的 0~1），只能退而求其次：以默认值为中心、按量程比例摊开。</para>
+        /// <para>曲目按"简谱 1 = 0"记谱，音域大致 0~11 半音，离实测的 ±24 还有余量，
+        /// 正常情况下夹取不会生效——它只是防止 <see cref="RootSemitone"/> 被调得过大时
+        /// 把音符设到量程外（那样 FMOD 会直接忽略，听起来就是"某个音丢了"）。</para>
         /// </summary>
-        private static void BuildScale(float min, float max, float center)
+        private static void SetPitchRange(float min, float max)
         {
-            int steps = PentatonicSemitones.Length;
-
-            if (max - min >= SemitoneRangeThreshold)
-            {
-                _noteValues = new float[steps];
-                for (int i = 0; i < steps; i++)
-                {
-                    _noteValues[i] = Mathf.Clamp(center + PentatonicSemitones[i], min, max);
-                }
-                return;
-            }
-
-            float half = (max - min) * MelodySpanRatio * 0.5f;
-            float low = Mathf.Clamp(center - half, min, max);
-            float high = Mathf.Clamp(center + half, min, max);
-
-            _noteValues = new float[steps];
-            for (int i = 0; i < steps; i++)
-            {
-                _noteValues[i] = Mathf.Lerp(low, high, (float)i / (steps - 1));
-            }
+            _pitchMin = min;
+            _pitchMax = max;
         }
 
     }
