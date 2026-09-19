@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using EliteEnemies.Core;
-using UnityEngine;
 
 namespace EliteEnemies.Coop
 {
@@ -30,8 +29,6 @@ namespace EliteEnemies.Coop
         /// </summary>
         public const string ChannelName = "eliteenemies:v1/affix";
 
-        private const string LogTag = "[EliteEnemies.Coop]";
-
         /// <summary>
         /// AI 上线回调——**主机与客户端都会走到这里**。
         ///
@@ -46,7 +43,7 @@ namespace EliteEnemies.Coop
             if (!CoopApi.IsServer)
             {
                 // 第 0 期只记录，用于验证"复制体就绪"与"词条到达"两个时刻的先后关系。
-                Debug.Log($"{LogTag} [客户端] 复制体就绪 aiId={aiId}（等待主机的词条清单）");
+                CoopLog.Emit($"[客户端] 复制体就绪 aiId={aiId}（等待主机的词条清单）");
                 return;
             }
 
@@ -59,13 +56,13 @@ namespace EliteEnemies.Coop
             var payload = CoopWire.EncodeEliteAffixes(aiId, affixes);
             if (CoopApi.Broadcast(payload))
             {
-                Debug.Log($"{LogTag} [主机] 已广播精英词条 aiId={aiId} " +
-                          $"词条=[{string.Join(",", affixes)}]（{payload.Length} 字节）");
+                CoopLog.Emit($"[主机] 已广播精英词条 aiId={aiId} " +
+                             $"词条=[{string.Join(",", affixes)}]（{payload.Length} 字节）");
             }
             else
             {
                 // 广播失败通常意味着联机还没起（backend 未装好）。**不静默**。
-                Debug.LogWarning($"{LogTag} [主机] 精英词条广播失败 aiId={aiId}——联机可能尚未就绪。");
+                CoopLog.Emit($"[主机] 精英词条广播失败 aiId={aiId}——联机可能尚未就绪。");
             }
         }
 
@@ -78,13 +75,13 @@ namespace EliteEnemies.Coop
             if (!CoopWire.TryDecodeEliteAffixes(payload.Span, out int aiId, out List<string> affixes, out string failure))
             {
                 // 解不了就**说出来**，不要静默丢弃——静默失效正是本工程一路在清的东西。
-                Debug.LogWarning($"{LogTag} 收到无法解析的报文（{payload.Length} 字节）：{failure}");
+                CoopLog.Emit($"收到无法解析的报文（{payload.Length} 字节）：{failure}");
                 return;
             }
 
             string side = isServer ? "主机" : "客户端";
-            Debug.Log($"{LogTag} [{side}] 收到精英词条 aiId={aiId} " +
-                      $"词条=[{string.Join(",", affixes)}]（第 0 期：仅记录，尚未应用）");
+            CoopLog.Emit($"[{side}] 收到精英词条 aiId={aiId} " +
+                         $"词条=[{string.Join(",", affixes)}]（第 0 期：仅记录，尚未应用）");
         }
     }
 }

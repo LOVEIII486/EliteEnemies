@@ -70,6 +70,10 @@ namespace EliteEnemies.Coop
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
             _watchingForApi = true;
 
+            // ⚠ 这条**刻意用 Debug.Log 而不是 CoopLog**：走到这里说明联机模组不在，
+            //   那层日志过滤器也就没被装上，普通日志看得见。
+            //   反过来若在这里借错误级别，就会给**每个单机玩家每次启动刷一条红字**。
+            //   判据：**只有在联机 API 已激活时才借错误级别**（那时过滤器才是活的）。
             Debug.Log($"{LogTag} 未检测到联机模组，按单机模式运行" +
                       "（若联机模组之后加载，会自动接入）。");
         }
@@ -91,7 +95,7 @@ namespace EliteEnemies.Coop
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning($"{LogTag} 退订 AiSpawned 失败（忽略）: {ex.Message}");
+                    CoopLog.Emit($"退订 AiSpawned 失败（忽略）: {ex.Message}");
                 }
             }
 
@@ -106,7 +110,7 @@ namespace EliteEnemies.Coop
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning($"{LogTag} 注销消息处理器失败（忽略）: {ex.Message}");
+                    CoopLog.Emit($"注销消息处理器失败（忽略）: {ex.Message}");
                 }
             }
 
@@ -166,14 +170,15 @@ namespace EliteEnemies.Coop
             {
                 Activate(api);
                 Active = true;
-                Debug.Log($"{LogTag} 已接入联机模组 API（程序集 {api.GetName().Version}），" +
-                          "精英词条将随 AI 同步广播。");
+                // 已激活 ⇒ 联机模组的日志过滤器是活的 ⇒ 必须走 CoopLog 才看得见。
+                CoopLog.Emit($"已接入联机模组 API（程序集 {api.GetName().Version}），" +
+                             "精英词条将随 AI 同步广播。");
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"{LogTag} 检测到联机模组，但接入其 API 失败，将按单机运行。" +
-                               $"（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n{ex}");
+                CoopLog.Emit($"检测到联机模组，但接入其 API 失败，将按单机运行。" +
+                             $"（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n{ex}");
                 return false;
             }
         }
@@ -373,8 +378,8 @@ namespace EliteEnemies.Coop
 
                 if (payloadProperty == null || isServerProperty == null)
                 {
-                    Debug.LogError($"{LogTag} 联机消息类型 {type.FullName} 上找不到 Payload / IsServer，" +
-                                   "联机模组的 API 可能已变。");
+                    CoopLog.Emit($"联机消息类型 {type.FullName} 上找不到 Payload / IsServer，" +
+                                 "联机模组的 API 可能已变。");
                     return;
                 }
 
@@ -386,7 +391,7 @@ namespace EliteEnemies.Coop
             catch (Exception ex)
             {
                 // 隔离：这是联机模组派发链上的回调，抛出去会带走它的整个消息分发。
-                Debug.LogError($"{LogTag} 处理联机消息失败（已隔离）: {ex}");
+                CoopLog.Emit($"处理联机消息失败（已隔离）: {ex}");
             }
         }
 
