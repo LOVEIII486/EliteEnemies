@@ -264,8 +264,18 @@ namespace EliteEnemies.Affixes.Behaviors
         ///
         /// <para>成本：每次 3 减 3 乘 1 比较。相比 <see cref="OnUpdate"/> 里每帧已经在做的
         /// （遍历全部 Renderer、遍历角色全部碰撞体逐个调原生 <c>Physics.IgnoreCollision</c>、
-        /// <c>SetPosition</c>）可以忽略。**唯一要避开的是扫场景**（<c>Physics.OverlapSphere</c> /
-        /// <c>FindObjects*</c>）——那种做法也被 <c>tools/check-affix-behaviors.sh</c> 的门 2 禁止。</para>
+        /// <c>SetPosition</c>）可以忽略。</para>
+        ///
+        /// <para>⚠ <b>这里原本写的是"唯一要避开的是扫场景（<c>Physics.OverlapSphere</c> /
+        /// <c>FindObjects*</c>），那种做法被 <c>check-affix-behaviors.sh</c> 的门 2 禁止"——
+        /// 那句话把两件不同的事混成了一件，而且会把人挡在**正确**的做法外面。</b>
+        /// 门 2 的正则（脚本第 60 行）只禁 <c>FindObjectsOfType|FindObjectsByType|FindFirstObject|
+        /// FindAnyObject|Resources.(Find|Load)</c>：那一族是**托管层的全场景遍历**，每帧调等于自杀。
+        /// 而 <c>Physics.OverlapSphereNonAlloc</c> 是**原生空间查询**（零 GC、只碰粗筛命中的那几个），
+        /// 游戏自己就在用——全库 9 处调用，其中 7 处查的是角色
+        /// （<c>ExplosionManager.cs:47</c>、<c>AIMainBrain.cs:149</c>、<c>AimTargetFinder.cs:36</c>、
+        /// <c>ItemAgent_Gun.cs:968</c>、<c>ItemAgent_MeleeWeapon.cs:129</c>、<c>Projectile.cs:271</c>）。
+        /// 要避开的是**每帧**调它，不是它本身；本方法走位置比较只是因为这里只关心**一个**已知目标。</para>
         /// </summary>
         private void CheckPlayerProximity(CharacterMainControl character)
         {
