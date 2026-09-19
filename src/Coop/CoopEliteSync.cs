@@ -40,6 +40,9 @@ namespace EliteEnemies.Coop
         /// <summary>主机侧已知精英表的上限（防御性；正常一局远达不到）。</summary>
         private const int MaxKnownElites = 4096;
 
+        /// <summary>逐条记录复制体 id 的上限——够核对重合度就行，不必全程记。</summary>
+        private const int MaxReplicaIdsLogged = 50;
+
         // ===== 主机侧 =====
         private static readonly Dictionary<int, List<string>> s_hostKnown = new Dictionary<int, List<string>>();
 
@@ -50,10 +53,12 @@ namespace EliteEnemies.Coop
         // ===== 统计（回答上面那两个问题）=====
         private static int s_recvTotal;
         private static int s_replicaTotal;
-        private static int s_affixBeforeReplica;    // 词条先到
-        private static int s_replicaBeforeAffix;    // 复制体先到
+        private static int s_affixBeforeReplica;    // 配对：词条先到（复制体后建）
+        private static int s_replicaFirst;          // 配对：复制体先到（词条后到）★ 第 1 期要处理的那种
+        private static int s_replicaNoAffixYet;     // 复制体出现时尚无词条——**多数只是非精英**，不是顺序
         private static int s_paired;
         private static int s_localEliteDivergence;  // 客户端自己掷出精英的次数
+        private static int s_replicaIdsLogged;      // 已逐条记录的复制体 id 数
 
         private static float s_lastQueryTime = -999f;
         private static float s_lastSummaryTime;
@@ -158,8 +163,24 @@ namespace EliteEnemies.Coop
             }
             else
             {
-                s_replicaBeforeAffix++;
-                RequestFullSnapshot($"复制体先到 aiId={aiId}");
+                // ⚠ 这一条**不能读作"复制体先到"**：绝大多数 AI 本来就不是精英，
+                //   它们永远不会有词条。所以只记"复制体出现在词条之前"这件事本身。
+                s_replicaNoAffixYet++;
+
+                // 把复制体 id 记下来（前若干个），好与主机的广播 id 离线核对——
+                // 否则"有没有精英复制体"这个问题只能靠猜。id 是 int，几十行不占地方。
+                if (s_replicaIdsLogged < MaxReplicaIdsLogged)
+                {
+                    s_replicaIdsLogged++;
+                    CoopLog.Info($"[客户端] 复制体就绪 aiId={aiId}（此刻尚无词条）");
+                }
+                else if (s_replicaIdsLogged == MaxReplicaIdsLogged)
+                {
+                    s_replicaIdsLogged++;
+                    CoopLog.Info($"[客户端] 复制体 id 已记满 {MaxReplicaIdsLogged} 个，后续不再逐条记录");
+                }
+
+                RequestFullSnapshot($"复制体 aiId={aiId} 尚无词条");
             }
 
             MaybeLogSummary();
@@ -244,8 +265,8 @@ namespace EliteEnemies.Coop
             if (s_clientReplicas.Contains(aiId))
             {
                 s_paired++;
-                s_replicaBeforeAffix++;
-                CoopLog.Info($"[客户端] 配对成功（**复制体先到**）aiId={aiId} " +
+                s_replicaFirst++;
+                CoopLog.Info($"[客户端] 配对成功（**复制体先到**，需补应用）aiId={aiId} " +
                              $"词条=[{string.Join(",", affixes)}]（{via}）");
             }
             else if (!quiet)
@@ -286,8 +307,13 @@ namespace EliteEnemies.Coop
         {
             s_lastSummaryTime = Time.unscaledTime;
 
-            CoopLog.Info($"[摘要·{trigger}] 收到词条={s_recvTotal} 见到的复制体={s_replicaTotal} " +
-                         $"配对={s_paired}（词条先到 {s_affixBeforeReplica} / 复制体先到 {s_replicaBeforeAffix}） " +
+            // ⚠ 措辞要准：`复制体出现时无词条` **不等于**"复制体先到"——
+            //   绝大多数 AI 本就不是精英，它们永远不会有词条。
+            //   真正有意义的只有 `配对`（两边都有）与 `客户端自行掷出精英`（分叉）。
+            CoopLog.Info($"[摘要·{trigger}] 收到词条={s_recvTotal}（去重 {s_clientAffixes.Count}） " +
+                         $"见到复制体={s_replicaTotal}（去重 {s_clientReplicas.Count}） " +
+                         $"配对={s_paired}（词条先到 {s_affixBeforeReplica} / 复制体先到 {s_replicaFirst}） " +
+                         $"复制体出现时无词条={s_replicaNoAffixYet} " +
                          $"客户端自行掷出精英={s_localEliteDivergence}");
         }
     }
