@@ -282,6 +282,8 @@ namespace EliteEnemies.Stats
                 BossEliteChance = EliteEnemyCore.Config.BossEliteChance,
                 MerchantEliteChance = EliteEnemyCore.Config.MerchantEliteChance,
                 MaxAffixCount = EliteEnemyCore.Config.MaxAffixCount,
+                // ⚠ Clone：快照不与配置共享数组（理由见字段注释）。
+                AffixCountWeights = CloneAffixWeights(EliteEnemyCore.Config.AffixCountWeights),
                 DropRateMultiplier = EliteEnemyCore.Config.DropRateMultiplier,
                 // ⚠ 取自 GameConfig 而**不是** EliteEnemyCore.Config：后者只有派生出的
                 // `ItemQualityBias`（浮点，如 -1.5），而这里要报的是**设置界面里那个档位旋钮**
@@ -304,6 +306,16 @@ namespace EliteEnemies.Stats
                 Sources = BuildSources(),
             };
             return s;
+        }
+
+        /// <summary>
+        /// 复制一份词条数量权重给快照。配置为 null（或空）时给空数组——
+        /// 报告那边把它渲染成「未配置」，与 <c>AffixSelector</c> 的兜底口径一致。
+        /// </summary>
+        private static int[] CloneAffixWeights(int[] weights)
+        {
+            if (weights == null || weights.Length == 0) return new int[0];
+            return (int[])weights.Clone();
         }
 
         /// <summary>

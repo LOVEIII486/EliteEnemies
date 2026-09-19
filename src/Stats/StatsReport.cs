@@ -47,6 +47,7 @@ namespace EliteEnemies.Stats
                           " Boss " + Pct0(s.BossEliteChance) +
                           " 商人 " + Pct0(s.MerchantEliteChance) +
                           " | 词条上限 " + s.MaxAffixCount +
+                          " | 词条权重 " + DescribeAffixWeights(s.AffixCountWeights) +
                           " | 掉率倍率 " + s.DropRateMultiplier.ToString("F1") +
                           " | 品质档位 " + s.ItemQualityTier);
             sb.AppendLine("[配置] 词条 " + DescribeAffixes(s));
@@ -59,6 +60,41 @@ namespace EliteEnemies.Stats
         }
 
         // ────────────────────────── 生成 ──────────────────────────
+
+        /// <summary>
+        /// 词条**数量**权重的紧凑写法：<c>1-5:50/30/15/4/1</c>。
+        ///
+        /// <para>它与 <c>词条上限</c> 是两件事、必须一起看：上限只说"最多几条"，
+        /// 而"**通常几条**"由这张权重表决定——「词条条数」那段直方图能不能解释，
+        /// 全靠这一项。实测吃过一次亏：某份日志里 5 条词条占 27%（默认权重下只该占 1%），
+        /// 而报告里没有这个数，读的人只能回头去问作者是不是改过权重。</para>
+        ///
+        /// <para>三条渲染约定：</para>
+        /// <list type="bullet">
+        /// <item>下标 0 恒为 0（不允许"0 条词条"），不打印；</item>
+        /// <item>**末尾为 0 的档位也省掉**，于是"只放开 1、2 条"读起来就是 <c>1-2:50/30</c>；</item>
+        /// <item>负数按 0 显示——<c>AffixSelector.SelectWeightedAffixCount</c> 就是这么 clamp 的
+        /// （<c>Mathf.Max(0, weights[i])</c>）。报告必须与判定口径一致，
+        /// 否则"报告说有权重、实际被当 0"会让读的人往错的方向推。</item>
+        /// </list>
+        /// </summary>
+        private static string DescribeAffixWeights(int[] weights)
+        {
+            if (weights == null || weights.Length < 2) return "(未配置)";
+
+            int last = weights.Length - 1;
+            while (last >= 1 && weights[last] <= 0) last--;
+            if (last < 1) return "(全为 0，按均匀分布)";
+
+            var sb = new StringBuilder();
+            sb.Append('1').Append('-').Append(last).Append(':');
+            for (int i = 1; i <= last; i++)
+            {
+                if (i > 1) sb.Append('/');
+                sb.Append(weights[i] > 0 ? weights[i] : 0);
+            }
+            return sb.ToString();
+        }
 
         private static void AppendSpawn(StringBuilder sb, StatsSnapshot s)
         {

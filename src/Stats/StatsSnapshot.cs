@@ -35,6 +35,24 @@ namespace EliteEnemies.Stats
         public float BossEliteChance;
         public float MerchantEliteChance;
         public int MaxAffixCount;
+
+        /// <summary>
+        /// 词条**数量**权重，下标 = 条数（1–5）。<c>[0]</c> 恒为 0
+        /// （配置里就是这么填的：不允许"0 条词条"，见 <c>GameConfig</c> 的 <c>AffixCountWeights</c>）。
+        ///
+        /// <para><b>为什么要报它</b>：<c>MaxAffixCount</c> 只说"最多几条"，
+        /// 而"**通常几条**"由这张表决定——它才是"一只精英掉了几件"最直接的自变量。
+        /// 实测吃过一次亏：一份日志里 5 条词条占了 27%，而默认权重下它只该占 1%；
+        /// 读日志的人只能**回头去问**作者是不是改过权重，因为报告里根本没有这个数。</para>
+        ///
+        /// <para>⚠ 与配置对象**不共享数组**（赋值时 <c>Clone</c>）：快照是"当时是什么"的定格，
+        /// 不能因为之后有人改了设置就跟着变。</para>
+        ///
+        /// <para>允许为空数组：配置本身允许为 null（<c>AffixSelector</c> 就是按 null 兜的），
+        /// 那时报告渲染成「未配置」。</para>
+        /// </summary>
+        public int[] AffixCountWeights = new int[0];
+
         public float DropRateMultiplier;
         public int ItemQualityTier;
 
