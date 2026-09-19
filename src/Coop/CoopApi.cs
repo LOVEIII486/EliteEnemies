@@ -34,6 +34,12 @@ namespace EliteEnemies.Coop
         /// <summary>API 程序集的<b>简单名</b>（不含版本与公钥——<c>LoadFrom</c> 加载的 FullName 带这些）。</summary>
         private const string ApiAssemblyName = "EscapeFromDuckovModApi";
 
+        /// <summary>
+        /// 联机模组<b>主程序集</b>的简单名。它和 API 程序集是<b>两个不同的 DLL</b>，
+        /// 且实测本模组要用的 <c>NetService</c> 只在这里面（API 程序集里没有）。
+        /// </summary>
+        private const string MainAssemblyName = "EscapeFromDuckovCoopMod";
+
         private const string NetApiTypeName = "EscapeFromDuckovCoopMod.ModNetworkApi";
         private const string EventsTypeName = "EscapeFromDuckovCoopMod.ModApiEvents";
         private const string ContextTypeName = "EscapeFromDuckovCoopMod.ModMessageContext";
@@ -41,6 +47,9 @@ namespace EliteEnemies.Coop
 
         private static bool _initialized;
         private static bool _watchingForApi;
+
+        /// <summary>「契约对不上」只报一次，避免每次程序集加载都刷屏。</summary>
+        private static bool _mismatchReported;
 
         private static Action<byte[]> _broadcast;
         private static Func<bool> _isServer;
@@ -63,10 +72,15 @@ namespace EliteEnemies.Coop
             if (_initialized) return;
             _initialized = true;
 
-            // 情形 A：联机模组已先加载
+            // 先探一次：联机模组可能已经加载好了
             if (TryActivate()) return;
 
-            // 情形 B：联机模组之后才加载（游戏按 ModManager 的顺序装，谁先谁后不定）
+            // 还没到。挂上汇编加载监听等它来。
+            //
+            // ⚠ **不能"等到第一个就退订"**：联机模组有**两个**程序集
+            // （EscapeFromDuckovModApi 与 EscapeFromDuckovCoopMod），它们可能分先后加载，
+            // 而我们需要的类型横跨两者（NetService 只在后者里）。
+            // 所以这里一直等到**真正激活**才退订，见 OnAssemblyLoad。
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
             _watchingForApi = true;
 
@@ -118,6 +132,7 @@ namespace EliteEnemies.Coop
             _broadcast = null;
             _isServer = null;
             Active = false;
+            _mismatchReported = false;
 
             // ⚠ **必须重置**：否则模组停用后再启用时 Initialize 会直接早退，
             // 而这个模块已经在上面的 Shutdown 里把自己拆干净了——结果是
@@ -135,55 +150,84 @@ namespace EliteEnemies.Coop
 
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
         {
-            string name;
-            try
-            {
-                name = args?.LoadedAssembly?.GetName().Name;
-            }
-            catch
-            {
-                return;
-            }
+            if (!Active) TryActivate();
 
-            if (!string.Equals(name, ApiAssemblyName, StringComparison.Ordinal)) return;
-
-            // 只可能加载一次，探完就退订——不做常驻监听。
-            AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
-            _watchingForApi = false;
-            TryActivate();
+            // 激活成功就没必要再听下去了，就地退订，不做常驻监听。
+            if (Active && _watchingForApi)
+            {
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+                _watchingForApi = false;
+            }
         }
 
         /// <summary>
         /// 探测并接入。**幂等**：已激活直接返回 true。
         ///
-        /// <para>任何一步失败都只<b>记日志并退回单机</b>，绝不抛出——
+        /// <para><b>程序集还没加载齐时不算失败</b>：联机模组的两个程序集
+        /// （<c>EscapeFromDuckovModApi</c> 与 <c>EscapeFromDuckovCoopMod</c>）
+        /// 可能分先后加载，所以"找不到类型"要区分两种情况——
+        /// <b>还没到</b>（静默，等下一次汇编加载再试）与
+        /// <b>到了但形状不对</b>（记一次错，那是契约漂移）。</para>
+        ///
+        /// <para>任何异常都只记日志并退回单机，绝不抛出——
         /// 联机兼容是附加能力，它挂掉不该影响单机玩法。</para>
         /// </summary>
         private static bool TryActivate()
         {
             if (Active) return true;
 
-            var api = FindApiAssembly();
-            if (api == null) return false;
+            // ⚠ **按全名扫所有已加载程序集**，不假定类型属于哪个程序集。
+            //   实测（2026-09-19）：ModNetworkApi / ModMessageContext / ModApiEvents 在
+            //   EscapeFromDuckovModApi.dll 里，而 NetService 在 EscapeFromDuckovCoopMod.dll 里。
+            //   早先要求"四个类型同属一个程序集"，于是必定失败。
+            var netApi = FindType(NetApiTypeName);
+            var events = FindType(EventsTypeName);
+            var context = FindType(ContextTypeName);
+            var netService = FindType(NetServiceTypeName);
+
+            if (netApi == null || events == null || context == null || netService == null)
+            {
+                if (IsAnyCoopAssemblyLoaded() && !_mismatchReported)
+                {
+                    _mismatchReported = true;
+                    CoopLog.Emit("检测到联机模组，但它里面找不到本模组依赖的类型，将按单机运行。" +
+                                 "（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n" +
+                                 $"  缺的类型：" +
+                                 $"{(netApi == null ? NetApiTypeName + " " : string.Empty)}" +
+                                 $"{(events == null ? EventsTypeName + " " : string.Empty)}" +
+                                 $"{(context == null ? ContextTypeName + " " : string.Empty)}" +
+                                 $"{(netService == null ? NetServiceTypeName : string.Empty)}");
+                }
+
+                return false;
+            }
 
             try
             {
-                Activate(api);
+                Activate(netApi, events, context, netService);
                 Active = true;
                 // 已激活 ⇒ 联机模组的日志过滤器是活的 ⇒ 必须走 CoopLog 才看得见。
-                CoopLog.Emit($"已接入联机模组 API（程序集 {api.GetName().Version}），" +
+                CoopLog.Emit($"已接入联机模组 API（{netApi.Assembly.GetName().Name}），" +
                              "精英词条将随 AI 同步广播。");
                 return true;
             }
             catch (Exception ex)
             {
-                CoopLog.Emit($"检测到联机模组，但接入其 API 失败，将按单机运行。" +
-                             $"（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n{ex}");
+                if (!_mismatchReported)
+                {
+                    _mismatchReported = true;
+                    CoopLog.Emit("检测到联机模组，但接入其 API 失败，将按单机运行。" +
+                                 $"（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n{ex}");
+                }
+
                 return false;
             }
         }
 
-        private static Assembly FindApiAssembly()
+        private static bool IsAnyCoopAssemblyLoaded()
+            => FindAssembly(ApiAssemblyName) != null || FindAssembly(MainAssemblyName) != null;
+
+        private static Assembly FindAssembly(string simpleName)
         {
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             for (int i = 0; i < assemblies.Length; i++)
@@ -191,37 +235,47 @@ namespace EliteEnemies.Coop
                 var assembly = assemblies[i];
                 if (assembly == null) continue;
 
-                string simpleName;
+                string name;
                 try
                 {
-                    simpleName = assembly.GetName().Name;
+                    name = assembly.GetName().Name;
                 }
                 catch
                 {
                     continue;   // 动态程序集可能取不到名字，跳过
                 }
 
-                if (string.Equals(simpleName, ApiAssemblyName, StringComparison.Ordinal))
+                if (string.Equals(name, simpleName, StringComparison.Ordinal))
                     return assembly;
             }
 
             return null;
         }
 
-        private static void Activate(Assembly api)
+        /// <summary>按全名在所有已加载程序集里找类型（不限定属于哪个程序集，理由见 <see cref="TryActivate"/>）。</summary>
+        private static Type FindType(string fullName)
         {
-            var netApi = api.GetType(NetApiTypeName, false);
-            var events = api.GetType(EventsTypeName, false);
-            var context = api.GetType(ContextTypeName, false);
-            var netService = api.GetType(NetServiceTypeName, false);
-
-            if (netApi == null || events == null || context == null || netService == null)
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
             {
-                throw new InvalidOperationException(
-                    "联机 API 程序集里缺少预期的类型（" +
-                    $"{NetApiTypeName} / {EventsTypeName} / {ContextTypeName} / {NetServiceTypeName}）。");
+                Type type = null;
+                try
+                {
+                    type = assemblies[i]?.GetType(fullName, false);
+                }
+                catch
+                {
+                    continue;   // 个别程序集反射会抛（动态程序集等），跳过即可
+                }
+
+                if (type != null) return type;
             }
 
+            return null;
+        }
+
+        private static void Activate(Type netApi, Type events, Type context, Type netService)
+        {
             // 1) 主机/客户端角色判断
             _isServer = BuildIsServerProbe(netService);
 
