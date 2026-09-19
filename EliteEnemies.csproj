@@ -286,6 +286,42 @@
   </PropertyGroup>
 
   <!--
+    ════════════════════════════════════════════════════════════════════════
+    构建提示的统一格式
+    ════════════════════════════════════════════════════════════════════════
+
+    本工程的自定义提示来自**三处**，且格式各不相同：
+        1. 本文件的 <Message>（下面 GenerateModInfo / DeployToGame 两个目标）
+        2. tools\MdToBbcode\Program.cs 的 stdout
+        3. tools\gen-affix-overview.py 的 stdout
+    后两处是**子进程**的输出，被 Exec 原样转发进构建日志——不统一前缀的话，
+    根本看不出哪句是模组说的、哪句是 MSBuild/Rider 自带的。
+
+    统一成：  [EliteEnemies] <阶段> · <内容>
+    下面这个属性就是那个前缀；工具里的前缀是硬编码的（它们本就只服务本仓库）。
+
+    ── 为什么配置标记是「Configuration + 调试工具」两段 ──────────────────
+    ⚠ **只打 Release/Debug 会反过来误导。** 本文件顶部写明：调试工具的开关是
+    `EliteDebug` 属性，**与 Configuration 无关**（刻意不用 #if DEBUG，因为
+    dotnet build 默认就是 Debug 配置且会部署）。四种组合都真实存在：
+
+        Debug   + EliteDebug 未给  → 调试工具关   （平时一条 dotnet build）
+        Debug   + EliteDebug=true  → 调试工具开
+        Release + EliteDebug 未给  → 调试工具关   （发布）
+        Release + EliteDebug=true  → 调试工具开
+
+    最后一行就是反例：日志里只写 "Release"，看不出游戏里那份 DLL 带着 F9/F10。
+    所以两个都要打，落在**最靠前的**和**部署那一行**上——后者是"往游戏里塞了
+    什么"最该一眼看清的地方。
+  -->
+  <PropertyGroup>
+    <_EliteTag>[EliteEnemies]</_EliteTag>
+    <_EliteDebugState Condition="'$(EliteDebug)' == 'true'">调试工具开</_EliteDebugState>
+    <_EliteDebugState Condition="'$(EliteDebug)' != 'true'">调试工具关</_EliteDebugState>
+    <_EliteBuildMark>$(Configuration) · $(_EliteDebugState)</_EliteBuildMark>
+  </PropertyGroup>
+
+  <!--
     挂在 BeforeBuild 而不是 Build：MSBuild 的 Build 目标体在其依赖（CoreBuild ->
     CoreCompile）之后才执行，挂 Build 会导致生成跑在编译之后，DeployToGame 取不到它。
   -->
@@ -343,7 +379,8 @@
 
     <WriteLinesToFile File="$(_GeneratedInfoIni)" Lines="$(_TemplateText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
 
-    <Message Importance="high" Text="GenerateModInfo: 由模板生成 info.ini（version = $(Version)）" />
+    <!-- 这条是**最靠前**的自定义提示，所以兼作"本次构建是什么"的横幅 -->
+    <Message Importance="high" Text="$(_EliteTag) info.ini · 已生成（version = $(Version)）· $(_EliteBuildMark)" />
   </Target>
 
   <!--
@@ -404,7 +441,8 @@
     <Copy SourceFiles="@(_DeployCsv)" DestinationFolder="$(_ModLocDir)" />
     <Copy SourceFiles="@(_DeployLib)" DestinationFolder="$(_ModLibDir)" />
 
-    <Message Importance="high" Text="DeployToGame: -> $(_ModDir)" />
+    <!-- 部署是"往游戏里塞了什么"的那一步，配置标记在这里最有用 -->
+    <Message Importance="high" Text="$(_EliteTag) 部署 · 已同步到 $(_ModDir) · $(_EliteBuildMark)" />
   </Target>
 
   <!--

@@ -60,6 +60,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS = os.path.join(os.path.dirname(ROOT), "Docs")
 ITEM_DB = os.path.join(DOCS, "ItemDatabase原版.xlsx")
 
+# 所有输出行的前缀。**必须与 EliteEnemies.csproj 里的 _EliteTag 逐字相同**——
+# 本脚本是被构建用 Exec 拉起来的，stdout 会被原样转发进构建日志，前缀不统一
+# 就分不清哪句是模组说的、哪句是 MSBuild 自带。格式：[EliteEnemies] <阶段> · <内容>
+TAG = "[EliteEnemies]"
+
 RARITY_ZH = {"Common": "普通", "Uncommon": "罕见", "Rare": "稀有",
              "Epic": "史诗", "Legendary": "传说"}
 
@@ -329,10 +334,10 @@ def main():
     with open(out_path, "w", encoding='utf-8', newline='') as f:
         f.write("\n".join(body))
 
-    print("生成 %s（%d 条词缀，%d 行）"
-          % (out_path, len(affixes), len(body)))
+    print("%s 词缀总览 · 生成 %s（%d 条词缀，%d 行）"
+          % (TAG, out_path, len(affixes), len(body)))
     for w in warned:
-        print("  ⚠ " + w)
+        print("%s 词缀总览 · ⚠ %s" % (TAG, w))
     return 0
 
 

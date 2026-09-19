@@ -15,6 +15,14 @@ namespace MdToBbcode;
 /// </summary>
 internal static class Program
 {
+    /// <summary>
+    /// 所有输出行的前缀。**必须与 <c>EliteEnemies.csproj</c> 里的 <c>_EliteTag</c>
+    /// 逐字相同**——本工具是被构建用 <c>Exec</c> 拉起来的，它的 stdout 会被原样
+    /// 转发进构建日志，前缀不统一就分不清哪句是模组说的、哪句是 MSBuild 自带。
+    /// 统一格式：<c>[EliteEnemies] &lt;阶段&gt; · &lt;内容&gt;</c>。
+    /// </summary>
+    private const string Tag = "[EliteEnemies]";
+
     private static int Main(string[] args)
     {
         // 默认路径相对仓库根目录，即本文件所在目录的上两级
@@ -53,13 +61,13 @@ internal static class Program
             string target = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(file) + ".bbcode.txt");
             File.WriteAllLines(target, bbcode, utf8NoBom);
 
-            Console.WriteLine($"生成 {target}  ({bbcode.Count} 行)");
+            Console.WriteLine($"{Tag} 工坊简介 · 生成 {target}（{bbcode.Count} 行）");
 
             // ⚠ 这些不是"小瑕疵"：转换不出来的写法会**原样**出现在 Steam 页面上，
             //    而生成过程一切正常、没有任何报错——属于本工程最忌讳的静默失效。
             foreach (string w in warnings)
             {
-                Console.WriteLine($"  ⚠ {Path.GetFileName(file)}: {w}");
+                Console.WriteLine($"{Tag} 工坊简介 · ⚠ {Path.GetFileName(file)}: {w}");
             }
             problemCount += warnings.Count;
         }
@@ -69,12 +77,12 @@ internal static class Program
         if (problemCount > 0)
         {
             Console.WriteLine();
-            Console.WriteLine($"❌ {problemCount} 处写法转换不了（见上）。产物已生成，但**先修好再粘**。");
+            Console.WriteLine($"{Tag} 工坊简介 · ❌ {problemCount} 处写法转换不了（见上）。产物已生成，但**先修好再粘**。");
             return 1;
         }
 
         Console.WriteLine();
-        Console.WriteLine("把生成的文件内容整段复制到 Steam 创意工坊的简介栏即可。");
+        Console.WriteLine($"{Tag} 工坊简介 · 把生成的文件内容整段复制到 Steam 创意工坊的简介栏即可。");
         return 0;
     }
 
