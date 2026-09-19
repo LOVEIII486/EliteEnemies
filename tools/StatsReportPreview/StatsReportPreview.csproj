@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    开发辅助工具：在**游戏外**渲染本局统计报告。不属于模组本体，也不加入
+    EliteEnemies.sln（与 tools\MdToBbcode 同一取舍，免得 dotnet build 顺带编译它）。
+
+    用法（在仓库根目录）：
+        dotnet run 加上项目参数指向 tools\StatsReportPreview          # 版式预览 + 边界断言
+        dotnet run（同上）再加一个 check 参数                          # 只跑断言（安静）
+
+    ⚠ 上面写成"加上项目参数"而不是直接写出命令行，是**没法子**：
+      XML 注释里不允许出现连续两个减号，而那个参数名正是两个减号开头。
+      tools\MdToBbcode 的 csproj 当初也是这么绕的。
+
+    ⚠ 这里是**直接编译仓库里的源文件**，而不是引用模组 DLL——模组是 netstandard2.1
+      且引用一堆 Unity 程序集，控制台工程引用不了。而这三个文件只用到 System.*，
+      正好能原样编进来。因此它断言的是**真源码**，不是复制品。
+
+    ⚠ 只列这三个文件，**不要**改成 src\Stats\ 下的通配：那个目录还有 SessionStats.cs，
+      它是采集侧、引用 UnityEngine 与游戏类型，进来就编不过。将来若往 Stats\ 里加
+      "纯数据/纯渲染"的文件，需要手动加进来——编译失败是响的，不会静默漏测。
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- 工具只在本机跑，用当前 SDK 的 TFM 即可；与模组的 netstandard2.1 无关 -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>StatsReportPreview</AssemblyName>
+    <RootNamespace>StatsReportPreview</RootNamespace>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Stats\StatsSnapshot.cs" />
+    <Compile Include="..\..\src\Stats\StatsReport.cs" />
+    <Compile Include="..\..\src\Stats\SkipReason.cs" />
+  </ItemGroup>
+
+</Project>
