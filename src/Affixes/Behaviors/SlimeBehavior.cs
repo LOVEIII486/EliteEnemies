@@ -91,19 +91,8 @@ namespace EliteEnemies.Affixes.Behaviors
             _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
         }
 
-        // ===== TODO(临时探针)：定位"史莱姆在主机上也不跳跃" =====
-        //
-        // 跳跃是一串条件与出来的，光看日志分不出是哪一条卡住，靠猜要烧掉好几轮实机。
-        // 定位完**整段删掉**（AGENT.md §3.8：正式版不留一次性探针）。
-        // ⚠ 用 LogError 而不是 Log：联机模组把第三方的 Log/LogWarning **全吞掉**
-        //（只放行 Error），普通日志在联机局里一个字都看不到。
-        private static int s_probeCountdown = 8;
-        private static float s_nextProbeTime;
-
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            ProbeJumpGate(character);
-
             if (_health == null || _health.IsDead) return;
 
             // 1. 动态体型和伤害更新
@@ -120,48 +109,6 @@ namespace EliteEnemies.Affixes.Behaviors
                 PerformJump();
                 _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
             }
-        }
-
-        /// <summary>TODO(临时探针)：把跳跃的每一个门槛值打出来（每 2 秒一条，最多 8 条）。</summary>
-        private void ProbeJumpGate(CharacterMainControl character)
-        {
-            if (s_probeCountdown <= 0) return;
-            if (Time.unscaledTime < s_nextProbeTime) return;
-
-            s_probeCountdown--;
-            s_nextProbeTime = Time.unscaledTime + 2f;
-
-            float hp = _health != null ? _health.CurrentHealth : -1f;
-            float maxHp = _health != null ? _health.MaxHealth : -1f;
-
-            bool onGround = false;
-            bool slowY = false;
-            float velY = 0f;
-            if (_movementControl != null)
-            {
-                onGround = _movementControl.IsOnGround;
-                velY = _movementControl.Velocity.y;
-                slowY = Mathf.Abs(velY) < 0.1f;
-            }
-
-            string rayInfo = "n/a";
-            float scaleX = -1f;
-            if (character != null)
-            {
-                scaleX = character.transform.localScale.x;
-                var origin = character.transform.position + Vector3.up;
-                bool blocked = Physics.Raycast(origin, Vector3.up, out RaycastHit hit, MaxJumpHeightCheck, _obstacleMask);
-                rayInfo = blocked ? $"{hit.distance:0.##}({hit.collider?.name})" : "clear";
-            }
-
-            Debug.LogError($"[EliteEnemies.SlimeProbe] 血量={hp:0.#}/{maxHp:0.#}" +
-                           $"（比例 {(maxHp > 0f ? hp / maxHp : -1f):0.###}，门槛 {NoJumpHealthThreshold}）" +
-                           $" 死亡={_health != null && _health.IsDead}" +
-                           $" 移动组件={_movementControl != null} ecm2={_ecm2Movement != null}" +
-                           $" onGround={onGround} velY={velY:0.###} 落地判定={IsGrounded()}" +
-                           $"（{onGround}/{slowY}） 头顶射线={rayInfo}" +
-                           $" 距下次跳跃={_nextJumpTime - Time.time:0.##}s" +
-                           $" 缩放={scaleX:0.##}");
         }
 
         private void UpdateScaleAndDamage(CharacterMainControl character, float healthPercent)
