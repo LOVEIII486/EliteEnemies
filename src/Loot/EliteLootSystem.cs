@@ -117,8 +117,9 @@ namespace EliteEnemies.Loot
             // 获取惩罚参数
             GetEnemyPenalty(charName, out float dropPenalty, out int qualityDowngrade);
 
-            // 预先扩容（防止格子不够）
-            PreExpandInventory(lootbox.Inventory, affixes);
+            // （这里原先有一次「预先扩容」：按 `2 + 2×词条数` 估一个值把箱子撑大。
+            //   已删除——理由见 AddToLootbox 的注释：那个估法与词条表里的实际掉落配置无关，
+            //   而箱子的基数**并不固定**。现在容量跟着实际件数长。）
 
             if (Verbose) Debug.Log($"{LogTag} >>> 开始处理 [{charName}] 的掉落 (词缀数:{affixes.Count}) | 掉率修正:{dropPenalty:P0} | 全局倍率:{GlobalDropRate:F1} | 品质偏好:{helper.qualityBiasPower:F1}");
 
@@ -133,6 +134,9 @@ namespace EliteEnemies.Loot
             {
                 ProcessRarityBonusLoot(lootbox, affixes, charName, dropPenalty, qualityDowngrade);
             }
+
+            // 收尾：留一个空格。"满格"因此成为**异常信号**——正常状态下不该出现。
+            EnsureOneSpareSlot(lootbox.Inventory);
         }
 
         /// <summary>
@@ -330,8 +334,8 @@ namespace EliteEnemies.Loot
             // 核心逻辑：添加第一个
             item.Detach();
             item.FromInfoKey = sourceKey;
-            lootbox.Inventory.AddAndMerge(item, 0);
-            
+            AddToLootbox(lootbox, item, sourceKey);
+
             // 如果数量 > 1，复制剩余的
             for (int i = 1; i < count; i++)
             {
@@ -341,7 +345,7 @@ namespace EliteEnemies.Loot
                     clone.Initialize();
                     clone.FromInfoKey = sourceKey;
                     clone.Detach();
-                    lootbox.Inventory.AddAndMerge(clone, 0);
+                    AddToLootbox(lootbox, clone, sourceKey);
                 }
             }
             
@@ -414,18 +418,67 @@ namespace EliteEnemies.Loot
             }
         }
 
-        private static void PreExpandInventory(Inventory inventory, List<string> affixes)
+        /// <summary>
+        /// 往战利品箱里放一件东西，**放不下才按需扩容再试一次**。
+        ///
+        /// <para><b>它取代的旧做法是"开掉前先估一个数把箱子撑大"</b>
+        /// （<c>SetCapacity(Capacity + estimate)</c>，estimate = <c>2 + 2×词条数</c> × 倍率）。
+        /// 那个做法有两个问题：</para>
+        /// <list type="number">
+        /// <item><b>估法与词条表里的实际掉落配置毫无关系</b>，是猜的。猜小了照样吞掉落，
+        /// 猜大了就是把箱子撑大——而它本来是为了"确保放得下"才写的。</item>
+        /// <item><b>箱子的基数并不固定。</b>游戏的建箱路径是
+        /// 「先临时 <c>SetCapacity(512)</c> 把尸体身上的东西全塞进去，再加完**收紧**到
+        /// <c>Mathf.Max(8, 最后一件物品的位置 + 1)</c>」（<c>InteractableLootbox.cs:357,411-413</c>）
+        /// ⇒ 常见的敌人箱子只有 8~十几格。而本模组的补丁跑在那个收紧**之后**，
+        /// 于是旧写法是在"实际需要"之上再加一个猜的数：10 格的箱子会被撑到 16 或 46。</item>
+        /// </list>
+        ///
+        /// <para>改成按需扩之后，容量**只跟着实际件数长**：放得下就一个字节都不动，
+        /// 放不下才 +1，而且只加真正需要的那一格。掉落件数随掉率倍率放大时自动跟随，
+        /// 不需要任何估算常量跟着改。</para>
+        ///
+        /// <para>⚠ 这同时补上了一个**静默吞掉落**的洞：<c>AddAndMerge</c> 在没空格时
+        /// 直接 <c>return false</c> 什么也不做（<c>ItemUtilities.cs:127-155</c>），
+        /// 而旧代码两处调用都没接返回值 ⇒ 那件物品变成谁也不管的孤儿。
+        /// 现在扩容后仍失败会**打日志**。</para>
+        /// </summary>
+        private static void AddToLootbox(InteractableLootbox lootbox, Item item, string sourceKey)
         {
-            // 估算需要的格子数，避免扩容多次
-            int estimate = 2; // 基础余量 + 奖励
-            foreach(var aff in affixes) estimate += 2; // 假设每个词缀最多贡献2组
+            if (lootbox == null || item == null) return;
 
-            // 倍率现在是**判定次数**（见 RollCount），件数会按倍率放大到最多 3 倍。
-            // 估算必须跟着放大，否则倍率 > 1 时箱子可能装不下、掉落被吞掉。
-            estimate = Mathf.CeilToInt(estimate * Mathf.Max(1f, GlobalDropRate));
+            Inventory inventory = lootbox.Inventory;
+            if (inventory == null) return;
 
-            int newCap = inventory.Capacity + estimate;
-            inventory.SetCapacity(newCap);
+            if (inventory.AddAndMerge(item, 0)) return;
+
+            inventory.SetCapacity(inventory.Capacity + 1);
+            if (inventory.AddAndMerge(item, 0)) return;
+
+            Debug.LogWarning($"{LogTag} 扩容后仍放不下，丢弃一件掉落：{item.DisplayName}（来源 {sourceKey}）");
+        }
+
+        /// <summary>
+        /// 收尾：确保箱子**比实际物品数多一格**，即永远留一个空格。
+        ///
+        /// <para><b>为什么留这一格</b>：留了它，"箱子显示满是满的"就**不可能是正常状态**——
+        /// 战利品界面显示的是 <c>(件数/容量)</c>（<c>LootView.cs:43,304-312</c>），
+        /// 于是玩家（和排查问题的我们）看到 <c>(N/N)</c> 就知道**有东西被吞了**。
+        /// 否则箱子刚好装满与"掉了一件没放进去"看起来一模一样，那种失败是静默的。</para>
+        ///
+        /// <para>⚠ <b>只增不减</b>：基数可能本来就比 <c>用到的格数 + 1</c> 大——
+        /// 游戏自己有一个 <c>Mathf.Max(8, …)</c> 的下限（<c>InteractableLootbox.cs:411</c>），
+        /// 一个只装了 3 件的箱子基数就是 8。那是游戏自己的版面选择，
+        /// 本方法**不去把它收下来**，只在它不够留一格时才往上补。</para>
+        /// </summary>
+        private static void EnsureOneSpareSlot(Inventory inventory)
+        {
+            if (inventory == null) return;
+
+            // GetLastItemPosition() 是最后一个非空位的下标；+1 = 实际用到的格数，再 +1 = 留一格。
+            // 空箱子返回 -1 ⇒ wanted = 1，恒小于任何已有容量，不会误改。
+            int wanted = inventory.GetLastItemPosition() + 2;
+            if (inventory.Capacity < wanted) inventory.SetCapacity(wanted);
         }
 
         /// <summary>
