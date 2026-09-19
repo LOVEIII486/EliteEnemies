@@ -96,6 +96,22 @@ namespace EliteEnemies.Coop
 
         private const int MaxPendingVisual = 512;
 
+        /// <summary>
+        /// **主机侧**：视觉状态已到、但**这只 AI 还没进同步库**（拿不到 aiId）的那批。
+        ///
+        /// <para>⚠️ <b>为什么主机也需要暂存</b>：巨大化/迷你在
+        /// <c>OnEliteInitialized</c>（= <c>AICharacterController.Init</c> 时）就设好了体型，
+        /// 而主机侧的 <c>AiSpawned</c> 比它**晚 800ms**（那个事件本身要等 AI 初始化完）。
+        /// 也就是说：**报体型的那一刻，这只 AI 还没有 id**——原先直接丢掉，
+        /// 而这些词条**不会重报** ⇒ 客机永远看不到。</para>
+        ///
+        /// <para>与客机侧对称：等到 <see cref="OnHostSawAi"/> 拿到 id 时补发。</para>
+        /// </summary>
+        private static readonly Dictionary<CharacterMainControl, Vector3> s_hostPendingScale =
+            new Dictionary<CharacterMainControl, Vector3>();
+        private static readonly Dictionary<CharacterMainControl, bool> s_hostPendingHidden =
+            new Dictionary<CharacterMainControl, bool>();
+
         // ===== 统计 =====
         private static int s_recvTotal;
         private static int s_replicaTotal;
@@ -161,6 +177,8 @@ namespace EliteEnemies.Coop
             s_clientPending.Clear();
             s_pendingVisualScale.Clear();
             s_pendingVisualHidden.Clear();
+            s_hostPendingScale.Clear();
+            s_hostPendingHidden.Clear();
 
             // 计数器一并归零：模组停用后重新启用时，统计不该背着上一局的数据。
             s_recvTotal = 0;
@@ -251,6 +269,8 @@ namespace EliteEnemies.Coop
 
             s_hostKnown[aiId] = info;
 
+            FlushHostPendingVisual(aiId, cmc);   // 体型可能是"先于 id"报的，补上
+
             var payload = CoopWire.EncodeAffix(aiId, info.ComboId, info.Affixes);
             if (CoopApi.Broadcast(payload))
             {
@@ -330,10 +350,36 @@ namespace EliteEnemies.Coop
             if (ai == null) return false;
 
             int aiId = FindHostAiId(ai);
-            if (aiId == 0) return false;
+            if (aiId == 0)
+            {
+                // 这只 AI 还没进同步库（典型：间谍条是在 `Init` 时设的体型，
+                // 而 `AiSpawned` 要晚 800ms）。**暂存**，等 `OnHostSawAi` 拿到 id 再补发——
+                // 那些词条不会重报，丢了就是永久丢。
+                if (s_hostPendingScale.Count < MaxPendingVisual)
+                {
+                    s_hostPendingScale[ai] = scale;
+                    s_hostPendingHidden[ai] = hidden;
+                }
+
+                return true;
+            }
 
             CoopApi.Broadcast(CoopWire.EncodeEliteVisual(aiId, scale, hidden));
             return true;
+        }
+
+        /// <summary>主机侧：这只 AI 刚拿到 id，把它之前暂存的视觉状态补发出去。</summary>
+        private static void FlushHostPendingVisual(int aiId, CharacterMainControl ai)
+        {
+            if (!s_hostPendingScale.TryGetValue(ai, out var scale)) return;
+
+            s_hostPendingScale.Remove(ai);
+            s_hostPendingHidden.TryGetValue(ai, out bool hidden);
+            s_hostPendingHidden.Remove(ai);
+
+            CoopApi.Broadcast(CoopWire.EncodeEliteVisual(aiId, scale, hidden));
+            CoopLog.Info($"[主机] 补发精英视觉 aiId={aiId} 缩放={scale.x:0.00} 隐藏={hidden}" +
+                         "（它是在拿到 id 之前报的）");
         }
 
         // ==================== 客户端侧 ====================
