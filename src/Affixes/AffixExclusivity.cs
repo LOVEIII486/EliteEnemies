@@ -32,6 +32,10 @@ namespace EliteEnemies.Affixes
             //   `character.PopText(...)`（`TalkativeBehavior.cs:82`），**绕过 `canTalk`**，
             //   所以拟态那套"伪装期间闭嘴"的压制对它无效；两者只会在玩家贴脸时互相拆台。
             ["Mimic"] = new HashSet<string> { "MimicTear", "Split", "ChickenBro", "MandarinDuck", "Guardian","Giant","Slime","Reflect", "Talkative" },
+            // ItemMimic：= Mimic 那一行的成员 **+ "Mimic" 自身**。
+            //   两个伪装词条同时出现会互抢 Hide()/Show() 与血条闸门 ⇒ 敌人半隐半现。
+            //   其余成员的理由与 Mimic 完全相同（那条的注释在上面），Talkative 尤其不能少。
+            ["ItemMimic"] = new HashSet<string> { "Mimic", "MimicTear", "Split", "ChickenBro", "MandarinDuck", "Guardian","Giant","Slime","Reflect", "Talkative" },
         };
 
     /// <summary>

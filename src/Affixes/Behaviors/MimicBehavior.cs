@@ -186,9 +186,16 @@ namespace EliteEnemies.Affixes.Behaviors
         /// 身上的伪装，两者永远不该碰撞，否则非运动学的箱子会被角色的胶囊体顶走、两者分家。</item>
         /// </list>
         ///
-        /// <para>⚠ 子弹**不会**被箱子挡住：弹道只考虑
-        /// <c>Layers.damageReceiverLayerMask</c>（<c>Projectile.cs:361</c>），
-        /// 而箱子的交互碰撞体不在那一层 ⇒ 玩家打箱子照样打到角色的伤害接收器。</para>
+        /// <para>⚠ 子弹**不会**被箱子挡住：弹道射线只打 <c>hitLayers</c>
+        /// （<c>Projectile.cs:143</c> = damageReceiver ∪ wall ∪ ground ∪ blockBullet），
+        /// 而箱子的交互碰撞体在 "Interactable" 层、不在其中
+        /// ⇒ 玩家打箱子照样打到角色的伤害接收器。</para>
+        ///
+        /// <para>⚠ <b>本注释原先写的是「弹道只考虑 <c>damageReceiverLayerMask</c>（<c>Projectile.cs:361</c>）」，
+        /// 两处都不对</b>：<c>:361</c> 是判断"命中的是不是伤害接收器"的**分支处**，真正的射线掩码在
+        /// <c>:143</c>，而且**含 ground**。对箱子结论不变（箱子的碰撞体不在其中任何一个掩码里），
+        /// 但**贴地的生成物**会踩在这上面——见 <see cref="ItemMimicBehavior"/>：把伪装物放平在地上，
+        /// 对着它开枪就可能被地面先吃掉弹道。</para>
         /// </summary>
         private void SpawnTrapBox(CharacterMainControl character)
         {
