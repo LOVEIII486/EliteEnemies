@@ -19,6 +19,16 @@ namespace EliteEnemies.Core
         public void SetCombo(EliteComboDefinition combo) => _combo = combo;
 
         /// <summary>
+        /// combo 精英的 combo id（<see cref="EliteComboDefinition.ComboId"/>）；非 combo 精英为 <c>null</c>。
+        ///
+        /// <para>存在的理由是**联机同步**：combo 的显示名由定义现算（见
+        /// <see cref="CustomDisplayName"/>），所以网络上要传的是**id**而不是那个串——
+        /// 客户端拿到 id 后自己查回定义，称号才会跟着客户端那门语言走。
+        /// 传渲染好的字符串就等于把当时那门语言焊死了（本工程在本地化上栽过同一类问题）。</para>
+        /// </summary>
+        public string ComboId => _combo?.ComboId;
+
+        /// <summary>
         /// combo 精英的显示名（带色号）；非 combo 精英返回 null。
         ///
         /// <para><b>存 combo 定义、现算名字，而不是存生成时那一刻的字符串快照。</b>

@@ -76,6 +76,16 @@ namespace EliteEnemies.Loot
             {
                 if (lootbox == null || item == null) return;
 
+                // 0. **本机必须是精英逻辑的权威**（联机客户端不是）。
+                //
+                // 第 1 期起客户端会给复制体挂 EliteMarker（那是**显示**用的），
+                // 于是这道校验会通过——若不加这层闸门，客户端就会把自己那口箱子里
+                // 也注入一份精英掉落，与主机同步下来的箱子**重复**。
+                //
+                // 掉落由主机权威生成、经联机模组同步，客户端只该展示。
+                // 判据是一个静态 bool，单机与主机下恒为 true ⇒ 此处零行为变化。
+                if (!EliteEnemyCore.IsEliteAuthority) return;
+
                 // 1. 校验精英身份（角色的反查已由调用方统一完成）
                 if (character == null) return;
 

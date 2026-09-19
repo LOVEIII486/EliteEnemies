@@ -54,6 +54,7 @@ namespace EliteEnemies.Coop
         private static Action<byte[]> _broadcast;
         private static Action<byte[]> _sendToServer;
         private static Func<bool> _isServer;
+        private static Func<bool> _networkStarted;
         private static IDisposable _messageSubscription;
         private static EventInfo _aiSpawnedEvent;
         private static Action<int, CharacterMainControl> _aiSpawnedHandler;
@@ -63,6 +64,16 @@ namespace EliteEnemies.Coop
 
         /// <summary>本端是不是主机（服务器）。未激活时恒为 false。</summary>
         public static bool IsServer => Active && _isServer != null && _isServer();
+
+        /// <summary>
+        /// 联机是否**真的已启动**（开了房或进了房）。未激活、或激活了但没开始联机时恒为 false。
+        ///
+        /// <para>⚠ <b>这个区分很要紧</b>：玩家<b>装了联机模组却自己单机玩</b>时，
+        /// <c>NetService.IsServer</c> 也是 <c>false</c>（从没 <c>StartNetwork</c> 过）。
+        /// 若只按 <c>IsServer</c> 判断"是不是客户端"，就会把单机玩家误判成客户端，
+        /// 进而<b>关掉他全部精英</b>——一个不报错、不留日志的静默失效。</para>
+        /// </summary>
+        public static bool NetworkStarted => Active && _networkStarted != null && _networkStarted();
 
         /// <summary>
         /// 启动接入。**幂等**，可安全重复调用。
@@ -143,6 +154,7 @@ namespace EliteEnemies.Coop
             _broadcast = null;
             _sendToServer = null;
             _isServer = null;
+            _networkStarted = null;
             Active = false;
             _mismatchReported = false;
 
@@ -298,6 +310,7 @@ namespace EliteEnemies.Coop
         {
             // 1) 主机/客户端角色判断
             _isServer = BuildIsServerProbe(netService);
+            _networkStarted = BuildNetworkStartedProbe(netService);
 
             // 2) 发送通道——主机用 Broadcast（一对多），客户端用 SendToServer（一对一）
             var broadcastMethod = FindSenderMethod(netApi, "Broadcast", 3);
@@ -356,6 +369,38 @@ namespace EliteEnemies.Coop
             if (field != null) return () => field.GetValue(null);
 
             throw new MissingMemberException(type.FullName, name);
+        }
+
+        /// <summary>
+        /// <c>NetService.networkStarted</c> 的取值探针——**用它是为了把"装了联机模组但单机玩"
+        /// 与"真的在联机局里当客户端"区分开**，见 <see cref="NetworkStarted"/>。
+        ///
+        /// <para>实测该成员在 <c>Main/NetService.cs:42</c> 是 <c>public bool networkStarted;</c>
+        /// （**字段**），同文件 <c>:67</c> 另有一个 <c>NetworkStarted</c> 属性转发它。
+        /// 两个都试，取到哪个都行。</para>
+        /// </summary>
+        private static Func<bool> BuildNetworkStartedProbe(Type netServiceType)
+        {
+            var getInstance = BuildStaticMemberGetter(netServiceType, "Instance");
+            var getStarted = BuildInstanceBoolGetter(netServiceType, "NetworkStarted", "networkStarted");
+
+            return () =>
+            {
+                var service = getInstance();
+                return service != null && getStarted(service);
+            };
+        }
+
+        /// <summary>取实例 bool 成员的读取器：先找属性，再找字段。两者都接受，理由同 <see cref="BuildStaticMemberGetter"/>。</summary>
+        private static Func<object, bool> BuildInstanceBoolGetter(Type type, string propertyName, string fieldName)
+        {
+            var property = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            if (property != null) return target => (bool)property.GetValue(target);
+
+            var field = type.GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
+            if (field != null) return target => (bool)field.GetValue(target);
+
+            throw new MissingMemberException(type.FullName, $"{propertyName} / {fieldName}");
         }
 
         /// <summary>取实例成员的读取器。字段与属性都接受，理由同上。</summary>

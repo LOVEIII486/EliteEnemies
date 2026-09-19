@@ -1,26 +1,40 @@
 using System;
 using System.Collections.Generic;
+using EliteEnemies.Combos;
 using EliteEnemies.Core;
 using UnityEngine;
 
 namespace EliteEnemies.Coop
 {
+    /// <summary>主机侧广播的一只精英。</summary>
+    internal sealed class EliteInfo
+    {
+        /// <summary>combo id；非 combo 精英为 null。</summary>
+        public string ComboId;
+
+        public List<string> Affixes;
+    }
+
     /// <summary>
-    /// 精英词条的联机同步——**第 0 期：验证链路与时机，尚不改变任何游戏行为**。
+    /// 精英词条的联机同步。
     ///
-    /// <para><b>本期的产出是什么</b>：证明「主机侧精英化 → 词条清单到达客户端」这条链是通的，
-    /// 并回答两个决定第 1 期写法的问题——</para>
+    /// <para><b>心智模型</b>：主机是**精英逻辑的唯一权威**——它掷骰、它决定掉落；
+    /// 客户端只做两件事：<b>别自己判定</b>（<see cref="EliteEnemyCore.IsEliteAuthority"/> 为 false），
+    /// 以及<b>把主机说的结果显示出来</b>。完整依据见
+    /// <c>docs\联机兼容可行性分析.md</c>。</para>
     ///
-    /// <list type="number">
-    /// <item><b>复制体与词条哪个先到？</b>决定第 1 期要不要在"词条先到"时排队等待。
-    /// 两种顺序都要能应付，但代价不同。</item>
-    /// <item><b>客户端会不会自己掷出精英？</b>联机模组在 <c>Base</c> 场景
-    /// <b>不拦截刷怪器</b>（<c>Patch/Scene/AIPatch.cs:38-39</c>），于是客户端的本地刷怪
-    /// 照常走 <c>AICharacterController.Init</c>，本模块的精英化补丁<b>照样触发</b>——
-    /// 两端各自随机，结果不同。这是<b>实测已确认</b>的隐性分叉，第 1 期必须堵掉。</item>
-    /// </list>
+    /// <para><b>顺序无关</b>：词条与 AI 复制体是两条独立到达的异步链，
+    /// 谁先到都有可能。所以两边各自只<b>记录</b>，每次记录后都试着<b>配对</b>——
+    /// 两边都在了就应用。不假设任何顺序。</para>
     ///
-    /// <para>客户端本期**只记录、不应用**；应用是第 1 期的事。</para>
+    /// <para><b>客户端应用什么</b>：挂一个带正确 <c>Affixes</c>/combo 的
+    /// <see cref="EliteMarker"/>。这一个动作就够让客机"看起来像精英"——血条标签
+    /// 与配色都读它（<c>Visuals\EliteHealthBarUI.cs</c>、<c>Patches\HealthBarPatches.cs</c>），
+    /// 而且血条 UI **专门为"标记晚挂上"留了 0.5 秒重查窗口**，正好是客户端的情形。</para>
+    ///
+    /// <para><b>客户端应用不了什么</b>：词条的<b>行为</b>（发光、体型、技能）本轮不跑。
+    /// 客户端的复制体是"哑"的（NavMeshAgent 与 AICharacterController 都被禁用），
+    /// 让行为在客户端跑会与主机分叉。那需要一个「权威归属」轴，是下一步的事。</para>
     /// </summary>
     internal static class CoopEliteSync
     {
@@ -29,7 +43,7 @@ namespace EliteEnemies.Coop
         /// 老客户端不会再收到它解不了的东西（联机模组的频道分发是精确匹配的）。
         /// 与 <see cref="CoopWire.ProtocolVersion"/> 是两道独立的闸门，冗余但便宜。
         /// </summary>
-        public const string ChannelName = "eliteenemies:v2/elite";
+        public const string ChannelName = "eliteenemies:v3/elite";
 
         /// <summary>向主机请求全量快照的最小间隔——避免每只怪都问一次。</summary>
         private const float QueryCooldown = 2f;
@@ -44,34 +58,52 @@ namespace EliteEnemies.Coop
         private const int MaxReplicaIdsLogged = 50;
 
         // ===== 主机侧 =====
-        private static readonly Dictionary<int, List<string>> s_hostKnown = new Dictionary<int, List<string>>();
+        private static readonly Dictionary<int, EliteInfo> s_hostKnown = new Dictionary<int, EliteInfo>();
 
-        // ===== 客户端侧 =====
-        private static readonly Dictionary<int, List<string>> s_clientAffixes = new Dictionary<int, List<string>>();
-        private static readonly HashSet<int> s_clientReplicas = new HashSet<int>();
+        /// <summary>客户端：复制体 id → 角色。**要存角色引用**——应用标记时得拿到它。</summary>
+        private static readonly Dictionary<int, CharacterMainControl> s_clientReplicas =
+            new Dictionary<int, CharacterMainControl>();
 
-        // ===== 统计（回答上面那两个问题）=====
+        /// <summary>客户端：词条已到、但复制体还没到的那批（等复制体来了再应用）。</summary>
+        private static readonly Dictionary<int, EliteInfo> s_clientPending = new Dictionary<int, EliteInfo>();
+
+        // ===== 统计 =====
         private static int s_recvTotal;
         private static int s_replicaTotal;
         private static int s_affixBeforeReplica;    // 配对：词条先到（复制体后建）
-        private static int s_replicaFirst;          // 配对：复制体先到（词条后到）★ 第 1 期要处理的那种
+        private static int s_replicaFirst;          // 配对：复制体先到（词条后到）
         private static int s_replicaNoAffixYet;     // 复制体出现时尚无词条——**多数只是非精英**，不是顺序
         private static int s_paired;
-        private static int s_localEliteDivergence;  // 客户端自己掷出精英的次数
-        private static int s_replicaIdsLogged;      // 已逐条记录的复制体 id 数
+        private static int s_applied;
+        private static int s_localEliteDivergence;  // 客户端自己掷出精英的次数（应为 0）
+        private static int s_replicaIdsLogged;
 
         private static float s_lastQueryTime = -999f;
         private static float s_lastSummaryTime;
         private static bool s_summarySeeded;
 
-        /// <summary>
-        /// 通道就绪后的启动。探针的输出全部走 <see cref="CoopLog"/> 的文件，不再进 <c>Player.log</c>。
-        /// </summary>
+        /// <summary>通道就绪后的启动。诊断输出全部走 <see cref="CoopLog"/> 的文件。</summary>
         public static void Initialize()
         {
             CoopDiag.Install();
             CoopStallWatch.Install();
             CoopLog.Announce();
+
+            // ★ 交出/收回「精英逻辑权威」——客户端不再自己判定精英、也不再注入精英掉落。
+            //
+            // ⚠ **三个条件缺一不可**：只在"联机真的已启动 **且** 本端不是主机"时才交出权威。
+            //   少写 `!NetworkStarted` 那一项就会踩到：玩家**装了联机模组却自己单机玩**时
+            //   `IsServer` 同样是 false（从没 StartNetwork 过），于是精英会被全部关掉——
+            //   不报错、不留日志。这是本工程最忌的那类静默失效。
+            //
+            //   用委托而不是缓存 bool：身份在会话中会变（联机模组的 StartNetwork/StopNetwork）。
+            EliteEnemyCore.EliteAuthorityOverride =
+                () => !CoopApi.Active || !CoopApi.NetworkStarted || CoopApi.IsServer;
+
+            CoopLog.Info($"[启动] 联机已启动={CoopApi.NetworkStarted} 本端角色=" +
+                         $"{(CoopApi.IsServer ? "主机" : "客户端")}；" +
+                         $"精英逻辑权威={EliteEnemyCore.IsEliteAuthority}" +
+                         (EliteEnemyCore.IsEliteAuthority ? string.Empty : "（本机将不自行判定精英）"));
 
             s_lastSummaryTime = Time.unscaledTime;
             s_summarySeeded = true;
@@ -80,12 +112,15 @@ namespace EliteEnemies.Coop
         public static void Shutdown()
         {
             LogSummary("停机");
+
+            EliteEnemyCore.EliteAuthorityOverride = null;
+
             CoopStallWatch.Uninstall();
             CoopDiag.Uninstall();
 
             s_hostKnown.Clear();
-            s_clientAffixes.Clear();
             s_clientReplicas.Clear();
+            s_clientPending.Clear();
         }
 
         /// <summary>
@@ -100,14 +135,11 @@ namespace EliteEnemies.Coop
         {
             if (!cmc) return;
 
-            if (CoopApi.IsServer)
-            {
-                OnHostSawAi(aiId, cmc);
-                return;
-            }
-
-            OnClientSawReplica(aiId, cmc);
+            if (CoopApi.IsServer) OnHostSawAi(aiId, cmc);
+            else OnClientSawReplica(aiId, cmc);
         }
+
+        // ==================== 主机侧 ====================
 
         private static void OnHostSawAi(int aiId, CharacterMainControl cmc)
         {
@@ -124,12 +156,19 @@ namespace EliteEnemies.Coop
                 s_hostKnown.Clear();
             }
 
-            s_hostKnown[aiId] = new List<string>(affixes);
+            var info = new EliteInfo
+            {
+                ComboId = marker.ComboId,
+                Affixes = new List<string>(affixes)
+            };
 
-            var payload = CoopWire.EncodeAffix(aiId, affixes);
+            s_hostKnown[aiId] = info;
+
+            var payload = CoopWire.EncodeAffix(aiId, info.ComboId, info.Affixes);
             if (CoopApi.Broadcast(payload))
             {
-                CoopLog.Info($"[主机] 广播精英 aiId={aiId} 词条=[{string.Join(",", affixes)}]");
+                CoopLog.Info($"[主机] 广播精英 aiId={aiId} " +
+                             $"combo={info.ComboId ?? "-"} 词条=[{string.Join(",", info.Affixes)}]");
             }
             else
             {
@@ -138,55 +177,185 @@ namespace EliteEnemies.Coop
             }
         }
 
-        private static void OnClientSawReplica(int aiId, CharacterMainControl cmc)
+        private static void AnswerQuery()
         {
-            s_replicaTotal++;
-            s_clientReplicas.Add(aiId);
+            var ids = new List<int>(s_hostKnown.Count);
+            var combos = new List<string>(s_hostKnown.Count);
+            var affixes = new List<List<string>>(s_hostKnown.Count);
 
-            // ★ 分叉检测：客户端身上有 EliteMarker ⇒ 它自己掷过骰了。
-            //   客户端的复制体不该带标记（它走 CreateCharacter，不经过 Init），
-            //   所以一旦有标记，就说明本机走了游戏自己的刷怪路径（Base 场景即如此）。
-            bool locallyElite = cmc.GetComponent<EliteMarker>() != null;
-            if (locallyElite)
+            foreach (var pair in s_hostKnown)
             {
-                s_localEliteDivergence++;
-                CoopLog.Warn($"[客户端] ⚠ 本机自行掷出了精英 aiId={aiId}" +
-                             "——Base 场景不拦截刷怪器，两端会各自随机、结果不一致");
+                ids.Add(pair.Key);
+                combos.Add(pair.Value.ComboId);
+                affixes.Add(pair.Value.Affixes);
             }
 
-            if (s_clientAffixes.TryGetValue(aiId, out var affixes))
+            var payload = CoopWire.EncodeBatch(ids, combos, affixes);
+            if (CoopApi.Broadcast(payload))
             {
-                s_paired++;
-                s_affixBeforeReplica++;
-                CoopLog.Info($"[客户端] 配对成功（**词条先到**）aiId={aiId} " +
-                             $"词条=[{string.Join(",", affixes)}]");
+                CoopLog.Info($"[主机] 已回应全量请求：{ids.Count} 只精英（{payload.Length} 字节）");
             }
             else
             {
-                // ⚠ 这一条**不能读作"复制体先到"**：绝大多数 AI 本来就不是精英，
-                //   它们永远不会有词条。所以只记"复制体出现在词条之前"这件事本身。
-                s_replicaNoAffixYet++;
-
-                // 把复制体 id 记下来（前若干个），好与主机的广播 id 离线核对——
-                // 否则"有没有精英复制体"这个问题只能靠猜。id 是 int，几十行不占地方。
-                if (s_replicaIdsLogged < MaxReplicaIdsLogged)
-                {
-                    s_replicaIdsLogged++;
-                    CoopLog.Info($"[客户端] 复制体就绪 aiId={aiId}（此刻尚无词条）");
-                }
-                else if (s_replicaIdsLogged == MaxReplicaIdsLogged)
-                {
-                    s_replicaIdsLogged++;
-                    CoopLog.Info($"[客户端] 复制体 id 已记满 {MaxReplicaIdsLogged} 个，后续不再逐条记录");
-                }
-
-                RequestFullSnapshot($"复制体 aiId={aiId} 尚无词条");
+                CoopLog.Warn("[主机] 全量回应广播失败——联机可能尚未就绪");
             }
+        }
+
+        // ==================== 客户端侧 ====================
+
+        private static void OnClientSawReplica(int aiId, CharacterMainControl cmc)
+        {
+            s_replicaTotal++;
+            s_clientReplicas[aiId] = cmc;
+
+            // 分叉检测：客户端复制体**不该**带 EliteMarker（它走 CreateCharacter，不经过 Init）。
+            // 带了就说明本机走了游戏自己的刷怪路径（Base 场景即如此），两端会各自随机。
+            // 第 1 期起 IsEliteAuthority 会在客户端为 false，这条应当归零——不归零就是真有漏网。
+            if (cmc.GetComponent<EliteMarker>() != null)
+            {
+                s_localEliteDivergence++;
+                CoopLog.Warn($"[客户端] ⚠ 本机自行掷出了精英 aiId={aiId}" +
+                             "——「精英逻辑权威」的闸门没挡住，请检查 EliteAuthorityOverride");
+            }
+
+            if (s_clientPending.ContainsKey(aiId)) s_affixBeforeReplica++;
+            else s_replicaNoAffixYet++;
+
+            if (s_replicaIdsLogged < MaxReplicaIdsLogged)
+            {
+                s_replicaIdsLogged++;
+                CoopLog.Info($"[客户端] 复制体就绪 aiId={aiId}");
+            }
+
+            TryApply(aiId);
+            if (!s_clientPending.ContainsKey(aiId)) RequestFullSnapshot($"复制体 aiId={aiId} 尚无词条");
 
             MaybeLogSummary();
         }
 
-        /// <summary>收到本模块频道上的报文。</summary>
+        private static void RecordOnClient(int aiId, string comboId, List<string> affixes, string via, bool quiet = false)
+        {
+            s_recvTotal++;
+
+            var info = new EliteInfo { ComboId = comboId, Affixes = affixes };
+
+            if (s_clientReplicas.ContainsKey(aiId))
+            {
+                s_paired++;
+                s_replicaFirst++;
+                CoopLog.Info($"[客户端] 配对（**复制体先到**）aiId={aiId} " +
+                             $"combo={comboId ?? "-"} 词条=[{string.Join(",", affixes)}]（{via}）");
+            }
+            else
+            {
+                s_clientPending[aiId] = info;
+                if (!quiet)
+                {
+                    CoopLog.Info($"[客户端] 收到词条（复制体尚未生成）aiId={aiId} " +
+                                 $"combo={comboId ?? "-"} 词条=[{string.Join(",", affixes)}]（{via}）");
+                }
+            }
+
+            TryApply(aiId);
+            MaybeLogSummary();
+        }
+
+        /// <summary>
+        /// **顺序无关的配对点**：两边都在了就应用。任何一边到达后都调它。
+        /// 用的是"检查另一边在不在"，所以不依赖任何到达顺序。
+        ///
+        /// <para><b>幂等性靠"看目标对象的实际状态"，不靠记 id。</b>
+        /// 复制体是**可能被销毁重建**的（换场景、激活门控来回切），
+        /// 若按 id 记账，重建出来的新对象就再也挂不上标记——而且是静默的。
+        /// 所以这里每次都去查那个角色身上有没有"内容正确的"标记。</para>
+        /// </summary>
+        private static void TryApply(int aiId)
+        {
+            if (!s_clientReplicas.TryGetValue(aiId, out var cmc)) return;
+            if (!s_clientPending.TryGetValue(aiId, out var info)) return;
+            if (!cmc)
+            {
+                // 复制体已被销毁——清掉引用，等重建后由 OnClientSawReplica 再进来。
+                s_clientReplicas.Remove(aiId);
+                return;
+            }
+
+            try
+            {
+                var existing = cmc.GetComponent<EliteMarker>();
+                if (existing != null && MarkerMatches(existing, info)) return;   // 已经是这个内容了
+
+                ApplyEliteMarker(cmc, info);
+                s_applied++;
+                CoopLog.Info($"[客户端] 已应用精英标记 aiId={aiId} " +
+                             $"combo={info.ComboId ?? "-"} 词条=[{string.Join(",", info.Affixes)}]");
+            }
+            catch (Exception ex)
+            {
+                // 应用失败就**说出来**。不记账 ⇒ 下次事件还会再试。
+                CoopLog.Warn($"[客户端] 应用精英标记失败 aiId={aiId}: {ex}");
+            }
+        }
+
+        /// <summary>标记的内容是否已经是目标内容（词条集合与 combo 都一致）。</summary>
+        private static bool MarkerMatches(EliteMarker marker, EliteInfo info)
+        {
+            if (marker.Affixes == null || marker.Affixes.Count != info.Affixes.Count) return false;
+            for (int i = 0; i < info.Affixes.Count; i++)
+            {
+                if (!string.Equals(marker.Affixes[i], info.Affixes[i], StringComparison.Ordinal))
+                    return false;
+            }
+
+            return string.Equals(marker.ComboId ?? string.Empty,
+                                 info.ComboId ?? string.Empty, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// 客户端把"这只是精英"显示出来——**只挂标记，不跑任何词条行为**。
+        ///
+        /// <para><see cref="EliteMarker.BaseName"/> 由本机现算（<c>ResolveBaseName</c> 只依赖
+        /// 本地预设与本地化），**不需要过网**——传渲染好的字符串会把语言焊死。</para>
+        /// </summary>
+        private static void ApplyEliteMarker(CharacterMainControl cmc, EliteInfo info)
+        {
+            var marker = cmc.GetComponent<EliteMarker>();
+            if (marker == null) marker = cmc.gameObject.AddComponent<EliteMarker>();
+
+            marker.BaseName = EliteEnemyCore.ResolveBaseName(cmc);
+            marker.Affixes = new List<string>(info.Affixes);
+
+            if (!string.IsNullOrEmpty(info.ComboId))
+            {
+                var combo = FindCombo(info.ComboId);
+                if (combo != null)
+                {
+                    marker.SetCombo(combo);
+                }
+                else
+                {
+                    // 找不到就**说出来**：这几乎总是"两端词条表不一致"，不是本机的问题。
+                    CoopLog.Warn($"[客户端] 找不到 combo '{info.ComboId}'——两端词条表可能不一致，" +
+                                 "该精英将只显示词条标签而不显示 combo 称号");
+                }
+            }
+        }
+
+        private static EliteComboDefinition FindCombo(string comboId)
+        {
+            var pool = EliteComboRegistry.ComboPool;
+            for (int i = 0; i < pool.Count; i++)
+            {
+                var combo = pool[i];
+                if (combo != null && string.Equals(combo.ComboId, comboId, StringComparison.Ordinal))
+                    return combo;
+            }
+
+            return null;
+        }
+
+        // ==================== 收包 ====================
+
         public static void OnNetworkMessage(ReadOnlyMemory<byte> payload, bool isServer)
         {
             if (!CoopWire.TryDecode(payload.Span, out var message, out string failure))
@@ -199,83 +368,23 @@ namespace EliteEnemies.Coop
             switch (message.Kind)
             {
                 case CoopWire.Kind.Query:
-                    // 只有主机能回答。客户端收到 Query（不该发生）时不理会。
-                    if (isServer) AnswerQuery();
+                    if (isServer) AnswerQuery();   // 只有主机能回答
                     break;
 
                 case CoopWire.Kind.Affix:
+                    if (!isServer) RecordOnClient(message.AiId, message.ComboId, message.Affixes, "单条");
+                    break;
+
                 case CoopWire.Kind.Batch:
-                    // 主机收到的 Affix/Batch 是自己广播的回环（Broadcast 的 includeServer 默认 true），
-                    // 主机身上没有复制体，无需处理。
-                    if (!isServer) ApplyOnClient(message);
+                    if (isServer) break;
+                    CoopLog.Info($"[客户端] 收到全量快照：{message.BatchIds.Count} 只精英");
+                    for (int i = 0; i < message.BatchIds.Count; i++)
+                    {
+                        RecordOnClient(message.BatchIds[i], message.BatchComboIds[i],
+                                       message.BatchAffixes[i], "全量", quiet: true);
+                    }
                     break;
             }
-        }
-
-        // ===== 主机：回答全量请求 =====
-
-        private static void AnswerQuery()
-        {
-            if (s_hostKnown.Count == 0)
-            {
-                CoopLog.Info("[主机] 客户端请求全量，但当前没有已知精英，回空表");
-            }
-
-            var ids = new List<int>(s_hostKnown.Count);
-            var affixes = new List<List<string>>(s_hostKnown.Count);
-            foreach (var pair in s_hostKnown)
-            {
-                ids.Add(pair.Key);
-                affixes.Add(pair.Value);
-            }
-
-            var payload = CoopWire.EncodeBatch(ids, affixes);
-            if (CoopApi.Broadcast(payload))
-            {
-                CoopLog.Info($"[主机] 已回应全量请求：{ids.Count} 只精英（{payload.Length} 字节）");
-            }
-            else
-            {
-                CoopLog.Warn("[主机] 全量回应广播失败——联机可能尚未就绪");
-            }
-        }
-
-        // ===== 客户端：记录（本期不应用） =====
-
-        private static void ApplyOnClient(EliteMessage message)
-        {
-            if (message.Kind == CoopWire.Kind.Affix)
-            {
-                RecordOnClient(message.AiId, message.Affixes, "单条");
-                return;
-            }
-
-            CoopLog.Info($"[客户端] 收到全量快照：{message.BatchIds.Count} 只精英");
-            for (int i = 0; i < message.BatchIds.Count; i++)
-                RecordOnClient(message.BatchIds[i], message.BatchAffixes[i], "全量", quiet: true);
-
-            MaybeLogSummary();
-        }
-
-        private static void RecordOnClient(int aiId, List<string> affixes, string via, bool quiet = false)
-        {
-            s_recvTotal++;
-            s_clientAffixes[aiId] = affixes;
-
-            if (s_clientReplicas.Contains(aiId))
-            {
-                s_paired++;
-                s_replicaFirst++;
-                CoopLog.Info($"[客户端] 配对成功（**复制体先到**，需补应用）aiId={aiId} " +
-                             $"词条=[{string.Join(",", affixes)}]（{via}）");
-            }
-            else if (!quiet)
-            {
-                CoopLog.Info($"[客户端] 收到词条（复制体尚未生成）aiId={aiId} " +
-                             $"词条=[{string.Join(",", affixes)}]（{via}）");
-            }
-
-            MaybeLogSummary();
         }
 
         private static void RequestFullSnapshot(string reason)
@@ -293,7 +402,7 @@ namespace EliteEnemies.Coop
             }
         }
 
-        // ===== 摘要 =====
+        // ==================== 摘要 ====================
 
         private static void MaybeLogSummary()
         {
@@ -309,10 +418,10 @@ namespace EliteEnemies.Coop
 
             // ⚠ 措辞要准：`复制体出现时无词条` **不等于**"复制体先到"——
             //   绝大多数 AI 本就不是精英，它们永远不会有词条。
-            //   真正有意义的只有 `配对`（两边都有）与 `客户端自行掷出精英`（分叉）。
-            CoopLog.Info($"[摘要·{trigger}] 收到词条={s_recvTotal}（去重 {s_clientAffixes.Count}） " +
-                         $"见到复制体={s_replicaTotal}（去重 {s_clientReplicas.Count}） " +
-                         $"配对={s_paired}（词条先到 {s_affixBeforeReplica} / 复制体先到 {s_replicaFirst}） " +
+            CoopLog.Info($"[摘要·{trigger}] 收到词条={s_recvTotal}（待配对 {s_clientPending.Count}） " +
+                         $"见到复制体={s_replicaTotal} 配对={s_paired}" +
+                         $"（词条先到 {s_affixBeforeReplica} / 复制体先到 {s_replicaFirst}） " +
+                         $"已应用标记={s_applied} " +
                          $"复制体出现时无词条={s_replicaNoAffixYet} " +
                          $"客户端自行掷出精英={s_localEliteDivergence}");
         }

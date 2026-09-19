@@ -24,6 +24,19 @@ namespace EliteEnemies.Patches
                 var cmc = _characterMainControl;
                 if (!cmc) return;   // 空引用：连归类都无从谈起，不记账
 
+                // 联机客户端**不自行判定精英**：精英由主机判定、结果经网络下发，
+                // 客户端再掷一次就会两端各自随机、结果不一致（实测已确认，见
+                // docs\联机兼容可行性分析.md §2.1）。判据是一个静态 bool，单机下恒为 true。
+                //
+                // ⚠ 放在所有判定**之前**：客户端的每一只怪都走这条，不该再去做
+                //   分类/忽略名单那些工作。但**要记账**——否则"日志里怎么一只都没有"
+                //   又会变成一个答不上来的问题。
+                if (!EliteEnemyCore.IsEliteAuthority)
+                {
+                    SessionStats.RecordNotInvolved(SkipReason.NotEliteAuthority);
+                    return;
+                }
+
                 // 下面三道提前 return 都**记账**（未参与判定）。早先它们什么都不留，
                 // 于是"日志里怎么完全没看见那只怪"无从回答——总数也就对不上账。
                 if (cmc.IsMainCharacter)

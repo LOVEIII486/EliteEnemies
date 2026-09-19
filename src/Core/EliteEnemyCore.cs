@@ -19,6 +19,42 @@ namespace EliteEnemies.Core
 
         private static EliteEnemiesConfig _config = new EliteEnemiesConfig();
         public static EliteEnemiesConfig Config => _config;
+
+        /// <summary>
+        /// **本机是否拥有「精英逻辑」的权威**——精英判定与精英掉落都归它管。
+        ///
+        /// <para>默认 <c>true</c>（单机与联机主机都是如此）。<b>联机客户端会被置为 <c>false</c></b>，
+        /// 因为在那套模型里精英由主机判定、结果经网络下发；客户端自己再判一次就会
+        /// <b>两端各自随机、结果不一致</b>（实测已确认，见
+        /// <c>docs\联机兼容可行性分析.md</c> §2.1）。</para>
+        ///
+        /// <para><b>为什么是一个字段而不是直接引用联机模块</b>：遵守
+        /// <c>docs\联机兼容可行性分析.md</c> §5.5 的单向依赖纪律——
+        /// <c>Core</c> 不认识 <c>EliteEnemies.Coop</c>，由后者在激活/停机时<b>设置</b>这里。
+        /// 方向是 Coop → Core，不是反过来。</para>
+        ///
+        /// <para>⚠ <b>客户端仍然会给复制体挂 <see cref="EliteMarker"/></b>——那是<b>显示</b>用的
+        /// （血条标签与配色读它）。「挂标记」与「拥有权威」是两件事，不要合并。</para>
+        /// </summary>
+        /// <summary>
+        /// 覆盖「谁是权威」的判定。**默认 <c>null</c> ⇒ 本机就是权威**（单机、联机主机）。
+        /// 由联机模块在激活时设成一个"现查当前角色"的委托。
+        ///
+        /// <para>⚠ <b>刻意用委托而不是缓存成 bool</b>：主机/客户端身份在一次会话里
+        /// <b>可能变化</b>（联机模组的 <c>StartNetwork</c>/<c>StopNetwork</c> 会改 <c>IsServer</c>），
+        /// 缓存下来就会过期，而过期表现为"某一端悄悄按错的权威跑了"——正是本项目最忌的静默失效。</para>
+        /// </summary>
+        public static Func<bool> EliteAuthorityOverride { get; set; }
+
+        /// <summary>本机是否为精英逻辑的权威。读法见 <see cref="EliteAuthorityOverride"/>。</summary>
+        public static bool IsEliteAuthority
+        {
+            get
+            {
+                var provider = EliteAuthorityOverride;
+                return provider == null || provider();
+            }
+        }
         
         // 由生成器创建的临时预设（EggSpawnHelper 的 CreateModifiedPreset 用 Instantiate 造）
         // 的实例 ID——这些预设对应的敌人不应精英化。

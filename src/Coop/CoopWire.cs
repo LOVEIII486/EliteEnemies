@@ -10,10 +10,17 @@ namespace EliteEnemies.Coop
     {
         public CoopWire.Kind Kind;
         public int AiId;
+
+        /// <summary>combo 精英的 combo id；非 combo 精英为空串。</summary>
+        public string ComboId;
+
         public List<string> Affixes;
 
         /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：全量快照的 id 列表。</summary>
         public readonly List<int> BatchIds = new List<int>();
+
+        /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：与 <see cref="BatchIds"/> 一一对应。</summary>
+        public readonly List<string> BatchComboIds = new List<string>();
 
         /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：与 <see cref="BatchIds"/> 一一对应的词条表。</summary>
         public readonly List<List<string>> BatchAffixes = new List<List<string>>();
@@ -37,12 +44,16 @@ namespace EliteEnemies.Coop
     /// （<c>ModNetworkApi.cs:303-331</c> `CacheBroadcast` 是"赋值"不是"入队"），
     /// 所以共用一个频道时，迟到的客户端<b>只能补到最后一只精英</b>，前面全丢——
     /// 实测 59 条广播只到了 40 条。现在客户端可以主动要一份全量。</item>
+    ///
+    /// <item><b>v3</b>：每条多加一个 <c>comboId</c> 字符串（非 combo 精英为空串）。
+    /// <b>传的是 id 不是称号串</b>——称号由 combo 定义现算，客户端拿到 id 自己查回定义，
+    /// 才会跟着客户端那门语言走（传渲染好的字符串等于把语言焊死，本工程在本地化上栽过）。</item>
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 2;
+        public const byte ProtocolVersion = 3;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -69,12 +80,12 @@ namespace EliteEnemies.Coop
 
         // ==================== 编码 ====================
 
-        public static byte[] EncodeAffix(int aiId, IReadOnlyList<string> affixes)
+        public static byte[] EncodeAffix(int aiId, string comboId, IReadOnlyList<string> affixes)
         {
             using (var stream = new MemoryStream(64))
             using (var writer = NewWriter(stream, Kind.Affix))
             {
-                WriteAffixes(writer, aiId, affixes);
+                WriteEntry(writer, aiId, comboId, affixes);
                 return Finish(stream, writer);
             }
         }
@@ -88,17 +99,19 @@ namespace EliteEnemies.Coop
             }
         }
 
-        /// <summary>全量快照。<paramref name="ids"/> 与 <paramref name="affixes"/> 必须等长。</summary>
-        public static byte[] EncodeBatch(IReadOnlyList<int> ids, IReadOnlyList<List<string>> affixes)
+        /// <summary>全量快照。三个列表必须等长。</summary>
+        public static byte[] EncodeBatch(IReadOnlyList<int> ids, IReadOnlyList<string> comboIds,
+                                         IReadOnlyList<List<string>> affixes)
         {
-            int count = Math.Min(ids?.Count ?? 0, affixes?.Count ?? 0);
+            int count = Math.Min(ids?.Count ?? 0,
+                        Math.Min(comboIds?.Count ?? 0, affixes?.Count ?? 0));
 
             using (var stream = new MemoryStream(256))
             using (var writer = NewWriter(stream, Kind.Batch))
             {
                 writer.Write(count);
                 for (int i = 0; i < count; i++)
-                    WriteAffixes(writer, ids[i], affixes[i]);
+                    WriteEntry(writer, ids[i], comboIds[i], affixes[i]);
 
                 return Finish(stream, writer);
             }
@@ -113,9 +126,10 @@ namespace EliteEnemies.Coop
             return writer;
         }
 
-        private static void WriteAffixes(BinaryWriter writer, int aiId, IReadOnlyList<string> affixes)
+        private static void WriteEntry(BinaryWriter writer, int aiId, string comboId, IReadOnlyList<string> affixes)
         {
             writer.Write(aiId);
+            writer.Write(comboId ?? string.Empty);
 
             int count = affixes?.Count ?? 0;
             writer.Write(count);
@@ -171,8 +185,10 @@ namespace EliteEnemies.Coop
                     switch (kind)
                     {
                         case Kind.Affix:
-                            if (!ReadAffixes(reader, out int aiId, out var affixes, out failure)) return false;
+                            if (!ReadEntry(reader, out int aiId, out string comboId,
+                                           out var affixes, out failure)) return false;
                             result.AiId = aiId;
+                            result.ComboId = comboId;
                             result.Affixes = affixes;
                             break;
 
@@ -189,8 +205,10 @@ namespace EliteEnemies.Coop
 
                             for (int i = 0; i < entries; i++)
                             {
-                                if (!ReadAffixes(reader, out int batchId, out var batchAffixes, out failure)) return false;
+                                if (!ReadEntry(reader, out int batchId, out string batchCombo,
+                                               out var batchAffixes, out failure)) return false;
                                 result.BatchIds.Add(batchId);
+                                result.BatchComboIds.Add(batchCombo);
                                 result.BatchAffixes.Add(batchAffixes);
                             }
                             break;
@@ -211,13 +229,16 @@ namespace EliteEnemies.Coop
             }
         }
 
-        private static bool ReadAffixes(BinaryReader reader, out int aiId, out List<string> affixes, out string failure)
+        private static bool ReadEntry(BinaryReader reader, out int aiId, out string comboId,
+                                      out List<string> affixes, out string failure)
         {
             aiId = 0;
+            comboId = null;
             affixes = null;
             failure = null;
 
             aiId = reader.ReadInt32();
+            comboId = reader.ReadString();
 
             int count = reader.ReadInt32();
             if (count < 0 || count > MaxAffixesPerEntry)

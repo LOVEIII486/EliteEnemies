@@ -42,5 +42,11 @@ namespace EliteEnemies.Stats
 
         /// <summary>身上没有 <c>characterPreset</c>，无从判断。</summary>
         NoPreset,
+
+        /// <summary>
+        /// 本机不是精英逻辑的权威（联机客户端）。见 <c>EliteEnemyCore.IsEliteAuthority</c>——
+        /// 精英由主机判定并经网络下发，客户端自行掷骰会让两端结果不一致。
+        /// </summary>
+        NotEliteAuthority,
     }
 }
