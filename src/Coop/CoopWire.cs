@@ -6,6 +6,27 @@ using UnityEngine;
 
 namespace EliteEnemies.Coop
 {
+    /// <summary>
+    /// 精英的**视觉状态**：体型缩放 + 显隐。**它不属于任何一只 AI 的专有字段，
+    /// 而是随"精英条目"一起走的**（见 <see cref="CoopWire.ProtocolVersion"/> 的 v7 说明）。
+    ///
+    /// <para><c>Has == false</c> 表示"这一条没带视觉信息"——接收方据此**不要覆盖**已知值。
+    /// 之所以要这个"有没有"，是因为 <c>Vector3.one</c> / <c>false</c> 本身就是**合法状态**
+    /// （未巨大化、未隐身），拿默认值当"没有"就再也分不开了。</para>
+    /// </summary>
+    internal struct EliteVisualState
+    {
+        public bool Has;
+
+        /// <summary>
+        /// **绝对缩放**（直接就是 <c>transform.localScale</c>），**不是倍率**——
+        /// 史莱姆写的是 <c>_originalScale * 倍率</c>，按倍率重建会错。
+        /// </summary>
+        public Vector3 Scale;
+
+        public bool Hidden;
+    }
+
     /// <summary>解出来的一条消息。<see cref="Kind"/> 决定哪些字段有意义。</summary>
     internal sealed class EliteMessage
     {
@@ -46,6 +67,12 @@ namespace EliteEnemies.Coop
 
         /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：与 <see cref="BatchIds"/> 一一对应的词条表。</summary>
         public readonly List<List<string>> BatchAffixes = new List<List<string>>();
+
+        /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：与 <see cref="BatchIds"/> 一一对应的视觉状态。</summary>
+        public readonly List<EliteVisualState> BatchVisuals = new List<EliteVisualState>();
+
+        /// <summary>词条 / 全量条目带回来的视觉状态（v7）。<c>Has=false</c> = 主机那边也没有。</summary>
+        public EliteVisualState Visual;
     }
 
     /// <summary>
@@ -88,12 +115,26 @@ namespace EliteEnemies.Coop
     /// 传译文会把**主机那门语言**焊死到客机身上（<c>AGENT.md §3.5</c>）。
     /// 格式参数只放**语言无关**的那部分（数字等）；参数里若含本地化文本，那条只能退到传译文。</item>
     ///
+    /// <item><b>v7</b>：**视觉状态并入"精英条目"本身**——词条报文与全量快照都带上
+    /// 「体型缩放 + 显隐」（可缺省，<c>Has=false</c> 只占 1 字节）。
+    ///
+    /// 起因是一处**实测缺陷**：视觉状态原先是独立的一条**一次性**消息
+    /// （<see cref="Kind.EliteVisual"/>），于是<b>错过的就永远错过</b>——
+    /// 中途加入的客机、以及复制体被销毁重建过的客机（联机模组在离开
+    /// <c>DeactivationRadius</c> 时整个销毁复制体）都拿不到，
+    /// 而词条标签走全量快照**补得回来**。症状正是「**标签看得到、体型看不到**」。
+    ///
+    /// 联机模组自己的文档给过同一条纪律（<c>01-third-party-api.md</c> §3.4：
+    /// 补发只缓存"最后一条"）⇒ **按"最新状态覆盖"设计，不要按逐条事件流设计**。
+    /// <see cref="Kind.EliteVisual"/> 保留，但只承担"后续变化"（史莱姆每帧重算、
+    /// 隐身来回切），**首次状态一律由条目携带**。</item>
+    ///
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 6;
+        public const byte ProtocolVersion = 7;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -129,9 +170,13 @@ namespace EliteEnemies.Coop
             PlayerEffectResult = 5,
 
             /// <summary>
-            /// 主机 → 全体：某只 AI 的**视觉状态**变了（体型缩放 / 显隐）。
+            /// 主机 → 全体：某只 AI 的**视觉状态变了**（体型缩放 / 显隐）。
             /// 起因是这些**不在** <c>AISyncEntry</c> 里（见分析档 §5.4 G4），
             /// 客机因此看不到巨大化/迷你/隐身。
+            ///
+            /// <para>⚠ v7 起它只承担**变化**：首次状态搭在词条/全量条目的
+            /// <see cref="EliteVisualState"/> 上——一次性消息错过就没有了，
+            /// 而客机可能还没进图、或复制体已被销毁重建。</para>
             /// </summary>
             EliteVisual = 6,
 
@@ -141,12 +186,13 @@ namespace EliteEnemies.Coop
 
         // ==================== 编码 ====================
 
-        public static byte[] EncodeAffix(int aiId, string comboId, IReadOnlyList<string> affixes)
+        public static byte[] EncodeAffix(int aiId, string comboId, IReadOnlyList<string> affixes,
+                                         EliteVisualState visual)
         {
             using (var stream = new MemoryStream(64))
             using (var writer = NewWriter(stream, Kind.Affix))
             {
-                WriteEntry(writer, aiId, comboId, affixes);
+                WriteEntry(writer, aiId, comboId, affixes, visual);
                 return Finish(stream, writer);
             }
         }
@@ -160,19 +206,21 @@ namespace EliteEnemies.Coop
             }
         }
 
-        /// <summary>全量快照。三个列表必须等长。</summary>
+        /// <summary>全量快照。四个列表必须等长。</summary>
         public static byte[] EncodeBatch(IReadOnlyList<int> ids, IReadOnlyList<string> comboIds,
-                                         IReadOnlyList<List<string>> affixes)
+                                         IReadOnlyList<List<string>> affixes,
+                                         IReadOnlyList<EliteVisualState> visuals)
         {
             int count = Math.Min(ids?.Count ?? 0,
-                        Math.Min(comboIds?.Count ?? 0, affixes?.Count ?? 0));
+                        Math.Min(comboIds?.Count ?? 0,
+                        Math.Min(affixes?.Count ?? 0, visuals?.Count ?? 0)));
 
             using (var stream = new MemoryStream(256))
             using (var writer = NewWriter(stream, Kind.Batch))
             {
                 writer.Write(count);
                 for (int i = 0; i < count; i++)
-                    WriteEntry(writer, ids[i], comboIds[i], affixes[i]);
+                    WriteEntry(writer, ids[i], comboIds[i], affixes[i], visuals[i]);
 
                 return Finish(stream, writer);
             }
@@ -226,7 +274,11 @@ namespace EliteEnemies.Coop
         }
 
         /// <summary>
-        /// 精英视觉：<c>[aiId][缩放向量][是否隐藏]</c>。
+        /// 精英视觉的**变化**：<c>[aiId][缩放向量][是否隐藏]</c>。
+        ///
+        /// <para>⚠ <b>首次状态不走这里</b>，而是搭在词条报文 / 全量快照的条目上
+        /// （v7，见 <see cref="ProtocolVersion"/>）——这条只负责"之后的变化"，
+        /// 因为一次性消息错过就没了，而客机可能还没进图、或复制体已被销毁重建。</para>
         ///
         /// <para>⚠ <b>传的是**绝对缩放**（三个分量），不是一个标量倍率。</b>
         /// 因为史莱姆是 <c>_originalScale * 倍率</c>——原模型 scale 不是 1 时，
@@ -255,7 +307,8 @@ namespace EliteEnemies.Coop
             return writer;
         }
 
-        private static void WriteEntry(BinaryWriter writer, int aiId, string comboId, IReadOnlyList<string> affixes)
+        private static void WriteEntry(BinaryWriter writer, int aiId, string comboId,
+                                       IReadOnlyList<string> affixes, EliteVisualState visual)
         {
             writer.Write(aiId);
             writer.Write(comboId ?? string.Empty);
@@ -264,6 +317,15 @@ namespace EliteEnemies.Coop
             writer.Write(count);
             for (int i = 0; i < count; i++)
                 writer.Write(affixes[i] ?? string.Empty);
+
+            // v7：视觉状态搭在条目里。绝大多数精英没有（Has=false ⇒ 只多 1 字节）。
+            writer.Write(visual.Has);
+            if (!visual.Has) return;
+
+            writer.Write(visual.Scale.x);
+            writer.Write(visual.Scale.y);
+            writer.Write(visual.Scale.z);
+            writer.Write(visual.Hidden);
         }
 
         private static byte[] Finish(MemoryStream stream, BinaryWriter writer)
@@ -315,10 +377,11 @@ namespace EliteEnemies.Coop
                     {
                         case Kind.Affix:
                             if (!ReadEntry(reader, out int aiId, out string comboId,
-                                           out var affixes, out failure)) return false;
+                                           out var affixes, out var visual, out failure)) return false;
                             result.AiId = aiId;
                             result.ComboId = comboId;
                             result.Affixes = affixes;
+                            result.Visual = visual;
                             break;
 
                         case Kind.Query:
@@ -362,10 +425,12 @@ namespace EliteEnemies.Coop
                             for (int i = 0; i < entries; i++)
                             {
                                 if (!ReadEntry(reader, out int batchId, out string batchCombo,
-                                               out var batchAffixes, out failure)) return false;
+                                               out var batchAffixes, out var batchVisual,
+                                               out failure)) return false;
                                 result.BatchIds.Add(batchId);
                                 result.BatchComboIds.Add(batchCombo);
                                 result.BatchAffixes.Add(batchAffixes);
+                                result.BatchVisuals.Add(batchVisual);
                             }
                             break;
 
@@ -386,11 +451,13 @@ namespace EliteEnemies.Coop
         }
 
         private static bool ReadEntry(BinaryReader reader, out int aiId, out string comboId,
-                                      out List<string> affixes, out string failure)
+                                      out List<string> affixes, out EliteVisualState visual,
+                                      out string failure)
         {
             aiId = 0;
             comboId = null;
             affixes = null;
+            visual = default(EliteVisualState);
             failure = null;
 
             aiId = reader.ReadInt32();
@@ -408,6 +475,21 @@ namespace EliteEnemies.Coop
                 list.Add(reader.ReadString());
 
             affixes = list;
+
+            // v7：视觉状态。缺省（Has=false）是合法且常见的情形。
+            if (reader.ReadBoolean())
+            {
+                float x = reader.ReadSingle();
+                float y = reader.ReadSingle();
+                float z = reader.ReadSingle();
+                visual = new EliteVisualState
+                {
+                    Has = true,
+                    Scale = new Vector3(x, y, z),
+                    Hidden = reader.ReadBoolean()
+                };
+            }
+
             return true;
         }
     }

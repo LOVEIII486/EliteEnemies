@@ -16,6 +16,16 @@ namespace EliteEnemies.Coop
         public List<string> Affixes;
 
         /// <summary>
+        /// 这只精英的**最新视觉状态**（体型缩放 + 显隐）。
+        ///
+        /// <para>⚠️ <b>为什么它属于"条目"、而不只是一条独立报文</b>：视觉状态原先只有
+        /// <see cref="CoopWire.Kind.EliteVisual"/> 一条**一次性**消息，于是<b>错过就永远错过</b>
+        /// ——中途加入的客机靠全量快照只补得到词条、补不到体型（实测症状正是
+        /// 「标签看得到、体型看不到」）。放进条目后，全量快照天然带上当前值。</para>
+        /// </summary>
+        public EliteVisualState Visual;
+
+        /// <summary>
         /// 主机侧：这只精英的**角色对象**。
         ///
         /// <para>用途是**反查**——"某只 AI 弹了字 / 改了体型"要广播时，
@@ -84,16 +94,26 @@ namespace EliteEnemies.Coop
         private static readonly Dictionary<int, EliteInfo> s_clientPending = new Dictionary<int, EliteInfo>();
 
         /// <summary>
-        /// 客户端：**视觉状态已到、但复制体还没建出来**的那批，暂存起来等复制体出现再套上。
+        /// 客户端：**每只精英的最新视觉状态**（aiId → 缩放 + 显隐）。
         ///
-        /// <para>⚠️ <b>为什么必须暂存、不能像原先那样丢弃</b>：巨大化/迷你是在**精英生成时**
-        /// 设一次体型，而那一刻客机的复制体往往还没建出来——丢掉的是一条**再也不会重发**
-        /// 的一次性状态，客机就永远看不到体型了（实测确认）。
-        /// 显隐会反复切换，丢一条还能等下一跳；**但体型不会**。</para>
+        /// <para>⚠️ <b>它同时承担两件事，而这两件事原先各错了一半</b>：</para>
+        /// <list type="number">
+        /// <item><b>复制体还没建出来时的暂存</b>——巨大化/迷你是在**精英生成时**设一次体型，
+        /// 那一刻客机的复制体往往还没建出来。丢掉的是一条**再也不会重发**的状态。</item>
+        /// <item><b>复制体被销毁重建后的重放</b>——联机模组在离开 <c>DeactivationRadius</c> 时
+        /// 把复制体**整个销毁**（<c>AISyncService.Client_DestroyReplica</c>），玩家走回来再造一个。
+        /// 原先这份暂存在套用后就 <c>Remove</c> 掉了，于是<b>走远再回来体型就没了，
+        /// 而标签还在</b>（标记那条路 <see cref="s_clientPending"/> 从不删除）。</item>
+        /// </list>
+        ///
+        /// <para>⇒ <b>它是"最后已知状态"，不是"待办事项"</b>：套用后**不删除**，
+        /// 每次复制体出现都重新套一遍。这与 <see cref="s_clientPending"/> 同形，
+        /// 也与联机模组文档给的纪律一致（补发只缓存最后一条 ⇒ 按"最新状态覆盖"设计）。</para>
         /// </summary>
-        private static readonly Dictionary<int, Vector3> s_pendingVisualScale = new Dictionary<int, Vector3>();
-        private static readonly Dictionary<int, bool> s_pendingVisualHidden = new Dictionary<int, bool>();
+        private static readonly Dictionary<int, EliteVisualState> s_clientVisual =
+            new Dictionary<int, EliteVisualState>();
 
+        /// <summary>视觉状态表的容量上限（防御性；正常一局远达不到）。超出后不再记录新的。</summary>
         private const int MaxPendingVisual = 512;
 
         /// <summary>
@@ -105,12 +125,12 @@ namespace EliteEnemies.Coop
         /// 也就是说：**报体型的那一刻，这只 AI 还没有 id**——原先直接丢掉，
         /// 而这些词条**不会重报** ⇒ 客机永远看不到。</para>
         ///
-        /// <para>与客机侧对称：等到 <see cref="OnHostSawAi"/> 拿到 id 时补发。</para>
+        /// <para>与客机侧不同：主机是**权威**，值就存在角色对象上，所以这里存的是
+        /// "还没找到归属的那一份"，等 <see cref="OnHostSawAi"/> 拿到 id 时**并进条目**
+        /// （<see cref="EliteInfo.Visual"/>）随词条报文一起发出去，之后就可以丢掉了。</para>
         /// </summary>
-        private static readonly Dictionary<CharacterMainControl, Vector3> s_hostPendingScale =
-            new Dictionary<CharacterMainControl, Vector3>();
-        private static readonly Dictionary<CharacterMainControl, bool> s_hostPendingHidden =
-            new Dictionary<CharacterMainControl, bool>();
+        private static readonly Dictionary<CharacterMainControl, EliteVisualState> s_hostPendingVisual =
+            new Dictionary<CharacterMainControl, EliteVisualState>();
 
         // ===== 统计 =====
         private static int s_recvTotal;
@@ -124,6 +144,21 @@ namespace EliteEnemies.Coop
         private static int s_replicaIdsLogged;
         private static int s_hostRegLogged;
         private static bool s_zeroIdWarned;
+
+        /// <summary>主机上报过视觉状态的次数（含首次搭在词条报文上的那条）。摘要里报出来。</summary>
+        private static int s_hostVisualSent;
+
+        /// <summary>其中**打了日志**的条数。逐条记录，但设上限——史莱姆会反复上报。</summary>
+        private static int s_hostVisualLogged;
+
+        /// <summary>
+        /// 主机逐条记录「上报视觉」的上限。
+        ///
+        /// <para>⚠️ <b>为什么主机侧必须有这行日志</b>：原先<b>发送分支一行输出都没有</b>
+        /// （只有"补发"那条会打），于是出问题时<b>分不清「没发」「发了客机没收」「收了没应用」</b>
+        /// ——这三者要查的方向完全不同。症状在客机、证据在两端，缺一半就查不动。</para>
+        /// </summary>
+        private const int MaxHostVisualLogged = 50;
 
         private static float s_lastQueryTime = -999f;
         private static float s_lastSummaryTime;
@@ -175,10 +210,8 @@ namespace EliteEnemies.Coop
             s_hostKnown.Clear();
             s_clientReplicas.Clear();
             s_clientPending.Clear();
-            s_pendingVisualScale.Clear();
-            s_pendingVisualHidden.Clear();
-            s_hostPendingScale.Clear();
-            s_hostPendingHidden.Clear();
+            s_clientVisual.Clear();
+            s_hostPendingVisual.Clear();
 
             // 计数器一并归零：模组停用后重新启用时，统计不该背着上一局的数据。
             s_recvTotal = 0;
@@ -192,6 +225,8 @@ namespace EliteEnemies.Coop
             s_replicaIdsLogged = 0;
             s_hostRegLogged = 0;
             s_zeroIdWarned = false;
+            s_hostVisualSent = 0;
+            s_hostVisualLogged = 0;
             s_lastQueryTime = -999f;
         }
 
@@ -267,15 +302,22 @@ namespace EliteEnemies.Coop
                 Character = cmc
             };
 
+            // 体型可能是"先于 id"报的（巨大化/迷你就是在 `Init` 时设的，见
+            // `s_hostPendingVisual`）——并进条目，随词条报文一起发出去。**单独发一条也行**，
+            // 但那要多一条报文、还多一个"两条谁先到"的假设，没必要。
+            info.Visual = TakeHostPendingVisual(cmc);
             s_hostKnown[aiId] = info;
 
-            FlushHostPendingVisual(aiId, cmc);   // 体型可能是"先于 id"报的，补上
-
-            var payload = CoopWire.EncodeAffix(aiId, info.ComboId, info.Affixes);
+            var payload = CoopWire.EncodeAffix(aiId, info.ComboId, info.Affixes, info.Visual);
             if (CoopApi.Broadcast(payload))
             {
+                // 计数只在**真的发出去**之后加：这个读数是用来看"主机有没有发"的，
+                // 放进失败分支会让它说谎（见 `MaxHostVisualLogged`）。
+                if (info.Visual.Has) s_hostVisualSent++;
+
                 CoopLog.Info($"[主机] 广播精英 aiId={aiId} " +
-                             $"combo={info.ComboId ?? "-"} 词条=[{string.Join(",", info.Affixes)}]");
+                             $"combo={info.ComboId ?? "-"} 词条=[{string.Join(",", info.Affixes)}]" +
+                             DescribeVisual(info.Visual, prependSpace: true));
             }
             else
             {
@@ -284,23 +326,40 @@ namespace EliteEnemies.Coop
             }
         }
 
+        /// <summary>
+        /// 回应全量请求。
+        ///
+        /// <para>⚠️ <b>必须带上视觉状态</b>（v7）：全量快照是**迟到的客机唯一能补到体型的路**——
+        /// 实测的进图流程是"先在基地集合、投票后主机先进关卡、客机约 10 秒后才进"，
+        /// 精英在主机进图时就生成了，那一条一次性广播客机根本不在场。</para>
+        /// </summary>
         private static void AnswerQuery()
         {
             var ids = new List<int>(s_hostKnown.Count);
             var combos = new List<string>(s_hostKnown.Count);
             var affixes = new List<List<string>>(s_hostKnown.Count);
+            var visuals = new List<EliteVisualState>(s_hostKnown.Count);
 
             foreach (var pair in s_hostKnown)
             {
                 ids.Add(pair.Key);
                 combos.Add(pair.Value.ComboId);
                 affixes.Add(pair.Value.Affixes);
+                visuals.Add(pair.Value.Visual);
             }
 
-            var payload = CoopWire.EncodeBatch(ids, combos, affixes);
+            int withVisual = 0;
+            for (int i = 0; i < visuals.Count; i++)
+            {
+                if (visuals[i].Has) withVisual++;
+            }
+
+            var payload = CoopWire.EncodeBatch(ids, combos, affixes, visuals);
             if (CoopApi.Broadcast(payload))
             {
-                CoopLog.Info($"[主机] 已回应全量请求：{ids.Count} 只精英（{payload.Length} 字节）");
+                // 带上"其中几只有视觉状态"——迟到的客机能不能补到体型，就看这个数字。
+                CoopLog.Info($"[主机] 已回应全量请求：{ids.Count} 只精英" +
+                             $"（其中 {withVisual} 只带视觉状态，{payload.Length} 字节）");
             }
             else
             {
@@ -349,37 +408,53 @@ namespace EliteEnemies.Coop
             if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;
             if (ai == null) return false;
 
+            var state = new EliteVisualState { Has = true, Scale = scale, Hidden = hidden };
+
             int aiId = FindHostAiId(ai);
             if (aiId == 0)
             {
-                // 这只 AI 还没进同步库（典型：间谍条是在 `Init` 时设的体型，
-                // 而 `AiSpawned` 要晚 800ms）。**暂存**，等 `OnHostSawAi` 拿到 id 再补发——
+                // 这只 AI 还没进同步库（典型：体型是在 `Init` 时设的，
+                // 而 `AiSpawned` 要晚 800ms）。**暂存**，等 `OnHostSawAi` 拿到 id 时并进条目——
                 // 那些词条不会重报，丢了就是永久丢。
-                if (s_hostPendingScale.Count < MaxPendingVisual)
-                {
-                    s_hostPendingScale[ai] = scale;
-                    s_hostPendingHidden[ai] = hidden;
-                }
-
+                if (s_hostPendingVisual.Count < MaxPendingVisual) s_hostPendingVisual[ai] = state;
                 return true;
             }
 
+            // ⚠ **同时写回条目**：全量快照（`AnswerQuery`）发的是表里的值，
+            // 只广播不更新表的话，迟到的客机补到的就是**过期的体型**。
+            if (s_hostKnown.TryGetValue(aiId, out var info)) info.Visual = state;
+
             CoopApi.Broadcast(CoopWire.EncodeEliteVisual(aiId, scale, hidden));
+            s_hostVisualSent++;
+
+            if (s_hostVisualLogged < MaxHostVisualLogged)
+            {
+                s_hostVisualLogged++;
+                CoopLog.Info($"[主机] 上报精英视觉 aiId={aiId}{DescribeVisual(state, prependSpace: true)}");
+            }
+
             return true;
         }
 
-        /// <summary>主机侧：这只 AI 刚拿到 id，把它之前暂存的视觉状态补发出去。</summary>
-        private static void FlushHostPendingVisual(int aiId, CharacterMainControl ai)
+        /// <summary>主机侧：这只 AI 刚拿到 id，把它之前暂存的视觉状态**取走**（并入条目）。</summary>
+        private static EliteVisualState TakeHostPendingVisual(CharacterMainControl ai)
         {
-            if (!s_hostPendingScale.TryGetValue(ai, out var scale)) return;
+            if (!s_hostPendingVisual.TryGetValue(ai, out var state)) return default(EliteVisualState);
 
-            s_hostPendingScale.Remove(ai);
-            s_hostPendingHidden.TryGetValue(ai, out bool hidden);
-            s_hostPendingHidden.Remove(ai);
+            s_hostPendingVisual.Remove(ai);
+            CoopLog.Info($"[主机] 精英视觉是在拿到 id 之前报的，已并进词条报文" +
+                         $"{DescribeVisual(state, prependSpace: true)}");
+            return state;
+        }
 
-            CoopApi.Broadcast(CoopWire.EncodeEliteVisual(aiId, scale, hidden));
-            CoopLog.Info($"[主机] 补发精英视觉 aiId={aiId} 缩放={scale.x:0.00} 隐藏={hidden}" +
-                         "（它是在拿到 id 之前报的）");
+        /// <summary>把视觉状态拼成日志片段；没有就不产出任何字符。</summary>
+        private static string DescribeVisual(EliteVisualState visual, bool prependSpace = false)
+        {
+            if (!visual.Has) return string.Empty;
+
+            string text = $"缩放={visual.Scale.x:0.00},{visual.Scale.y:0.00},{visual.Scale.z:0.00}" +
+                          $" 隐藏={visual.Hidden}";
+            return prependSpace ? " " + text : text;
         }
 
         // ==================== 客户端侧 ====================
@@ -412,17 +487,21 @@ namespace EliteEnemies.Coop
             }
 
             TryApply(aiId);
-            ApplyPendingVisual(aiId, cmc);   // 体型这类一次性状态可能是"先到"的，补上
+            ApplyKnownVisual(aiId, cmc);   // 已知的视觉状态每次都重套一遍（复制体可能刚被重建）
             if (!s_clientPending.ContainsKey(aiId)) RequestFullSnapshot($"复制体 aiId={aiId} 尚无词条");
 
             MaybeLogSummary();
         }
 
-        private static void RecordOnClient(int aiId, string comboId, List<string> affixes, string via, bool quiet = false)
+        private static void RecordOnClient(int aiId, string comboId, List<string> affixes,
+                                           EliteVisualState visual, string via, bool quiet = false)
         {
             s_recvTotal++;
 
-            var info = new EliteInfo { ComboId = comboId, Affixes = affixes };
+            // 视觉状态可能与词条同到（v7 起首次状态就搭在条目上），也可能随后才到。
+            RememberVisual(aiId, visual);
+
+            var info = new EliteInfo { ComboId = comboId, Affixes = affixes, Visual = visual };
 
             if (s_clientReplicas.ContainsKey(aiId))
             {
@@ -442,6 +521,7 @@ namespace EliteEnemies.Coop
             }
 
             TryApply(aiId);
+            ApplyKnownVisual(aiId);
             MaybeLogSummary();
         }
 
@@ -540,26 +620,53 @@ namespace EliteEnemies.Coop
         }
 
         /// <summary>
-        /// 客户端：把主机报来的视觉状态应用到复制体上。
+        /// 客户端：把主机报来的视觉**变化**收到"最新状态"表里，并立即套用。
         ///
-        /// <para>复制体还没建出来就**暂存**（见 <see cref="s_pendingVisualScale"/> 的注释——
-        /// 体型是一次性状态，丢了就再也不会重发）。</para>
+        /// <para>⚠️ 收到后**不区分**复制体在不在——在就套、不在就等
+        /// （<see cref="OnClientSawReplica"/> 会补套）。这与原先"没复制体就丢弃/暂存一次"
+        /// 的区别在于：状态是**常驻**的，复制体被销毁重建后还能重放。</para>
         /// </summary>
         private static void ApplyEliteVisual(EliteMessage message)
         {
+            var state = new EliteVisualState
+            {
+                Has = true,
+                Scale = new Vector3(message.Fx, message.Fy, message.Fz),
+                Hidden = message.Ei != 0
+            };
+
+            RememberVisual(message.AiId, state);
+
             if (!s_clientReplicas.TryGetValue(message.AiId, out var cmc) || !cmc)
             {
-                if (s_pendingVisualScale.Count < MaxPendingVisual)
-                {
-                    s_pendingVisualScale[message.AiId] = new Vector3(message.Fx, message.Fy, message.Fz);
-                    s_pendingVisualHidden[message.AiId] = message.Ei != 0;
-                }
-
-                CoopLog.Info($"[客户端] 收到精英视觉 aiId={message.AiId}，复制体尚未就绪，已暂存待用");
+                CoopLog.Info($"[客户端] 收到精英视觉 aiId={message.AiId}" +
+                             $"{DescribeVisual(state, prependSpace: true)}，复制体尚未就绪，已记住待用");
                 return;
             }
 
-            ApplyVisualTo(cmc, new Vector3(message.Fx, message.Fy, message.Fz), message.Ei != 0);
+            ApplyVisualTo(cmc, state.Scale, state.Hidden);
+        }
+
+        /// <summary>把一条视觉状态记进"最新状态"表（<c>Has=false</c> 的条目**不覆盖**已知值）。</summary>
+        private static void RememberVisual(int aiId, EliteVisualState visual)
+        {
+            if (!visual.Has) return;
+
+            if (!s_clientVisual.ContainsKey(aiId) && s_clientVisual.Count >= MaxPendingVisual) return;
+            s_clientVisual[aiId] = visual;
+        }
+
+        /// <summary>把已知的视觉状态套到该 aiId 当前的复制体上（没有复制体或没有状态就什么都不做）。</summary>
+        private static void ApplyKnownVisual(int aiId)
+        {
+            if (!s_clientReplicas.TryGetValue(aiId, out var cmc) || !cmc) return;
+            ApplyKnownVisual(aiId, cmc);
+        }
+
+        private static void ApplyKnownVisual(int aiId, CharacterMainControl cmc)
+        {
+            if (!s_clientVisual.TryGetValue(aiId, out var state)) return;
+            ApplyVisualTo(cmc, state.Scale, state.Hidden);
         }
 
         /// <summary>
@@ -578,18 +685,6 @@ namespace EliteEnemies.Coop
             else cmc.Show();
 
             CoopLog.Info($"[客户端] 应用精英视觉 缩放={scale.x:0.00} 隐藏={hidden}");
-        }
-
-        /// <summary>复制体建出来之后，把之前暂存的视觉状态补上。</summary>
-        private static void ApplyPendingVisual(int aiId, CharacterMainControl cmc)
-        {
-            if (!s_pendingVisualScale.TryGetValue(aiId, out var scale)) return;
-
-            s_pendingVisualScale.Remove(aiId);
-            s_pendingVisualHidden.TryGetValue(aiId, out bool hidden);
-            s_pendingVisualHidden.Remove(aiId);
-
-            ApplyVisualTo(cmc, scale, hidden);
         }
 
         /// <summary>
@@ -628,7 +723,8 @@ namespace EliteEnemies.Coop
                     break;
 
                 case CoopWire.Kind.Affix:
-                    if (!isServer) RecordOnClient(message.AiId, message.ComboId, message.Affixes, "单条");
+                    if (!isServer)
+                        RecordOnClient(message.AiId, message.ComboId, message.Affixes, message.Visual, "单条");
                     break;
 
                 case CoopWire.Kind.EliteVisual:
@@ -655,7 +751,7 @@ namespace EliteEnemies.Coop
                     for (int i = 0; i < message.BatchIds.Count; i++)
                     {
                         RecordOnClient(message.BatchIds[i], message.BatchComboIds[i],
-                                       message.BatchAffixes[i], "全量", quiet: true);
+                                       message.BatchAffixes[i], message.BatchVisuals[i], "全量", quiet: true);
                     }
                     break;
             }
@@ -696,8 +792,10 @@ namespace EliteEnemies.Coop
                          $"见到复制体={s_replicaTotal} 配对={s_paired}" +
                          $"（词条先到 {s_affixBeforeReplica} / 复制体先到 {s_replicaFirst}） " +
                          $"已应用标记={s_applied} " +
+                         $"已记住视觉={s_clientVisual.Count} " +
                          $"复制体出现时无词条={s_replicaNoAffixYet} " +
-                         $"客户端自行掷出精英={s_localEliteDivergence}");
+                         $"客户端自行掷出精英={s_localEliteDivergence} " +
+                         $"主机上报视觉={s_hostVisualSent}");
         }
     }
 }
