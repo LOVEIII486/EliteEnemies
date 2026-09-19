@@ -47,7 +47,7 @@
       不需要、也不允许手工维护——见下方 GenerateModInfo。
       发版时只改这一行，然后 dotnet build 即可。
     -->
-    <Version>2.2.0</Version>
+    <Version>2.2.1</Version>
 
     <Product>Elite Enemies</Product>
     <!-- 旧的 Properties\AssemblyInfo.cs 已删除（SDK 自动生成同名特性，留着会 CS0579 重复）。
