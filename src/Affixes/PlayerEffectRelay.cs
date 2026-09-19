@@ -62,7 +62,7 @@ namespace EliteEnemies.Affixes
         /// 在 AI 头顶弹字的转交。**与其它效果不同：主机自己也要弹**，
         /// 所以这个口是"两边都做"，返回值没有"接管"的含义。
         /// </summary>
-        public static System.Func<CharacterMainControl, string, bool> AiPopTextHandler { get; set; }
+        public static System.Func<CharacterMainControl, string, string, string, bool> AiPopTextHandler { get; set; }
 
         /// <summary>
         /// 精英**视觉状态**（体型缩放 / 显隐）的转交。
@@ -75,7 +75,7 @@ namespace EliteEnemies.Affixes
         /// 在**玩家**头顶弹字的转交。**这一条是"接管"语义**——主机弹在复制体上等于没弹，
         /// 所以联机下只让客机弹。
         /// </summary>
-        public static System.Func<CharacterMainControl, string, bool> PlayerPopTextHandler { get; set; }
+        public static System.Func<CharacterMainControl, string, string, string, bool> PlayerPopTextHandler { get; set; }
 
         /// <summary>
         /// 在 AI 头顶弹字：**本地弹一份，联机下再让客机各弹一份**。
@@ -85,12 +85,69 @@ namespace EliteEnemies.Affixes
         /// （<c>Patch/Character/AIAwarenessPatch.cs:10-19</c>），
         /// 所以第三方弹的字**不会**过网。</para>
         /// </summary>
-        public static void PopTextOnElite(CharacterMainControl ai, string text)
+        /// <summary>
+        /// 在 AI 头顶弹字。**传键，不传译文。**
+        ///
+        /// <para><b>为什么必须传键</b>：联机下这条要发给客机，而传渲染好的文本
+        /// 等于把<b>主机那门语言</b>焊死到客机身上——正是 <c>AGENT.md §3.5</c>
+        /// 反复强调的那类问题。传键则两端**各按自己的语言**解析。</para>
+        ///
+        /// <para>用这个助手，不要在行为里直接写 <c>ai.PopText(...)</c>——
+        /// 联机模组的通用 <c>PopText</c> 补丁**被它自己注释掉了**
+        /// （<c>Patch/Character/AIAwarenessPatch.cs:10-19</c>），第三方弹的字不会过网。</para>
+        ///
+        /// <para>含**运行时参数**的弹字（例如"偷到了 X 物品"）用不了这个口——
+        /// 那类走 <see cref="PopTextOnEliteResolved"/>，代价见那里的注释。</para>
+        /// </summary>
+        /// <param name="key">本地化键。</param>
+        /// <param name="fallback">键缺失时的兜底文本。**跟键一起发给客机**——
+        /// 接收方是通用路径、不知道是哪一条，所以带上最省事（它是代码常量，两端本就相同）。</param>
+        /// <param name="arg">格式参数——**只放语言无关的那部分**（数字等）。
+        /// 参数里若含本地化文本（物品名、Buff 名），那条只能退到
+        /// <see cref="PopTextOnEliteResolved"/>。</param>
+        public static void PopTextOnElite(CharacterMainControl ai, string key, string fallback = null,
+                                          string arg = null)
         {
-            var handler = AiPopTextHandler;
-            handler?.Invoke(ai, text);
+            if (ai == null || string.IsNullOrEmpty(key)) return;
 
-            if (ai != null && !string.IsNullOrEmpty(text)) ai.PopText(text);
+            var handler = AiPopTextHandler;
+            handler?.Invoke(ai, key, fallback, arg);
+
+            ai.PopText(Format(key, fallback, arg));
+        }
+
+        /// <summary>按本地化键取值，有参数时再套一层 format。</summary>
+        internal static string Format(string key, string fallback, string arg)
+        {
+            string text = EliteEnemies.Localization.LocalizationManager.GetText(key, fallback);
+            if (string.IsNullOrEmpty(arg)) return text;
+
+            try
+            {
+                return string.Format(text, arg);
+            }
+            catch
+            {
+                // 键里没有 {0} 之类的占位符就会抛——那时原样返回，别把弹字整没了。
+                return text;
+            }
+        }
+
+        /// <summary>
+        /// 弹一条**已经拼好的**文本（含运行时参数，无法只传键）。
+        ///
+        /// <para>⚠️ <b>这是退路，不是常规路径</b>：客机会显示**主机那门语言**的文本。
+        /// 只在"文本里拼了运行期才知道的东西、而那样东西又没随报文传过去"时才用。
+        /// 能拆成键 + 参数的一律用 <see cref="PopTextOnElite"/>。</para>
+        /// </summary>
+        public static void PopTextOnEliteResolved(CharacterMainControl ai, string resolvedText)
+        {
+            if (ai == null || string.IsNullOrEmpty(resolvedText)) return;
+
+            var handler = AiPopTextHandler;
+            handler?.Invoke(ai, resolvedText, null, null);   // 兜底为 null ⇒ 对端原样用键
+
+            ai.PopText(resolvedText);
         }
 
         /// <summary>把精英的视觉状态告知客机（本地应用由调用方自己做）。</summary>
@@ -101,10 +158,10 @@ namespace EliteEnemies.Affixes
         }
 
         /// <summary>在玩家头顶弹字。返回 <c>true</c> = 已转交，**不要**再本地弹。</summary>
-        public static bool TryRelayPlayerPopText(CharacterMainControl victim, string text)
+        public static bool TryRelayPlayerPopText(CharacterMainControl victim, string key, string fallback = null)
         {
             var handler = PlayerPopTextHandler;
-            return handler != null && handler(victim, text);
+            return handler != null && handler(victim, key, fallback, null);
         }
 
         /// <summary>把效果转交给受害者那台机器。返回 <c>true</c> = 已接管，**不要**再本地执行。</summary>

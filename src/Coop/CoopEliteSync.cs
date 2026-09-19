@@ -296,15 +296,15 @@ namespace EliteEnemies.Coop
         /// 主机侧：某只精英弹了一行字。**本机那份由调用方自己弹**（见
         /// <c>PlayerEffectRelay.PopTextOnElite</c>），这里只负责让客机也弹。
         /// </summary>
-        public static bool OnHostElitePopText(CharacterMainControl ai, string text)
+        public static bool OnHostElitePopText(CharacterMainControl ai, string key, string fallback, string arg)
         {
             if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;
-            if (ai == null || string.IsNullOrEmpty(text)) return false;
+            if (ai == null || string.IsNullOrEmpty(key)) return false;
 
             int aiId = FindHostAiId(ai);
             if (aiId == 0) return false;   // 不在同步库里（例：基地 NPC）——两端各弹各的即可
 
-            CoopApi.Broadcast(CoopWire.EncodeAiPopText(aiId, text));
+            CoopApi.Broadcast(CoopWire.EncodeAiPopText(aiId, key, fallback, arg));
             return true;
         }
 
@@ -497,12 +497,22 @@ namespace EliteEnemies.Coop
             CoopLog.Info($"[客户端] 应用精英视觉 aiId={message.AiId} 缩放={message.Fx:0.00} 隐藏={hidden}");
         }
 
-        /// <summary>客户端：在复制体头顶弹字。</summary>
+        /// <summary>
+        /// 客户端：在复制体头顶弹字。
+        ///
+        /// <para>⚠ <b>按本机语言解析那个键</b>——收到的不是译文（见 <c>CoopWire</c> 的 v6 说明）。</summary>
         private static void ApplyAiPopText(EliteMessage message)
         {
             if (!s_clientReplicas.TryGetValue(message.AiId, out var cmc) || !cmc) return;
 
-            cmc.PopText(message.Text);
+            // `Text` 是键，`ComboId` 被借来装兜底文本，`TextArg` 是格式参数（都是 string 字段）。
+            string key = message.Text;
+            if (string.IsNullOrEmpty(key)) return;
+
+            cmc.PopText(PlayerEffectRelay.Format(
+                key,
+                string.IsNullOrEmpty(message.ComboId) ? null : message.ComboId,
+                message.TextArg));
         }
 
         // ==================== 收包 ====================

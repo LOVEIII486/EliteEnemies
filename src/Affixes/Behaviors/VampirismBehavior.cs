@@ -30,10 +30,9 @@ namespace EliteEnemies.Affixes.Behaviors
         /// </summary>
         private float _lastHealTime = -999f;
 
-        private string VampirePopText =>
-            LocalizationManager.GetText(
-                "EliteEnemies_Affix_Vampirism_PopText_1",
-                "<color=#DC143C>吸血 +{0}</color>");
+        /// <summary>"吸血 +{0}"——**存键不存译文**（联机下要把键发给客机，见 PlayerEffectRelay）。</summary>
+        private const string VampirePopKey = "EliteEnemies_Affix_Vampirism_PopText_1";
+        private const string VampirePopFallback = "<color=#DC143C>吸血 +{0}</color>";
 
         public void OnAttack(CharacterMainControl attacker, DamageInfo dmg)
         {
@@ -84,8 +83,9 @@ namespace EliteEnemies.Affixes.Behaviors
             // 如果实际回复了生命值，显示提示
             if (actualHeal > 0.1f)
             {
-                string popText = string.Format(VampirePopText, Mathf.CeilToInt(actualHeal));
-                PlayerEffectRelay.PopTextOnElite(attacker, popText);
+                // 参数是**数字**（语言无关）⇒ 走传键，让客机自己格式化。
+                PlayerEffectRelay.PopTextOnElite(attacker, VampirePopKey, VampirePopFallback,
+                                                 Mathf.CeilToInt(actualHeal).ToString());
 
                 // 更新冷却时间
                 _lastHealTime = Time.time;
@@ -116,11 +116,6 @@ namespace EliteEnemies.Affixes.Behaviors
             // 官方标记：见 ItemSetting_Gun.SetMarkerParam（ItemSetting_Gun.cs:543）
             return !currentAgent.Item.GetBool("IsGun");
         }
-
-
-
-
-
 
     }
 }

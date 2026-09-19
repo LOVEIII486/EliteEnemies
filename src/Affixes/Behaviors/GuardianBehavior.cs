@@ -50,12 +50,6 @@ namespace EliteEnemies.Affixes.Behaviors
         private string PartnerSuffix =>
             LocalizationManager.GetText("EliteEnemies_Affix_Guardian_MateSuffix") ?? "Guardian";
 
-        private string ImmuneText =>
-            LocalizationManager.GetText("EliteEnemies_Affix_Guardian_ImmunePop") ?? "IMMUNE";
-
-        private string BrokenText =>
-            LocalizationManager.GetText("EliteEnemies_Affix_Guardian_ShieldBroken") ?? "SHIELD BROKEN";
-
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             _self = character;
@@ -189,7 +183,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (Time.time - _lastPopTime >= PopCooldown)
             {
-                PlayerEffectRelay.PopTextOnElite(character, ImmuneText);
+                PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Guardian_ImmunePop", "IMMUNE");
                 _lastPopTime = Time.time;
             }
         }
@@ -198,7 +192,7 @@ namespace EliteEnemies.Affixes.Behaviors
         {
             _isForceBroken = true;
             SetInvincibleState(false);
-            PlayerEffectRelay.PopTextOnElite(character, BrokenText);
+            PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Guardian_ShieldBroken", "SHIELD BROKEN");
 
             if (_partner != null)
             {

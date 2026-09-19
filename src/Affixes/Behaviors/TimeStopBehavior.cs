@@ -50,10 +50,6 @@ namespace EliteEnemies.Affixes.Behaviors
 
         /// <summary>接管前的 <c>devCambulletTimeScale</c>，结束时还原（别的来源若也用了它，不该被我们清掉）。</summary>
         private float _previousDevTimeScale = 1f;
-
-        private string EnemyPopLine =>
-            LocalizationManager.GetText("EliteEnemies_Affix_TimeStop_PopText_1", "<color=#FFD700>砸瓦鲁多！</color>");
-
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             if (character == null) return;
@@ -103,7 +99,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 _previousDevTimeScale = TimeScaleManager.devCambulletTimeScale;
                 TimeScaleManager.devCambulletTimeScale = TimeStopScale;
 
-                PlayerEffectRelay.PopTextOnElite(character, EnemyPopLine);
+                PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_TimeStop_PopText_1", "<color=#FFD700>砸瓦鲁多！</color>");
 
                 if (_timeStopCoroutine != null) StopManagedCoroutine(_timeStopCoroutine);
                 _timeStopCoroutine = StartManagedCoroutine(EndTimeStopAfterDelay());

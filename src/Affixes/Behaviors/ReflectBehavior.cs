@@ -26,9 +26,6 @@ namespace EliteEnemies.Affixes.Behaviors
 
         private const float CooldownTime = 4.5f; 
         private const float ActiveDuration = 3.0f;
-        
-        private string ReflectPopText => LocalizationManager.GetText("EliteEnemies_Affix_Reflect_PopText");
-
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             _ownerID = character.GetInstanceID();
@@ -52,7 +49,7 @@ namespace EliteEnemies.Affixes.Behaviors
             ActiveReflectorIDs.Add(_ownerID);
             
             // 弹字要自己转交——联机模组把通用的 PopText 补丁注释掉了（见 PlayerEffectRelay）。
-            PlayerEffectRelay.PopTextOnElite(Ctx.Character, ReflectPopText);
+            PlayerEffectRelay.PopTextOnElite(Ctx.Character, "EliteEnemies_Affix_Reflect_PopText", null);
             _visualShield.Show();
         }
 

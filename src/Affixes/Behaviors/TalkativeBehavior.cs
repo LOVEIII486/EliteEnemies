@@ -79,11 +79,9 @@ namespace EliteEnemies.Affixes.Behaviors
                 _lastIndex = index;
                 string message = _messages[index];
 
-                PlayerEffectRelay.PopTextOnElite(character, message);
+                PlayerEffectRelay.PopTextOnEliteResolved(character, message);
             }
         }
-
-
 
         public override void OnCleanup(CharacterMainControl character)
         {

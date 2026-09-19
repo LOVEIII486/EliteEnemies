@@ -11,9 +11,6 @@ namespace EliteEnemies.Affixes.Behaviors
     {
         public override string AffixName => "Overload";
         private bool _isEnraged = false;
-        
-        private string OverloadPopText => LocalizationManager.GetText("EliteEnemies_Affix_Overload_PopText", "OVERLOAD!");
-
         public override void OnEliteInitialized(CharacterMainControl character) 
         {
             _isEnraged = false;
@@ -25,7 +22,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (_isEnraged || character == null) return;
             
             _isEnraged = true;
-            PlayerEffectRelay.PopTextOnElite(character, OverloadPopText);
+            PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Overload_PopText", "OVERLOAD!");
 
             ModifyAI(character, AIFields.BaseReactionTime, 0.3f);
 
@@ -39,7 +36,6 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
         
-
 
         public override void OnCleanup(CharacterMainControl character)
         {

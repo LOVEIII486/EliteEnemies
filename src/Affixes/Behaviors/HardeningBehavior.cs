@@ -35,11 +35,8 @@ namespace EliteEnemies.Affixes.Behaviors
         private float _lastTriggerTime = -999f;
         private float _stateTimer = 0f;
 
-        private string HardeningPopText => LocalizationManager.GetText("EliteEnemies_Affix_Hardening_PopText_1"); // "硬化 +{0}%"
-        private string MaxStateText => LocalizationManager.GetText("EliteEnemies_Affix_Hardening_Max");
-        private string WeakenedStateText => LocalizationManager.GetText("EliteEnemies_Affix_Hardening_Weakened");
-        private string RecoverStateText => LocalizationManager.GetText("EliteEnemies_Affix_Hardening_Recover");
-
+        /// <summary>"硬化 +{0}%"——**存键不存译文**，联机下要把它发给客机（见 PlayerEffectRelay）。</summary>
+        private const string HardeningPopKey = "EliteEnemies_Affix_Hardening_PopText_1";
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             ResetState(character);
@@ -64,12 +61,13 @@ namespace EliteEnemies.Affixes.Behaviors
                 _accumulatedReduction = MaxTotalReduction;
                 _currentState = HardeningState.MaxHardened;
                 _stateTimer = 0f;
-                PlayerEffectRelay.PopTextOnElite(character, MaxStateText);
+                PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Hardening_Max", null);
             }
             else
             {
-                string msg = string.Format(HardeningPopText, (added * 100f).ToString("F1"));
-                PlayerEffectRelay.PopTextOnElite(character, msg);
+                // 参数是**数字**（语言无关）⇒ 可以走传键，让客机自己格式化。
+                PlayerEffectRelay.PopTextOnElite(character, HardeningPopKey, null,
+                                                 (added * 100f).ToString("F1"));
             }
 
             ApplyPhysicsFactorChange(character);
@@ -121,7 +119,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _currentState = HardeningState.Weakened;
             _stateTimer = 0f;
 
-            PlayerEffectRelay.PopTextOnElite(character, WeakenedStateText);
+            PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Hardening_Weakened", null);
         }
 
         private void EnterAccumulatingState(CharacterMainControl character)
@@ -133,7 +131,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _stateTimer = 0f;
             _lastTriggerTime = -999f;
 
-            PlayerEffectRelay.PopTextOnElite(character, RecoverStateText);
+            PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Hardening_Recover", null);
         }
 
         private void ResetState(CharacterMainControl character)

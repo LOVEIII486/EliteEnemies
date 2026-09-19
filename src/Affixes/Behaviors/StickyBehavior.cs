@@ -12,10 +12,6 @@ namespace EliteEnemies.Affixes.Behaviors
     public class StickyBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {
         public override string AffixName => "Sticky";
-
-        private string EnemyPopLine =>
-            LocalizationManager.GetText("EliteEnemies_Affix_Sticky_PopText_1");
-
         private string PlayerPopLine =>
             LocalizationManager.GetText("EliteEnemies_Affix_Sticky_PopText_2");
 
@@ -47,7 +43,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.DropWeapon))
             {
                 _consumed = true;
-                PlayerEffectRelay.PopTextOnElite(owner, EnemyPopLine);
+                PlayerEffectRelay.PopTextOnElite(owner, "EliteEnemies_Affix_Sticky_PopText_1", null);
                 return;
             }
 
@@ -58,7 +54,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 return;
             }
 
-            PlayerEffectRelay.PopTextOnElite(owner, EnemyPopLine);
+            PlayerEffectRelay.PopTextOnElite(owner, "EliteEnemies_Affix_Sticky_PopText_1", null);
             // 玩家侧弹字同理：主机弹在复制体上、真人看不到 ⇒ 联机下只让客机弹。
             if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopLine))
                 player.PopText(PlayerPopLine);
@@ -67,8 +63,6 @@ namespace EliteEnemies.Affixes.Behaviors
         }
         
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
-
-
 
     }
 }

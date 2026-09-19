@@ -14,10 +14,6 @@ namespace EliteEnemies.Affixes.Behaviors
         
         private static readonly float Cooldown = 12.0f;
         private float _lastTriggerTime = -999f;
-
-        private string EnemyPopLine =>
-            LocalizationManager.GetText("EliteEnemies_Affix_MagazineCurse_PopText_1");
-
         private string PlayerPopLine =>
             LocalizationManager.GetText("EliteEnemies_Affix_MagazineCurse_PopText_2");
 
@@ -45,7 +41,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (!PlayerEffectActions.ForceReload(player)) return;   // 没枪 / 换不了 ⇒ 不进冷却
 
-            PlayerEffectRelay.PopTextOnElite(character, EnemyPopLine);
+            PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_MagazineCurse_PopText_1", null);
             // 玩家侧弹字同理：主机弹在复制体上、真人看不到 ⇒ 联机下只让客机弹。
             // 单机 / 主机自己的玩家照样本地弹（`TryRelayPlayerPopText` 返回 false）。
             if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopLine))
@@ -62,8 +58,6 @@ namespace EliteEnemies.Affixes.Behaviors
             if (character == null) return;
             _lastTriggerTime = -999f;
         }
-
-
 
         public override void OnCleanup(CharacterMainControl character)
         {

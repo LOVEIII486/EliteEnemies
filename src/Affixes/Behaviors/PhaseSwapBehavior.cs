@@ -47,10 +47,6 @@ namespace EliteEnemies.Affixes.Behaviors
 
         private static float _lastSwapTime = -999f;
         private static bool _isSwapping = false; // 防止在交换过程中重复触发
-
-        private string PhasePopText =>
-            LocalizationManager.GetText("EliteEnemies_Affix_Phase_PopText_1");
-
         public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             // 自愈：标志为真、却早已超过一次合法交换所需的时长 ⇒ 那条协程被中止了（见类注释）。
@@ -91,14 +87,14 @@ namespace EliteEnemies.Affixes.Behaviors
                 attacker.StartCoroutine(MoveEnemyOnly(attacker, playerPos + SwapOffset));
 
                 _lastSwapTime = Time.time;
-                PlayerEffectRelay.PopTextOnElite(attacker, PhasePopText);
+                PlayerEffectRelay.PopTextOnElite(attacker, "EliteEnemies_Affix_Phase_PopText_1", null);
                 return;
             }
 
             attacker.StartCoroutine(SmoothSwapRoutine(attacker, player));
 
             _lastSwapTime = Time.time;
-            PlayerEffectRelay.PopTextOnElite(attacker, PhasePopText);
+            PlayerEffectRelay.PopTextOnElite(attacker, "EliteEnemies_Affix_Phase_PopText_1", null);
         }
 
         /// <summary>联机：只把精英挪到玩家（复制体）的位置；玩家那一半由他自己那台机器做。</summary>
@@ -157,8 +153,6 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnAttack(CharacterMainControl attacker, DamageInfo damageInfo) { }
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
-
-
 
     }
 }

@@ -11,8 +11,6 @@ namespace EliteEnemies.Affixes.Behaviors
         public override string AffixName => "Berserk";
         
         private bool _berserkTriggered = false;
-        private string BerserkPopText => LocalizationManager.GetText("EliteEnemies_Affix_Berserk_PopText_1");
-
         public override void OnEliteInitialized(CharacterMainControl character) 
         {
             _berserkTriggered = false;
@@ -32,7 +30,7 @@ namespace EliteEnemies.Affixes.Behaviors
         private void TriggerBerserk(CharacterMainControl character)
         {
             _berserkTriggered = true;
-            PlayerEffectRelay.PopTextOnElite(character, BerserkPopText);
+            PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Berserk_PopText_1", null);
 
             // 1. 伤害增加 30%
             // 复用现成的助手：它做的就是"枪 + 近战都乘同一倍率"（CharacterModifiers.cs:50）
@@ -49,7 +47,6 @@ namespace EliteEnemies.Affixes.Behaviors
             ModifyAI(character, AIFields.BaseReactionTime, 0.5f);
         }
         
-
 
         public override void OnCleanup(CharacterMainControl character)
         {

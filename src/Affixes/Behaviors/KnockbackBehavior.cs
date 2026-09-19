@@ -12,11 +12,6 @@ namespace EliteEnemies.Affixes.Behaviors
         private static readonly float KnockbackCooldown = 5f; // cd
 
         private static float _globalLastKnockbackTime = -999f;
-        
-        private string EnemyPopLine => LocalizationManager.GetText(
-            "EliteEnemies_Affix_Knockback_PopText_1",
-            "<color=#FF4500>装逼我让你飞起来！</color>");
-        
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
         {
         }
@@ -53,22 +48,16 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.Knockback, scaledDirection))
             {
-                PlayerEffectRelay.PopTextOnElite(attacker, EnemyPopLine);
+                PlayerEffectRelay.PopTextOnElite(attacker, "EliteEnemies_Affix_Knockback_PopText_1", "<color=#FF4500>装逼我让你飞起来！</color>");
                 _globalLastKnockbackTime = Time.time;
                 return;
             }
 
             PlayerEffectActions.Knockback(player, scaledDirection);
 
-            PlayerEffectRelay.PopTextOnElite(attacker, EnemyPopLine);
+            PlayerEffectRelay.PopTextOnElite(attacker, "EliteEnemies_Affix_Knockback_PopText_1", "<color=#FF4500>装逼我让你飞起来！</color>");
             _globalLastKnockbackTime = Time.time;
         }
-
-
-
-
-
-
 
     }
 }

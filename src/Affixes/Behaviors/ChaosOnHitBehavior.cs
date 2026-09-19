@@ -67,15 +67,13 @@ namespace EliteEnemies.Affixes.Behaviors
             _victims.Add(victim);   // 记下来，死亡时要按这批人逐个撤
 
             string text = string.Format(ChaosPopTextFmt, pick.DisplayName);
-            PlayerEffectRelay.PopTextOnElite(attacker, text);
+            PlayerEffectRelay.PopTextOnEliteResolved(attacker, text);
             _lastApplyTime = Time.time;
         }
 
         public void OnDamaged(CharacterMainControl character, DamageInfo dmg)
         {
         }
-
-
 
         public override void OnEliteDeath(CharacterMainControl c, DamageInfo dmg)
         {
@@ -97,7 +95,6 @@ namespace EliteEnemies.Affixes.Behaviors
 
             _victims.Clear();
         }
-
 
     }
 }

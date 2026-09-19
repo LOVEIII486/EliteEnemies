@@ -31,8 +31,11 @@ namespace EliteEnemies.Coop
         /// <summary>仅「玩家效果」类报文用：第二个整数参数（偷窃回报时是物品的 typeId）。</summary>
         public int Ei2;
 
-        /// <summary>弹字报文用：文本内容。</summary>
+        /// <summary>弹字报文用：本地化键（玩家效果报文里也用它装键）。</summary>
         public string Text;
+
+        /// <summary>弹字报文用：**格式参数**（语言无关的那部分，例：百分比数字）。可为空。</summary>
+        public string TextArg;
 
         /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：全量快照的 id 列表。</summary>
         public readonly List<int> BatchIds = new List<int>();
@@ -80,12 +83,16 @@ namespace EliteEnemies.Coop
     /// 所以<b>第三方调 <c>cmc.PopText()</c> 一律不过网</b>；而体型（<c>localScale</c>）
     /// 也不在 <c>AISyncEntry</c> 里。两者都只能由本模块自己补。</item>
     ///
+    /// <item><b>v6</b>：弹字报文改传**本地化键 + 兜底 + 格式参数**，不再传渲染好的译文——
+    /// 传译文会把**主机那门语言**焊死到客机身上（<c>AGENT.md §3.5</c>）。
+    /// 格式参数只放**语言无关**的那部分（数字等）；参数里若含本地化文本，那条只能退到传译文。</item>
+    ///
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 5;
+        public const byte ProtocolVersion = 6;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -196,14 +203,23 @@ namespace EliteEnemies.Coop
             }
         }
 
-        /// <summary>AI 弹字：<c>[aiId][文本]</c>。</summary>
-        public static byte[] EncodeAiPopText(int aiId, string text)
+        /// <summary>
+        /// AI 弹字：<c>[aiId][本地化键][兜底文本]</c>。
+        ///
+        /// <para>⚠ <b>传的是键，不是译文。</b>传渲染好的文本等于把<b>主机那门语言</b>
+        /// 焊死到客机身上——正是 <c>AGENT.md §3.5</c> 反复强调的那类问题。
+        /// 兜底文本也一并传：它是**代码里的常量**，两端本是同一份，
+        /// 但接收方是通用路径、不知道是哪一条，所以带上最省事。</para>
+        /// </summary>
+        public static byte[] EncodeAiPopText(int aiId, string key, string fallback, string arg)
         {
-            using (var stream = new MemoryStream(96))
+            using (var stream = new MemoryStream(160))
             using (var writer = NewWriter(stream, Kind.AiPopText))
             {
                 writer.Write(aiId);
-                writer.Write(text ?? string.Empty);
+                writer.Write(key ?? string.Empty);
+                writer.Write(fallback ?? string.Empty);
+                writer.Write(arg ?? string.Empty);
                 return Finish(stream, writer);
             }
         }
@@ -319,7 +335,9 @@ namespace EliteEnemies.Coop
 
                         case Kind.AiPopText:
                             result.AiId = reader.ReadInt32();
-                            result.Text = reader.ReadString();
+                            result.Text = reader.ReadString();       // 本地化键
+                            result.ComboId = reader.ReadString();    // 兜底文本（复用这个字符串字段）
+                            result.TextArg = reader.ReadString();    // 格式参数（可为空）
                             break;
 
                         case Kind.Batch:

@@ -36,13 +36,6 @@ namespace EliteEnemies.Affixes.Behaviors
         private bool _isInvincible;      // 当前是否处于词条赋予的无敌状态
         private bool _originalInvincibleState; // 记录触发前的无敌状态（用于还原）
         private float _invincibleEndTime;      // 无敌结束时间戳
-
-        private string PopLineStart =>
-            LocalizationManager.GetText("EliteEnemies_Affix_Undead_PopText_1");
-
-        private string PopLineEnd =>
-            LocalizationManager.GetText("EliteEnemies_Affix_Undead_PopText_2");
-
         public override void OnEliteInitialized(CharacterMainControl character)
         {
             if (character == null || character.Health == null) return;
@@ -117,7 +110,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _invincibleEndTime = Time.time + InvincibleDuration;
             health.SetInvincible(true);
 
-            PlayerEffectRelay.PopTextOnElite(character, PopLineStart);
+            PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Undead_PopText_1", null);
 
             ModifyAI(character, AIFields.ShootCanMove, true);
             ModifyAI(character, AIFields.CanDash, true);
@@ -136,7 +129,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 character.Health.SetInvincible(_originalInvincibleState);
                 if (!character.Health.IsDead)
                 {
-                    PlayerEffectRelay.PopTextOnElite(character, PopLineEnd);
+                    PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Undead_PopText_2", null);
                 }
             }
             _isInvincible = false;

@@ -101,8 +101,6 @@ namespace EliteEnemies.Affixes.Behaviors
             }
         }
 
-
-
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
             // 首次受击触发隐身
@@ -186,7 +184,7 @@ namespace EliteEnemies.Affixes.Behaviors
             }
             _lastMsgIndex = idx;
             
-            PlayerEffectRelay.PopTextOnElite(character, _messages[idx]);
+            PlayerEffectRelay.PopTextOnEliteResolved(character, _messages[idx]);
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
