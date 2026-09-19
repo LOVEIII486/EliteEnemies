@@ -83,6 +83,19 @@ namespace EliteEnemies.Coop
         /// <summary>客户端：词条已到、但复制体还没到的那批（等复制体来了再应用）。</summary>
         private static readonly Dictionary<int, EliteInfo> s_clientPending = new Dictionary<int, EliteInfo>();
 
+        /// <summary>
+        /// 客户端：**视觉状态已到、但复制体还没建出来**的那批，暂存起来等复制体出现再套上。
+        ///
+        /// <para>⚠️ <b>为什么必须暂存、不能像原先那样丢弃</b>：巨大化/迷你是在**精英生成时**
+        /// 设一次体型，而那一刻客机的复制体往往还没建出来——丢掉的是一条**再也不会重发**
+        /// 的一次性状态，客机就永远看不到体型了（实测确认）。
+        /// 显隐会反复切换，丢一条还能等下一跳；**但体型不会**。</para>
+        /// </summary>
+        private static readonly Dictionary<int, Vector3> s_pendingVisualScale = new Dictionary<int, Vector3>();
+        private static readonly Dictionary<int, bool> s_pendingVisualHidden = new Dictionary<int, bool>();
+
+        private const int MaxPendingVisual = 512;
+
         // ===== 统计 =====
         private static int s_recvTotal;
         private static int s_replicaTotal;
@@ -146,6 +159,8 @@ namespace EliteEnemies.Coop
             s_hostKnown.Clear();
             s_clientReplicas.Clear();
             s_clientPending.Clear();
+            s_pendingVisualScale.Clear();
+            s_pendingVisualHidden.Clear();
 
             // 计数器一并归零：模组停用后重新启用时，统计不该背着上一局的数据。
             s_recvTotal = 0;
@@ -351,6 +366,7 @@ namespace EliteEnemies.Coop
             }
 
             TryApply(aiId);
+            ApplyPendingVisual(aiId, cmc);   // 体型这类一次性状态可能是"先到"的，补上
             if (!s_clientPending.ContainsKey(aiId)) RequestFullSnapshot($"复制体 aiId={aiId} 尚无词条");
 
             MaybeLogSummary();
@@ -477,24 +493,57 @@ namespace EliteEnemies.Coop
             return null;
         }
 
-        /// <summary>客户端：把主机报来的视觉状态应用到复制体上。</summary>
+        /// <summary>
+        /// 客户端：把主机报来的视觉状态应用到复制体上。
+        ///
+        /// <para>复制体还没建出来就**暂存**（见 <see cref="s_pendingVisualScale"/> 的注释——
+        /// 体型是一次性状态，丢了就再也不会重发）。</para>
+        /// </summary>
         private static void ApplyEliteVisual(EliteMessage message)
         {
-            // 复制体可能还没建出来（视觉消息先到、复制体后到）——那就丢掉这一条。
-            // **刻意不做排队**：视觉状态是"当时的样子"，把迟到的旧状态套上去
-            // 反而会短暂显示错的体型；下一次变化会补上正确的。
             if (!s_clientReplicas.TryGetValue(message.AiId, out var cmc) || !cmc)
             {
-                CoopLog.Info($"[客户端] 收到精英视觉 aiId={message.AiId}，但复制体尚未就绪，已丢弃");
+                if (s_pendingVisualScale.Count < MaxPendingVisual)
+                {
+                    s_pendingVisualScale[message.AiId] = Vector3.one * Mathf.Max(message.Fx, 0.0001f);
+                    s_pendingVisualHidden[message.AiId] = message.Ei != 0;
+                }
+
+                CoopLog.Info($"[客户端] 收到精英视觉 aiId={message.AiId}，复制体尚未就绪，已暂存待用");
                 return;
             }
 
-            bool hidden = message.Ei != 0;
-            cmc.gameObject.SetActive(!hidden);
+            ApplyVisualTo(cmc, Vector3.one * Mathf.Max(message.Fx, 0.0001f), message.Ei != 0);
+        }
 
-            if (!hidden && message.Fx > 0f) cmc.transform.localScale = Vector3.one * message.Fx;
+        /// <summary>
+        /// 把视觉状态套到复制体上。
+        ///
+        /// <para>⚠️ <b>显隐必须走 <c>Hide()/Show()</c>，不能用 <c>gameObject.SetActive</c>。</b>
+        /// 后者会**连碰撞体一起关掉**——客机的子弹会直接穿过去、打不中，表现为
+        /// "看不见也打不中"（实测确认）；而主机侧用的正是 <c>Hide()/Show()</c>
+        /// （只关渲染、保留碰撞）⇒ 两边不一致。隐身该是"**看不见但打得到**"。</para>
+        /// </summary>
+        private static void ApplyVisualTo(CharacterMainControl cmc, Vector3 scale, bool hidden)
+        {
+            cmc.transform.localScale = scale;
 
-            CoopLog.Info($"[客户端] 应用精英视觉 aiId={message.AiId} 缩放={message.Fx:0.00} 隐藏={hidden}");
+            if (hidden) cmc.Hide();
+            else cmc.Show();
+
+            CoopLog.Info($"[客户端] 应用精英视觉 缩放={scale.x:0.00} 隐藏={hidden}");
+        }
+
+        /// <summary>复制体建出来之后，把之前暂存的视觉状态补上。</summary>
+        private static void ApplyPendingVisual(int aiId, CharacterMainControl cmc)
+        {
+            if (!s_pendingVisualScale.TryGetValue(aiId, out var scale)) return;
+
+            s_pendingVisualScale.Remove(aiId);
+            s_pendingVisualHidden.TryGetValue(aiId, out bool hidden);
+            s_pendingVisualHidden.Remove(aiId);
+
+            ApplyVisualTo(cmc, scale, hidden);
         }
 
         /// <summary>
