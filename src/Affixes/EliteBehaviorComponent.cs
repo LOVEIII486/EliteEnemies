@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using EliteEnemies.Modifiers;
@@ -13,13 +13,31 @@ namespace EliteEnemies.Affixes
     public class EliteBehaviorComponent : MonoBehaviour
     {
         private CharacterMainControl _character;
+
+        /// <summary>受伤事件的两个来源。**两个都订阅**——为什么缺一不可见 <see cref="RegisterCombatEvents"/>。</summary>
         private DamageReceiver _damageReceiver;
+        private Health _health;
+
+        /// <summary>
+        /// 「这一遍伤害已经由 <c>DamageReceiver</c> 那侧派发过了」。
+        ///
+        /// <para>正常命中时 <c>DamageReceiver.Hurt</c> 会**先触发自己的事件、再紧接着同步转发**
+        /// 给 <c>Health.Hurt</c>（<c>DamageReceiver.cs:94-96</c>），于是同一次伤害经两个事件各来一遍。
+        /// 靠这个标志让紧随其后的那遍跳过，保证 <c>OnDamaged</c> 只派发一次。</para>
+        ///
+        /// <para>⚠️ <b>不能用"记住上次的 DamageInfo 再比引用"来去重</b>——<c>DamageInfo</c> 是
+        /// <b>值类型</b>，每次装箱都是新对象，<c>ReferenceEquals</c> 恒为 false。</para>
+        ///
+        /// <para>程序化结算（联机模组那条路）只触发 <c>Health</c> 那侧，此标志为 false ⇒ 正常派发。</para>
+        /// </summary>
+        private bool _handledByReceiver;
         private List<IAffixBehavior> _behaviors = new List<IAffixBehavior>();
         private List<IUpdateableAffixBehavior> _updateableBehaviors = new List<IUpdateableAffixBehavior>();
         private List<ICombatAffixBehavior> _combatBehaviors = new List<ICombatAffixBehavior>();
         private bool _isInitialized = false;
 
-        private UnityAction<DamageInfo> _hurtHandler;
+        private UnityAction<DamageInfo> _receiverHurtHandler;
+        private UnityAction<DamageInfo> _healthHurtHandler;
 
         /// <summary>每个敌人只解析一次的常用引用，见 <see cref="AffixContext"/>。</summary>
         private AffixContext _context;
@@ -108,16 +126,49 @@ namespace EliteEnemies.Affixes
         {
             if (_combatBehaviors.Count == 0) return;
 
-            // 1. 绑定受伤事件
+            // 1. 绑定受伤事件——**两个都要绑**，理由见下。
+            //
+            // 游戏里这是两个不同组件上的同名 UnityEvent，触发时机与覆盖面都不同：
+            //
+            //   DamageReceiver.Hurt(dmg)                       // DamageReceiver.cs:76
+            //   {   dmg.toDamageReceiver = this;
+            //       OnHurtEvent?.Invoke(dmg);                  // ← ① 扣血**之前**，仅"被打中"才走
+            //       health.Hurt(dmg); }                        //    再转发给下面
+            //
+            //   Health.Hurt(dmg)                               // Health.cs:308
+            //   {   …扣血…;
+            //       OnDeadEvent?.Invoke(dmg);
+            //       OnHurtEvent?.Invoke(dmg); }                // ← ② 扣血**之后**，两条路都会走这
+            //
+            // **只绑 ①**：正常命中没问题，但**程序化结算走不到**它——
+            //   联机模组在主机上结算客机上报的伤害正是直接调 `health.Hurt()`
+            //   （`AISyncService.ApplyDamageToController`），于是 `OnDamaged` 永不触发，
+            //   **报复之类的词条在联机下静默失效**（已实测确认）。
+            //
+            // **只绑 ②**：覆盖面够了，但 `OnDamaged` 会从"扣血前"变成"扣血后"——
+            //   而**扣血前这个时机是有用的**：`UndyingBehavior` 的"预判通道"正是靠它
+            //   赶在 `Health.Hurt` 之前补血并给上无敌（`Health.Hurt` 开头就是
+            //   `if (invincible) return false;`），那一击才被完全挡下。
+            //   `SplitBehavior` 也明写两条通道"缺一不可"。**挪到 ② 会破坏单机的不死。**
+            //
+            // ⇒ 两个都绑，靠**事件顺序标志**保证同一次伤害只派发一次：
+            //   正常命中时 `DamageReceiver.Hurt` 触发完自己的事件后会**紧接着同步**调用
+            //   `health.Hurt`，所以 `Health` 那一遍必定紧跟在 `DamageReceiver` 那一遍之后。
+            //   收到前者就置 `_handledByReceiver`，后者据此跳过并清标志。
+            //   （⚠ 不能用"比较 DamageInfo"去重：它是**值类型**，装箱后 `ReferenceEquals` 恒为 false。）
             _damageReceiver = _character.mainDamageReceiver;
-            if (_damageReceiver != null)
+            _health = _character.Health;
+
+            if (_damageReceiver == null && _health == null)
             {
-                _hurtHandler = OnHurtHandler;
-                _damageReceiver.OnHurtEvent.AddListener(_hurtHandler);
+                Debug.LogWarning($"[EliteBehaviorComponent] {_character.name} 既没有 DamageReceiver 也没有 Health！");
             }
             else
             {
-                Debug.LogWarning($"[EliteBehaviorComponent] {_character.name} 没有 DamageReceiver 组件！");
+                _receiverHurtHandler = OnDamageReceiverHurt;
+                _healthHurtHandler = OnHealthHurt;
+                _damageReceiver?.OnHurtEvent.AddListener(_receiverHurtHandler);
+                _health?.OnHurtEvent.AddListener(_healthHurtHandler);
             }
 
             // 2. 绑定攻击事件
@@ -131,9 +182,32 @@ namespace EliteEnemies.Affixes
         }
 
         /// <summary>
-        /// 受伤事件处理器
+        /// 正常命中路径：**扣血之前**由 <c>DamageReceiver</c> 触发。
+        /// 派发后置起标志，让紧跟着的那遍 <c>Health</c> 事件跳过。
         /// </summary>
-        private void OnHurtHandler(DamageInfo damageInfo)
+        private void OnDamageReceiverHurt(DamageInfo damageInfo)
+        {
+            _handledByReceiver = true;
+            DispatchOnDamaged(damageInfo);
+        }
+
+        /// <summary>
+        /// 覆盖面更广的那条：**扣血之后**由 <c>Health</c> 触发，
+        /// 包括**不经过 DamageReceiver 的程序化结算**（联机模组给主机结算客机伤害即此路）。
+        /// 若这一遍已由 <c>DamageReceiver</c> 派发过就跳过。
+        /// </summary>
+        private void OnHealthHurt(DamageInfo damageInfo)
+        {
+            if (_handledByReceiver)
+            {
+                _handledByReceiver = false;   // 消费掉，只跳过紧随其后的这一遍
+                return;
+            }
+
+            DispatchOnDamaged(damageInfo);
+        }
+
+        private void DispatchOnDamaged(DamageInfo damageInfo)
         {
             if (!_isInitialized || _character == null) return;
 
@@ -333,10 +407,13 @@ namespace EliteEnemies.Affixes
         private void UnregisterCombatEvents()
         {
             // 解绑受伤事件
-            if (_damageReceiver != null && _hurtHandler != null)
-            {
-                _damageReceiver.OnHurtEvent.RemoveListener(_hurtHandler);
-            }
+            // 两个来源都要退订；对象可能已被销毁，逐个判空。
+            if (_damageReceiver != null && _receiverHurtHandler != null)
+                _damageReceiver.OnHurtEvent.RemoveListener(_receiverHurtHandler);
+            if (_health != null && _healthHurtHandler != null)
+                _health.OnHurtEvent.RemoveListener(_healthHurtHandler);
+
+            _handledByReceiver = false;
 
             // 解绑攻击事件
             if (_character != null)
