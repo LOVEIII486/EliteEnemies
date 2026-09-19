@@ -1,4 +1,5 @@
 ﻿using Duckov;
+using EliteEnemies.Core;
 using UnityEngine;
 
 namespace EliteEnemies.Affixes.Behaviors
@@ -38,12 +39,11 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
-            var player = CharacterMainControl.Main;
-            if (player == null) return;
-
-            float dist = Vector3.Distance(character.transform.position, player.transform.position);
-            
-            if (dist > TriggerDistance) return;
+            // ⚠ 用**最近玩家**（本机 + 远端），不是 `CharacterMainControl.Main`。
+            //   后者是「本机玩家」——联机下判定在主机上跑，客机玩家是另一个角色对象，
+            //   写死 Main 会让这个词条**只对主机玩家的靠近有反应**。
+            var player = EliteEnemyCore.FindNearestPlayer(character.transform.position, out float dist);
+            if (player == null || dist > TriggerDistance) return;
 
             _timer += deltaTime;
             if (_timer >= _nextInterval)
@@ -56,14 +56,15 @@ namespace EliteEnemies.Affixes.Behaviors
         
         private void ResetDynamicTimer(CharacterMainControl owner)
         {
-            var player = CharacterMainControl.Main;
-            if (player == null) 
+            // ⚠ 用**最近玩家**（本机 + 远端），不是 `CharacterMainControl.Main`。
+            //   后者是「本机玩家」——联机下判定在主机上跑，客机玩家是另一个角色对象，
+            //   写死 Main 会让这个词条**只对主机玩家的靠近有反应**。
+            var player = EliteEnemyCore.FindNearestPlayer(owner.transform.position, out float dist);
+            if (player == null)
             {
                 _nextInterval = TimerFarMax;
                 return;
             }
-
-            float dist = Vector3.Distance(owner.transform.position, player.transform.position);
             
             // 计算距离权重系数
             float t = Mathf.Clamp01(dist / TriggerDistance);

@@ -77,6 +77,63 @@ namespace EliteEnemies.Core
             var predicate = RemotePlayerPredicate;
             return predicate != null && predicate(cmc);
         }
+
+        /// <summary>
+        /// 本机知道的**远端玩家**列表。**默认 <c>null</c> ⇒ 单机下不存在远端玩家。**
+        /// 由联机模块在激活时填入**它自己持有的那个列表实例**（不是拷贝）。
+        ///
+        /// <para><b>为什么给的是 <see cref="List{T}"/> 而不是"每次现算的集合"</b>：
+        /// <see cref="FindNearestPlayer"/> 会被 <c>OnUpdate</c> **每帧**调用，
+        /// 热路径上**不能分配**。用 <c>List</c> 的索引器遍历不产生任何垃圾；
+        /// 换成 <c>IEnumerable</c> 就会每次都装一个枚举器出来。</para>
+        ///
+        /// <para>⚠ 调用方**只读**，不要改这个列表。</para>
+        /// </summary>
+        public static List<CharacterMainControl> RemotePlayers { get; set; }
+
+        /// <summary>
+        /// 找出离 <paramref name="position"/> **最近的玩家**——本机玩家与远端玩家一起比。
+        ///
+        /// <para><b>为什么需要它</b>：几个"玩家靠近才触发"的词条（幻影 / 音乐家 / 拟态）
+        /// 原先写死拿 <c>CharacterMainControl.Main</c>，那是**本机**玩家。
+        /// 联机下判定在主机上跑，而客机玩家是另一个角色对象
+        /// ⇒ 那些词条**只对主机玩家的靠近有反应**，客机走到跟前也不触发。</para>
+        ///
+        /// <para>找不到任何玩家时返回 <c>null</c>，并把 <paramref name="distance"/> 置为
+        /// <see cref="float.MaxValue"/>——调用方不必再判空距离。</para>
+        /// </summary>
+        public static CharacterMainControl FindNearestPlayer(Vector3 position, out float distance)
+        {
+            CharacterMainControl best = null;
+            distance = float.MaxValue;
+
+            var main = LevelManager.Instance != null ? LevelManager.Instance.MainCharacter : null;
+            if (main != null)
+            {
+                best = main;
+                distance = Vector3.Distance(position, main.transform.position);
+            }
+
+            // 远端玩家：单机下 RemotePlayers 为 null，这个循环整个不执行。
+            var remotes = RemotePlayers;
+            if (remotes != null)
+            {
+                for (int i = 0; i < remotes.Count; i++)
+                {
+                    var player = remotes[i];
+                    if (!player) continue;   // 已销毁的条目（联机模块会定期清理，这里再兜一次）
+
+                    float d = Vector3.Distance(position, player.transform.position);
+                    if (d < distance)
+                    {
+                        distance = d;
+                        best = player;
+                    }
+                }
+            }
+
+            return best;
+        }
         
         // 由生成器创建的临时预设（EggSpawnHelper 的 CreateModifiedPreset 用 Instantiate 造）
         // 的实例 ID——这些预设对应的敌人不应精英化。

@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using EliteEnemies.Core;
 using UnityEngine;
 using ItemStatsSystem;
 using NodeCanvas.Framework;
@@ -253,9 +254,14 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <summary>
         /// 物品形态：玩家进入 <see cref="ItemTriggerDistance"/> 就触发伏击。
         ///
-        /// <para>形状照搬 <c>MusicianBehavior.OnUpdate</c>（<c>:160-170</c>）——同一件事在本仓库
-        /// 已有先例，别另起炉灶：玩家引用取自 <c>CharacterMainControl.Main</c>（游戏自己也在用的静态，
-        /// 例：<c>StockShop.cs:417</c>），距离用 <c>sqrMagnitude</c> 比较（省一次开方）。</para>
+        /// <para>形状照搬 <c>MusicianBehavior.OnUpdate</c>——同一件事在本仓库
+        /// 已有先例，别另起炉灶：距离用 <c>sqrMagnitude</c> 比较（省一次开方）。</para>
+        ///
+        /// <para>⚠ <b>玩家引用用 <see cref="EliteEnemyCore.FindNearestPlayer"/>，不是
+        /// <c>CharacterMainControl.Main</c>。</b>后者是「本机玩家」——
+        /// 联机下判定在主机上跑，客机玩家是另一个角色对象，写死 Main 会让本词条
+        /// <b>只对主机玩家的靠近有反应</b>。（<c>Main</c> 在单机下没错，
+        /// 所以这个 bug 只在联机暴露，详见 <c>Docs\Coop\05-integration-gotchas.md</c> §11。）</para>
         ///
         /// <para><b>为什么不做 <c>Time.timeScale &lt;= 0</c> 的守卫</b>（音乐家那边有）：
         /// 那个守卫是为"暂停时别继续吹奏"加的，而这里的判据是**纯位置比较**——
@@ -279,10 +285,13 @@ namespace EliteEnemies.Affixes.Behaviors
         /// </summary>
         private void CheckPlayerProximity(CharacterMainControl character)
         {
-            CharacterMainControl player = CharacterMainControl.Main;
+            // ⚠ 用**最近玩家**（本机 + 远端），不是 `CharacterMainControl.Main`。
+            //   后者是「本机玩家」——联机下判定在主机上跑，客机玩家是另一个角色对象，
+            //   写死 Main 会让这个词条**只对主机玩家的靠近有反应**。
+            var player = EliteEnemyCore.FindNearestPlayer(character.transform.position, out float dist);
             if (player == null) return;
 
-            float distSqr = (character.transform.position - player.transform.position).sqrMagnitude;
+            float distSqr = dist * dist;
             if (distSqr > ItemTriggerDistance * ItemTriggerDistance) return;
 
             TriggerAmbush(character, player);

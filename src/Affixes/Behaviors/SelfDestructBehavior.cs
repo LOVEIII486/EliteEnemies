@@ -1,4 +1,5 @@
 ﻿using EliteEnemies.Visuals;
+using EliteEnemies.Core;
 using UnityEngine;
 
 namespace EliteEnemies.Affixes.Behaviors
@@ -51,26 +52,33 @@ namespace EliteEnemies.Affixes.Behaviors
 
             // 获取死亡位置并生成爆炸
             var deathPosition = character.transform.position;
-            CreateExplosion(deathPosition, character);
+            CreateExplosion(deathPosition, character, damageInfo.fromCharacter);
         }
 
         /// <summary>
         /// 创建动态伤害的爆炸效果
         /// </summary>
-        private void CreateExplosion(Vector3 position, CharacterMainControl deadCharacter)
+        /// <param name="killer">击杀者。**爆炸伤害按他的血量上限算**——理由见方法内的注释。</param>
+        private void CreateExplosion(Vector3 position, CharacterMainControl deadCharacter, CharacterMainControl killer)
         {
             if (LevelManager.Instance == null || LevelManager.Instance.ExplosionManager == null)
             {
                 return;
             }
 
-            var mainPlayer = CharacterMainControl.Main;
+            // ⚠ 参考血量取**击杀者**的，不是 `CharacterMainControl.Main`（本机玩家）。
+            //   原先写死 Main：单人下击杀者通常就是本机玩家，所以看不出问题；
+            //   联机下击杀者多半是**客机玩家**，而 Main 是主机玩家 ⇒ 伤害按错的人算。
+            //
+            //   击杀者取不到时（例如环境伤害致死）退回 Main——**保住单机原有的行为**，
+            //   不让这条改动改变单人下的任何数值。
+            var reference = killer != null ? killer : CharacterMainControl.Main;
             float calculatedDamage = MinExplosionDamage;
 
             // 动态计算伤害
-            if (mainPlayer != null && mainPlayer.Health != null)
+            if (reference != null && reference.Health != null)
             {
-                float dynamicDamage = mainPlayer.Health.MaxHealth * DamagePercentOfMaxHp;
+                float dynamicDamage = reference.Health.MaxHealth * DamagePercentOfMaxHp;
                 calculatedDamage = Mathf.Clamp(dynamicDamage,MinExplosionDamage,MaxExplosionDamage);
             }
 

@@ -56,6 +56,14 @@ namespace EliteEnemies.Affixes.Behaviors
             if (enemy == null || enemy.CharacterItem == null) return;
             _owner = enemy;
 
+            // ⚠ 这里**刻意**取 `CharacterMainControl.Main`——也就是**本机玩家**。
+            //
+            //   联机下的语义是「**只抄主机玩家的外观与装备**」（作者 2026-09-19 定）：
+            //   本行为只会在主机上跑（客户端复制体没有行为组件），
+            //   所以主机上的 `Main` 就是主机玩家——正是要抄的那个人。
+            //
+            //   ⇒ **不要**把它改成 `victim` 或"最近玩家"：那会让仿身泪滴随击杀者变化，
+            //     与"抄主机玩家"这个设定不符，而且两端看到的外观会不一致。
             var player = CharacterMainControl.Main;
             if (player == null || player.CharacterItem == null) return;
 

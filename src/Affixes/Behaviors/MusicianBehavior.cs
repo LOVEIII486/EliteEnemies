@@ -1,5 +1,6 @@
-using Duckov;
+﻿using Duckov;
 using FMOD.Studio;
+using EliteEnemies.Core;
 using UnityEngine;
 
 namespace EliteEnemies.Affixes.Behaviors
@@ -157,10 +158,13 @@ namespace EliteEnemies.Affixes.Behaviors
                 return;
             }
 
-            CharacterMainControl player = CharacterMainControl.Main;
-            if (player == null) return;
+            // ⚠ 用**最近玩家**（本机 + 远端），不是 `CharacterMainControl.Main`。
+            //   后者是「本机玩家」——联机下判定在主机上跑，客机玩家是另一个角色对象，
+            //   写死 Main 会让这个词条**只对主机玩家的靠近有反应**。
+            var nearest = EliteEnemyCore.FindNearestPlayer(character.transform.position, out float nearestDist);
+            if (nearest == null) return;
 
-            float distSqr = (character.transform.position - player.transform.position).sqrMagnitude;
+            float distSqr = nearestDist * nearestDist;
             if (distSqr > TriggerDistance * TriggerDistance)
             {
                 // 玩家走远了：立刻收声，但**不重置冷却**——
