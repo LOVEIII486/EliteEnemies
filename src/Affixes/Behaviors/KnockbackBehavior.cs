@@ -9,9 +9,6 @@ namespace EliteEnemies.Affixes.Behaviors
     {
         public override string AffixName => "Knockback";
 
-        private static readonly float KnockbackForce = 7f; // 垂直力
-        private static readonly float HorizontalForce = 15f; // 横向力
-        private static readonly float GroundPauseDuration = 0.3f; // 地面约束暂停时间
         private static readonly float KnockbackCooldown = 5f; // cd
 
         private static float _globalLastKnockbackTime = -999f;
@@ -44,47 +41,29 @@ namespace EliteEnemies.Affixes.Behaviors
                 return;
             }
 
-            PerformKnockback(player, attacker);
+            // ⚠ 方向与距离倍率只有主机算得出来（要用精英与玩家的位置），
+            //   所以先在这里算好，再决定是本地做还是交给对方那台机器做。
+            Vector3 horizontal = player.transform.position - attacker.transform.position;
+            horizontal.y = 0f;
 
+            float distance = horizontal.magnitude;
+            float distanceMultiplier = Mathf.Clamp(1.5f / Mathf.Max(distance, 1f), 0.9f, 2f);
+            Vector3 scaledDirection = (distance > 0.0001f ? horizontal / distance : Vector3.zero)
+                                      * distanceMultiplier;
+
+            if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.Knockback, scaledDirection))
+            {
+                attacker.PopText(EnemyPopLine);
+                _globalLastKnockbackTime = Time.time;
+                return;
+            }
+
+            PlayerEffectActions.Knockback(player, scaledDirection);
+
+            attacker.PopText(EnemyPopLine);
             _globalLastKnockbackTime = Time.time;
         }
 
-        private void PerformKnockback(CharacterMainControl player, CharacterMainControl attacker)
-        {
-            var movement = player.movementControl;
-            if (movement == null)
-            {
-                return;
-            }
-
-            CharacterMovement component = movement.GetComponent<CharacterMovement>();
-            if (component == null)
-            {
-                return;
-            }
-
-            // 延长地面约束暂停时间
-            component.PauseGroundConstraint(GroundPauseDuration);
-
-            Vector3 toPlayer = player.transform.position - attacker.transform.position;
-            float distance = toPlayer.magnitude;
-            Vector3 direction = toPlayer.normalized;
-            direction.y = 0;
-
-            // 根据距离动态调整力度
-            float distanceMultiplier = Mathf.Clamp(1.5f / Mathf.Max(distance, 1f), 0.9f, 2f);
-
-            Vector3 vector = component.velocity;
-
-            // 增强横向力，并添加距离倍率
-            vector.x = direction.x * HorizontalForce * distanceMultiplier;
-            vector.y = KnockbackForce;
-            vector.z = direction.z * HorizontalForce * distanceMultiplier;
-
-            component.velocity = vector;
-
-            attacker.PopText(EnemyPopLine);
-        }
 
 
 

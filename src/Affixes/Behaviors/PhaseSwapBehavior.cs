@@ -28,7 +28,16 @@ namespace EliteEnemies.Affixes.Behaviors
         public override string AffixName => "Phase";
 
         private static readonly float CooldownSeconds = 8f;
-        private static readonly float SwapDuration = 0.3f; // 交换过程持续时间（秒），越小越快
+        /// <summary>
+        /// 一次换位的时长（秒）。**联机下由客户端执行同一份平滑移动，所以必须公开**——
+        /// 两端用不同的时长会让"换位"看起来不一样。
+        /// </summary>
+        public const float SwapDurationSeconds = 0.3f;
+
+        private const float SwapDuration = SwapDurationSeconds; // 交换过程持续时间（秒），越小越快
+
+        /// <summary>换位时抬高一点，避免地形起伏把角色卡进地里（与原协程里的 offset 一致）。</summary>
+        private static readonly Vector3 SwapOffset = Vector3.up * 0.1f;
 
         /// <summary>
         /// 把 <c>_isSwapping</c> 判为"陈旧"的时限。取 <see cref="SwapDuration"/> 加 1 秒余量，
@@ -70,10 +79,34 @@ namespace EliteEnemies.Affixes.Behaviors
             var player = victim;
             if (player == null || attacker == null) return;
             
+            Vector3 enemyPos = attacker.transform.position;
+            Vector3 playerPos = player.transform.position;
+
+            // 联机下只有玩家那一半要转交：精英是主机权威的、主机自己挪；
+            // 而玩家的位置由他自己那台机器说了算（主机上那个只是复制体）。
+            if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.PhaseSwap, enemyPos))
+            {
+                // ⚠ 不走 SmoothSwapRoutine——那个会连玩家一起挪，而挪复制体
+                //   既到不了真人、又会被客机的同步覆盖回去。只挪精英。
+                attacker.StartCoroutine(MoveEnemyOnly(attacker, playerPos + SwapOffset));
+
+                _lastSwapTime = Time.time;
+                attacker.PopText(PhasePopText);
+                return;
+            }
+
             attacker.StartCoroutine(SmoothSwapRoutine(attacker, player));
 
             _lastSwapTime = Time.time;
             attacker.PopText(PhasePopText);
+        }
+
+        /// <summary>联机：只把精英挪到玩家（复制体）的位置；玩家那一半由他自己那台机器做。</summary>
+        private IEnumerator MoveEnemyOnly(CharacterMainControl enemy, Vector3 target)
+        {
+            _isSwapping = true;
+            yield return PlayerEffectActions.SmoothMoveTo(enemy, target, SwapDurationSeconds);
+            _isSwapping = false;
         }
 
         /// <summary>

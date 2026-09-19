@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -15,6 +15,21 @@ namespace EliteEnemies.Coop
         public string ComboId;
 
         public List<string> Affixes;
+
+        /// <summary>仅「玩家效果」类报文用：效果作用在哪个玩家（网络 id）。</summary>
+        public string TargetPlayerId;
+
+        /// <summary>仅「玩家效果」类报文用：效果种类（见 <c>CoopPlayerEffect.Kind</c>）。</summary>
+        public byte Effect;
+
+        /// <summary>仅「玩家效果」类报文用：三个浮点参数（含义随 <see cref="Effect"/> 而定）。</summary>
+        public float Fx, Fy, Fz;
+
+        /// <summary>仅「玩家效果」类报文用：第一个整数参数（通常是"这件事关于哪只精英"）。</summary>
+        public int Ei;
+
+        /// <summary>仅「玩家效果」类报文用：第二个整数参数（偷窃回报时是物品的 typeId）。</summary>
+        public int Ei2;
 
         /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：全量快照的 id 列表。</summary>
         public readonly List<int> BatchIds = new List<int>();
@@ -48,12 +63,20 @@ namespace EliteEnemies.Coop
     /// <item><b>v3</b>：每条多加一个 <c>comboId</c> 字符串（非 combo 精英为空串）。
     /// <b>传的是 id 不是称号串</b>——称号由 combo 定义现算，客户端拿到 id 自己查回定义，
     /// 才会跟着客户端那门语言走（传渲染好的字符串等于把语言焊死，本工程在本地化上栽过）。</item>
+    ///
+    /// <item><b>v4</b>：新增「玩家效果」与「玩家效果结果」两种报文。
+    /// 起因是**架构性的**：作用于玩家的效果（击退/换位/偷窃/咬枪）在联机下
+    /// <b>不能由主机替远端玩家做</b>——主机上那个只是复制体，改了到不了真人。
+    /// 只能把效果<b>带参数</b>转交给受害者那台机器执行。
+    /// （试过复用联机模组的 buff 转发，但 <c>PlayerBuffBroadcastRpc</c> 只有
+    /// <c>PlayerId/WeaponTypeId/BuffId</c> 三个字段，<b>传不了参数</b>。）</item>
+    ///
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 3;
+        public const byte ProtocolVersion = 4;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -76,6 +99,17 @@ namespace EliteEnemies.Coop
 
             /// <summary>主机 → 客户端：全量快照，回应 <see cref="Query"/>。</summary>
             Batch = 3,
+
+            /// <summary>
+            /// 主机 → 全体：请**某个玩家**在他那台机器上执行一个效果。
+            /// 收到的一方比对自己的网络 id，是给自己才执行。
+            /// </summary>
+            PlayerEffect = 4,
+
+            /// <summary>
+            /// 客户端 → 主机：某个玩家效果执行完了，回报结果（目前只有偷窃需要）。
+            /// </summary>
+            PlayerEffectResult = 5,
         }
 
         // ==================== 编码 ====================
@@ -113,6 +147,30 @@ namespace EliteEnemies.Coop
                 for (int i = 0; i < count; i++)
                     WriteEntry(writer, ids[i], comboIds[i], affixes[i]);
 
+                return Finish(stream, writer);
+            }
+        }
+
+        /// <summary>
+        /// 玩家效果报文。<paramref name="x"/>/<paramref name="y"/>/<paramref name="z"/> 与
+        /// <paramref name="i"/> 的含义随 <paramref name="effect"/> 而定（见 <c>CoopPlayerEffect.Kind</c>）。
+        ///
+        /// <para>「效果」与「效果结果」两种报文**共用同一个形状**——结果只是
+        /// 反向发送的同一张表，没必要再定义一套。</para>
+        /// </summary>
+        public static byte[] EncodePlayerEffect(Kind kind, string targetPlayerId, byte effect,
+                                                float x, float y, float z, int i, int i2 = 0)
+        {
+            using (var stream = new MemoryStream(48))
+            using (var writer = NewWriter(stream, kind))
+            {
+                writer.Write(targetPlayerId ?? string.Empty);
+                writer.Write(effect);
+                writer.Write(x);
+                writer.Write(y);
+                writer.Write(z);
+                writer.Write(i);
+                writer.Write(i2);
                 return Finish(stream, writer);
             }
         }
@@ -194,6 +252,17 @@ namespace EliteEnemies.Coop
 
                         case Kind.Query:
                             break;   // 无载荷
+
+                        case Kind.PlayerEffect:
+                        case Kind.PlayerEffectResult:
+                            result.TargetPlayerId = reader.ReadString();
+                            result.Effect = reader.ReadByte();
+                            result.Fx = reader.ReadSingle();
+                            result.Fy = reader.ReadSingle();
+                            result.Fz = reader.ReadSingle();
+                            result.Ei = reader.ReadInt32();
+                            result.Ei2 = reader.ReadInt32();
+                            break;
 
                         case Kind.Batch:
                             int entries = reader.ReadInt32();

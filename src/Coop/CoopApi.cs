@@ -55,6 +55,9 @@ namespace EliteEnemies.Coop
         private static Action<byte[]> _sendToServer;
         private static Func<bool> _isServer;
         private static Func<bool> _networkStarted;
+        private static Func<CharacterMainControl, string> _getPlayerIdFor;
+        private static Func<string> _getSelfId;
+        private static Func<string, bool> _isSelfId;
         private static IDisposable _messageSubscription;
         private static EventInfo _aiSpawnedEvent;
         private static Action<int, CharacterMainControl> _aiSpawnedHandler;
@@ -161,6 +164,7 @@ namespace EliteEnemies.Coop
             {
                 CoopPlayers.Shutdown();
                 CoopAffixPolicy.Uninstall();
+                CoopPlayerEffect.Shutdown();
                 CoopEliteSync.Shutdown();
             }
             catch (Exception ex)
@@ -173,6 +177,9 @@ namespace EliteEnemies.Coop
             _sendToServer = null;
             _isServer = null;
             _networkStarted = null;
+            _getPlayerIdFor = null;
+            _getSelfId = null;
+            _isSelfId = null;
             Active = false;
             _mismatchReported = false;
 
@@ -196,6 +203,26 @@ namespace EliteEnemies.Coop
             if (!Active || _sendToServer == null || payload == null) return false;
             _sendToServer(payload);
             return true;
+        }
+
+        /// <summary>
+        /// 取某个角色对应的**玩家 id**（主机侧用，用来把效果路由到他那台机器）。
+        /// 拿不到（不是玩家、或服务未就绪）时返回 <c>null</c>。
+        /// </summary>
+        public static string GetPlayerIdFor(CharacterMainControl cmc)
+        {
+            if (!Active || _getPlayerIdFor == null || cmc == null) return null;
+            return _getPlayerIdFor(cmc);
+        }
+
+        /// <summary>本机的玩家 id。未激活时返回 <c>null</c>。</summary>
+        public static string SelfPlayerId => Active && _getSelfId != null ? _getSelfId() : null;
+
+        /// <summary>这个玩家 id 是不是本机。<paramref name="id"/> 为空时返回 false。</summary>
+        public static bool IsSelfPlayerId(string id)
+        {
+            if (!Active || _isSelfId == null || string.IsNullOrEmpty(id)) return false;
+            return _isSelfId(id);
         }
 
         private static void SubscribePlayerSpawned(Type eventsType)
@@ -342,6 +369,11 @@ namespace EliteEnemies.Coop
             _isServer = BuildIsServerProbe(netService);
             _networkStarted = BuildNetworkStartedProbe(netService);
 
+            // 1b) 玩家 id 路由（把"作用于玩家"的效果转交给受害者那台机器，见 CoopPlayerEffect）
+            _getPlayerIdFor = BuildGetPlayerIdProbe(netService);
+            _getSelfId = BuildSelfIdProbe(netService);
+            _isSelfId = BuildIsSelfIdProbe(netService);
+
             // 2) 发送通道——主机用 Broadcast（一对多），客户端用 SendToServer（一对一）
             var broadcastMethod = FindSenderMethod(netApi, "Broadcast", 3);
             var writerType = broadcastMethod.GetParameters()[1].ParameterType.GetGenericArguments()[0];
@@ -362,6 +394,7 @@ namespace EliteEnemies.Coop
             // 6) 通知上层的业务模块：通道已就绪
             CoopPlayers.Initialize();
             CoopAffixPolicy.Install();
+            CoopPlayerEffect.Install();
             CoopEliteSync.Initialize();
         }
 
@@ -423,6 +456,90 @@ namespace EliteEnemies.Coop
             {
                 var service = getInstance();
                 return service != null && getStarted(service);
+            };
+        }
+
+        /// <summary>
+        /// <c>NetService.TryGetPlayerId(CharacterMainControl, out string)</c> 的探针。
+        ///
+        /// <para>实测签名见 <c>Main/NetService.cs:723</c>（<c>public bool</c>）。
+        /// <c>out</c> 参数只能走 <c>Invoke</c> + 读回参数数组——这是反射处理 <c>out</c> 的标准做法。</para>
+        /// </summary>
+        private static Func<CharacterMainControl, string> BuildGetPlayerIdProbe(Type netServiceType)
+        {
+            var getInstance = BuildStaticMemberGetter(netServiceType, "Instance");
+            var method = netServiceType.GetMethod("TryGetPlayerId",
+                BindingFlags.Public | BindingFlags.Instance, null,
+                new[] { typeof(CharacterMainControl), typeof(string).MakeByRefType() }, null);
+
+            if (method == null)
+                throw new MissingMethodException(netServiceType.FullName, "TryGetPlayerId(CharacterMainControl, out string)");
+
+            return cmc =>
+            {
+                var service = getInstance();
+                if (service == null || cmc == null) return null;
+
+                var args = new object[] { cmc, null };
+                try
+                {
+                    return (bool)method.Invoke(service, args) ? args[1] as string : null;
+                }
+                catch
+                {
+                    return null;
+                }
+            };
+        }
+
+        /// <summary><c>NetService.GetSelfNetworkId()</c> 的探针（<c>Main/NetService.cs:646</c>，返回 <c>string</c>）。</summary>
+        private static Func<string> BuildSelfIdProbe(Type netServiceType)
+        {
+            var getInstance = BuildStaticMemberGetter(netServiceType, "Instance");
+            var method = netServiceType.GetMethod("GetSelfNetworkId", BindingFlags.Public | BindingFlags.Instance);
+
+            if (method == null)
+                throw new MissingMethodException(netServiceType.FullName, "GetSelfNetworkId()");
+
+            return () =>
+            {
+                var service = getInstance();
+                if (service == null) return null;
+
+                try
+                {
+                    return method.Invoke(service, null) as string;
+                }
+                catch
+                {
+                    return null;
+                }
+            };
+        }
+
+        /// <summary><c>NetService.IsSelfId(string)</c> 的探针（<c>Main/NetService.cs:654</c>，返回 <c>bool</c>）。</summary>
+        private static Func<string, bool> BuildIsSelfIdProbe(Type netServiceType)
+        {
+            var getInstance = BuildStaticMemberGetter(netServiceType, "Instance");
+            var method = netServiceType.GetMethod("IsSelfId",
+                BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
+
+            if (method == null)
+                throw new MissingMethodException(netServiceType.FullName, "IsSelfId(string)");
+
+            return id =>
+            {
+                var service = getInstance();
+                if (service == null || string.IsNullOrEmpty(id)) return false;
+
+                try
+                {
+                    return (bool)method.Invoke(service, new object[] { id });
+                }
+                catch
+                {
+                    return false;
+                }
             };
         }
 

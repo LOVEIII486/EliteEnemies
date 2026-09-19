@@ -34,33 +34,18 @@ namespace EliteEnemies.Affixes.Behaviors
             CharacterMainControl player = victim;
             if (player == null) return;
 
-            // 玩家没拿枪（跑图/近战）时不生效——这是正常的空窗，不是 bug
-            ItemAgent_Gun gun = player.GetGun();
-            if (gun == null) return;
-
-            ItemSetting_Gun setting = gun.GunItemSetting;
-            if (setting == null) return;
-
-            // ⚠ 两道门都必须有，而且**不能省**：
-            //   · LoadingBullets —— UseABullet 自己**不检查换弹状态**。换弹流程
-            //     （ItemSetting_Gun.LoadBulletsFromInventory，async）里 needCount 是按进入时的
-            //     弹数算好的，中途插进去扣弹，会让实扣发数与缓存/UI 对不上。
-            //   · IsReloading() —— 状态机层面的同一件事，两个一起判更稳。
-            if (setting.LoadingBullets || gun.IsReloading()) return;
-
-            // 顺手读一次公开的 BulletCount：它的 getter 会在缓存为负时重算，
-            // 保证下面 UseABullet 的 `bulletCount--` 落在一个**已初始化**的值上。
-            // 同时这也是一道"空仓就别啃"的门。
-            if (setting.BulletCount <= 0) return;
-            if (gun.BulletEmpty) return;
-
-            for (int i = 0; i < BulletsPerBite; i++)
+            // 联机下把效果**转交给受害者那台机器**执行——主机上那个只是复制体，
+            // 改它到不了真人（位置/背包/武器都是客机自报的快照）。
+            // 单机、以及联机时主机自己的玩家 ⇒ 返回 false，照常本地执行。
+            if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.ConsumeBullets, i: BulletsPerBite))
             {
-                if (setting.LoadingBullets || gun.IsReloading() || gun.BulletEmpty) break;
-                setting.UseABullet();
+                _lastBiteTime = Time.time;
+                return;
             }
 
-            _lastBiteTime = Time.time;
+            // 本地：从真弹匣里扣（两道门都在 PlayerEffectActions 里，理由见那边的注释）
+            if (PlayerEffectActions.ConsumeBullets(player, BulletsPerBite) > 0)
+                _lastBiteTime = Time.time;
         }
     }
 }

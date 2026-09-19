@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using EliteEnemies.Combos;
 using EliteEnemies.Core;
@@ -430,6 +430,16 @@ namespace EliteEnemies.Coop
 
                 case CoopWire.Kind.Affix:
                     if (!isServer) RecordOnClient(message.AiId, message.ComboId, message.Affixes, "单条");
+                    break;
+
+                case CoopWire.Kind.PlayerEffect:
+                    // 主机也会收到自己广播的回环——`OnEffect` 里用"是不是本机玩家 id"过滤，
+                    // 主机自己那条会被 `IsSelfPlayerId` 挡掉（它走的是本地执行）。
+                    CoopPlayerEffect.OnEffect(message);
+                    break;
+
+                case CoopWire.Kind.PlayerEffectResult:
+                    if (isServer) CoopPlayerEffect.OnEffectResult(message);
                     break;
 
                 case CoopWire.Kind.Batch:

@@ -59,6 +59,15 @@ namespace EliteEnemies.Affixes.Behaviors
             CharacterMainControl thief = Ctx?.Character;
             if (thief == null) return;
 
+            // 联机下：从玩家背包里出去的那一半只能由他自己那台机器做
+            //（主机拿不到客机的完整背包）。做得成不成会回报回来，
+            // 主机再按回报把战利品加到精英身上（见 OnRemoteStealCompleted）。
+            if (PlayerEffectRelay.TryRelaySteal(player, thief))
+            {
+                _lastStealTime = Time.time;   // 冷却照走，避免每颗弹丸都发一次请求
+                return;
+            }
+
             Item playerBag = player.CharacterItem;
             Item thiefBag = thief.CharacterItem;
             if (playerBag == null || thiefBag == null) return;
@@ -98,6 +107,57 @@ namespace EliteEnemies.Affixes.Behaviors
                 QualityColor(stolen.DisplayQuality),
                 Shorten(stolen.DisplayName, MaxNameWidth));
             thief.PopText(pop);
+        }
+
+        /// <summary>
+        /// **联机**：客户端偷完回报之后，由主机把东西加到精英身上。
+        ///
+        /// <para>偷窃被拆成两半：<b>从玩家背包里出去</b>的那一半只能由客机做
+        /// （主机那个只是复制体），而<b>加给精英</b>这一半在主机做（精英是主机权威的）。
+        /// 这里就是后一半。被偷的只有 typeId 可用——按它重新实例化一件同类型的。</para>
+        /// </summary>
+        internal static void OnRemoteStealCompleted(CharacterMainControl thief, int stolenTypeId)
+        {
+            if (thief == null || stolenTypeId <= 0) return;
+
+            var thiefBag = thief.CharacterItem;
+            if (thiefBag == null || thiefBag.Inventory == null) return;
+
+            try
+            {
+                Item stolen = ItemAssetsCollection.InstantiateSync(stolenTypeId);
+                if (stolen == null) return;
+
+                stolen.Initialize();
+                stolen.Detach();
+                if (!thiefBag.Inventory.AddAndMerge(stolen, 0))
+                {
+                    // 小偷背包塞不下——东西已经在客机那边扣掉了，但这里放不进去。
+                    // **不静默**：这是玩家会察觉的损失（东西没了却没进小偷包里）。
+                    Debug.LogWarning($"[EliteEnemies.Thief] 联机偷窃：小偷背包放不下 typeId={stolenTypeId}，" +
+                                     "该物品已从玩家背包移出但未能进入小偷背包");
+                    return;
+                }
+
+                // "击杀掉 2 件"的那第二件（与单机路径同一规则）。
+                Item bonus = ItemAssetsCollection.InstantiateSync(stolenTypeId);
+                if (bonus != null)
+                {
+                    bonus.Initialize();
+                    bonus.Detach();
+                    thiefBag.Inventory.AddAndMerge(bonus, 0);
+                }
+
+                string pop = string.Format(
+                    LocalizationManager.GetText(PopTextKey),
+                    QualityColor(stolen.DisplayQuality),
+                    Shorten(stolen.DisplayName, MaxNameWidth));
+                thief.PopText(pop);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[EliteEnemies.Thief] 联机偷窃：把战利品加给精英时出错（已隔离）: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -200,7 +260,15 @@ namespace EliteEnemies.Affixes.Behaviors
         /// 那里一条命中间隔可能只有几十毫秒，临时集合就是白白的 GC 压力。
         /// 两趟扫描（先数、再取第 N 个）在背包这个量级上更快，而且零分配。</para>
         /// </summary>
-        private static Item PickStealable(Inventory bag)
+        /// <summary>
+        /// 从背包里挑一件可偷的。
+        ///
+        /// <para>⚠ <b>改成 internal 是为了联机复用</b>：联机下主机拿不到客机的完整背包，
+        /// 只能由<b>客机那边</b>挑并回报偷了什么。挑选标准必须**只有一份**，
+        /// 否则两端会漂移（客机觉得能偷、主机觉得不能）。
+        /// 调用点是 <c>CoopPlayerEffect.ExecuteSteal</c>。</para>
+        /// </summary>
+        internal static Item PickStealable(Inventory bag)
         {
             if (bag == null) return null;
 

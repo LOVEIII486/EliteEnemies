@@ -1,4 +1,5 @@
 ﻿using System;
+using EliteEnemies.Core;
 using UnityEngine;
 using EliteEnemies.Localization;
 
@@ -25,25 +26,28 @@ namespace EliteEnemies.Affixes.Behaviors
             if (Time.time - _lastTriggerTime < Cooldown) return;
 
             var attacker = damageInfo.fromCharacter;
-            if (attacker == null || !attacker.IsMainCharacter) return;
+            if (attacker == null) return;
+
+            // ⚠ 原先这里只认 `IsMainCharacter`（**本机**玩家）⇒ **客机攻击时静默永不触发**。
+            //   联机下判定在主机上跑，攻击者往往是客机玩家的**复制体**。
+            if (!attacker.IsMainCharacter && !EliteEnemyCore.IsRemotePlayerCharacter(attacker)) return;
 
             var player = attacker;
-            if (player == null) return;
 
-            var gun = player.GetGun();
-            if (gun == null)
+            // 联机下把效果**转交给受害者那台机器**执行——主机上那个只是复制体，
+            // 改它到不了真人（位置/背包/武器都是客机自报的快照）。
+            // 单机、以及联机时主机自己的玩家 ⇒ 返回 false，照常本地执行。
+            if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.ForceReload))
             {
-                return; // 没枪不触发，也不进入冷却
-            }
-            
-            bool reloadStarted = player.TryToReload();
-
-            if (reloadStarted)
-            {
-                character?.PopText(EnemyPopLine);
-                player.PopText(PlayerPopLine);
                 _lastTriggerTime = Time.time;
+                return;
             }
+
+            if (!PlayerEffectActions.ForceReload(player)) return;   // 没枪 / 换不了 ⇒ 不进冷却
+
+            character?.PopText(EnemyPopLine);
+            player.PopText(PlayerPopLine);
+            _lastTriggerTime = Time.time;
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)

@@ -1,5 +1,6 @@
 ﻿using System;
 using EliteEnemies.Localization;
+using EliteEnemies.Core;
 using UnityEngine;
 
 namespace EliteEnemies.Affixes.Behaviors
@@ -33,38 +34,30 @@ namespace EliteEnemies.Affixes.Behaviors
                 return;
 
             var attacker = dmg.fromCharacter;
-            if (attacker == null || !attacker.IsMainCharacter)
-                return;
+            if (attacker == null) return;
+
+            // ⚠ 原先只认 `IsMainCharacter`（本机玩家）⇒ 客机攻击时静默永不触发。
+            if (!attacker.IsMainCharacter && !EliteEnemyCore.IsRemotePlayerCharacter(attacker)) return;
 
             var player = attacker;
 
-            // 当前武器
-            var heldAgent = player.CurrentHoldItemAgent;
-            var heldItem = heldAgent ? heldAgent.Item : null;
-
-            bool hasWeapon =
-                heldItem != null &&
-                heldItem.Tags != null &&
-                heldItem.Tags.Contains("Weapon");
-
-            // 玩家没有拿武器
-            if (!hasWeapon)
+            // 联机下转交给对方那台机器——主机改复制体的武器到不了真人。
+            // ⚠ 这条路上无法知道对方手上是不是武器（那在客机那边），
+            //   所以一律按“消耗掉这次机会”处理，不判 ConsumeWhenNoWeapon。
+            if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.DropWeapon))
             {
-                if (ConsumeWhenNoWeapon)
-                {
-                    _consumed = true;
-                }
+                _consumed = true;
+                owner.PopText(EnemyPopLine);
                 return;
             }
-            
-            var dropPos = player.transform.position + Vector3.up * 0.1f;
-            heldItem.Drop(dropPos, true, Vector3.forward, 360f);
-            
-            if (player.agentHolder != null && player.CurrentHoldItemAgent != null)
+
+            if (!PlayerEffectActions.DropCurrentWeapon(player))
             {
-                player.agentHolder.ChangeHoldItem(null);
+                // 手上不是武器：按配置决定要不要消耗这次机会
+                if (ConsumeWhenNoWeapon) _consumed = true;
+                return;
             }
-            
+
             owner.PopText(EnemyPopLine);
             player.PopText(PlayerPopLine);
 
