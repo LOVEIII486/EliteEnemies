@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace EliteEnemies.Affixes
 {
@@ -39,6 +39,9 @@ namespace EliteEnemies.Affixes
 
             /// <summary>回报：偷到了什么（见 <c>CoopPlayerEffect.OnEffectResult</c>）。</summary>
             StealResult = 7,
+
+            /// <summary><c>Text</c> = 要弹在**这个玩家**头顶的文本。</summary>
+            PopTextOnPlayer = 8,
         }
 
         /// <summary>
@@ -54,6 +57,55 @@ namespace EliteEnemies.Affixes
         /// 所以它多一个参数。
         /// </summary>
         public static System.Func<CharacterMainControl, CharacterMainControl, bool> StealHandler { get; set; }
+
+        /// <summary>
+        /// 在 AI 头顶弹字的转交。**与其它效果不同：主机自己也要弹**，
+        /// 所以这个口是"两边都做"，返回值没有"接管"的含义。
+        /// </summary>
+        public static System.Func<CharacterMainControl, string, bool> AiPopTextHandler { get; set; }
+
+        /// <summary>
+        /// 精英**视觉状态**（体型缩放 / 显隐）的转交。
+        /// 起因是这两样都不在联机模组的 <c>AISyncEntry</c> 里，客机因此看不到。
+        /// 同样是"主机自己也要应用"。
+        /// </summary>
+        public static System.Func<CharacterMainControl, float, bool, bool> EliteVisualHandler { get; set; }
+
+        /// <summary>
+        /// 在**玩家**头顶弹字的转交。**这一条是"接管"语义**——主机弹在复制体上等于没弹，
+        /// 所以联机下只让客机弹。
+        /// </summary>
+        public static System.Func<CharacterMainControl, string, bool> PlayerPopTextHandler { get; set; }
+
+        /// <summary>
+        /// 在 AI 头顶弹字：**本地弹一份，联机下再让客机各弹一份**。
+        ///
+        /// <para>用这个助手，不要在行为里直接写 <c>ai.PopText(...)</c>——
+        /// 联机模组的通用 <c>PopText</c> 补丁**被它自己注释掉了**
+        /// （<c>Patch/Character/AIAwarenessPatch.cs:10-19</c>），
+        /// 所以第三方弹的字**不会**过网。</para>
+        /// </summary>
+        public static void PopTextOnElite(CharacterMainControl ai, string text)
+        {
+            var handler = AiPopTextHandler;
+            handler?.Invoke(ai, text);
+
+            if (ai != null && !string.IsNullOrEmpty(text)) ai.PopText(text);
+        }
+
+        /// <summary>把精英的视觉状态告知客机（本地应用由调用方自己做）。</summary>
+        public static void RelayEliteVisual(CharacterMainControl ai, float scale, bool hidden)
+        {
+            var handler = EliteVisualHandler;
+            handler?.Invoke(ai, scale, hidden);
+        }
+
+        /// <summary>在玩家头顶弹字。返回 <c>true</c> = 已转交，**不要**再本地弹。</summary>
+        public static bool TryRelayPlayerPopText(CharacterMainControl victim, string text)
+        {
+            var handler = PlayerPopTextHandler;
+            return handler != null && handler(victim, text);
+        }
 
         /// <summary>把效果转交给受害者那台机器。返回 <c>true</c> = 已接管，**不要**再本地执行。</summary>
         public static bool TryRelay(CharacterMainControl victim, Kind kind, Vector3 v = default(Vector3), int i = 0)

@@ -45,8 +45,11 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (!PlayerEffectActions.ForceReload(player)) return;   // 没枪 / 换不了 ⇒ 不进冷却
 
-            character?.PopText(EnemyPopLine);
-            player.PopText(PlayerPopLine);
+            PlayerEffectRelay.PopTextOnElite(character, EnemyPopLine);
+            // 玩家侧弹字同理：主机弹在复制体上、真人看不到 ⇒ 联机下只让客机弹。
+            // 单机 / 主机自己的玩家照样本地弹（`TryRelayPlayerPopText` 返回 false）。
+            if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopLine))
+                player.PopText(PlayerPopLine);
             _lastTriggerTime = Time.time;
         }
 

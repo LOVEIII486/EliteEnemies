@@ -106,7 +106,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 LocalizationManager.GetText(PopTextKey),
                 QualityColor(stolen.DisplayQuality),
                 Shorten(stolen.DisplayName, MaxNameWidth));
-            thief.PopText(pop);
+            PlayerEffectRelay.PopTextOnElite(thief, pop);
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace EliteEnemies.Affixes.Behaviors
                     LocalizationManager.GetText(PopTextKey),
                     QualityColor(stolen.DisplayQuality),
                     Shorten(stolen.DisplayName, MaxNameWidth));
-                thief.PopText(pop);
+                PlayerEffectRelay.PopTextOnElite(thief, pop);
             }
             catch (System.Exception ex)
             {

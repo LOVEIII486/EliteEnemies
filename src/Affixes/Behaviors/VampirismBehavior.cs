@@ -85,7 +85,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (actualHeal > 0.1f)
             {
                 string popText = string.Format(VampirePopText, Mathf.CeilToInt(actualHeal));
-                attacker.PopText(popText);
+                PlayerEffectRelay.PopTextOnElite(attacker, popText);
 
                 // 更新冷却时间
                 _lastHealTime = Time.time;

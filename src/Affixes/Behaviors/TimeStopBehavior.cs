@@ -103,7 +103,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 _previousDevTimeScale = TimeScaleManager.devCambulletTimeScale;
                 TimeScaleManager.devCambulletTimeScale = TimeStopScale;
 
-                character.PopText(EnemyPopLine);
+                PlayerEffectRelay.PopTextOnElite(character, EnemyPopLine);
 
                 if (_timeStopCoroutine != null) StopManagedCoroutine(_timeStopCoroutine);
                 _timeStopCoroutine = StartManagedCoroutine(EndTimeStopAfterDelay());

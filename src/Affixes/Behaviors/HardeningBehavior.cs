@@ -64,12 +64,12 @@ namespace EliteEnemies.Affixes.Behaviors
                 _accumulatedReduction = MaxTotalReduction;
                 _currentState = HardeningState.MaxHardened;
                 _stateTimer = 0f;
-                character.PopText(MaxStateText);
+                PlayerEffectRelay.PopTextOnElite(character, MaxStateText);
             }
             else
             {
                 string msg = string.Format(HardeningPopText, (added * 100f).ToString("F1"));
-                character.PopText(msg);
+                PlayerEffectRelay.PopTextOnElite(character, msg);
             }
 
             ApplyPhysicsFactorChange(character);
@@ -121,7 +121,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _currentState = HardeningState.Weakened;
             _stateTimer = 0f;
 
-            character.PopText(WeakenedStateText);
+            PlayerEffectRelay.PopTextOnElite(character, WeakenedStateText);
         }
 
         private void EnterAccumulatingState(CharacterMainControl character)
@@ -133,7 +133,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _stateTimer = 0f;
             _lastTriggerTime = -999f;
 
-            character.PopText(RecoverStateText);
+            PlayerEffectRelay.PopTextOnElite(character, RecoverStateText);
         }
 
         private void ResetState(CharacterMainControl character)

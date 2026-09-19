@@ -53,14 +53,14 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.Knockback, scaledDirection))
             {
-                attacker.PopText(EnemyPopLine);
+                PlayerEffectRelay.PopTextOnElite(attacker, EnemyPopLine);
                 _globalLastKnockbackTime = Time.time;
                 return;
             }
 
             PlayerEffectActions.Knockback(player, scaledDirection);
 
-            attacker.PopText(EnemyPopLine);
+            PlayerEffectRelay.PopTextOnElite(attacker, EnemyPopLine);
             _globalLastKnockbackTime = Time.time;
         }
 

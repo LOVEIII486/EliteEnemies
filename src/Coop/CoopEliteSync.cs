@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using EliteEnemies.Affixes;
 using EliteEnemies.Combos;
 using EliteEnemies.Core;
 using UnityEngine;
@@ -13,6 +14,15 @@ namespace EliteEnemies.Coop
         public string ComboId;
 
         public List<string> Affixes;
+
+        /// <summary>
+        /// 主机侧：这只精英的**角色对象**。
+        ///
+        /// <para>用途是**反查**——"某只 AI 弹了字 / 改了体型"要广播时，
+        /// 手里只有那个角色对象，得把它换成网络上认得的 <c>aiId</c>。
+        /// 客户端侧这条为 null（客户端只有复制体，用 <c>s_clientReplicas</c> 就够了）。</para>
+        /// </summary>
+        public CharacterMainControl Character;
     }
 
     /// <summary>
@@ -108,6 +118,11 @@ namespace EliteEnemies.Coop
             EliteEnemyCore.EliteAuthorityOverride =
                 () => !CoopApi.Active || !CoopApi.NetworkStarted || CoopApi.IsServer;
 
+            // 这两条是"主机自己也要做"的转交（本地那份由调用方做），**不是接管**。
+            // 起因：联机模组把通用的 PopText 补丁**注释掉了**，而体型也不在 AISyncEntry 里。
+            PlayerEffectRelay.AiPopTextHandler = OnHostElitePopText;
+            PlayerEffectRelay.EliteVisualHandler = OnHostEliteVisual;
+
             CoopLog.Info($"[启动] 联机已启动={CoopApi.NetworkStarted} 本端角色=" +
                          $"{(CoopApi.IsServer ? "主机" : "客户端")}；" +
                          $"精英逻辑权威={EliteEnemyCore.IsEliteAuthority}" +
@@ -122,6 +137,8 @@ namespace EliteEnemies.Coop
             LogSummary("停机");
 
             EliteEnemyCore.EliteAuthorityOverride = null;
+            PlayerEffectRelay.AiPopTextHandler = null;
+            PlayerEffectRelay.EliteVisualHandler = null;
 
             CoopStallWatch.Uninstall();
             CoopDiag.Uninstall();
@@ -213,7 +230,8 @@ namespace EliteEnemies.Coop
             var info = new EliteInfo
             {
                 ComboId = marker.ComboId,
-                Affixes = new List<string>(affixes)
+                Affixes = new List<string>(affixes),
+                Character = cmc
             };
 
             s_hostKnown[aiId] = info;
@@ -253,6 +271,54 @@ namespace EliteEnemies.Coop
             {
                 CoopLog.Warn("[主机] 全量回应广播失败——联机可能尚未就绪");
             }
+        }
+
+        /// <summary>
+        /// 反查：这个角色对应哪个 <c>aiId</c>。找不到返回 0（沿用那个哨兵值）。
+        ///
+        /// <para>线性查：精英表最多几十条，而弹字/改体型都不是每帧发生的事
+        /// （见 <c>MaxKnownElites</c> 的上限）。**刻意不做反向字典**——
+        /// 两份映射必然漂移，而这里的规模不值那个风险。</para>
+        /// </summary>
+        private static int FindHostAiId(CharacterMainControl cmc)
+        {
+            if (cmc == null) return 0;
+
+            foreach (var pair in s_hostKnown)
+            {
+                if (pair.Value.Character == cmc) return pair.Key;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// 主机侧：某只精英弹了一行字。**本机那份由调用方自己弹**（见
+        /// <c>PlayerEffectRelay.PopTextOnElite</c>），这里只负责让客机也弹。
+        /// </summary>
+        public static bool OnHostElitePopText(CharacterMainControl ai, string text)
+        {
+            if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;
+            if (ai == null || string.IsNullOrEmpty(text)) return false;
+
+            int aiId = FindHostAiId(ai);
+            if (aiId == 0) return false;   // 不在同步库里（例：基地 NPC）——两端各弹各的即可
+
+            CoopApi.Broadcast(CoopWire.EncodeAiPopText(aiId, text));
+            return true;
+        }
+
+        /// <summary>主机侧：某只精英的视觉状态变了（体型缩放 / 显隐）。</summary>
+        public static bool OnHostEliteVisual(CharacterMainControl ai, float scale, bool hidden)
+        {
+            if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;
+            if (ai == null) return false;
+
+            int aiId = FindHostAiId(ai);
+            if (aiId == 0) return false;
+
+            CoopApi.Broadcast(CoopWire.EncodeEliteVisual(aiId, scale, hidden));
+            return true;
         }
 
         // ==================== 客户端侧 ====================
@@ -411,6 +477,34 @@ namespace EliteEnemies.Coop
             return null;
         }
 
+        /// <summary>客户端：把主机报来的视觉状态应用到复制体上。</summary>
+        private static void ApplyEliteVisual(EliteMessage message)
+        {
+            // 复制体可能还没建出来（视觉消息先到、复制体后到）——那就丢掉这一条。
+            // **刻意不做排队**：视觉状态是"当时的样子"，把迟到的旧状态套上去
+            // 反而会短暂显示错的体型；下一次变化会补上正确的。
+            if (!s_clientReplicas.TryGetValue(message.AiId, out var cmc) || !cmc)
+            {
+                CoopLog.Info($"[客户端] 收到精英视觉 aiId={message.AiId}，但复制体尚未就绪，已丢弃");
+                return;
+            }
+
+            bool hidden = message.Ei != 0;
+            cmc.gameObject.SetActive(!hidden);
+
+            if (!hidden && message.Fx > 0f) cmc.transform.localScale = Vector3.one * message.Fx;
+
+            CoopLog.Info($"[客户端] 应用精英视觉 aiId={message.AiId} 缩放={message.Fx:0.00} 隐藏={hidden}");
+        }
+
+        /// <summary>客户端：在复制体头顶弹字。</summary>
+        private static void ApplyAiPopText(EliteMessage message)
+        {
+            if (!s_clientReplicas.TryGetValue(message.AiId, out var cmc) || !cmc) return;
+
+            cmc.PopText(message.Text);
+        }
+
         // ==================== 收包 ====================
 
         public static void OnNetworkMessage(ReadOnlyMemory<byte> payload, bool isServer)
@@ -430,6 +524,14 @@ namespace EliteEnemies.Coop
 
                 case CoopWire.Kind.Affix:
                     if (!isServer) RecordOnClient(message.AiId, message.ComboId, message.Affixes, "单条");
+                    break;
+
+                case CoopWire.Kind.EliteVisual:
+                    if (!isServer) ApplyEliteVisual(message);
+                    break;
+
+                case CoopWire.Kind.AiPopText:
+                    if (!isServer) ApplyAiPopText(message);
                     break;
 
                 case CoopWire.Kind.PlayerEffect:

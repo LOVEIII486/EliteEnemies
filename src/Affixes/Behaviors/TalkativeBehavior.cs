@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using EliteEnemies.Localization;
@@ -79,7 +79,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 _lastIndex = index;
                 string message = _messages[index];
 
-                character.PopText(message);
+                PlayerEffectRelay.PopTextOnElite(character, message);
             }
         }
 

@@ -67,7 +67,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _victims.Add(victim);   // 记下来，死亡时要按这批人逐个撤
 
             string text = string.Format(ChaosPopTextFmt, pick.DisplayName);
-            attacker.PopText(text);
+            PlayerEffectRelay.PopTextOnElite(attacker, text);
             _lastApplyTime = Time.time;
         }
 

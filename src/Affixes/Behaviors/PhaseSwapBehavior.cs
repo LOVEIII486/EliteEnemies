@@ -91,14 +91,14 @@ namespace EliteEnemies.Affixes.Behaviors
                 attacker.StartCoroutine(MoveEnemyOnly(attacker, playerPos + SwapOffset));
 
                 _lastSwapTime = Time.time;
-                attacker.PopText(PhasePopText);
+                PlayerEffectRelay.PopTextOnElite(attacker, PhasePopText);
                 return;
             }
 
             attacker.StartCoroutine(SmoothSwapRoutine(attacker, player));
 
             _lastSwapTime = Time.time;
-            attacker.PopText(PhasePopText);
+            PlayerEffectRelay.PopTextOnElite(attacker, PhasePopText);
         }
 
         /// <summary>联机：只把精英挪到玩家（复制体）的位置；玩家那一半由他自己那台机器做。</summary>

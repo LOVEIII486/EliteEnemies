@@ -1,4 +1,4 @@
-using EliteEnemies.Localization;
+﻿using EliteEnemies.Localization;
 using EliteEnemies.Modifiers;
 using UnityEngine;
 
@@ -117,7 +117,7 @@ namespace EliteEnemies.Affixes.Behaviors
             _invincibleEndTime = Time.time + InvincibleDuration;
             health.SetInvincible(true);
 
-            character.PopText(PopLineStart);
+            PlayerEffectRelay.PopTextOnElite(character, PopLineStart);
 
             ModifyAI(character, AIFields.ShootCanMove, true);
             ModifyAI(character, AIFields.CanDash, true);
@@ -136,7 +136,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 character.Health.SetInvincible(_originalInvincibleState);
                 if (!character.Health.IsDead)
                 {
-                    character.PopText(PopLineEnd);
+                    PlayerEffectRelay.PopTextOnElite(character, PopLineEnd);
                 }
             }
             _isInvincible = false;

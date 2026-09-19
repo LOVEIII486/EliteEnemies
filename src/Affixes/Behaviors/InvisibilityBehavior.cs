@@ -72,6 +72,24 @@ namespace EliteEnemies.Affixes.Behaviors
             ModifyAI(enemy, AIFields.ShootCanMove, true);
         }
 
+        /// <summary>
+        /// 显隐的统一出口。**为什么收口**：这个行为里 Hide/Show 有 8 处调用，
+        /// 逐个加转交必然漏；而显隐本身**不在**联机模组的 <c>AISyncEntry</c> 里，
+        /// 不转交的话客机看到的是一个**始终可见**的精英（隐身词条等于不存在）。
+        ///
+        /// <para>顺带把当前体型一起报过去——两条视觉状态共用一个报文，
+        /// 免得两边各自维护、互相覆盖。</para>
+        /// </summary>
+        private static void SetHidden(CharacterMainControl character, bool hidden)
+        {
+            if (character == null) return;
+
+            if (hidden) character.Hide();
+            else character.Show();
+
+            PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale.x, hidden);
+        }
+
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
         {
             if (!_hasBeenHit)
@@ -79,7 +97,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 _hasBeenHit = true;
                 _isVisible = false;
                 _timer = VisibleInterval;
-                character.Hide();
+                SetHidden(character, true);
             }
         }
 
@@ -93,7 +111,7 @@ namespace EliteEnemies.Affixes.Behaviors
                 _hasBeenHit = true;
                 _timer = VisibleInterval;
                 _isVisible = false;
-                character.Hide();
+                SetHidden(character, true);
                 // ShowRandomMessage(character);
             }
         }
@@ -115,7 +133,7 @@ namespace EliteEnemies.Affixes.Behaviors
                     {
                         _isFlashing = false;
                         _isVisible = false;
-                        character.Hide();
+                        SetHidden(character, true);
                         _timer = VisibleInterval;
                     }
                     else
@@ -123,12 +141,12 @@ namespace EliteEnemies.Affixes.Behaviors
                         // 切换显隐状态
                         if (_isVisible)
                         {
-                            character.Hide();
+                            SetHidden(character, true);
                             _isVisible = false;
                         }
                         else
                         {
-                            character.Show();
+                            SetHidden(character, false);
                             _isVisible = true;
                         }
                     }
@@ -149,11 +167,11 @@ namespace EliteEnemies.Affixes.Behaviors
             
             if (_isVisible)
             {
-                character.Show();
+                SetHidden(character, false);
             }
             else
             {
-                character.Hide();
+                SetHidden(character, true);
             }
         }
 
@@ -168,7 +186,7 @@ namespace EliteEnemies.Affixes.Behaviors
             }
             _lastMsgIndex = idx;
             
-            character.PopText(_messages[idx]);
+            PlayerEffectRelay.PopTextOnElite(character, _messages[idx]);
         }
 
         public override void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo)
@@ -182,7 +200,7 @@ namespace EliteEnemies.Affixes.Behaviors
             
             if (character != null)
             {
-                character.Show();
+                SetHidden(character, false);
             }
             
             _isActive = false;

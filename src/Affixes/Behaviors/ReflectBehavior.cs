@@ -51,7 +51,8 @@ namespace EliteEnemies.Affixes.Behaviors
             _timer = 0f;
             ActiveReflectorIDs.Add(_ownerID);
             
-            Ctx.Character.PopText(ReflectPopText);
+            // 弹字要自己转交——联机模组把通用的 PopText 补丁注释掉了（见 PlayerEffectRelay）。
+            PlayerEffectRelay.PopTextOnElite(Ctx.Character, ReflectPopText);
             _visualShield.Show();
         }
 

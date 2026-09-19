@@ -189,7 +189,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (Time.time - _lastPopTime >= PopCooldown)
             {
-                character.PopText(ImmuneText);
+                PlayerEffectRelay.PopTextOnElite(character, ImmuneText);
                 _lastPopTime = Time.time;
             }
         }
@@ -198,7 +198,7 @@ namespace EliteEnemies.Affixes.Behaviors
         {
             _isForceBroken = true;
             SetInvincibleState(false);
-            character.PopText(BrokenText);
+            PlayerEffectRelay.PopTextOnElite(character, BrokenText);
 
             if (_partner != null)
             {

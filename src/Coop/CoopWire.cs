@@ -31,6 +31,9 @@ namespace EliteEnemies.Coop
         /// <summary>仅「玩家效果」类报文用：第二个整数参数（偷窃回报时是物品的 typeId）。</summary>
         public int Ei2;
 
+        /// <summary>弹字报文用：文本内容。</summary>
+        public string Text;
+
         /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：全量快照的 id 列表。</summary>
         public readonly List<int> BatchIds = new List<int>();
 
@@ -71,12 +74,18 @@ namespace EliteEnemies.Coop
     /// （试过复用联机模组的 buff 转发，但 <c>PlayerBuffBroadcastRpc</c> 只有
     /// <c>PlayerId/WeaponTypeId/BuffId</c> 三个字段，<b>传不了参数</b>。）</item>
     ///
+    /// <item><b>v5</b>：新增「精英视觉」与「AI 弹字」两种报文，并给玩家效果报文加了一个文本字段。
+    /// 起因：<b>联机模组的通用 <c>PopText</c> 补丁被注释掉了</b>
+    /// （它自己的 <c>Patch/Character/AIAwarenessPatch.cs:10-19</c>），
+    /// 所以<b>第三方调 <c>cmc.PopText()</c> 一律不过网</b>；而体型（<c>localScale</c>）
+    /// 也不在 <c>AISyncEntry</c> 里。两者都只能由本模块自己补。</item>
+    ///
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 4;
+        public const byte ProtocolVersion = 5;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -110,6 +119,16 @@ namespace EliteEnemies.Coop
             /// 客户端 → 主机：某个玩家效果执行完了，回报结果（目前只有偷窃需要）。
             /// </summary>
             PlayerEffectResult = 5,
+
+            /// <summary>
+            /// 主机 → 全体：某只 AI 的**视觉状态**变了（体型缩放 / 显隐）。
+            /// 起因是这些**不在** <c>AISyncEntry</c> 里（见分析档 §5.4 G4），
+            /// 客机因此看不到巨大化/迷你/隐身。
+            /// </summary>
+            EliteVisual = 6,
+
+            /// <summary>主机 → 全体：在某只 AI 头顶弹一行字（<c>AiId</c> + <c>Text</c>）。</summary>
+            AiPopText = 7,
         }
 
         // ==================== 编码 ====================
@@ -159,7 +178,8 @@ namespace EliteEnemies.Coop
         /// 反向发送的同一张表，没必要再定义一套。</para>
         /// </summary>
         public static byte[] EncodePlayerEffect(Kind kind, string targetPlayerId, byte effect,
-                                                float x, float y, float z, int i, int i2 = 0)
+                                                float x, float y, float z, int i, int i2 = 0,
+                                                string text = null)
         {
             using (var stream = new MemoryStream(48))
             using (var writer = NewWriter(stream, kind))
@@ -171,6 +191,32 @@ namespace EliteEnemies.Coop
                 writer.Write(z);
                 writer.Write(i);
                 writer.Write(i2);
+                writer.Write(text ?? string.Empty);
+                return Finish(stream, writer);
+            }
+        }
+
+        /// <summary>AI 弹字：<c>[aiId][文本]</c>。</summary>
+        public static byte[] EncodeAiPopText(int aiId, string text)
+        {
+            using (var stream = new MemoryStream(96))
+            using (var writer = NewWriter(stream, Kind.AiPopText))
+            {
+                writer.Write(aiId);
+                writer.Write(text ?? string.Empty);
+                return Finish(stream, writer);
+            }
+        }
+
+        /// <summary>精英视觉：<c>[aiId][缩放][是否隐藏]</c>。</summary>
+        public static byte[] EncodeEliteVisual(int aiId, float scale, bool hidden)
+        {
+            using (var stream = new MemoryStream(16))
+            using (var writer = NewWriter(stream, Kind.EliteVisual))
+            {
+                writer.Write(aiId);
+                writer.Write(scale);
+                writer.Write(hidden);
                 return Finish(stream, writer);
             }
         }
@@ -262,6 +308,18 @@ namespace EliteEnemies.Coop
                             result.Fz = reader.ReadSingle();
                             result.Ei = reader.ReadInt32();
                             result.Ei2 = reader.ReadInt32();
+                            result.Text = reader.ReadString();
+                            break;
+
+                        case Kind.EliteVisual:
+                            result.AiId = reader.ReadInt32();
+                            result.Fx = reader.ReadSingle();     // 缩放
+                            result.Ei = reader.ReadBoolean() ? 1 : 0;   // 是否隐藏
+                            break;
+
+                        case Kind.AiPopText:
+                            result.AiId = reader.ReadInt32();
+                            result.Text = reader.ReadString();
                             break;
 
                         case Kind.Batch:

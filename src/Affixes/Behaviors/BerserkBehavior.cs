@@ -32,7 +32,7 @@ namespace EliteEnemies.Affixes.Behaviors
         private void TriggerBerserk(CharacterMainControl character)
         {
             _berserkTriggered = true;
-            character.PopText(BerserkPopText);
+            PlayerEffectRelay.PopTextOnElite(character, BerserkPopText);
 
             // 1. 伤害增加 30%
             // 复用现成的助手：它做的就是"枪 + 近战都乘同一倍率"（CharacterModifiers.cs:50）

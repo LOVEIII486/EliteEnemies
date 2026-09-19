@@ -25,7 +25,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (_isEnraged || character == null) return;
             
             _isEnraged = true;
-            character.PopText(OverloadPopText);
+            PlayerEffectRelay.PopTextOnElite(character, OverloadPopText);
 
             ModifyAI(character, AIFields.BaseReactionTime, 0.3f);
 

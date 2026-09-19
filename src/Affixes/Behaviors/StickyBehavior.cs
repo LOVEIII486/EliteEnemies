@@ -47,7 +47,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.DropWeapon))
             {
                 _consumed = true;
-                owner.PopText(EnemyPopLine);
+                PlayerEffectRelay.PopTextOnElite(owner, EnemyPopLine);
                 return;
             }
 
@@ -58,8 +58,10 @@ namespace EliteEnemies.Affixes.Behaviors
                 return;
             }
 
-            owner.PopText(EnemyPopLine);
-            player.PopText(PlayerPopLine);
+            PlayerEffectRelay.PopTextOnElite(owner, EnemyPopLine);
+            // 玩家侧弹字同理：主机弹在复制体上、真人看不到 ⇒ 联机下只让客机弹。
+            if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopLine))
+                player.PopText(PlayerPopLine);
 
             _consumed = true;
         }
