@@ -40,13 +40,19 @@ namespace EliteEnemies.Buffs.Effects
         private static bool _frozenLookupFailed;
 
         /// <summary>
-        /// 最近一次**观察到**玩家处于冻结状态的时刻，见 <see cref="IsFreezeImmune"/>。
+        /// **每个玩家**最近一次被观察到"处于冻结状态"的时刻，见 <see cref="IsFreezeImmune"/>。键是实例 id。
         ///
-        /// <para>纯静态的一个 float，**刻意不做场景卸载清理**：它不持有任何对象引用（没有
-        /// <c>BulletDeflectionTracker</c> 那类"攒着已销毁的引用"的泄漏问题），而且判据是
-        /// <c>Time.time</c>——它跨场景只增不减，所以残留值自己会在 <see cref="FreezeImmunitySeconds"/> 秒内失效。</para>
+        /// <para>⚠️ <b>键必须区分"哪个人"</b>：这里原先是一个全局 <c>float</c>，单机下只有一个玩家、
+        /// 所以看不出问题；联机下会**跨玩家串味**——玩家 A 被冻结会把时间戳刷成"现在"，
+        /// 于是此后 10 秒里查 B 也返回"免疫"，B 的寒冷叠不上去（<c>Frozen</c> 词条对 B
+        /// **静默失效** 10 秒）。这正是 <c>Docs\Coop\05</c> §11 那类"单机看不出来"的 bug。</para>
+        ///
+        /// <para>键用 <c>GetInstanceID()</c> 而**不是角色引用**：不持有引用，也就没有
+        /// "攒着已销毁对象"的泄漏（与原先那个静态 float 的取舍一致）。条目只按**玩家数**增长
+        /// （只有玩家会被叠寒冷），量级可忽略；残留的旧 id 条目自己会在
+        /// <see cref="FreezeImmunitySeconds"/> 秒后失效。</para>
         /// </summary>
-        private static float _lastSeenFrozenAt = -999f;
+        private static readonly Dictionary<int, float> _lastFrozenSeenAt = new Dictionary<int, float>();
 
         public override string BuffName => "EliteBuff_Chill";
         public override int BuffId => 99909;
@@ -75,13 +81,16 @@ namespace EliteEnemies.Buffs.Effects
         {
             if (player == null) return false;
 
+            int id = player.GetInstanceID();
+
             if (player.HasBuff(FrozenBuffId))
             {
-                _lastSeenFrozenAt = Time.time;
+                _lastFrozenSeenAt[id] = Time.time;
                 return true;
             }
 
-            return Time.time < _lastSeenFrozenAt + FreezeImmunitySeconds;
+            return _lastFrozenSeenAt.TryGetValue(id, out float lastSeen)
+                   && Time.time < lastSeen + FreezeImmunitySeconds;
         }
 
         protected override void ApplyStats()
