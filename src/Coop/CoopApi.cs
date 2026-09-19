@@ -48,6 +48,13 @@ namespace EliteEnemies.Coop
         private static bool _initialized;
         private static bool _watchingForApi;
 
+        /// <summary>
+        /// 「有程序集刚刚加载，该再探一次」的待办标记。**只由 <see cref="OnAssemblyLoad"/> 置位**，
+        /// 由 <see cref="PumpActivation"/> 在普通帧里消费——原因见 <see cref="OnAssemblyLoad"/>：
+        /// 那个回调里做反射会原生崩溃。
+        /// </summary>
+        private static bool _activationPending;
+
         /// <summary>「契约对不上」只报一次，避免每次程序集加载都刷屏。</summary>
         private static bool _mismatchReported;
 
@@ -101,6 +108,10 @@ namespace EliteEnemies.Coop
             AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
             _watchingForApi = true;
 
+            // ⚠ **钩子里不做反射，只记待办**（理由见 OnAssemblyLoad）。
+            //   所以这里必须同时起一个低频泵来干正事。
+            CoopActivationPump.EnsureInstalled();
+
             // ⚠ 这条**刻意用 Debug.Log 而不是 CoopLog**：走到这里说明联机模组不在，
             //   那层日志过滤器也就没被装上，普通日志看得见。
             //   反过来若在这里借错误级别，就会给**每个单机玩家每次启动刷一条红字**。
@@ -112,11 +123,9 @@ namespace EliteEnemies.Coop
         /// <summary>停机：退订、解绑回调。可重复调用。</summary>
         public static void Shutdown()
         {
-            if (_watchingForApi)
-            {
-                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
-                _watchingForApi = false;
-            }
+            UnsubscribeFromAssemblyLoad();
+            _activationPending = false;
+            CoopActivationPump.Remove();
 
             if (_aiSpawnedEvent != null && _aiSpawnedHandler != null)
             {
@@ -237,16 +246,74 @@ namespace EliteEnemies.Coop
             _playerSpawnedEvent = eventInfo;
         }
 
+        /// <summary>
+        /// 汇编加载事件——**只记一个待办，绝不在本回调里做反射**。
+        ///
+        /// <para>⚠️ <b>本回调是 mono 在 <c>DoAssemblyLoad</c> 内部<b>同步</b>调用的，
+        /// 那一刻 <c>args.LoadedAssembly</c> 还没注册完</b>。对它（或此刻对"全部已加载程序集"）
+        /// 调 <c>GetType</c>/<c>GetProperty</c> 会让 mono <b>原生崩溃</b>——不是托管异常，
+        /// 所以 <c>try/catch</c> 兜不住、日志里也只会留下一个 native 栈。</para>
+        ///
+        /// <para><b>实测（2026-09-19，玩家提交的日志）</b>：崩溃栈是
+        /// <c>Assembly:LoadFrom</c> → <c>AppDomain:DoAssemblyLoad</c> →
+        /// 本方法 → <c>TryActivate</c> → <c>FindType</c> → <c>Assembly:InternalGetType</c>
+        /// （以及另一段 <c>GetProperty</c> → <c>RuntimeType:GetPropertiesByName_native</c>），
+        /// 全在 <c>UnityPlayer</c> 的原生帧里。</para>
+        ///
+        /// <para>只有在「<b>联机模组比本模组晚加载</b>」时才会走到这里——
+        /// 作者的加载顺序是联机模组在前（也是文档推荐的顺序），
+        /// 那时 <see cref="Initialize"/> 一次就探到了，本回调根本不会被触发，
+        /// 所以这个崩溃在自测里从来没有出现过。</para>
+        /// </summary>
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
         {
-            if (!Active) TryActivate();
-
-            // 激活成功就没必要再听下去了，就地退订，不做常驻监听。
-            if (Active && _watchingForApi)
+            if (Active)
             {
-                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
-                _watchingForApi = false;
+                UnsubscribeFromAssemblyLoad();
+                return;
             }
+
+            // 只落一个标记，交给 CoopActivationPump 在**正常帧**里重试。
+            _activationPending = true;
+            CoopActivationPump.EnsureInstalled();
+        }
+
+        /// <summary>
+        /// 真正的一次探测尝试。由 <see cref="CoopActivationPump"/> 在普通帧里调用
+        /// （以及 <see cref="Initialize"/> 启动时直接调一次）。
+        ///
+        /// <para>与 <see cref="OnAssemblyLoad"/> 的分工是**刻意的**：
+        /// 那个回调在"程序集加载中途"，这里在"加载结束之后"，只有后者能安全反射。</para>
+        /// </summary>
+        internal static void PumpActivation()
+        {
+            if (Active)
+            {
+                FinishActivation();
+                return;
+            }
+
+            if (!_activationPending) return;
+            _activationPending = false;
+
+            TryActivate();
+
+            if (Active) FinishActivation();
+        }
+
+        /// <summary>接入成功后的收尾：退订汇编监听、撤掉轮询器。</summary>
+        private static void FinishActivation()
+        {
+            UnsubscribeFromAssemblyLoad();
+            CoopActivationPump.Remove();
+        }
+
+        private static void UnsubscribeFromAssemblyLoad()
+        {
+            if (!_watchingForApi) return;
+
+            AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+            _watchingForApi = false;
         }
 
         /// <summary>
