@@ -1,0 +1,442 @@
+using System;
+using System.Reflection;
+using UnityEngine;
+
+namespace EliteEnemies.Coop
+{
+    /// <summary>
+    /// 联机模组（Escape From Duckov Coop Mod）API 的接入点：探测、按需激活、收发桥接。
+    ///
+    /// <para><b>为什么这里用反射（属规范 <c>03 §2.3</c> 的 A2 类例外）</b>：
+    /// 本模组依赖的 <c>EscapeFromDuckovModApi</c> 是<b>第三方可选依赖</b>——
+    /// 玩家没订阅联机模组时那个 DLL 根本不在，
+    /// 硬引用会让<b>单机玩家模组加载失败</b>（直接崩溃）。
+    /// 这与 <c>ModSettingDiagnostics</c> 是同一理由下的同一类例外，判据是
+    /// <b>硬引用会不会导致加载失败</b>：会，就是 A2。
+    /// <b>不标 <c>TODO(反射待清)</c></b>——它不是历史包袱，是正当用法。</para>
+    ///
+    /// <para><b>探测方式：按程序集名扫 AppDomain，不按路径。</b>
+    /// 该 DLL 由联机模组复制到<b>它自己的</b>模组文件夹（实测其 csproj 的 <c>_ModFolder</c> 是
+    /// <c>$(DUCKOV_MODS_DIRECTORY)\联机Mod1</c>），与我们无关，且那个文件夹名会变。
+    /// 扫已加载程序集是唯一稳定的做法。</para>
+    ///
+    /// <para><b>激活时机</b>：本模组可能先于或后于联机模组加载，两种情形都要覆盖——
+    /// 启动时探一次，没探到就挂 <see cref="AppDomain.AssemblyLoad"/> 等它。
+    /// 激活是<b>幂等</b>的，重复调用只花一次 bool 判断。</para>
+    ///
+    /// <para>⚠ <b>单机下的开销</b>：<see cref="Active"/> 是 <c>static bool</c>，
+    /// 未激活时所有联机路径都在它后面短路。这个类不做任何每帧工作。</para>
+    /// </summary>
+    internal static class CoopApi
+    {
+        private const string LogTag = "[EliteEnemies.Coop]";
+
+        /// <summary>API 程序集的<b>简单名</b>（不含版本与公钥——<c>LoadFrom</c> 加载的 FullName 带这些）。</summary>
+        private const string ApiAssemblyName = "EscapeFromDuckovModApi";
+
+        private const string NetApiTypeName = "EscapeFromDuckovCoopMod.ModNetworkApi";
+        private const string EventsTypeName = "EscapeFromDuckovCoopMod.ModApiEvents";
+        private const string ContextTypeName = "EscapeFromDuckovCoopMod.ModMessageContext";
+        private const string NetServiceTypeName = "EscapeFromDuckovCoopMod.NetService";
+
+        private static bool _initialized;
+        private static bool _watchingForApi;
+
+        private static Action<byte[]> _broadcast;
+        private static Func<bool> _isServer;
+        private static IDisposable _messageSubscription;
+        private static EventInfo _aiSpawnedEvent;
+        private static Action<int, CharacterMainControl> _aiSpawnedHandler;
+
+        /// <summary>联机 API 是否已就绪。**单机下恒为 false**，所有联机路径在此短路。</summary>
+        public static bool Active { get; private set; }
+
+        /// <summary>本端是不是主机（服务器）。未激活时恒为 false。</summary>
+        public static bool IsServer => Active && _isServer != null && _isServer();
+
+        /// <summary>
+        /// 启动接入。**幂等**，可安全重复调用。
+        /// 由 <c>ModBehaviour</c> 的「联机兼容」子系统在 <c>Phase.Early</c> 调用。
+        /// </summary>
+        public static void Initialize()
+        {
+            if (_initialized) return;
+            _initialized = true;
+
+            // 情形 A：联机模组已先加载
+            if (TryActivate()) return;
+
+            // 情形 B：联机模组之后才加载（游戏按 ModManager 的顺序装，谁先谁后不定）
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            _watchingForApi = true;
+
+            Debug.Log($"{LogTag} 未检测到联机模组，按单机模式运行" +
+                      "（若联机模组之后加载，会自动接入）。");
+        }
+
+        /// <summary>停机：退订、解绑回调。可重复调用。</summary>
+        public static void Shutdown()
+        {
+            if (_watchingForApi)
+            {
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+                _watchingForApi = false;
+            }
+
+            if (_aiSpawnedEvent != null && _aiSpawnedHandler != null)
+            {
+                try
+                {
+                    _aiSpawnedEvent.RemoveEventHandler(null, _aiSpawnedHandler);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"{LogTag} 退订 AiSpawned 失败（忽略）: {ex.Message}");
+                }
+            }
+
+            _aiSpawnedEvent = null;
+            _aiSpawnedHandler = null;
+
+            if (_messageSubscription != null)
+            {
+                try
+                {
+                    _messageSubscription.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"{LogTag} 注销消息处理器失败（忽略）: {ex.Message}");
+                }
+            }
+
+            _messageSubscription = null;
+            _broadcast = null;
+            _isServer = null;
+            Active = false;
+
+            // ⚠ **必须重置**：否则模组停用后再启用时 Initialize 会直接早退，
+            // 而这个模块已经在上面的 Shutdown 里把自己拆干净了——结果是
+            // 「重新启用后联机兼容永久失效」，且不报错、不留日志（静默失效）。
+            _initialized = false;
+        }
+
+        /// <summary>把一段自定义载荷广播给全体客户端。未激活时静默丢弃（返回 false）。</summary>
+        public static bool Broadcast(byte[] payload)
+        {
+            if (!Active || _broadcast == null || payload == null) return false;
+            _broadcast(payload);
+            return true;
+        }
+
+        private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
+        {
+            string name;
+            try
+            {
+                name = args?.LoadedAssembly?.GetName().Name;
+            }
+            catch
+            {
+                return;
+            }
+
+            if (!string.Equals(name, ApiAssemblyName, StringComparison.Ordinal)) return;
+
+            // 只可能加载一次，探完就退订——不做常驻监听。
+            AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+            _watchingForApi = false;
+            TryActivate();
+        }
+
+        /// <summary>
+        /// 探测并接入。**幂等**：已激活直接返回 true。
+        ///
+        /// <para>任何一步失败都只<b>记日志并退回单机</b>，绝不抛出——
+        /// 联机兼容是附加能力，它挂掉不该影响单机玩法。</para>
+        /// </summary>
+        private static bool TryActivate()
+        {
+            if (Active) return true;
+
+            var api = FindApiAssembly();
+            if (api == null) return false;
+
+            try
+            {
+                Activate(api);
+                Active = true;
+                Debug.Log($"{LogTag} 已接入联机模组 API（程序集 {api.GetName().Version}），" +
+                          "精英词条将随 AI 同步广播。");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{LogTag} 检测到联机模组，但接入其 API 失败，将按单机运行。" +
+                               $"（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n{ex}");
+                return false;
+            }
+        }
+
+        private static Assembly FindApiAssembly()
+        {
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                var assembly = assemblies[i];
+                if (assembly == null) continue;
+
+                string simpleName;
+                try
+                {
+                    simpleName = assembly.GetName().Name;
+                }
+                catch
+                {
+                    continue;   // 动态程序集可能取不到名字，跳过
+                }
+
+                if (string.Equals(simpleName, ApiAssemblyName, StringComparison.Ordinal))
+                    return assembly;
+            }
+
+            return null;
+        }
+
+        private static void Activate(Assembly api)
+        {
+            var netApi = api.GetType(NetApiTypeName, false);
+            var events = api.GetType(EventsTypeName, false);
+            var context = api.GetType(ContextTypeName, false);
+            var netService = api.GetType(NetServiceTypeName, false);
+
+            if (netApi == null || events == null || context == null || netService == null)
+            {
+                throw new InvalidOperationException(
+                    "联机 API 程序集里缺少预期的类型（" +
+                    $"{NetApiTypeName} / {EventsTypeName} / {ContextTypeName} / {NetServiceTypeName}）。");
+            }
+
+            // 1) 主机/客户端角色判断
+            _isServer = BuildIsServerProbe(netService);
+
+            // 2) 发送通道
+            var broadcastMethod = FindBroadcastMethod(netApi);
+            var writerType = broadcastMethod.GetParameters()[1].ParameterType.GetGenericArguments()[0];
+            _broadcast = BuildBroadcast(broadcastMethod, writerType);
+
+            // 3) 接收通道
+            _messageSubscription = RegisterMessageHandler(netApi, context);
+
+            // 4) AI 上线事件
+            SubscribeAiSpawned(events);
+        }
+
+        /// <summary>
+        /// <c>NetService.Instance.IsServer</c> 的取值探针。
+        ///
+        /// <para>取 <c>Instance</c> 时可能为 null——联机模组的 <c>NetService</c> 在它自己的
+        /// <c>OnEnable</c> 里才给 API 装 backend（<c>ModNetworkApi.SetBackend</c>），
+        /// 在那之前我们是探不到"角色"的。null 一律当"不是主机"，
+        /// 于是本模组在那段时间<b>不发广播</b>——宁可漏发（响的），不要误发。</para>
+        /// </summary>
+        private static Func<bool> BuildIsServerProbe(Type netServiceType)
+        {
+            var getInstance = BuildStaticMemberGetter(netServiceType, "Instance");
+            var getIsServer = BuildInstanceMemberGetter(netServiceType, "IsServer");
+
+            return () =>
+            {
+                var service = getInstance();
+                if (service == null) return false;
+                return (bool)getIsServer(service);
+            };
+        }
+
+        /// <summary>
+        /// 取静态成员的读取器。**字段与属性都接受**。
+        ///
+        /// <para>⚠ <b>这一条是实测踩出来的</b>：联机模组的 <c>NetService.Instance</c> 是
+        /// <c>public static NetService Instance;</c>——一个 <b>字段</b>，不是属性
+        /// （<c>Main\NetService.cs:35</c>），而同一个类里的 <c>IsServer</c> 却是属性
+        /// （同文件 <c>:66</c>）。只认属性的写法会在这里拿到 null，
+        /// 表现为「联机模组明明装了，本模组却一直按单机跑」。</para>
+        /// </summary>
+        private static Func<object> BuildStaticMemberGetter(Type type, string name)
+        {
+            var property = type.GetProperty(name, BindingFlags.Public | BindingFlags.Static);
+            if (property != null) return () => property.GetValue(null);
+
+            var field = type.GetField(name, BindingFlags.Public | BindingFlags.Static);
+            if (field != null) return () => field.GetValue(null);
+
+            throw new MissingMemberException(type.FullName, name);
+        }
+
+        /// <summary>取实例成员的读取器。字段与属性都接受，理由同上。</summary>
+        private static Func<object, object> BuildInstanceMemberGetter(Type type, string name)
+        {
+            var property = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+            if (property != null) return target => property.GetValue(target);
+
+            var field = type.GetField(name, BindingFlags.Public | BindingFlags.Instance);
+            if (field != null) return target => field.GetValue(target);
+
+            throw new MissingMemberException(type.FullName, name);
+        }
+
+        /// <summary>
+        /// 找 <c>ModNetworkApi.Broadcast(string, Action&lt;NetDataWriter&gt;, bool)</c>。
+        ///
+        /// <para>按<b>签名形状</b>找而不是按名字硬编码参数类型：<c>NetDataWriter</c> 来自 LiteNetLib，
+        /// 是本模组编译期引用不到的类型。从方法签名里反解出它，比写死
+        /// <c>"LiteNetLib.Utils.NetDataWriter"</c> 稳——联机模组换 LiteNetLib 版本时不会静默失效。</para>
+        /// </summary>
+        private static MethodInfo FindBroadcastMethod(Type netApiType)
+        {
+            foreach (var method in netApiType.GetMethods(BindingFlags.Public | BindingFlags.Static))
+            {
+                if (method.Name != "Broadcast") continue;
+
+                var parameters = method.GetParameters();
+                if (parameters.Length != 3) continue;
+                if (parameters[0].ParameterType != typeof(string)) continue;
+                if (parameters[2].ParameterType != typeof(bool)) continue;
+
+                var builderType = parameters[1].ParameterType;
+                if (!builderType.IsGenericType || builderType.GetGenericArguments().Length != 1) continue;
+
+                return method;
+            }
+
+            throw new MissingMethodException(netApiType.FullName, "Broadcast(string, Action<NetDataWriter>, bool)");
+        }
+
+        private static Action<byte[]> BuildBroadcast(MethodInfo broadcastMethod, Type writerType)
+        {
+            var bridgeType = typeof(PayloadWriter<>).MakeGenericType(writerType);
+            var bridge = (PayloadWriter)Activator.CreateInstance(bridgeType);
+
+            var writeTo = bridgeType.GetMethod(nameof(PayloadWriter<object>.WriteTo));
+            var writerAction = Delegate.CreateDelegate(
+                typeof(Action<>).MakeGenericType(writerType), bridge, writeTo);
+
+            var channel = CoopEliteSync.ChannelName;
+            var args = new object[3];
+
+            return payload =>
+            {
+                // 复用同一个 bridge 实例：Broadcast 是同步的，改完字段立刻调用，不存在竞态。
+                bridge.Bytes = payload;
+                args[0] = channel;
+                args[1] = writerAction;
+                args[2] = true;
+                broadcastMethod.Invoke(null, args);
+            };
+        }
+
+        private static IDisposable RegisterMessageHandler(Type netApiType, Type contextType)
+        {
+            var handlerType = typeof(Action<>).MakeGenericType(contextType);
+            var registerMethod = netApiType.GetMethod("RegisterHandler", new[] { typeof(string), handlerType });
+
+            if (registerMethod == null)
+                throw new MissingMethodException(netApiType.FullName, "RegisterHandler(string, Action<ModMessageContext>)");
+
+            var coreMethod = typeof(CoopApi)
+                .GetMethod(nameof(OnNetworkMessageCore), BindingFlags.NonPublic | BindingFlags.Static)
+                .MakeGenericMethod(contextType);
+
+            var handler = Delegate.CreateDelegate(handlerType, coreMethod);
+
+            return (IDisposable)registerMethod.Invoke(null, new object[] { CoopEliteSync.ChannelName, handler });
+        }
+
+        /// <summary>
+        /// 消息处理的泛型外壳。
+        ///
+        /// <para>存在的唯一理由是 <c>ModMessageContext</c> 是本模组编译期引用不到的类型，
+        /// 而它的 <c>Payload</c>（<c>ReadOnlyMemory&lt;byte&gt;</c>）与 <c>IsServer</c>（<c>bool</c>）
+        /// <b>都是 BCL 类型</b>——所以只需要在这个壳里反射取一次，内层就是强类型代码。</para>
+        ///
+        /// <para><c>PropertyInfo.GetValue</c> 对结构体会装箱，这里<b>刻意不优化</b>：
+        /// 消息频率是"每次精英生成"，不是每帧。</para>
+        /// </summary>
+        private static void OnNetworkMessageCore<TContext>(TContext context)
+        {
+            try
+            {
+                var type = typeof(TContext);
+
+                var payloadProperty = type.GetProperty("Payload", BindingFlags.Public | BindingFlags.Instance);
+                var isServerProperty = type.GetProperty("IsServer", BindingFlags.Public | BindingFlags.Instance);
+
+                if (payloadProperty == null || isServerProperty == null)
+                {
+                    Debug.LogError($"{LogTag} 联机消息类型 {type.FullName} 上找不到 Payload / IsServer，" +
+                                   "联机模组的 API 可能已变。");
+                    return;
+                }
+
+                var payload = (ReadOnlyMemory<byte>)payloadProperty.GetValue(context);
+                var isServer = (bool)isServerProperty.GetValue(context);
+
+                CoopEliteSync.OnNetworkMessage(payload, isServer);
+            }
+            catch (Exception ex)
+            {
+                // 隔离：这是联机模组派发链上的回调，抛出去会带走它的整个消息分发。
+                Debug.LogError($"{LogTag} 处理联机消息失败（已隔离）: {ex}");
+            }
+        }
+
+        private static void SubscribeAiSpawned(Type eventsType)
+        {
+            var eventInfo = eventsType.GetEvent("AiSpawned", BindingFlags.Public | BindingFlags.Static);
+            if (eventInfo == null)
+                throw new MissingMemberException(eventsType.FullName, "AiSpawned");
+
+            // Action<int, CharacterMainControl> 两端都是编译期可引用的类型，不需要泛型桥。
+            _aiSpawnedHandler = CoopEliteSync.OnAiSpawned;
+            eventInfo.AddEventHandler(null, _aiSpawnedHandler);
+            _aiSpawnedEvent = eventInfo;
+        }
+
+        /// <summary>
+        /// 承载待发送字节的桥。
+        ///
+        /// <para>联机 API 的发送签名是 <c>Action&lt;NetDataWriter&gt;</c>，而 <c>NetDataWriter</c>
+        /// 来自 LiteNetLib——本模组既没有也不该有那个依赖。于是用泛型类在运行期闭出
+        /// <c>Action&lt;TWriter&gt;</c>，实际只调它的 <c>Put(byte[])</c>。</para>
+        ///
+        /// <para>载荷就是<b>原样字节</b>：已核实 LiteNetLib 的 <c>NetDataWriter.Put(byte[])</c>
+        /// 不写长度前缀（<c>PutBytesWithLength</c> 才写），而联机模组把 payloadBuilder 写入的内容
+        /// 原样放进消息（<c>ModNetworkApi.BuildPayload</c> → <c>writer.CopyData()</c>），
+        /// 所以对端 <c>Payload</c> 拿到的就是这里的 <see cref="Bytes"/>。</para>
+        /// </summary>
+        private abstract class PayloadWriter
+        {
+            public byte[] Bytes;
+        }
+
+        private sealed class PayloadWriter<TWriter> : PayloadWriter
+        {
+            private static readonly Action<TWriter, byte[]> s_putBytes = BuildPutBytes();
+
+            private static Action<TWriter, byte[]> BuildPutBytes()
+            {
+                var put = typeof(TWriter).GetMethod("Put", new[] { typeof(byte[]) });
+                if (put == null)
+                    throw new MissingMethodException(typeof(TWriter).FullName, "Put(byte[])");
+
+                return (Action<TWriter, byte[]>)Delegate.CreateDelegate(
+                    typeof(Action<TWriter, byte[]>), put);
+            }
+
+            public void WriteTo(TWriter writer)
+            {
+                s_putBytes(writer, Bytes);
+            }
+        }
+    }
+}

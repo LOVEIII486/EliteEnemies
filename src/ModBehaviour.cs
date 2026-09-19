@@ -5,6 +5,7 @@ using EliteEnemies.DebugTools;
 using EliteEnemies.Affixes;
 using EliteEnemies.Buffs;
 using EliteEnemies.Combos;
+using EliteEnemies.Coop;
 using EliteEnemies.Core;
 using EliteEnemies.Loot;
 using EliteEnemies.Infrastructure;
@@ -129,6 +130,11 @@ namespace EliteEnemies
             //    见 SessionStats 的类注释。
             new Subsystem("本局统计", Phase.Early, SessionStats.BeginSession, SessionStats.EndSession),
             new Subsystem("Harmony 补丁", Phase.Early, InitializeHarmonyPatches, CleanupHarmonyPatches),
+            // 联机兼容。**单机下它是惰性的**：探测不到联机模组就只挂一个
+            // AppDomain.AssemblyLoad 监听（一次性），此后所有联机路径被 CoopApi.Active
+            // 这个 static bool 短路。不新增 Harmony 补丁、不引入每帧工作——
+            // 开销评估见 docs\联机兼容可行性分析.md §6。
+            new Subsystem("联机兼容", Phase.Early, InitializeCoopCompat, CleanupCoopCompat),
             new Subsystem("词条行为注册", Phase.Early, InitializeAffixBehaviors, CleanupAffixBehaviors),
             new Subsystem("Buff 框架", Phase.Early, InitializeBuffFramework, CleanupBuffFramework),
             new Subsystem("掉落工具", Phase.Early, InitializeLootHelper, CleanupLootHelper),
@@ -189,6 +195,16 @@ namespace EliteEnemies
 
         private void UnsubscribeLanguageChange()
             => SodaCraft.Localizations.LocalizationManager.OnSetLanguage -= OnLanguageChanged;
+
+        /// <summary>
+        /// 联机兼容模块的启动。**幂等**，且**单机下不做任何事**——
+        /// 它只探测联机模组的 API 程序集是否已加载，没探到就退回单机。
+        ///
+        /// <para>探测方式与 A2 类反射的理由见 <see cref="CoopApi"/> 的类注释。</para>
+        /// </summary>
+        private void InitializeCoopCompat() => CoopApi.Initialize();
+
+        private void CleanupCoopCompat() => CoopApi.Shutdown();
 
         /// <summary>
         /// 词条行为注册的停机。
