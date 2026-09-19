@@ -11,9 +11,9 @@ namespace EliteEnemies.Affixes.Behaviors
         public override string AffixName => "Tear";
 
         // 攻击命中玩家时触发
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
-            EliteBuffs.ApplyToPlayer<TearBuff>(attacker);
+            EliteBuffs.ApplyToPlayer<TearBuff>(victim, attacker);
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }

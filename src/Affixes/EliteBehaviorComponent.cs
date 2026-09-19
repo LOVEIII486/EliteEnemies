@@ -273,7 +273,10 @@ namespace EliteEnemies.Affixes
         /// <summary>
         /// 触发命中玩家事件（从 Harmony Patch 调用）
         /// </summary>
-        public void TriggerHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        /// <param name="attacker">发动攻击的那个敌人（就是本组件所属的角色）。</param>
+        /// <param name="victim">挨打的那个玩家角色。**给玩家上 debuff 要用它**——
+        /// 联机下挨打的可能是别的玩家（见 <c>EliteBuffs.ApplyToPlayer</c>）。</param>
+        public void TriggerHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             if (!_isInitialized || _character == null) return;
 
@@ -283,7 +286,7 @@ namespace EliteEnemies.Affixes
             {
                 try
                 {
-                    behavior.OnHitPlayer(attacker, damageInfo);
+                    behavior.OnHitPlayer(attacker, victim, damageInfo);
                 }
                 catch (Exception ex)
                 {

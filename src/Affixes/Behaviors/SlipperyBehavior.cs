@@ -19,11 +19,11 @@ namespace EliteEnemies.Affixes.Behaviors
             _lastTriggerTime = -999f;
         }
 
-        public override void OnHitPlayer(CharacterMainControl player, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             if (Time.time < _lastTriggerTime + InternalCooldown) return;
 
-            EliteBuffs.ApplyToPlayer<SlipperyBuff>(player);
+            EliteBuffs.ApplyToPlayer<SlipperyBuff>(victim, attacker);
             _lastTriggerTime = Time.time;
         }
 

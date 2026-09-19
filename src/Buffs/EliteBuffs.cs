@@ -69,17 +69,30 @@ namespace EliteEnemies.Buffs
         }
 
         /// <summary>
-        /// 给**玩家**施加一个 Buff。<paramref name="from"/> 只作来源记录。
+        /// 给**被打中的那个玩家**施加一个 Buff。<paramref name="from"/> 只作来源记录。
         ///
-        /// <para>⚠ 单独开这个方法是因为历史实现里踩过一个坑：旧的
-        /// <c>TryAddBuffToPlayer(buff, attacker)</c> 的**目标永远是 <c>CharacterMainControl.Main</c>**，
-        /// 第二个参数只是"谁给的"。而词条回调 <c>OnHitPlayer(attacker, …)</c> 传进来的
-        /// <c>attacker</c> 是**精英自己**——若照着"Apply 到第一个参数"直译，debuff 会挂到精英身上。
-        /// 把目标写进方法名，这类误译就不容易再发生。</para>
+        /// <para><b><paramref name="victim"/> 是目标，不是来源。</b>
+        /// 原型（<c>CharacterMainControl.Main</c>）对单人是对的、对**联机是错的**：
+        /// 词条的判定在**主机**上跑，而主机上挨打的可能是**别的玩家**的复制体——
+        /// 挂到 <c>Main</c> 就等于"精英打中客机、debuff 却挂到主机玩家身上"，
+        /// 客机什么都看不到。所以目标必须由调用方给出（来自
+        /// <c>OnHitPlayer</c> 的 <c>victim</c> 参数）。</para>
+        ///
+        /// <para>⚠ 传入的 <paramref name="victim"/> 若为 <c>null</c>，会**退回 <c>Main</c> 并告警**——
+        /// 那是"取不到受害者"的兜底，不是正常路径。单人下它总是本机玩家，行为与从前完全一致。</para>
         /// </summary>
-        public static bool ApplyToPlayer<T>(CharacterMainControl from = null) where T : EliteBuffBase
+        public static bool ApplyToPlayer<T>(CharacterMainControl victim, CharacterMainControl from = null)
+            where T : EliteBuffBase
         {
-            var player = CharacterMainControl.Main;
+            var player = victim;
+
+            if (player == null)
+            {
+                player = CharacterMainControl.Main;
+                Debug.LogWarning($"{LogTag} 施加 {typeof(T).Name} 时拿不到受害者，退回本机玩家" +
+                                 "（联机下这可能意味着挂错了人，请检查 OnHitPlayer 的 victim 参数）");
+            }
+
             if (player == null)
             {
                 Debug.LogWarning($"{LogTag} 找不到玩家，无法施加 {typeof(T).Name}");

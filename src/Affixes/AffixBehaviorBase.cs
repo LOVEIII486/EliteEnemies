@@ -124,7 +124,7 @@ namespace EliteEnemies.Affixes
         public virtual void OnEliteInitialized(CharacterMainControl character) { }
         public virtual void OnEliteDeath(CharacterMainControl character, DamageInfo damageInfo) { }
         public virtual void OnCleanup(CharacterMainControl character) { }
-        public virtual void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo) { }
+        public virtual void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo) { }
 
         // --- 受保护的助手方法：仅供开发者手动调用 ---
 

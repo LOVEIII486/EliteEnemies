@@ -24,12 +24,12 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             float currentTime = Time.time;
             if (currentTime - _lastTriggerTime < Cooldown) return;
 
-            EliteBuffs.ApplyToPlayer<DistortionBuff>(attacker);
+            EliteBuffs.ApplyToPlayer<DistortionBuff>(victim, attacker);
             _lastTriggerTime = currentTime;
         }
 

@@ -1,5 +1,6 @@
 using System;
 using EliteEnemies.Affixes;
+using EliteEnemies.Core;
 using HarmonyLib;
 using UnityEngine;
 
@@ -43,7 +44,18 @@ namespace EliteEnemies.Patches
                 CharacterMainControl receiver = __instance.health != null
                     ? __instance.health.TryGetCharacter()
                     : null;
-                if (receiver == null || !receiver.IsMainCharacter) return;
+                if (receiver == null) return;
+
+                // 1b. **必须是"玩家"，但不必是"本机玩家"。**
+                //
+                //     ⚠ 原先这里只认 `IsMainCharacter`，于是联机下**整个补丁都不触发**：
+                //     主机上挨打的是**客机玩家的复制体**，它不满足 `IsMainCharacter`；
+                //     而客机侧的"攻击者"是没有行为组件的复制体（在第 4 步被挡掉）。
+                //     结果是**所有 debuff 类词条在联机下静默失效**（实测确认）。
+                //
+                //     "远端玩家"这个判定由联机模块注入——单机下它恒为假，
+                //     所以**单机的行为与从前一字不差**。
+                if (!receiver.IsMainCharacter && !EliteEnemyCore.IsRemotePlayerCharacter(receiver)) return;
 
                 // 2. 必须是由角色造成的伤害
                 CharacterMainControl attacker = damageInfo.fromCharacter;
@@ -56,7 +68,9 @@ namespace EliteEnemies.Patches
                 var behaviorComponent = attacker.GetComponent<EliteBehaviorComponent>();
                 if (behaviorComponent == null) return;
 
-                behaviorComponent.TriggerHitPlayer(attacker, damageInfo);
+                // `receiver` 就是**挨打的那个玩家**——把它一起传下去，
+                // debuff 才能挂对人（联机下挨打的多半不是本机玩家）。
+                behaviorComponent.TriggerHitPlayer(attacker, receiver, damageInfo);
             }
             catch (Exception ex)
             {

@@ -43,7 +43,7 @@ namespace EliteEnemies.Affixes.Behaviors
         {
         }
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             if (Time.time - _lastHealTime < CooldownSeconds)
                 return;

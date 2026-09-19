@@ -55,6 +55,28 @@ namespace EliteEnemies.Core
                 return provider == null || provider();
             }
         }
+
+        /// <summary>
+        /// 「这是不是一个**远端玩家**角色」的判定。**默认 <c>null</c> ⇒ 一律不是**。
+        /// 由联机模块注入（它订阅联机模组的玩家进场事件，记住在场的远端玩家）。
+        ///
+        /// <para>为什么要这个东西：词条的"打中玩家"判定原本只认
+        /// <c>IsMainCharacter</c>（**本机**玩家）。联机下主机上挨打的是**客机玩家的复制体**，
+        /// 不满足那个条件，于是所有 debuff 词条在联机下静默失效。
+        /// 判据必须能认出"这是玩家，只是不是我"。</para>
+        ///
+        /// <para>单机下没有远端玩家，这个判定恒为假 ⇒ **单机行为与从前完全一致**。</para>
+        /// </summary>
+        public static Func<CharacterMainControl, bool> RemotePlayerPredicate { get; set; }
+
+        /// <summary>这个角色是不是远端玩家。<b>单机下恒为 <c>false</c>。</b></summary>
+        public static bool IsRemotePlayerCharacter(CharacterMainControl cmc)
+        {
+            if (cmc == null) return false;
+
+            var predicate = RemotePlayerPredicate;
+            return predicate != null && predicate(cmc);
+        }
         
         // 由生成器创建的临时预设（EggSpawnHelper 的 CreateModifiedPreset 用 Instantiate 造）
         // 的实例 ID——这些预设对应的敌人不应精英化。

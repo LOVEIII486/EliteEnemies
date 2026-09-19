@@ -31,7 +31,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             if (Time.time < _lastStackTime + StackInterval) return;
 
@@ -42,7 +42,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (ChillBuff.IsFreezeImmune(CharacterMainControl.Main)) return;
 
             // 施加失败（玩家不存在等）时**不**推进计时——否则那一次间隔白等。
-            if (!EliteBuffs.ApplyToPlayer<ChillBuff>(attacker)) return;
+            if (!EliteBuffs.ApplyToPlayer<ChillBuff>(victim, attacker)) return;
 
             _lastStackTime = Time.time;
         }

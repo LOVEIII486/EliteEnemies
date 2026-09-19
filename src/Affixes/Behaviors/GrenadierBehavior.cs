@@ -31,7 +31,7 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <summary>
         /// 命中玩家时触发
         /// </summary>
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             if (Time.time - _lastHitTime < HitCooldown) return;
             if (attacker == null) return;

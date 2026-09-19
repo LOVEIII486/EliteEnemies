@@ -42,7 +42,7 @@ namespace EliteEnemies.Affixes.Behaviors
         private string PhasePopText =>
             LocalizationManager.GetText("EliteEnemies_Affix_Phase_PopText_1");
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             // 自愈：标志为真、却早已超过一次合法交换所需的时长 ⇒ 那条协程被中止了（见类注释）。
             // 注意 `_lastSwapTime` 与 `_isSwapping` 是在同一帧里先后写下的（协程的第一次

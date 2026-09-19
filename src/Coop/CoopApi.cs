@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using UnityEngine;
 
@@ -58,6 +58,8 @@ namespace EliteEnemies.Coop
         private static IDisposable _messageSubscription;
         private static EventInfo _aiSpawnedEvent;
         private static Action<int, CharacterMainControl> _aiSpawnedHandler;
+        private static EventInfo _playerSpawnedEvent;
+        private static Action<CharacterMainControl, string, bool> _playerSpawnedHandler;
 
         /// <summary>联机 API 是否已就绪。**单机下恒为 false**，所有联机路径在此短路。</summary>
         public static bool Active { get; private set; }
@@ -125,8 +127,22 @@ namespace EliteEnemies.Coop
                 }
             }
 
+            if (_playerSpawnedEvent != null && _playerSpawnedHandler != null)
+            {
+                try
+                {
+                    _playerSpawnedEvent.RemoveEventHandler(null, _playerSpawnedHandler);
+                }
+                catch (Exception ex)
+                {
+                    CoopLog.Info($"退订 PlayerSpawned 失败（忽略）: {ex.Message}");
+                }
+            }
+
             _aiSpawnedEvent = null;
             _aiSpawnedHandler = null;
+            _playerSpawnedEvent = null;
+            _playerSpawnedHandler = null;
 
             if (_messageSubscription != null)
             {
@@ -143,6 +159,7 @@ namespace EliteEnemies.Coop
             // 先让业务模块收尾（它要打一条摘要，此刻日志与通道都还得是活的）。
             try
             {
+                CoopPlayers.Shutdown();
                 CoopEliteSync.Shutdown();
             }
             catch (Exception ex)
@@ -178,6 +195,18 @@ namespace EliteEnemies.Coop
             if (!Active || _sendToServer == null || payload == null) return false;
             _sendToServer(payload);
             return true;
+        }
+
+        private static void SubscribePlayerSpawned(Type eventsType)
+        {
+            var eventInfo = eventsType.GetEvent("PlayerSpawned", BindingFlags.Public | BindingFlags.Static);
+            if (eventInfo == null)
+                throw new MissingMemberException(eventsType.FullName, "PlayerSpawned");
+
+            // Action<CharacterMainControl, string, bool> 全是编译期可引用的类型，不需要泛型桥。
+            _playerSpawnedHandler = CoopPlayers.OnPlayerSpawned;
+            eventInfo.AddEventHandler(null, _playerSpawnedHandler);
+            _playerSpawnedEvent = eventInfo;
         }
 
         private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
@@ -326,7 +355,11 @@ namespace EliteEnemies.Coop
             // 4) AI 上线事件
             SubscribeAiSpawned(events);
 
-            // 5) 通知上层的业务模块：通道已就绪
+            // 5) 玩家进场事件（用来认出"远端玩家角色"，见 CoopPlayers）
+            SubscribePlayerSpawned(events);
+
+            // 6) 通知上层的业务模块：通道已就绪
+            CoopPlayers.Initialize();
             CoopEliteSync.Initialize();
         }
 

@@ -17,11 +17,11 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             // 刻意**不做节流**：同 ID 再施加只是刷新时长（不像「寒冷」那样要叠层），
             // 而施加本身只是 buffManager 里一次 List.Find——霰弹枪一轮多颗弹丸也无所谓。
-            EliteBuffs.ApplyToPlayer<FesterBuff>(attacker);
+            EliteBuffs.ApplyToPlayer<FesterBuff>(victim, attacker);
         }
     }
 }

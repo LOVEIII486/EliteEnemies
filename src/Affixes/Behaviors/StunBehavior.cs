@@ -12,9 +12,9 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
-            EliteBuffs.ApplyToPlayer<StunBuff>(attacker);
+            EliteBuffs.ApplyToPlayer<StunBuff>(victim, attacker);
         }
 
 

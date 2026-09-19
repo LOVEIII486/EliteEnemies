@@ -45,7 +45,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo) { }
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
             if (Time.time < _lastStealTime + StealInterval) return;
 

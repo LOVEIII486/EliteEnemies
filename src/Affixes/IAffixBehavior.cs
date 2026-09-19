@@ -37,8 +37,15 @@ namespace EliteEnemies.Affixes
 
         /// <summary>
         /// 该敌人**打中玩家**时（由 <c>DamageReceiverPatches</c> 转发）。
-        /// <paramref name="attacker"/> 是发动攻击的那个敌人（即 <c>character</c>）。
+        ///
+        /// <para><paramref name="attacker"/> 是发动攻击的那个敌人（即 <c>character</c>）；
+        /// <paramref name="victim"/> 是**挨打的那个玩家角色**——要给玩家上 debuff 就用它，
+        /// **不要用 <c>CharacterMainControl.Main</c>**：联机下挨打的可能是**别的玩家**
+        /// （详见 <c>EliteBuffs.ApplyToPlayer</c> 的注释）。</para>
+        ///
+        /// <para>⚠ 两个参数都是 <c>CharacterMainControl</c>，<b>顺序是"打人的在前、挨打的在后"</b>，
+        /// 与 <paramref name="character"/> 同一个东西的是 <paramref name="attacker"/>。</para>
         /// </summary>
-        void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo);
+        void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo);
     }
 }

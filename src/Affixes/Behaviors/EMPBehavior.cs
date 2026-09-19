@@ -10,9 +10,9 @@ namespace EliteEnemies.Affixes.Behaviors
     {
         public override string AffixName => "EMP";
 
-        public override void OnHitPlayer(CharacterMainControl attacker, DamageInfo damageInfo)
+        public override void OnHitPlayer(CharacterMainControl attacker, CharacterMainControl victim, DamageInfo damageInfo)
         {
-            EliteBuffs.ApplyToPlayer<EMPBuff>(attacker);
+            EliteBuffs.ApplyToPlayer<EMPBuff>(victim, attacker);
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo) { }
