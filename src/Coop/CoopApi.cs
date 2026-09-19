@@ -52,6 +52,7 @@ namespace EliteEnemies.Coop
         private static bool _mismatchReported;
 
         private static Action<byte[]> _broadcast;
+        private static Action<byte[]> _sendToServer;
         private static Func<bool> _isServer;
         private static IDisposable _messageSubscription;
         private static EventInfo _aiSpawnedEvent;
@@ -109,7 +110,7 @@ namespace EliteEnemies.Coop
                 }
                 catch (Exception ex)
                 {
-                    CoopLog.Emit($"退订 AiSpawned 失败（忽略）: {ex.Message}");
+                    CoopLog.Info($"退订 AiSpawned 失败（忽略）: {ex.Message}");
                 }
             }
 
@@ -124,12 +125,23 @@ namespace EliteEnemies.Coop
                 }
                 catch (Exception ex)
                 {
-                    CoopLog.Emit($"注销消息处理器失败（忽略）: {ex.Message}");
+                    CoopLog.Info($"注销消息处理器失败（忽略）: {ex.Message}");
                 }
+            }
+
+            // 先让业务模块收尾（它要打一条摘要，此刻日志与通道都还得是活的）。
+            try
+            {
+                CoopEliteSync.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                CoopLog.Warn($"联机模块收尾失败（忽略）: {ex.Message}");
             }
 
             _messageSubscription = null;
             _broadcast = null;
+            _sendToServer = null;
             _isServer = null;
             Active = false;
             _mismatchReported = false;
@@ -145,6 +157,14 @@ namespace EliteEnemies.Coop
         {
             if (!Active || _broadcast == null || payload == null) return false;
             _broadcast(payload);
+            return true;
+        }
+
+        /// <summary>把一段自定义载荷发给主机。未激活时静默丢弃（返回 false）。</summary>
+        public static bool SendToServer(byte[] payload)
+        {
+            if (!Active || _sendToServer == null || payload == null) return false;
+            _sendToServer(payload);
             return true;
         }
 
@@ -190,7 +210,7 @@ namespace EliteEnemies.Coop
                 if (IsAnyCoopAssemblyLoaded() && !_mismatchReported)
                 {
                     _mismatchReported = true;
-                    CoopLog.Emit("检测到联机模组，但它里面找不到本模组依赖的类型，将按单机运行。" +
+                    CoopLog.Info("检测到联机模组，但它里面找不到本模组依赖的类型，将按单机运行。" +
                                  "（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n" +
                                  $"  缺的类型：" +
                                  $"{(netApi == null ? NetApiTypeName + " " : string.Empty)}" +
@@ -207,7 +227,7 @@ namespace EliteEnemies.Coop
                 Activate(netApi, events, context, netService);
                 Active = true;
                 // 已激活 ⇒ 联机模组的日志过滤器是活的 ⇒ 必须走 CoopLog 才看得见。
-                CoopLog.Emit($"已接入联机模组 API（{netApi.Assembly.GetName().Name}），" +
+                CoopLog.Info($"已接入联机模组 API（{netApi.Assembly.GetName().Name}），" +
                              "精英词条将随 AI 同步广播。");
                 return true;
             }
@@ -216,7 +236,7 @@ namespace EliteEnemies.Coop
                 if (!_mismatchReported)
                 {
                     _mismatchReported = true;
-                    CoopLog.Emit("检测到联机模组，但接入其 API 失败，将按单机运行。" +
+                    CoopLog.Info("检测到联机模组，但接入其 API 失败，将按单机运行。" +
                                  $"（联机模组的版本可能已变，本模组的联机兼容需要同步更新）\n{ex}");
                 }
 
@@ -279,16 +299,22 @@ namespace EliteEnemies.Coop
             // 1) 主机/客户端角色判断
             _isServer = BuildIsServerProbe(netService);
 
-            // 2) 发送通道
-            var broadcastMethod = FindBroadcastMethod(netApi);
+            // 2) 发送通道——主机用 Broadcast（一对多），客户端用 SendToServer（一对一）
+            var broadcastMethod = FindSenderMethod(netApi, "Broadcast", 3);
             var writerType = broadcastMethod.GetParameters()[1].ParameterType.GetGenericArguments()[0];
-            _broadcast = BuildBroadcast(broadcastMethod, writerType);
+            _broadcast = BuildSender(broadcastMethod, writerType);
+
+            var sendToServerMethod = FindSenderMethod(netApi, "SendToServer", 2);
+            _sendToServer = BuildSender(sendToServerMethod, writerType);
 
             // 3) 接收通道
             _messageSubscription = RegisterMessageHandler(netApi, context);
 
             // 4) AI 上线事件
             SubscribeAiSpawned(events);
+
+            // 5) 通知上层的业务模块：通道已就绪
+            CoopEliteSync.Initialize();
         }
 
         /// <summary>
@@ -345,33 +371,45 @@ namespace EliteEnemies.Coop
         }
 
         /// <summary>
-        /// 找 <c>ModNetworkApi.Broadcast(string, Action&lt;NetDataWriter&gt;, bool)</c>。
+        /// 找形如 <c>(string channel, Action&lt;NetDataWriter&gt; builder, …)</c> 的发送方法。
         ///
         /// <para>按<b>签名形状</b>找而不是按名字硬编码参数类型：<c>NetDataWriter</c> 来自 LiteNetLib，
         /// 是本模组编译期引用不到的类型。从方法签名里反解出它，比写死
         /// <c>"LiteNetLib.Utils.NetDataWriter"</c> 稳——联机模组换 LiteNetLib 版本时不会静默失效。</para>
+        ///
+        /// <para>实测两个目标方法的形状：<c>Broadcast(string, Action&lt;NetDataWriter&gt;, bool)</c>
+        /// 与 <c>SendToServer(string, Action&lt;NetDataWriter&gt;)</c>——只差尾部的
+        /// <c>includeServer</c> 参数，所以用参数个数区分。</para>
         /// </summary>
-        private static MethodInfo FindBroadcastMethod(Type netApiType)
+        private static MethodInfo FindSenderMethod(Type netApiType, string name, int parameterCount)
         {
             foreach (var method in netApiType.GetMethods(BindingFlags.Public | BindingFlags.Static))
             {
-                if (method.Name != "Broadcast") continue;
+                if (method.Name != name) continue;
 
                 var parameters = method.GetParameters();
-                if (parameters.Length != 3) continue;
+                if (parameters.Length != parameterCount) continue;
                 if (parameters[0].ParameterType != typeof(string)) continue;
-                if (parameters[2].ParameterType != typeof(bool)) continue;
 
                 var builderType = parameters[1].ParameterType;
                 if (!builderType.IsGenericType || builderType.GetGenericArguments().Length != 1) continue;
 
+                // 尾部多出来的那个参数（Broadcast 的 includeServer）必须是 bool，
+                // 否则可能误配到别的重载上。
+                for (int i = 2; i < parameters.Length; i++)
+                {
+                    if (parameters[i].ParameterType != typeof(bool)) goto next;
+                }
+
                 return method;
+
+            next: ;
             }
 
-            throw new MissingMethodException(netApiType.FullName, "Broadcast(string, Action<NetDataWriter>, bool)");
+            throw new MissingMethodException(netApiType.FullName, $"{name}（{parameterCount} 参）");
         }
 
-        private static Action<byte[]> BuildBroadcast(MethodInfo broadcastMethod, Type writerType)
+        private static Action<byte[]> BuildSender(MethodInfo method, Type writerType)
         {
             var bridgeType = typeof(PayloadWriter<>).MakeGenericType(writerType);
             var bridge = (PayloadWriter)Activator.CreateInstance(bridgeType);
@@ -380,17 +418,19 @@ namespace EliteEnemies.Coop
             var writerAction = Delegate.CreateDelegate(
                 typeof(Action<>).MakeGenericType(writerType), bridge, writeTo);
 
-            var channel = CoopEliteSync.ChannelName;
-            var args = new object[3];
+            var args = new object[method.GetParameters().Length];
+            args[0] = CoopEliteSync.ChannelName;
+            args[1] = writerAction;
+            // 尾部若还有参数，那是 Broadcast 的 includeServer：要 true，
+            // 否则主机的本地回环收不到自己的消息（我们依赖它做一致性检查）。
+            for (int i = 2; i < args.Length; i++)
+                args[i] = true;
 
             return payload =>
             {
-                // 复用同一个 bridge 实例：Broadcast 是同步的，改完字段立刻调用，不存在竞态。
+                // 复用同一个 bridge 实例：这些发送方法是同步的，改完字段立刻调用，不存在竞态。
                 bridge.Bytes = payload;
-                args[0] = channel;
-                args[1] = writerAction;
-                args[2] = true;
-                broadcastMethod.Invoke(null, args);
+                method.Invoke(null, args);
             };
         }
 
@@ -432,7 +472,7 @@ namespace EliteEnemies.Coop
 
                 if (payloadProperty == null || isServerProperty == null)
                 {
-                    CoopLog.Emit($"联机消息类型 {type.FullName} 上找不到 Payload / IsServer，" +
+                    CoopLog.Info($"联机消息类型 {type.FullName} 上找不到 Payload / IsServer，" +
                                  "联机模组的 API 可能已变。");
                     return;
                 }
@@ -445,7 +485,7 @@ namespace EliteEnemies.Coop
             catch (Exception ex)
             {
                 // 隔离：这是联机模组派发链上的回调，抛出去会带走它的整个消息分发。
-                CoopLog.Emit($"处理联机消息失败（已隔离）: {ex}");
+                CoopLog.Info($"处理联机消息失败（已隔离）: {ex}");
             }
         }
 
