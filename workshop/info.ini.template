@@ -31,7 +31,7 @@ version = @VERSION@
 ;   一次（已反编译安装的那份 TeamSoda.Duckov.Core.dll 确认，不是过期的源码树）。
 ;   两次调用作用在同一个 handle 上，按理后写的赢——但抽样 20 个同游戏模组，
 ;   18 个都带着真实分类标签，说明标签确实留得住。
-;   ⇒ 下次上传后用 GetPublishedFileDetails 查 tags 即可定论。
-;   若发现仍被覆盖，兜底是 src\DebugTools\WorkshopTagFixer.cs（F8）。
-tags = Gameplay,Companion & NPC,Loot & Economy
+;   ⇒ 上传后用 GetPublishedFileDetails 查 tags 即可定论（2026-09-19 实测：标签留得住）。
+;   （曾为此写过一个 F8 手动工具，**已删除**——不需要手动做，别再把它写回来。）
+tags = Gameplay,Companion & NPC,Loot & Economy,Multiplayer & Co-op
 publishedFileId = 3602009885
