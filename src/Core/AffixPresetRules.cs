@@ -66,11 +66,6 @@ namespace EliteEnemies.Core
                 {
                     "EnemyPreset_Boss_Kamakoto_Special"
                 },
-                // ItemMimic 同理：BOSS 不该伪装成地上的一件物品。
-                ["ItemMimic"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    "EnemyPreset_Boss_Kamakoto_Special"
-                },
                 ["Explosive"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
                 {
                     NPCPresetNames.Enemies.JLabInvisible

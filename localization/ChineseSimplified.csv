@@ -162,7 +162,7 @@ EliteEnemies_Affix_Overload_Name,过载,2.3,AffixNames
 EliteEnemies_Affix_Overload_Description,受伤后进入过载状态，持续射击时间大幅延长,2.3,AffixDescription
 EliteEnemies_Affix_Overload_PopText,<color=#FF4500>武器过载！！！</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Mimic_Name,拟态,2.3,AffixNames
-EliteEnemies_Affix_Mimic_Description,伪装成补给箱，在受伤或被玩家开箱时显形并突袭,2.3,AffixDescription
+EliteEnemies_Affix_Mimic_Description,随机伪装成补给箱或地上的一件物品，靠近、开箱或受伤时显形并突袭,2.3,AffixDescription
 EliteEnemies_Settings_AffixSpecialSettings_Group,词缀特殊设置,2.3,Groups
 EliteEnemies_Settings_SplitAffixMaxCloneCount,[分裂] 最大同屏数量限制,2.3,BasicSettings
 EliteEnemies_Settings_SplitAffixMinFPSThreshold,[分裂] 最低帧率熔断值,2.3,BasicSettings
@@ -199,5 +199,3 @@ EliteEnemies_Affix_AmmoEater_Description,命中玩家时啃掉其弹匣中的子
 EliteEnemies_Affix_Thief_Name,小偷,2.7,AffixNames
 EliteEnemies_Affix_Thief_Description,命中时偷走玩家背包里的一件物品，击杀它会掉落两件,2.7,AffixDescription
 EliteEnemies_Affix_Thief_PopText,这个归我了：<color=#{0}>{1}</color>,2.7,AffixBehavior
-EliteEnemies_Affix_ItemMimic_Name,物品拟态,2.7,AffixNames
-EliteEnemies_Affix_ItemMimic_Description,伪装成地上的一件物品，在玩家靠近或对它造成伤害时显形突袭,2.7,AffixDescription

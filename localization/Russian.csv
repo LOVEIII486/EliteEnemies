@@ -162,7 +162,7 @@ EliteEnemies_Affix_Overload_Name,Перегрузка,2.3,AffixNames
 EliteEnemies_Affix_Overload_Description,"Когда атакован, входит в оружейную ярость, увеличивающую продолжительность непрерывной стрельбы.",2.3,AffixDescription
 EliteEnemies_Affix_Overload_PopText,<color=#FF4500>ПЕРЕГРУЗКА!!!</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Mimic_Name,Мимик,2.3,AffixNames
-EliteEnemies_Affix_Mimic_Description,"Сидит в засаде и притворяется припасами, до тех пор, пока не активирован или атакован.",2.3,AffixDescription
+EliteEnemies_Affix_Mimic_Description,Случайно притворяется ящиком или предметом на земле. Нападает при приближении игрока либо при вскрытии или атаке.,2.3,AffixDescription
 EliteEnemies_Settings_AffixSpecialSettings_Group,Специальные Настройки Аффиксов,2.3,Groups
 EliteEnemies_Settings_SplitAffixMaxCloneCount,[Подкрепление] Максимальное количество клонов на экране,2.3,BasicSettings
 EliteEnemies_Settings_SplitAffixMinFPSThreshold,[Подкрепление] Минимальный порог FPS,2.3,BasicSettings
@@ -199,5 +199,3 @@ EliteEnemies_Affix_AmmoEater_Description,Попадания вырывают п�
 EliteEnemies_Affix_Thief_Name,Вор,2.7,AffixNames
 EliteEnemies_Affix_Thief_Description,Крадёт предмет из рюкзака игрока при попадании. Убийство даёт два.,2.7,AffixDescription
 EliteEnemies_Affix_Thief_PopText,Теперь моё: <color=#{0}>{1}</color>,2.7,AffixBehavior
-EliteEnemies_Affix_ItemMimic_Name,Мимик-предмет,2.7,AffixNames
-EliteEnemies_Affix_ItemMimic_Description,Притворяется предметом на земле. Нападает при приближении игрока или при атаке на него,2.7,AffixDescription

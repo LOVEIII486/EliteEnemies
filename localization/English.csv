@@ -162,7 +162,7 @@ EliteEnemies_Affix_Overload_Name,Overload,2.3,AffixNames
 EliteEnemies_Affix_Overload_Description,"After taking damage, enters an overload state that greatly extends continuous firing duration",2.3,AffixDescription
 EliteEnemies_Affix_Overload_PopText,<color=#FF4500>WEAPON OVERLOAD!!!</color>,2.3,AffixBehavior
 EliteEnemies_Affix_Mimic_Name,Mimic,2.3,AffixNames
-EliteEnemies_Affix_Mimic_Description,Disguises as a supply crate. Reveals itself and attacks when damaged or when the player opens it,2.3,AffixDescription
+EliteEnemies_Affix_Mimic_Description,"Randomly disguises as a supply crate or an item on the ground. Reveals itself and attacks when approached, opened or damaged",2.3,AffixDescription
 EliteEnemies_Settings_AffixSpecialSettings_Group,Affix Special Settings,2.3,Groups
 EliteEnemies_Settings_SplitAffixMaxCloneCount,[Split] Maximum On-Screen Clone Limit,2.3,BasicSettings
 EliteEnemies_Settings_SplitAffixMinFPSThreshold,[Split] Minimum FPS Cutoff Threshold,2.3,BasicSettings
@@ -199,5 +199,3 @@ EliteEnemies_Affix_AmmoEater_Description,Hits devour rounds straight from the pl
 EliteEnemies_Affix_Thief_Name,Thief,2.7,AffixNames
 EliteEnemies_Affix_Thief_Description,Steals an item from the player's backpack on hit. Killing it drops two.,2.7,AffixDescription
 EliteEnemies_Affix_Thief_PopText,Mine now: <color=#{0}>{1}</color>,2.7,AffixBehavior
-EliteEnemies_Affix_ItemMimic_Name,Item Mimic,2.7,AffixNames
-EliteEnemies_Affix_ItemMimic_Description,Disguises as an item on the ground. Reveals itself and attacks when the player approaches or damages it,2.7,AffixDescription

@@ -519,20 +519,6 @@ namespace EliteEnemies.Affixes
             MoveSpeedMultiplier = 1.0f,
             Rarity = AffixRarity.Rare
         },
-        // ItemMimic：Mimic 的对照实验——同一个思路，伪装体换成"躺在地上的一件物品"。
-        // 倍率与稀有度**刻意与 Mimic 取同一档**，这样两者的手感差异只来自伪装体本身，
-        // 不被数值干扰（词条与行为的完整说明见 Behaviors\ItemMimicBehavior.cs）。
-        //
-        // 掉落取 Totem 标签，与伪装池同主题：它伪装成的就是它掉的东西。
-        ["ItemMimic"] = new AffixData
-        {
-            Name = new LocalizedText("EliteEnemies_Affix_ItemMimic_Name"),
-            Description = new LocalizedText("EliteEnemies_Affix_ItemMimic_Description"),
-            HealthMultiplier = 1.0f,
-            DamageMultiplier = 1.1f,
-            MoveSpeedMultiplier = 1.0f,
-            Rarity = AffixRarity.Rare
-        }.WithRandomLoot(quality: -1, itemCount: 1, dropChance: 1f, tagNames: new[] { "Totem" }),
         ["Reflect"] = new AffixData
         {
             Name = new LocalizedText("EliteEnemies_Affix_Reflect_Name"),

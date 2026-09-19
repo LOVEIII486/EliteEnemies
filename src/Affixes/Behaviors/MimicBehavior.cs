@@ -1,5 +1,4 @@
 using System;
-﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using ItemStatsSystem;
@@ -9,40 +8,117 @@ using EliteEnemies.DebugTools;
 namespace EliteEnemies.Affixes.Behaviors
 {
     /// <summary>
-    /// 【拟态】
+    /// 【拟态】—— 敌人隐藏自身，伪装成**一件场景里的东西**，等玩家上钩时现形突袭。
+    ///
+    /// <para><b>两种形态，生成时 50/50 随机取一种：</b></para>
+    /// <list type="bullet">
+    /// <item><b>补给箱</b>（原有）：拿角色自己的 <c>deadLootBoxPrefab</c> 造一只装着诱饵物品的箱子，
+    /// 玩家**按 E 开箱**或对它造成伤害时现形。角色站在箱子上。</item>
+    /// <item><b>地上的物品</b>：拿一件高价值物品丢在脚下（走游戏自己的 <c>Item.Drop</c> 路径），
+    /// 玩家**进入 <see cref="ItemTriggerDistance"/> 米**或对它造成伤害时现形。物品是平的，
+    /// 角色与它同位。</item>
+    /// </list>
+    ///
+    /// <para><b>为什么要两种形态</b>：箱子是玩家「有理由去开」的东西，但打久了就认得出来
+    /// （孤零零一只箱子 = 拟态）。物品形态把触发点换成「走到跟前」，多一种变量。</para>
+    ///
+    /// <para>⚠ <b>箱子形态刻意保留「必须你去开」这条触发，不加距离触发</b>——那是它的博弈核心，
+    /// 也是作者调过的既有行为。两种形态的触发差异是**有意**的，不是漏改。</para>
+    ///
+    /// <para><b>物品形态为什么是距离触发而不是「按 E 拾取」</b>（本项目踩过一次，别再改回去）：
+    /// 拾取回调 <c>InteractableBase.OnInteractStartEvent</c>（<c>:293</c>）跑在真正拾取的
+    /// <c>OnInteractStart</c>（<c>:297</c>）**之前**，中间没有任何重判。而揭示时要销毁伪装物
+    /// （<see cref="ClearDisguiseItem"/>），<c>Object.Destroy</c> 又延迟到帧末
+    /// （游戏自己留了证据：<c>ItemTreeExtensions.DestroyTree</c> 之外还有一个单独的
+    /// <c>DestroyTreeImmediate</c>）⇒ 同一帧触发就会把一个**已排进销毁队列**的物品送进
+    /// <c>PickupItem</c> → <c>ReleaseActiveAgent → Detach → SendToPlayerCharacterInventory</c>
+    /// ⇒ 玩家背包里留下点不开的空条目。
+    /// 曾经的对策是"延迟 1.2 秒跨过那一帧"，但实机表现是**玩家捡完走开几米敌人才现身**。
+    /// 改成距离触发之后这条链整个不存在：现形时物品不在任何人背包里，直接销毁即可，
+    /// **也顺带消掉了"每只物品拟态白送玩家一件物品"**。</para>
+    ///
+    /// <para>⚠ 若日后又想给物品形态加回拾取触发：**必须在揭示之前跨过那一帧**，不能在同一帧调
+    /// <see cref="TriggerAmbush"/>。<see cref="ClearDisguiseItem"/> 里 <c>InInventory == null</c>
+    /// 那道守卫只保护"已经被玩家拿走"的物品，**保护不了"正要去拿"的那一帧**。</para>
+    ///
+    /// <para>⚠ 箱子形态那两个偏移（<c>_boxFollowOffset</c> / <c>BoxSpawnLift</c>）是为**有体积的**箱子
+    /// 设计的，物品形态一个都不能用：物品是平的，角色没法"站在"上面，抬高还会让它现形时浮空。</para>
     /// </summary>
     public class MimicBehavior : AffixBehaviorBase, IUpdateableAffixBehavior, ICombatAffixBehavior
     {
         public override string AffixName => "Mimic";
         private const string LogTag = "[EliteEnemies.Mimic]";
 
+        /// <summary>本只敌人的伪装形态，<see cref="OnEliteInitialized"/> 时随机定下、此后不变。</summary>
+        private enum DisguiseForm
+        {
+            /// <summary>装诱饵物品的补给箱，开箱触发。角色站在箱子上。</summary>
+            SupplyBox,
+
+            /// <summary>躺在地上的一件物品，靠近触发。</summary>
+            GroundItem
+        }
+
+        private DisguiseForm _form;
+
+        /// <summary>两种形态各占一半。</summary>
+        private const float GroundItemFormChance = 0.5f;
+
+        // ═══════════════════════ 物品形态 ═══════════════════════
+
+        /// <summary>
+        /// 伪装物的候选物品池（高价值、玩家看见就会把脚步引过去的小件）。
+        ///
+        /// <para>⚠ 这几个 ID 有没有 **3D 世界模型**，代码里判不了——<c>..\Docs\ItemDatabase原版.xlsx</c>
+        /// 只有 ID/名称/数值/标签，**没有模型列**（而且它本身不全：构建时会警告"掉落 ID 379 不在物品库里"，
+        /// 而 379 在游戏里是存在的）。运行时判据是
+        /// <c>ItemAssetsCollection.GetPrefab(id).ItemGraphic != null &amp;&amp; !prefab.useSpriteForPickup</c>
+        /// （游戏侧 <c>InteractablePickup.CreateGraphic</c> 就是这么选的）。没有 3D 模型的物品会退化成
+        /// **2D 精灵立牌**——实机看到纸片样式就说明这个 ID 要换掉。</para>
+        ///
+        /// <para>⚠ 829 曾被列进来，但它在物品库里查不到、邻居 827/828 是「神秘钥匙X/O」而它没有对应条目，
+        /// 遂**未采用**——无效 ID 的失败方式是静默的：<c>InstantiateSync</c> 会走
+        /// <c>InstantiateFallbackItem</c> 造一个既无图标也无模型的 <c>Item</c>，地上那件"伪装物"
+        /// **完全隐形**，日志里什么都没有。</para>
+        /// </summary>
+        private static readonly int[] DisguiseItemIds =
+        {
+            827, 828,             // 神秘钥匙X / 神秘钥匙O
+            801, 802, 803, 804,   // J-Lab门禁卡 黄 / 红 / 绿 / 蓝
+            886, 887,             // J-Lab门禁卡 黑 / 紫
+            388,                  // 0.2BTC
+            1254, 1253            // 皇冠 / 纯金徽章
+        };
+
+        /// <summary>
+        /// 物品形态：玩家进入这个距离（米）就现形。
+        ///
+        /// <para>这个数决定"玩家有多少时间意识到地上那件东西不对劲"，是物品形态**唯一的手感旋钮**
+        /// （形状与调法照 <c>MusicianBehavior.TriggerDistance</c> 的先例：调它，别去加别的机制）。</para>
+        ///
+        /// <para><b>约束：必须明显大于交互距离。</b>交互扫描是玩家身前 0.2m、半径 0.3 的
+        /// <c>OverlapSphere</c>（<c>CA_Interact.cs:51</c>）⇒ 玩家要贴到**约 0.5m** 内才有 E 提示。
+        /// 触发距离若被压到那附近，"玩家还够得着物品"就重新成立，拾取那条有坑的路又变得可达
+        /// （见类型注释）。2m 相比之下留了足够余量。</para>
+        /// </summary>
+        private const float ItemTriggerDistance = 2f;
+
+        private Item _item;
+        private DuckovItemAgent _itemAgent;
+        private InteractablePickup _pickup;
+
+        // ═══════════════════════ 补给箱形态 ═══════════════════════
+
         private InteractableLootbox _trapBox;
-        private AICharacterController _aiController;
-        private CharacterSoundMaker _soundMaker;
-        private GraphOwner _brain;
 
-        private List<Renderer> _cachedRenderers;
-
-        /// <summary>角色身上的碰撞体缓存，见 <see cref="ReignoreBoxCollision"/>。</summary>
-        private Collider[] _cachedCharacterColliders;
-
-        /// <summary>下一次重扫碰撞体列表的时刻（<see cref="Time.time"/> 口径）。</summary>
-        private float _nextColliderRescanTime;
-
-        /// <summary>碰撞体列表的重扫冷却（秒）。与 `EliteGlowController.RescanCooldown` 同一取舍。</summary>
-        private const float ColliderRescanCooldown = 0.5f;
-
-        private bool _hasTriggered = false;
-        private bool _isTriggering = false;
+        /// <summary>诱饵箱的碰撞体。持有它才能**反复**重挂"与角色互不碰撞"，见 <see cref="ReignoreDisguiseCollision"/>。</summary>
+        private Collider _trapBoxCollider;
 
         private const int BaitItemID = 445;
         private const int BaitItemCount = 10;
 
-        /// <summary>角色相对诱饵箱的偏移（略高于箱心，让角色站在箱子上）。</summary>
-        private readonly Vector3 _followOffset = Vector3.up * 0.15f;
-
-        /// <summary>位置同步的死区（平方）。箱子没动就不写，稳态下每帧只是一次比较。</summary>
-        private const float SyncThresholdSqr = 0.001f;
+        /// <summary>角色相对箱子的偏移（略高于箱心，让角色站在箱子上）。**物品形态不用它。**</summary>
+        private readonly Vector3 _boxFollowOffset = Vector3.up * 0.15f;
 
         /// <summary>开箱到伏击之间的延迟（秒，**真实时间**，见 <see cref="OnPlayerOpenedBox"/>）。</summary>
         private const float AmbushDelay = 1.2f;
@@ -51,14 +127,34 @@ namespace EliteEnemies.Affixes.Behaviors
         private CharacterMainControl _pendingTarget;
         private float _ambushDueTime;
 
-        /// <summary>诱饵箱的碰撞体。持有它才能**反复**重挂"与角色互不碰撞"，见 <see cref="ReignoreBoxCollision"/>。</summary>
-        private Collider _trapBoxCollider;
-
         /// <summary>
         /// 生成诱饵箱时把角色临时抬多高（米）。目的是让箱子**不生成在角色胶囊体内部**
-        /// ——否则交互提示可能解析到角色身上，玩家打不开箱子。
+        /// ——否则交互提示可能解析到角色身上，玩家打不开箱子。**物品形态不需要这一步。**
         /// </summary>
         private const float BoxSpawnLift = 5f;
+
+        // ═══════════════════════ 两种形态共用 ═══════════════════════
+
+        private AICharacterController _aiController;
+        private CharacterSoundMaker _soundMaker;
+        private GraphOwner _brain;
+
+        private List<Renderer> _cachedRenderers;
+
+        /// <summary>角色身上的碰撞体缓存，见 <see cref="ReignoreDisguiseCollision"/>。</summary>
+        private Collider[] _cachedCharacterColliders;
+
+        /// <summary>下一次重扫碰撞体列表的时刻（<see cref="Time.time"/> 口径）。</summary>
+        private float _nextColliderRescanTime;
+
+        /// <summary>碰撞体列表的重扫冷却（秒）。与 <c>EliteGlowController.RescanCooldown</c> 同一取舍。</summary>
+        private const float ColliderRescanCooldown = 0.5f;
+
+        private bool _hasTriggered = false;
+        private bool _isTriggering = false;
+
+        /// <summary>位置同步的死区（平方）。伪装物没动就不写，稳态下每帧只是一次比较。</summary>
+        private const float SyncThresholdSqr = 0.001f;
 
         private float _cachedSightDist, _cachedHearing, _cachedSightAngle, _cachedTraceDist;
         private bool _cachedCanTalk;
@@ -87,35 +183,54 @@ namespace EliteEnemies.Affixes.Behaviors
 
             InitRendererCache(character);
 
-            SpawnTrapBox(character);
+            SpawnDisguise(character);
 
             SetMimicState(character, true);
 
             ForceHideVisuals();
         }
 
+        /// <summary>定下形态并生成对应的伪装物。</summary>
+        private void SpawnDisguise(CharacterMainControl character)
+        {
+            _form = UnityEngine.Random.value < GroundItemFormChance
+                ? DisguiseForm.GroundItem
+                : DisguiseForm.SupplyBox;
+
+            if (_form == DisguiseForm.SupplyBox) SpawnTrapBox(character);
+            else SpawnDisguiseItem(character);
+
+            if (DebugSwitch.Enabled)
+            {
+                Debug.Log($"{LogTag} 诊断：本只敌人形态 = {_form}（{character.name}）");
+            }
+        }
+
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
             if (_hasTriggered || character == null) return;
 
-            // 先看待触发的伏击（开箱那条路用它替代了协程，见 OnPlayerOpenedBox）。
-            UpdatePendingAmbush(character);
+            // 只有箱子形态走"延迟伏击"这条路（开箱 → 等 1.2 秒）。
+            if (_form == DisguiseForm.SupplyBox)
+            {
+                UpdatePendingAmbush(character);
 
-            // ⚠ **伏击可能就在上面那句里生效了**（它会把 `_hasTriggered` 置真并揭示敌人）。
-            // 此时若继续往下走，同一帧就会把敌人**重新藏回去、AI 重新压制回去**
-            // ⇒ 表现是"伏击明明触发了，敌人却不现身、也不攻击"。
-            // 开枪那条路没这个问题：`OnDamaged` 在 `OnUpdate` 外面触发，
-            // 下一帧一进门就被最上面那句守卫挡住。
-            if (_hasTriggered) return;
+                // ⚠ **伏击可能就在上面那句里生效了**（它会把 `_hasTriggered` 置真并揭示敌人）。
+                // 此时若继续往下走，同一帧就会把敌人**重新藏回去、AI 重新压制回去**
+                // ⇒ 表现是"伏击明明触发了，敌人却不现身、也不攻击"。
+                // 开枪那条路没这个问题：`OnDamaged` 在 `OnUpdate` 外面触发，
+                // 下一帧一进门就被最上面那句守卫挡住。
+                if (_hasTriggered) return;
+            }
 
             character.Hide();
             ForceHideVisuals();
 
-            // ⚠ **每帧重挂**"箱子 ↔ 角色互不碰撞"。Unity 在碰撞体被**重新启用**时会清掉
+            // ⚠ **每帧重挂**"伪装物 ↔ 角色互不碰撞"。Unity 在碰撞体被**重新启用**时会清掉
             // `Physics.IgnoreCollision` 的对，而角色的碰撞体会被反复启停（FOW 显隐等）
             // ⇒ 只挂一次的话，箱子迟早被角色的胶囊体顶走（实机症状：**箱子漂移**）。
             // 十几对原生调用/帧，相对这条链路上的其它工作可以忽略。
-            ReignoreBoxCollision(character);
+            ReignoreDisguiseCollision(character);
 
             // 压制血条——**"闪一下"的根治点**，见 SuppressHealthBar 的注释。
             SuppressHealthBar(character);
@@ -123,14 +238,48 @@ namespace EliteEnemies.Affixes.Behaviors
             // 持续压制 AI —— 见 EnsureAISuppressed 的注释（为什么必须"每帧"而不是"压一次"）
             EnsureAISuppressed(character);
 
-            // 位置同步：**必须跟着箱子走**——玩家可能在开箱前把箱子推走，
-            // 不同步的话敌人就会现身在另一处；而且敌人必须始终站在箱子上，
+            // 位置同步：**必须跟着伪装物走**——玩家可能在触发前把箱子推走，
+            // 不同步的话敌人就会现身在另一处；而且敌人必须始终在那里，
             // 玩家才能直接射它提前击杀。
-            SyncPositionToBox(character);
+            SyncPositionToDisguise(character);
+
+            // ⚠ 只有物品形态有距离触发，而且**刻意放在最后**：它是这里唯一会改变状态的一步（揭示）。
+            //    放在最后 ⇒ 本帧该做的伪装维持工作都已经做完，也就不需要上面箱子那条
+            //    "UpdatePendingAmbush 之后必须再查一次 _hasTriggered" 的补丁——
+            //    那个坑（同帧把刚揭示的敌人又藏回去）在物品形态里从结构上就不存在。
+            if (_form == DisguiseForm.GroundItem) CheckPlayerProximity(character);
         }
 
         /// <summary>
-        /// 把角色对齐到诱饵箱（带死区：箱子没动就不写，稳态下每帧只是一次比较）。
+        /// 物品形态：玩家进入 <see cref="ItemTriggerDistance"/> 就触发伏击。
+        ///
+        /// <para>形状照搬 <c>MusicianBehavior.OnUpdate</c>（<c>:160-170</c>）——同一件事在本仓库
+        /// 已有先例，别另起炉灶：玩家引用取自 <c>CharacterMainControl.Main</c>（游戏自己也在用的静态，
+        /// 例：<c>StockShop.cs:417</c>），距离用 <c>sqrMagnitude</c> 比较（省一次开方）。</para>
+        ///
+        /// <para><b>为什么不做 <c>Time.timeScale &lt;= 0</c> 的守卫</b>（音乐家那边有）：
+        /// 那个守卫是为"暂停时别继续吹奏"加的，而这里的判据是**纯位置比较**——
+        /// 时间冻结时玩家位置不变，距离自然也不变，不存在"暂停期间误触发"这条路径。
+        /// 加一个不会生效的分支只会是噪音。</para>
+        ///
+        /// <para>成本：每次 3 减 3 乘 1 比较。相比 <see cref="OnUpdate"/> 里每帧已经在做的
+        /// （遍历全部 Renderer、遍历角色全部碰撞体逐个调原生 <c>Physics.IgnoreCollision</c>、
+        /// <c>SetPosition</c>）可以忽略。**唯一要避开的是扫场景**（<c>Physics.OverlapSphere</c> /
+        /// <c>FindObjects*</c>）——那种做法也被 <c>tools/check-affix-behaviors.sh</c> 的门 2 禁止。</para>
+        /// </summary>
+        private void CheckPlayerProximity(CharacterMainControl character)
+        {
+            CharacterMainControl player = CharacterMainControl.Main;
+            if (player == null) return;
+
+            float distSqr = (character.transform.position - player.transform.position).sqrMagnitude;
+            if (distSqr > ItemTriggerDistance * ItemTriggerDistance) return;
+
+            TriggerAmbush(character, player);
+        }
+
+        /// <summary>
+        /// 把角色对齐到伪装物（带死区：伪装物没动就不写，稳态下每帧只是一次比较）。
         ///
         /// <para><b>⚠ 必须走 <c>character.SetPosition()</c>，不要直接写 <c>transform.position</c>。</b>
         /// 后者绕过了两件事，而那正是原先抖动/穿模的来源：</para>
@@ -144,16 +293,34 @@ namespace EliteEnemies.Affixes.Behaviors
         ///
         /// <para>旋转仍直接写 <c>transform.rotation</c>——本文件自己的 <see cref="FaceTarget"/>
         /// 也是这么做的，且旋转不参与那个控制器互抢。</para>
+        ///
+        /// <para>⚠ <b>两种形态的垂直偏移不同，这不是笔误</b>：箱子有体积，角色要"站在箱子上"
+        /// （<c>_boxFollowOffset</c>）；物品是**平的**，角色没法站在它上面，所以对齐目标就是物品自身的轴心。
+        /// 另外 ⚠ 对 UnityEngine.Object 一律用 <c>!= null</c> 判空（走 Unity 重载的 fake-null），
+        /// **不能写 <c>?.transform</c>**——那走的是 C# 的真 null 判断，已销毁的箱子会被判成非空然后抛异常。</para>
         /// </summary>
-        private void SyncPositionToBox(CharacterMainControl character)
+        private void SyncPositionToDisguise(CharacterMainControl character)
         {
-            if (_trapBox == null) return;
+            Vector3 targetPos;
+            Quaternion targetRot;
 
-            Vector3 targetPos = _trapBox.transform.position + _followOffset;
+            if (_form == DisguiseForm.SupplyBox)
+            {
+                if (_trapBox == null) return;
+                targetPos = _trapBox.transform.position + _boxFollowOffset;
+                targetRot = _trapBox.transform.rotation;
+            }
+            else
+            {
+                if (_itemAgent == null) return;
+                targetPos = _itemAgent.transform.position;
+                targetRot = _itemAgent.transform.rotation;
+            }
+
             if (Vector3.SqrMagnitude(character.transform.position - targetPos) <= SyncThresholdSqr) return;
 
             character.SetPosition(targetPos);
-            character.transform.rotation = _trapBox.transform.rotation;
+            character.transform.rotation = targetRot;
         }
 
         /// <summary>
@@ -162,11 +329,13 @@ namespace EliteEnemies.Affixes.Behaviors
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
             if (_hasTriggered) return;
-    
+
             // 被打激活时，如果是被其他单位攻击，将攻击者设为突袭目标
             CharacterMainControl attacker = damageInfo.fromCharacter;
             TriggerAmbush(character, attacker);
         }
+
+        // ═══════════════════════════ 补给箱形态 ═══════════════════════════
 
         /// <summary>
         /// 在角色**脚下**放一只诱饵箱，并让它与角色**互不碰撞**。
@@ -194,7 +363,7 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <para>⚠ <b>本注释原先写的是「弹道只考虑 <c>damageReceiverLayerMask</c>（<c>Projectile.cs:361</c>）」，
         /// 两处都不对</b>：<c>:361</c> 是判断"命中的是不是伤害接收器"的**分支处**，真正的射线掩码在
         /// <c>:143</c>，而且**含 ground**。对箱子结论不变（箱子的碰撞体不在其中任何一个掩码里），
-        /// 但**贴地的生成物**会踩在这上面——见 <see cref="ItemMimicBehavior"/>：把伪装物放平在地上，
+        /// 但**贴地的生成物**会踩在这上面——见物品形态：把伪装物放平在地上，
         /// 对着它开枪就可能被地面先吃掉弹道。</para>
         /// </summary>
         private void SpawnTrapBox(CharacterMainControl character)
@@ -205,7 +374,7 @@ namespace EliteEnemies.Affixes.Behaviors
             //
             // ⚠ 但必须**先把角色挪开**（原版是"抬高 5 米"，这里保留同样的语义）。
             // 原因：箱子若生成在角色的胶囊体内部，交互提示的解析可能落到**角色**身上而不是箱子，
-            // 玩家就打不开它了。挪角色改走安全 API（见 SyncPositionToBox），
+            // 玩家就打不开它了。挪角色改走安全 API（见 SyncPositionToDisguise），
             // **不再直接写 `transform.position`**；紧接着每帧的位置同步会把它拉回箱子正上方。
             Vector3 originalFloorPos = character.transform.position;
             character.SetPosition(originalFloorPos + Vector3.up * BoxSpawnLift);
@@ -237,7 +406,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (boxCollider != null) boxCollider.isTrigger = false;
 
             _trapBoxCollider = boxCollider;
-            ReignoreBoxCollision(character);
+            ReignoreDisguiseCollision(character);
 
             // ⚠ 官方的建箱路径（`InteractableLootbox.CreateFromItem`）会先调它私有的
             // `CreateLocalInventory()`（`:328-332`）**新建一个 Inventory**；我们绕过那条路、
@@ -291,21 +460,182 @@ namespace EliteEnemies.Affixes.Behaviors
         }
 
         /// <summary>
-        /// 让诱饵箱与角色身上的每个碰撞体互不碰撞。
+        /// 延迟到点就触发（在 <see cref="OnUpdate"/> 里每帧查一次）。**只有箱子形态用它。**
+        /// </summary>
+        private void UpdatePendingAmbush(CharacterMainControl character)
+        {
+            if (_pendingTarget == null) return;
+            if (Time.realtimeSinceStartup < _ambushDueTime) return;
+
+            CharacterMainControl target = _pendingTarget;
+            _pendingTarget = null;
+            TriggerAmbush(character, target);
+        }
+
+        private void OnPlayerOpenedBox(CharacterMainControl player, CharacterMainControl owner)
+        {
+            if (DebugSwitch.Enabled)
+            {
+                Debug.Log($"{LogTag} 诊断：玩家打开了诱饵箱（_hasTriggered={_hasTriggered} " +
+                          $"_isTriggering={_isTriggering}）");
+            }
+
+            if (_hasTriggered || _isTriggering) return;
+            _isTriggering = true;
+
+            if (player.interactAction != null && player.interactAction.Running)
+                player.interactAction.StopAction();
+
+            // 延迟突袭：把玩家作为初始目标，延迟到点后在 `OnUpdate` 里触发。
+            //
+            // ⚠ **刻意不用协程**：原先走 `StartManagedCoroutine`，而实机日志显示——
+            // 协程体**确实执行了**（"协程已启动"打出来了）、宿主 **active 且 enabled**、
+            // **没有任何异常**，但它**再也不恢复**。排查成本已远超收益。
+            // 延迟只有 1.2 秒，而 `OnUpdate` 是**确定在跑**的（敌人全程保持隐身就是证据：
+            // `Hide()` 每帧都在跑）。改成"记一个到点时间戳、在 `OnUpdate` 里比较"，
+            // **整类协程问题直接消失**。
+            //
+            // ⚠ 时间用 `Time.realtimeSinceStartup`（真实时间）：开箱时游戏可能被暂停
+            // （日志里就能看到 `PauseMenu`），用 `Time.time` 会像 `WaitForSeconds` 一样被冻住。
+            _pendingTarget = player;
+            _ambushDueTime = Time.realtimeSinceStartup + AmbushDelay;
+        }
+
+        // ═══════════════════════════ 物品形态 ═══════════════════════════
+
+        /// <summary>
+        /// 把一件物品丢在角色脚下当作伪装物。
+        ///
+        /// <para>走的是游戏自己的掉落路径 <c>ItemExtensions.Drop</c>（<c>ItemExtensions.cs:89-121</c>），
+        /// 它一次把六件事做完：地面视觉（<c>InteractablePickup.CreateGraphic</c>）、交互标记、
+        /// 交互提示名、层级（<c>InteractableBase.Awake</c> 归到 "Interactable" 层）、
+        /// 场景搬运（<c>:107-110</c>）、落地朝向。**不要自己复刻其中任何一件**——
+        /// 本工程在"自造生成物"上反复栽过（箱子漂移、Obscurer）。</para>
+        ///
+        /// <para>⚠ <b><c>createRigidbody: false</c> 是刻意的。</b>传 <c>true</c> 会走
+        /// <c>InteractablePickup.Throw()</c> 给它一个初速度——那件物品会**从敌人脚下飞出去**，
+        /// 而伪装物必须待在原地。游戏自己的地面物品点 <c>LootSpawner</c> 用的也是
+        /// <c>false</c>（<c>LootSpawner.cs:174</c>），语义完全一致：**放在地上，不是抛出去**。</para>
+        ///
+        /// <para>⚠ <b>不需要再补一次 <c>MultiSceneCore.MoveToActiveWithScene</c>。</b>箱子形态要补，
+        /// 是因为它直接 <c>Instantiate</c> 预制体、绕过了官方建箱路径；<c>Item.Drop</c> 自己就带这一步
+        /// （<c>ItemExtensions.cs:107-110</c>）。</para>
+        ///
+        /// <para>⚠ <b>刻意不订阅 <c>OnInteractStartEvent</c></b>：触发是距离式的，
+        /// <see cref="ItemTriggerDistance"/> 远早于交互距离，玩家够得着它之前就已经现形了。
+        /// 理由见类型注释。</para>
+        /// </summary>
+        private void SpawnDisguiseItem(CharacterMainControl character)
+        {
+            if (character == null) return;
+
+            int itemId = DisguiseItemIds[UnityEngine.Random.Range(0, DisguiseItemIds.Length)];
+
+            Item item = ItemAssetsCollection.InstantiateSync(itemId);
+            if (item == null)
+            {
+                Debug.LogError($"{LogTag} 伪装物 itemID={itemId} 实例化失败，这只敌人将只隐藏不伪装");
+                return;
+            }
+
+            DuckovItemAgent agent = item.Drop(character.transform.position, false, Vector3.forward, 360f);
+            if (agent == null)
+            {
+                // 物品没落成：留着它也是一份悬空数据，直接收掉。
+                Debug.LogError($"{LogTag} 伪装物 itemID={itemId} 掉落失败（agent 为 null），这只敌人将只隐藏不伪装");
+                if (!item.IsBeingDestroyed) item.DestroyTree();
+                return;
+            }
+
+            _item = item;
+            _itemAgent = agent;
+            _pickup = agent.GetComponent<InteractablePickup>();
+
+            ReignoreDisguiseCollision(character);
+
+            if (DebugSwitch.Enabled)
+            {
+                Debug.Log($"{LogTag} 诊断：伪装物已生成（{character.name}，物品={itemId}，" +
+                          $"交互组件={(_pickup != null ? "有" : "无")}）");
+            }
+        }
+
+        /// <summary>
+        /// 收掉还在地上的伪装物品。
+        ///
+        /// <para>⚠ <b>玩家已经把它捡走时绝不能销毁</b>——<c>Item.Detach()</c> 会把它
+        /// **从玩家背包里拽出来**（<c>Item.cs:797-801</c> → <c>InInventory?.RemoveItem(this)</c>）。
+        /// 判据用 <c>InInventory == null</c>（<c>Item.cs:390</c>，public）：在地面的物品不属于任何背包。</para>
+        ///
+        /// <para>⚠ 范围触发下这条路**正常不会走到**（<see cref="ItemTriggerDistance"/> 远早于交互距离），
+        /// 它防的是"玩家带着远程拾取类模组直接拿走"这类意外路径。守卫留着，但**别指望它
+        /// 能挡住"同一帧内的拾取"**——那件事必须靠触发时机的顺序解决，见类型注释。</para>
+        ///
+        /// <para>清理范式是游戏自己的：<c>Detach()</c> 后 <c>DestroyTree()</c>
+        /// （<c>ItemTreeExtensions.cs:117-131</c>）。销毁 Item 会连带销毁 agent——
+        /// <c>Item.OnDestroy</c>（<c>Item.cs:1118-1124</c>）里会 <c>Detach()</c> +
+        /// <c>agentUtilities.ReleaseActiveAgent()</c>，后者销毁的就是 agent 那个 GameObject。
+        /// **不要反过来只销毁 agent**：那会留下一个无渲染、无交互的 Item 数据物体。</para>
+        /// </summary>
+        private void ClearDisguiseItem()
+        {
+            if (_item != null && !_item.IsBeingDestroyed && _item.InInventory == null)
+            {
+                _item.Detach();
+                _item.DestroyTree();
+            }
+
+            _item = null;
+            _itemAgent = null;
+            _pickup = null;
+        }
+
+        // ═══════════════════════════ 两种形态共用 ═══════════════════════════
+
+        /// <summary>收掉当前形态的伪装物。</summary>
+        private void ClearDisguise()
+        {
+            if (_form == DisguiseForm.SupplyBox)
+            {
+                if (_trapBox != null) UnityEngine.Object.Destroy(_trapBox.gameObject);
+                _trapBoxCollider = null;
+                _trapBox = null;
+            }
+            else
+            {
+                ClearDisguiseItem();
+            }
+        }
+
+        /// <summary>当前形态伪装物的碰撞体（用于挂"与角色互不碰撞"）。</summary>
+        private Collider GetDisguiseCollider()
+        {
+            if (_form == DisguiseForm.SupplyBox) return _trapBoxCollider;
+
+            // 优先取游戏自己认的那一个交互碰撞体，没有再退到 agent 上的任意 Collider。
+            if (_pickup != null && _pickup.interactCollider != null) return _pickup.interactCollider;
+            if (_itemAgent != null) return _itemAgent.GetComponent<Collider>();
+            return null;
+        }
+
+        /// <summary>
+        /// 让伪装物与角色身上的每个碰撞体互不碰撞。
         ///
         /// <para>⚠ <b>重挂这一步必须每帧做</b>（见 <see cref="OnUpdate"/>）：Unity 在碰撞体被
-        /// **重新启用**时会清掉 `Physics.IgnoreCollision` 的对，而角色的碰撞体会被反复启停。
-        /// 只挂一次的后果就是实机看到的**箱子漂移**——箱子被角色的胶囊体顶走。</para>
+        /// **重新启用**时会清掉 <c>Physics.IgnoreCollision</c> 的对，而角色的碰撞体会被反复启停。
+        /// 只挂一次的后果就是实机看到的**箱子漂移**——箱子被角色的胶囊体顶走。
+        /// 物品形态同理：物品是非运动学的静态 collider、推不走，但角色的胶囊体会被自己的伪装物**顶住**。</para>
         ///
         /// <para>但**取列表**不必每帧：见方法体内的缓存说明。代价是"角色之后换了模型"
         /// 这种情况最多晚一个重扫窗口才被挂上，而不是下一帧。</para>
         /// </summary>
-        private void ReignoreBoxCollision(CharacterMainControl character)
+        private void ReignoreDisguiseCollision(CharacterMainControl character)
         {
-            if (_trapBoxCollider == null || character == null) return;
+            Collider disguiseCollider = GetDisguiseCollider();
+            if (disguiseCollider == null || character == null) return;
 
             // ⚠ 每帧 `GetComponentsInChildren` 会**每帧**整棵层级遍历 + 新建一个数组——
-            //    对一只可能蹲几分钟不动的诱饵箱来说纯属浪费（原先这里就是每一帧都在付这笔）。
+            //    对一只可能蹲几分钟不动的诱饵来说纯属浪费（原先这里就是每一帧都在付这笔）。
             //    改为缓存 + 冷却重扫，与 `EliteGlowController.RefreshRenderers` 同一范式。
             //
             // 缓存**不会**让"碰撞体被反复启停"漏挂：Unity 清掉的是 `Physics.IgnoreCollision`
@@ -321,7 +651,7 @@ namespace EliteEnemies.Affixes.Behaviors
             var colliders = _cachedCharacterColliders;
             for (int i = 0; i < colliders.Length; i++)
             {
-                if (colliders[i] != null) Physics.IgnoreCollision(_trapBoxCollider, colliders[i], true);
+                if (colliders[i] != null) Physics.IgnoreCollision(disguiseCollider, colliders[i], true);
             }
         }
 
@@ -402,13 +732,8 @@ namespace EliteEnemies.Affixes.Behaviors
             if (_hasTriggered) return;
             _hasTriggered = true;
 
-            if (_trapBox != null)
-            {
-                UnityEngine.Object.Destroy(_trapBox.gameObject);
-                _trapBoxCollider = null;
-                _trapBox = null;
-            }
-    
+            ClearDisguise();
+
             SetMimicState(character, false);
             ForceShowVisuals();
 
@@ -424,7 +749,6 @@ namespace EliteEnemies.Affixes.Behaviors
                 _aiController.SetTarget(initialTarget.transform);
                 _aiController.searchedEnemy = initialTarget.mainDamageReceiver;
                 _aiController.alert = true;
-        
             }
         }
 
@@ -568,62 +892,26 @@ namespace EliteEnemies.Affixes.Behaviors
 
         private void ForceHideVisuals() => SetRenderersEnabled(false);
 
-        private void OnPlayerOpenedBox(CharacterMainControl player, CharacterMainControl owner)
-        {
-            if (DebugSwitch.Enabled)
-            {
-                Debug.Log($"{LogTag} 诊断：玩家打开了诱饵箱（_hasTriggered={_hasTriggered} " +
-                          $"_isTriggering={_isTriggering}）");
-            }
-
-            if (_hasTriggered || _isTriggering) return;
-            _isTriggering = true;
-    
-            if (player.interactAction != null && player.interactAction.Running) 
-                player.interactAction.StopAction();
-        
-            // 延迟突袭：把玩家作为初始目标，延迟到点后在 `OnUpdate` 里触发。
-            //
-            // ⚠ **刻意不用协程**：原先走 `StartManagedCoroutine`，而实机日志显示——
-            // 协程体**确实执行了**（"协程已启动"打出来了）、宿主 **active 且 enabled**、
-            // **没有任何异常**，但它**再也不恢复**。排查成本已远超收益。
-            // 延迟只有 1.2 秒，而 `OnUpdate` 是**确定在跑**的（敌人全程保持隐身就是证据：
-            // `Hide()` 每帧都在跑）。改成"记一个到点时间戳、在 `OnUpdate` 里比较"，
-            // **整类协程问题直接消失**。
-            //
-            // ⚠ 时间用 `Time.realtimeSinceStartup`（真实时间）：开箱时游戏可能被暂停
-            // （日志里就能看到 `PauseMenu`），用 `Time.time` 会像 `WaitForSeconds` 一样被冻住。
-            _pendingTarget = player;
-            _ambushDueTime = Time.realtimeSinceStartup + AmbushDelay;
-        }
-
-        /// <summary>延迟到点就触发（在 <see cref="OnUpdate"/> 里每帧查一次）。</summary>
-        private void UpdatePendingAmbush(CharacterMainControl character)
-        {
-            if (_pendingTarget == null) return;
-            if (Time.realtimeSinceStartup < _ambushDueTime) return;
-
-            CharacterMainControl target = _pendingTarget;
-            _pendingTarget = null;
-            TriggerAmbush(character, target);
-        }
-
-        // （原 `DelayedAmbushRoutine` 已删除：延迟改由 `OnUpdate` + 时间戳实现，
-        //   见 `OnPlayerOpenedBox` 与 `UpdatePendingAmbush` 的注释。）
-        
         private void FaceTarget(CharacterMainControl character, CharacterMainControl target)
         {
             if (character == null || target == null) return;
-    
+
             Vector3 direction = (target.transform.position - character.transform.position);
             direction.y = 0f;
-    
+
             if (direction.sqrMagnitude > 0.001f)
             {
                 character.transform.rotation = Quaternion.LookRotation(direction);
             }
         }
-        
+
+        /// <summary>
+        /// ⚠ <b>清理必须幂等</b>：本方法会被走到两次——<see cref="OnEliteDeath"/> 里顺带调一次，
+        /// 组件销毁时框架还会再调一次（<c>EliteBehaviorComponent.OnDestroy</c>）。
+        /// 幂等的写法是：不做任何创建/实例化；销毁用 <see cref="ClearDisguise"/> 里的守卫
+        /// （箱子是引用非空，物品还多一道 <c>IsBeingDestroyed</c> + <c>InInventory == null</c>）；
+        /// 引用与状态旗无条件重置，于是第二次进入时每一步都是空操作。
+        /// </summary>
         public override void OnCleanup(CharacterMainControl character)
         {
             SetMimicState(character, false);
@@ -631,15 +919,13 @@ namespace EliteEnemies.Affixes.Behaviors
             RestoreHealthBar(character);
             if (character != null) character.Show();
 
+            ClearDisguise();
+
             _hasTriggered = false;
             _isTriggering = false;
             _isSensorySuppressed = false;
 
-            if (_trapBox != null) UnityEngine.Object.Destroy(_trapBox.gameObject);
-
             // 与其它行为一致：清理时把引用放掉（实例本就会被丢弃，这里只是不留悬空引用）
-            _trapBox = null;
-            _trapBoxCollider = null;
             _pendingTarget = null;
             _aiController = null;
             _soundMaker = null;
@@ -653,8 +939,6 @@ namespace EliteEnemies.Affixes.Behaviors
         public void OnAttack(CharacterMainControl c, DamageInfo d)
         {
         }
-
-
 
         public override void OnEliteDeath(CharacterMainControl c, DamageInfo d) => OnCleanup(c);
 

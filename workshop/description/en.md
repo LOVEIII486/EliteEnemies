@@ -11,7 +11,7 @@ Temporary feedback group: 1030349064 (bug reports only).
 
 ## ⚔️ Available Affixes
 
-**54** affixes across five rarity tiers. To stay within Steam's description length limit, only 3 affixes are listed per tier.
+**53** affixes across five rarity tiers. To stay within Steam's description length limit, only 3 affixes are listed per tier.
 **Full descriptions, stat multipliers and loot tables for every affix:**
 https://steamcommunity.com/workshop/filedetails/discussion/3602009885/671726388306336723/
 
@@ -25,8 +25,8 @@ https://steamcommunity.com/workshop/filedetails/discussion/3602009885/6717263883
 * **Regeneration** — Continuously regenerates HP, about 10 per second.
 * **Blindness** — Attacks limit player vision for 7 seconds.
 
-### **【Rare】（18）**
-* **Mimic** — Disguises as a supply crate. Reveals itself and attacks when damaged or when the player opens it
+### **【Rare】（17）**
+* **Mimic** — Randomly disguises as a supply crate or an item on the ground. Reveals itself and attacks when approached, opened or damaged
 * **Undead** — On low HP, becomes invulnerable for 2.5 s and restores to 50% HP.
 * **Chaos** — Attacks inflict random abnormal effects.
 
