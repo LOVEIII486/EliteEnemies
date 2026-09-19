@@ -87,6 +87,37 @@ namespace EliteEnemies.Core
         /// </summary>
         public static Func<ICollection<string>> RuntimeDisabledAffixesProvider { get; set; }
 
+        /// <summary>
+        /// 「本机 <b>临时生成出来的场景物件</b>（箱子这类）会不会被同步给对端」。**默认 <c>null</c> ⇒ 会。**
+        /// 由联机模块在激活时注入。
+        ///
+        /// <para><b>为什么需要这个判据</b>：不是每个"本机造出来的东西"都对端可见。实测：
+        /// 联机模组**只**在官方建箱路径（<c>InteractableLootbox.CreateFromItem</c> 的 Postfix，
+        /// <c>Patch/Loot/DeadLootSpawnPatch.cs:26</c>）上把尸箱注册进同步库；
+        /// 直接 <c>Instantiate</c> 出来的箱子**从来进不去**，客机根本不存在它。
+        /// 而走游戏自己的 <c>ItemExtensions.Drop</c> 的掉落物**是**会过网的
+        /// （<c>Patch/Item/LootInventoryPatch.cs:371</c> 补丁了那条路）——**同一件事、两种做法、两种命运**。</para>
+        ///
+        /// <para>唯一的使用者是**拟态**：它的"补给箱"形态踩的正是这条坑
+        /// （箱不在客机 ⇒ 客机看到的是一只**可见的敌人站在空地上**，比没有更糟），
+        /// 于是联机下它只用"地上的物品"形态。</para>
+        ///
+        /// <para>⚠ 与 <see cref="EliteAuthorityOverride"/> 同一取舍：**用委托不缓存 bool**，
+        /// 且判据要含"联机**真的已启动**"——玩家<b>装了联机模组却自己单机玩</b>时必须仍然算"会同步"，
+        /// 否则他会莫名其妙地少掉一种形态，且不报错、不留日志。</para>
+        /// </summary>
+        public static Func<bool> SpawnedPropsAreShared { get; set; }
+
+        /// <summary>本机生成的场景物件是否对端可见。读法见 <see cref="SpawnedPropsAreShared"/>。</summary>
+        public static bool AreSpawnedPropsShared
+        {
+            get
+            {
+                var provider = SpawnedPropsAreShared;
+                return provider == null || provider();
+            }
+        }
+
         /// <summary>这个角色是不是远端玩家。<b>单机下恒为 <c>false</c>。</b></summary>
         public static bool IsRemotePlayerCharacter(CharacterMainControl cmc)
         {

@@ -41,12 +41,29 @@ namespace EliteEnemies.Coop
         public static void Install()
         {
             EliteEnemyCore.RuntimeDisabledAffixesProvider = Current;
+            EliteEnemyCore.SpawnedPropsAreShared = LocalPropsShared;
         }
 
         public static void Uninstall()
         {
             EliteEnemyCore.RuntimeDisabledAffixesProvider = null;
+            EliteEnemyCore.SpawnedPropsAreShared = null;
         }
+
+        /// <summary>
+        /// 本机临时生成的场景物件**过不了网**（联机模组只同步官方建箱路径造出来的箱子）。
+        ///
+        /// <para><b>为什么不是把拟态整个禁掉</b>：它只有"补给箱"那种形态过不了网，
+        /// 另一种（地上的物品）走的是游戏自己的 <c>ItemExtensions.Drop</c>，
+        /// 而联机模组**补丁了那条路** ⇒ 客机看得到诱饵、触发在主机侧判距离、现形后取消隐身。
+        /// 详见 <c>EliteEnemyCore.SpawnedPropsAreShared</c> 与 <c>MimicBehavior</c> 的形态注释。</para>
+        ///
+        /// <para>判据同 <see cref="Current"/>：<c>Active &amp;&amp; NetworkStarted</c>。
+        /// <b>少了 NetworkStarted 那一项</b>，"装了联机模组却自己单机玩"的玩家
+        /// 就会莫名其妙只遇到一种拟态形态——不报错、不留日志。</para>
+        /// </summary>
+        private static bool LocalPropsShared()
+            => !CoopApi.Active || !CoopApi.NetworkStarted;
 
         /// <summary>
         /// **现问现答**：只有"联机**真的已启动**"时才返回禁用名单。

@@ -189,14 +189,49 @@ namespace EliteEnemies.Affixes.Behaviors
             SetMimicState(character, true);
 
             ForceHideVisuals();
+
+            // 隐身本体这件事**也要过网**：联机模组不同步显隐，主机这边藏了、客机那边照样看得见
+            // ⇒ 客机看到的是一只"站在原地不动的敌人"，伪装等于不存在（且比没有更糟：它把
+            // 玩家的注意力引向本体，而伪装物反倒成了背景）。
+            // 只在**进入/退出**伪装这两个边沿各报一次——隐身状态在两次之间是恒定的，
+            // 而 `OnUpdate` 里那种"每帧 Hide()"是**本机**的维持动作，不需要每帧广播。
+            RelayHidden(character, true);
         }
 
-        /// <summary>定下形态并生成对应的伪装物。</summary>
+        /// <summary>把本体的显隐状态报给客机（走中立钩子；单机下没有接管方，代价是一次空调用）。</summary>
+        private static void RelayHidden(CharacterMainControl character, bool hidden)
+        {
+            if (character == null) return;
+
+            PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale, hidden);
+        }
+
+        /// <summary>
+        /// 定下形态并生成对应的伪装物。
+        ///
+        /// <para>⚠️ <b>联机下只有"地上的物品"这一种形态</b>（<see cref="EliteEnemyCore.AreSpawnedPropsShared"/>
+        /// 为假时）。理由是两种伪装物的**可见性命运不同**（已核联机模组源码）：</para>
+        /// <list type="bullet">
+        /// <item><b>补给箱</b>由我们直接 <c>Instantiate</c> 预制体（<see cref="SpawnTrapBox"/>），
+        /// 而联机模组**只**在官方建箱路径 <c>InteractableLootbox.CreateFromItem</c> 的 Postfix 里
+        /// 把尸箱注册进同步库（<c>Patch/Loot/DeadLootSpawnPatch.cs:26</c>）⇒ 客机**根本不存在**这只箱子。</item>
+        /// <item><b>地上的物品</b>走游戏自己的 <c>ItemExtensions.Drop</c>，而联机模组**补丁了那条路**
+        /// （<c>Patch/Item/LootInventoryPatch.cs:371</c>）⇒ 客机看得到诱饵。</item>
+        /// </list>
+        ///
+        /// <para>而且箱子形态还差一条**结构上补不了**的东西：它的触发是"玩家去开箱"，
+        /// 我们的钩子挂在<b>主机那只箱子</b>的交互事件上；客机开的是它本地那份 ⇒
+        /// <b>主机不会知道</b>（联机模组只同步物品级动作，没有"某玩家打开了箱子"这条路）。
+        /// 也就是说：箱子形态在联机下连"触发"都到不了。</para>
+        ///
+        /// <para><b>单机下这段一字未改</b>：<see cref="EliteEnemyCore.AreSpawnedPropsShared"/> 默认恒真，
+        /// 取的仍是同一个 <c>Random.value</c> 与同一个 50% 判据。</para>
+        /// </summary>
         private void SpawnDisguise(CharacterMainControl character)
         {
-            _form = UnityEngine.Random.value < GroundItemFormChance
-                ? DisguiseForm.GroundItem
-                : DisguiseForm.SupplyBox;
+            _form = DisguiseForm.GroundItem;
+            if (EliteEnemyCore.AreSpawnedPropsShared && UnityEngine.Random.value >= GroundItemFormChance)
+                _form = DisguiseForm.SupplyBox;
 
             if (_form == DisguiseForm.SupplyBox) SpawnTrapBox(character);
             else SpawnDisguiseItem(character);
@@ -762,6 +797,10 @@ namespace EliteEnemies.Affixes.Behaviors
             RestoreHealthBar(character);
             character.Show();
 
+            // 现形 = 本体的显隐从"藏"翻到"露" ⇒ 这是另一个边沿，必须报（否则客机那边
+            // 一直停在"隐身"，玩家被一个看不见的敌人打）。
+            RelayHidden(character, false);
+
             if (initialTarget != null && _aiController != null)
             {
                 FaceTarget(character, initialTarget);
@@ -937,6 +976,10 @@ namespace EliteEnemies.Affixes.Behaviors
             ForceShowVisuals();
             RestoreHealthBar(character);
             if (character != null) character.Show();
+
+            // 撤销精英化（`StripElite`）时可能还停在"伪装中"⇒ 同样要把"露出来"报出去，
+            // 否则客机永远停在隐身。第二次进入时是重复值，客机侧幂等。
+            RelayHidden(character, false);
 
             ClearDisguise();
 
