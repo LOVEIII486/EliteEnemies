@@ -178,6 +178,11 @@ namespace EliteEnemies.Coop
 
         private const int MaxHostHealthFixLogged = 20;
 
+        /// <summary>抓到过"隐身被翻回来"的复制体 id——只用于把那条日志限制成每只一条。</summary>
+        private static readonly HashSet<int> s_reassertLogged = new HashSet<int>();
+
+        private const int MaxReassertLogged = 20;
+
         private static float s_lastQueryTime = -999f;
         private static float s_lastSummaryTime;
         private static bool s_summarySeeded;
@@ -187,6 +192,10 @@ namespace EliteEnemies.Coop
         {
             CoopDiag.Install();
             CoopStallWatch.Install();
+
+            // 客机的显隐要**持续**压制（主机是每帧压的），见 HideReplica 的注释。
+            CoopVisualWatch.Install();
+
             CoopLog.Announce();
 
             // ★ 交出/收回「精英逻辑权威」——客户端不再自己判定精英、也不再注入精英掉落。
@@ -222,6 +231,7 @@ namespace EliteEnemies.Coop
             PlayerEffectRelay.AiPopTextHandler = null;
             PlayerEffectRelay.EliteVisualHandler = null;
 
+            CoopVisualWatch.Uninstall();
             CoopStallWatch.Uninstall();
             CoopDiag.Uninstall();
 
@@ -231,6 +241,7 @@ namespace EliteEnemies.Coop
             s_clientVisual.Clear();
             s_hostPendingVisual.Clear();
             s_healthUnbaked.Clear();
+            s_reassertLogged.Clear();
 
             // 计数器一并归零：模组停用后重新启用时，统计不该背着上一局的数据。
             s_recvTotal = 0;
@@ -746,10 +757,114 @@ namespace EliteEnemies.Coop
         {
             cmc.transform.localScale = scale;
 
-            if (hidden) cmc.Hide();
-            else cmc.Show();
+            if (hidden) HideReplica(cmc);
+            else ShowReplica(cmc);
 
             CoopLog.Info($"[客户端] 应用精英视觉 缩放={scale.x:0.00} 隐藏={hidden}");
+        }
+
+        /// <summary>
+        /// 把复制体藏起来。**动作与主机侧同一套**：`Hide()` + 直接关模型渲染器。
+        ///
+        /// <para>⚠️ <b>为什么不能只调一次 <c>Hide()</c>（这正是"拟态在客机一直显形"的根因）</b>：</para>
+        /// <list type="number">
+        /// <item><c>Hide()</c> 是**边沿触发**的——<c>if (!hidden)</c> 早退（<c>CharacterMainControl.cs:2545</c>），
+        /// 状态已经是"藏"时它什么也不做 ⇒ **没法用它再压一次**。所以这里先清标志再调。</item>
+        /// <item>而主机侧本来就是**每帧**压制的（<c>MimicBehavior.SetRenderersEnabled</c> 的注释：
+        /// "模型可能被别的系统重新启用，所以要持续压制"）。客机只收到**一条**消息，
+        /// 被翻回来就再也回不去——实测症状就是拟态在客机一直显形。</item>
+        /// <item><c>Hide()</c> 走的是**换层**（<c>CharacterSubVisuals.SetRenderersHidden</c> →
+        /// <c>gameObject.layer</c>），只覆盖 <c>subVisuals</c>；主机侧另外还关
+        /// <c>characterModel.renderers</c> ⇒ 两边都做，才不会只藏半边。</item>
+        /// </list>
+        ///
+        /// <para>配套：<see cref="CoopVisualWatch"/> 会每 0.5 秒对"仍是隐藏"的那些重压一次
+        /// （主机是每帧压的，客机得跟得上）。</para>
+        /// </summary>
+        private static void HideReplica(CharacterMainControl cmc)
+        {
+            // ⚠ 这里**故意不调 `Hide()`**——下面这几句与它的实现逐句相同
+            //（`CharacterMainControl.cs:2545-2555`），只去掉那个边沿守卫，
+            // 并保留 `Teams.player` 那条（游戏不让玩家队伍的角色被藏）。
+            if (cmc.Team == Teams.player) return;
+
+            cmc.hidden = true;
+
+            var model = cmc.characterModel;
+            if (model != null) model.SyncHiddenToMainCharacter();
+
+            SetModelRenderers(cmc, false);
+        }
+
+        /// <summary>取消隐藏：同样**两种机制都还原**（否则被关掉的那批渲染器永远回不来）。</summary>
+        private static void ShowReplica(CharacterMainControl cmc)
+        {
+            SetModelRenderers(cmc, true);
+            cmc.Show();
+        }
+
+        /// <summary>开关角色模型上的全部渲染器（与主机侧 <c>MimicBehavior</c> 用的是同一份列表）。</summary>
+        private static void SetModelRenderers(CharacterMainControl cmc, bool enabled)
+        {
+            var model = cmc.characterModel;
+            if (model == null) return;
+
+            var renderers = model.renderers;
+            if (renderers == null) return;
+
+            for (int i = 0; i < renderers.Count; i++)
+            {
+                var renderer = renderers[i];
+                if (renderer != null && renderer.enabled != enabled) renderer.enabled = enabled;
+            }
+        }
+
+        /// <summary>
+        /// 对"主机说它该藏着"的复制体**再压一次**（见 <see cref="HideReplica"/>）。
+        /// 由 <see cref="CoopVisualWatch"/> 每 0.5 秒调一次；没有隐藏中的目标时是零成本。
+        /// </summary>
+        internal static void ReassertHiddenVisuals()
+        {
+            if (s_clientVisual.Count == 0 || s_clientReplicas.Count == 0) return;
+
+            foreach (var pair in s_clientVisual)
+            {
+                if (!pair.Value.Hidden) continue;
+                if (!s_clientReplicas.TryGetValue(pair.Key, out var cmc) || !cmc) continue;
+
+                // 先看一眼"它是不是真的又露出来了"——只用于**决定要不要报日志**。
+                // 压制本身是无条件的：`Hide()` 换的是 layer、我们关的是 enabled，
+                // 两条路哪一条被翻回来都得盖回去（而且这一步很便宜）。
+                bool exposed = IsVisuallyExposed(cmc);
+
+                HideReplica(cmc);
+
+                // 只在**第一次**真的抓到"被翻回来"时报一条——它同时是"这套重压确实必要"的证据。
+                // 每次报会变成 2Hz 的日志洪水。
+                if (exposed && s_reassertLogged.Add(pair.Key) && s_reassertLogged.Count <= MaxReassertLogged)
+                {
+                    CoopLog.Info($"[客户端] 复制体 aiId={pair.Key} 的隐身被翻回来了，已重新压制" +
+                                 "（主机侧是每帧压制的，客机只能按低频率跟）");
+                }
+            }
+        }
+
+        /// <summary>这个复制体的模型**当前是不是露着**（只看渲染器开关，不看 layer）。</summary>
+        private static bool IsVisuallyExposed(CharacterMainControl cmc)
+        {
+            var model = cmc.characterModel;
+            if (model == null) return false;
+
+            var renderers = model.renderers;
+            if (renderers == null) return false;
+
+            for (int i = 0; i < renderers.Count; i++)
+            {
+                var renderer = renderers[i];
+                if (renderer != null && renderer.enabled) return true;
+            }
+
+            return false;
         }
 
         /// <summary>
