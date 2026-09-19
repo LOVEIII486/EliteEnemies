@@ -23,17 +23,17 @@ namespace EliteEnemies.Patches
         {
             try
             {
-                // 0. `Hurt` 返回 false = **这一击游戏根本没结算**——玩家已死（`DamageReceiver.cs:78-81`）、
-                //    坐在受保护的载具里（`:86-93`）、或 `LevelManager` 未就绪（`:82-85`）。
-                //    那就不算"打中玩家"，不该触发任何 `OnHitPlayer` 效果
-                //    （否则会对尸体上致盲/眩晕/击退，或在载具里给玩家上 debuff）。
+                // 【判据总览】三道门，顺序与理由见各自注释：
+                //   1.  挨打的得是个角色
+                //   1b. 挨打的得是**玩家**（本机或远端）
+                //   1c. `__result` 这道"游戏是否真的结算了"的检查——**只对本机玩家用**，
+                //       远端玩家不看（联机模组会拦下那种伤害，`__result` 因此不可信）
                 //
-                //    ⚠ 它**挡不住**"被无敌帧吃掉的伤害"：`DamageReceiver.Hurt` 在正常路径上
+                // ⚠ 1c 那道门**挡不住**"被无敌帧吃掉的伤害"：`DamageReceiver.Hurt` 在正常路径上
                 //    **无条件返回 true**（`DamageReceiver.cs:100`），不管 `Health.Hurt` 内部是否
                 //    因 `invincible` 早退（`Health.cs:314`）。要连那一层一起挡，只能改订阅
                 //    `Health.OnHurt`——在 Postfix 里读 `damageInfo.finalDamage` 是拿不到的
                 //    （`DamageInfo` 是结构体、被逐层按值传递，结算值写在 `Health.Hurt` 的局部副本上）。
-                if (!__result) return;
 
                 // 1. 先判"挨打的是不是玩家"——**最便宜的判断放最前面**。
                 //    用游戏自己的口子：`DamageReceiver.health` 是公开字段，
@@ -55,7 +55,26 @@ namespace EliteEnemies.Patches
                 //
                 //     "远端玩家"这个判定由联机模块注入——单机下它恒为假，
                 //     所以**单机的行为与从前一字不差**。
-                if (!receiver.IsMainCharacter && !EliteEnemyCore.IsRemotePlayerCharacter(receiver)) return;
+                bool isRemotePlayer = EliteEnemyCore.IsRemotePlayerCharacter(receiver);
+                if (!receiver.IsMainCharacter && !isRemotePlayer) return;
+
+                // 1c. **`__result` 只对"本机玩家"可信，对远端玩家不可信。**
+                //
+                //     上面那句 `if (!__result) return;` 的意思是"Hurt 返回 false = 这一击
+                //     游戏根本没结算"。但联机模组在**主机**上会用**更高优先级**的 Prefix
+                //     拦下"打中远端玩家复制体"的伤害、把它转发给真正的客机，然后 `return false`
+                //     （`EscapeFromDuckovCoopMod/Patch/../Main/HarmonyFix.cs` 的
+                //     `Patch_ServerForwardRemotePlayerDamage`）。
+                //
+                //     Harmony 的规则是：**Prefix 返回 false 时原方法不跑，但 Postfix 照跑**，
+                //     此时 `__result` 是**默认值 `false`**。于是主机上每一发打在客机玩家身上的
+                //     伤害，都会被上面那句当成"没结算"挡掉——**这正是 debuff 词条在联机下
+                //     不生效的最后一道拦路虎**（实测确认：主机的本机玩家能中 debuff，
+                //     客机不能）。
+                //
+                //     所以：本机玩家仍按老规矩看 `__result`（单机行为一字不差）；
+                //     远端玩家不看它——那一击是**真的打中了玩家**，该触发。
+                if (!__result && !isRemotePlayer) return;
 
                 // 2. 必须是由角色造成的伤害
                 CharacterMainControl attacker = damageInfo.fromCharacter;
