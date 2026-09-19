@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace EliteEnemies.Affixes.Behaviors
 {
@@ -28,7 +28,10 @@ namespace EliteEnemies.Affixes.Behaviors
         {
             if (Time.time < _lastBiteTime + BiteInterval) return;
 
-            CharacterMainControl player = CharacterMainControl.Main;
+            // ⚠ 目标必须是 **victim（被打中的那个玩家）**，不是 `CharacterMainControl.Main`。
+            //   联机下判定在主机上跑，而挨打的往往是**客机玩家的复制体**；
+            //   写死 Main 会把效果挂到主机自己的玩家身上，客机什么都看不到。
+            CharacterMainControl player = victim;
             if (player == null) return;
 
             // 玩家没拿枪（跑图/近战）时不生效——这是正常的空窗，不是 bug

@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections;
+using EliteEnemies.Core;
 using EliteEnemies.Localization;
 using UnityEngine;
 
@@ -67,13 +68,18 @@ namespace EliteEnemies.Affixes.Behaviors
             if (_isAnyTimeStopActive) return;
             if (character == null || character.Health == null) return;
 
-            // 1. 必须是玩家造成的伤害
-            if (damageInfo.fromCharacter == null) return;
-            if (!damageInfo.fromCharacter.IsMainCharacter) return;   // 避免 NPC 互殴触发
-
-            // 2. 距离检查：太远玩家感知不到，不触发
-            var player = CharacterMainControl.Main;
+            // 1. 必须由**玩家**造成（本机玩家与远端玩家都算）——避免 NPC 互殴触发。
+            //
+            //    ⚠ 原先只认 `IsMainCharacter`：联机下客机造成的伤害，其攻击者在**主机**上是
+            //    客机玩家的**复制体**，不满足该条件 ⇒ **时停在联机下永不触发**。
+            //    判据与 `DamageReceiverPatches` 用的是同一个（见 EliteEnemyCore.RemotePlayerPredicate）。
+            var player = damageInfo.fromCharacter;
             if (player == null) return;
+            if (!player.IsMainCharacter && !EliteEnemyCore.IsRemotePlayerCharacter(player)) return;
+
+            // 2. 距离检查：太远玩家感知不到，不触发。
+            //    ⚠ 量的是**造成这次伤害的那个玩家**到精英的距离，不是本机玩家——
+            //    联机下这俩常常不是同一个人（原先写死 Main，等于只在主机玩家挨着时才触发）。
 
             float distanceToPlayer = Vector3.Distance(character.transform.position, player.transform.position);
             if (distanceToPlayer > TriggerMaxDistance) return;

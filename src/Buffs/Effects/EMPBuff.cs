@@ -21,9 +21,30 @@ namespace EliteEnemies.Buffs.Effects
         public override int BuffId => 99906;
         public override float Duration => 5f;
 
+        /// <summary>
+        /// 这个 Buff 是不是挂在**本机玩家**身上。
+        ///
+        /// <para>⚠️ <b>HUD 是「这台机器」的资源，只有挨打的那个玩家就在本机时才该动它。</b>
+        /// 联机下精英打中客机时判定在<b>主机</b>上跑，debuff 会被挂到客机玩家的<b>复制体</b>上——
+        /// 那时 <c>OnApplied</c> 也在主机上跑。不判这一下，就会
+        /// <b>把主机的 HUD 关掉</b>（而真正该关的客机那边，要等 buff 被转发过去才生效）。</para>
+        /// </summary>
+        private bool OwnsLocalHud => Character != null && Character.IsMainCharacter;
+
+        /// <summary>
+        /// 本次是否真的动过 HUD。<b>必须记住，不能在 <c>OnRemoved</c> 里重算。</b>
+        ///
+        /// <para>若在 <c>OnRemoved</c> 里重新判一次 <see cref="OwnsLocalHud"/>，
+        /// 而那时 <c>Character</c> 恰好已不可读，就会出现「Hold 了却没 Release」——
+        /// 守卫的持有计数卡住，HUD 再也回不来。记住则 Hold/Release 严格成对。</para>
+        /// </summary>
+        private bool _heldHud;
+
         protected override void OnApplied()
         {
-            HudHidingGuard.Hold();
+            _heldHud = OwnsLocalHud;
+            if (_heldHud) HudHidingGuard.Hold();
+
             PopText("EliteEnemies_Affix_EMP_PopText_1");
         }
 
@@ -36,7 +57,12 @@ namespace EliteEnemies.Buffs.Effects
         /// </summary>
         protected override void OnRemoved()
         {
-            HudHidingGuard.Release();
+            if (_heldHud)
+            {
+                HudHidingGuard.Release();
+                _heldHud = false;
+            }
+
             PopText("EliteEnemies_Affix_EMP_PopText_2");
         }
 

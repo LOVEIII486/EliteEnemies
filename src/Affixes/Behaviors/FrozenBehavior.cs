@@ -1,4 +1,4 @@
-using EliteEnemies.Buffs;
+﻿using EliteEnemies.Buffs;
 using EliteEnemies.Buffs.Effects;
 using UnityEngine;
 
@@ -39,7 +39,8 @@ namespace EliteEnemies.Affixes.Behaviors
             // 见 ChillBuff.IsFreezeImmune。
             // ⚠ 这一条**必须**有，否则会连锁冻结：冻结期间寒冷照叠，满层后同 ID 走刷新分支，
             //   把冻结时长重新刷满——只要精英持续命中，玩家就永远出不来。
-            if (ChillBuff.IsFreezeImmune(CharacterMainControl.Main)) return;
+            // ⚠ 查的是**被打中那个玩家**的冻结免疫，不是本机玩家（同 `ApplyToPlayer` 的理由）。
+            if (victim == null || ChillBuff.IsFreezeImmune(victim)) return;
 
             // 施加失败（玩家不存在等）时**不**推进计时——否则那一次间隔白等。
             if (!EliteBuffs.ApplyToPlayer<ChillBuff>(victim, attacker)) return;
