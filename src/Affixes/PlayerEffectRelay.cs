@@ -69,7 +69,7 @@ namespace EliteEnemies.Affixes
         /// 起因是这两样都不在联机模组的 <c>AISyncEntry</c> 里，客机因此看不到。
         /// 同样是"主机自己也要应用"。
         /// </summary>
-        public static System.Func<CharacterMainControl, float, bool, bool> EliteVisualHandler { get; set; }
+        public static System.Func<CharacterMainControl, Vector3, bool, bool> EliteVisualHandler { get; set; }
 
         /// <summary>
         /// 在**玩家**头顶弹字的转交。**这一条是"接管"语义**——主机弹在复制体上等于没弹，
@@ -151,7 +151,9 @@ namespace EliteEnemies.Affixes
         }
 
         /// <summary>把精英的视觉状态告知客机（本地应用由调用方自己做）。</summary>
-        public static void RelayEliteVisual(CharacterMainControl ai, float scale, bool hidden)
+        /// <param name="scale">**绝对缩放**（直接就是 <c>transform.localScale</c> 的值），
+        /// 不是倍率——史莱姆是 <c>_originalScale * 倍率</c>，按倍率重建会错。</param>
+        public static void RelayEliteVisual(CharacterMainControl ai, Vector3 scale, bool hidden)
         {
             var handler = EliteVisualHandler;
             handler?.Invoke(ai, scale, hidden);

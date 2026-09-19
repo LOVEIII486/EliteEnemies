@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using UnityEngine;
 
 namespace EliteEnemies.Coop
 {
@@ -224,14 +225,22 @@ namespace EliteEnemies.Coop
             }
         }
 
-        /// <summary>精英视觉：<c>[aiId][缩放][是否隐藏]</c>。</summary>
-        public static byte[] EncodeEliteVisual(int aiId, float scale, bool hidden)
+        /// <summary>
+        /// 精英视觉：<c>[aiId][缩放向量][是否隐藏]</c>。
+        ///
+        /// <para>⚠ <b>传的是**绝对缩放**（三个分量），不是一个标量倍率。</b>
+        /// 因为史莱姆是 <c>_originalScale * 倍率</c>——原模型 scale 不是 1 时，
+        /// 对端按 <c>Vector3.one * 倍率</c> 重建就错了。</para>
+        /// </summary>
+        public static byte[] EncodeEliteVisual(int aiId, Vector3 scale, bool hidden)
         {
-            using (var stream = new MemoryStream(16))
+            using (var stream = new MemoryStream(24))
             using (var writer = NewWriter(stream, Kind.EliteVisual))
             {
                 writer.Write(aiId);
-                writer.Write(scale);
+                writer.Write(scale.x);
+                writer.Write(scale.y);
+                writer.Write(scale.z);
                 writer.Write(hidden);
                 return Finish(stream, writer);
             }
@@ -329,7 +338,9 @@ namespace EliteEnemies.Coop
 
                         case Kind.EliteVisual:
                             result.AiId = reader.ReadInt32();
-                            result.Fx = reader.ReadSingle();     // 缩放
+                            result.Fx = reader.ReadSingle();     // 缩放 x
+                            result.Fy = reader.ReadSingle();     // 缩放 y
+                            result.Fz = reader.ReadSingle();     // 缩放 z
                             result.Ei = reader.ReadBoolean() ? 1 : 0;   // 是否隐藏
                             break;
 

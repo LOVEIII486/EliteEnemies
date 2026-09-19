@@ -57,7 +57,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
                 // 体型是 Transform，**不在** 联机模组的 AISyncEntry 里 ⇒ 不转交的话客机看不到。
 
-                PlayerEffectRelay.RelayEliteVisual(character, _actualSizeMultiplier, false);
+                PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale, false);
             }
         }
 
@@ -71,7 +71,7 @@ namespace EliteEnemies.Affixes.Behaviors
             {
                 character.transform.localScale = Vector3.one;
 
-                PlayerEffectRelay.RelayEliteVisual(character, 1f, false);
+                PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale, false);
             }
             
             _actualSizeMultiplier = 1.0f;

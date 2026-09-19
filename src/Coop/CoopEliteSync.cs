@@ -324,7 +324,7 @@ namespace EliteEnemies.Coop
         }
 
         /// <summary>主机侧：某只精英的视觉状态变了（体型缩放 / 显隐）。</summary>
-        public static bool OnHostEliteVisual(CharacterMainControl ai, float scale, bool hidden)
+        public static bool OnHostEliteVisual(CharacterMainControl ai, Vector3 scale, bool hidden)
         {
             if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;
             if (ai == null) return false;
@@ -505,7 +505,7 @@ namespace EliteEnemies.Coop
             {
                 if (s_pendingVisualScale.Count < MaxPendingVisual)
                 {
-                    s_pendingVisualScale[message.AiId] = Vector3.one * Mathf.Max(message.Fx, 0.0001f);
+                    s_pendingVisualScale[message.AiId] = new Vector3(message.Fx, message.Fy, message.Fz);
                     s_pendingVisualHidden[message.AiId] = message.Ei != 0;
                 }
 
@@ -513,7 +513,7 @@ namespace EliteEnemies.Coop
                 return;
             }
 
-            ApplyVisualTo(cmc, Vector3.one * Mathf.Max(message.Fx, 0.0001f), message.Ei != 0);
+            ApplyVisualTo(cmc, new Vector3(message.Fx, message.Fy, message.Fz), message.Ei != 0);
         }
 
         /// <summary>

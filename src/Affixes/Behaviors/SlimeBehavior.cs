@@ -1,4 +1,4 @@
-using ECM2;
+﻿using ECM2;
 using UnityEngine;
 using EliteEnemies.Modifiers;
 
@@ -54,6 +54,15 @@ namespace EliteEnemies.Affixes.Behaviors
         private Vector3 _originalScale;
         private float _lastHealthPercent = 1f;
         private float _nextJumpTime;
+
+        /// <summary>
+        /// 上一次**报给客机**的体型。
+        ///
+        /// <para>⚠ 史莱姆的体型是**随血量连续变化**的（<c>UpdateScaleAndDamage</c> 每帧重算），
+        /// 所以既不能像巨大化那样"只在生成时报一次"，也**不能每帧都发**。
+        /// 只在**真的变了**的时候发一条。</para>
+        /// </summary>
+        private Vector3 _lastReportedScale;
         private int _obstacleMask;
 
         public override void OnEliteInitialized(CharacterMainControl character)
@@ -78,6 +87,7 @@ namespace EliteEnemies.Affixes.Behaviors
             UpdateScaleAndDamage(character, 1.0f);
 
             _lastHealthPercent = 1f;
+            _lastReportedScale = character.transform.localScale;
             _nextJumpTime = Time.time + UnityEngine.Random.Range(JumpIntervalMin, JumpIntervalMax);
         }
 
@@ -106,7 +116,16 @@ namespace EliteEnemies.Affixes.Behaviors
             float t = 1f - healthPercent;
 
             float newScaleFactor = Mathf.Lerp(InitialScale, MinScale, t);
-            character.transform.localScale = _originalScale * newScaleFactor;
+            Vector3 newScale = _originalScale * newScaleFactor;
+            character.transform.localScale = newScale;
+
+            // 联机：体型只在**真的变过**时上报——它每帧都重算，不能每帧发。
+            // 阈值取得很小（1% 边长）以免漏掉渐变，又足以滤掉浮点抖动与静止帧。
+            if ((newScale - _lastReportedScale).sqrMagnitude > 0.0001f)
+            {
+                _lastReportedScale = newScale;
+                PlayerEffectRelay.RelayEliteVisual(character, newScale, false);
+            }
 
             float newDamageMultiplier = Mathf.Lerp(InitialDamageMult, MaxDamageMult, t);
 

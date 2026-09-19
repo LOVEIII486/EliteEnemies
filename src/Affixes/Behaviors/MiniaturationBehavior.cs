@@ -45,7 +45,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
                 // 同巨大化：体型不过网，必须自己转交。
 
-                PlayerEffectRelay.RelayEliteVisual(character, _actualSizeMultiplier, false);
+                PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale, false);
             }
         }
 
@@ -59,7 +59,7 @@ namespace EliteEnemies.Affixes.Behaviors
             {
                 character.transform.localScale = Vector3.one;
 
-                PlayerEffectRelay.RelayEliteVisual(character, 1f, false);
+                PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale, false);
             }
 
             _actualSizeMultiplier = 1.0f;

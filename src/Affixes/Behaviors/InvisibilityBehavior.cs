@@ -87,7 +87,7 @@ namespace EliteEnemies.Affixes.Behaviors
             if (hidden) character.Hide();
             else character.Show();
 
-            PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale.x, hidden);
+            PlayerEffectRelay.RelayEliteVisual(character, character.transform.localScale, hidden);
         }
 
         public void OnAttack(CharacterMainControl character, DamageInfo damageInfo)
