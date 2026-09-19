@@ -200,4 +200,4 @@ EliteEnemies_Affix_Thief_Name,Thief,2.7,AffixNames
 EliteEnemies_Affix_Thief_Description,Steals an item from the player's backpack on hit. Killing it drops two.,2.7,AffixDescription
 EliteEnemies_Affix_Thief_PopText,Mine now: <color=#{0}>{1}</color>,2.7,AffixBehavior
 EliteEnemies_Affix_ItemMimic_Name,Item Mimic,2.7,AffixNames
-EliteEnemies_Affix_ItemMimic_Description,Disguises as an item on the ground. Reveals itself and attacks when picked up or damaged,2.7,AffixDescription
+EliteEnemies_Affix_ItemMimic_Description,Disguises as an item on the ground. Reveals itself and attacks when the player approaches or damages it,2.7,AffixDescription

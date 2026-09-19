@@ -12,27 +12,27 @@ namespace EliteEnemies.Affixes.Behaviors
     ///
     /// <para>与【拟态】<see cref="MimicBehavior"/> 是同一个思路的两个变体，差别只在**伪装体**：
     /// 拟态伪装成一只补给箱，本词条伪装成**躺在地上的一件物品**。箱子是玩家「有理由去开」的东西，
-    /// 打久了就认得出来；物品是**路过时有动机主动去捡**的东西，触发点从「开箱」变成「贪心去捡」。</para>
+    /// 打久了就认得出来；地上的物品则会把玩家的视线和脚步引过去。</para>
     ///
-    /// <para><b>触发</b>：玩家按 E 拾取它、或对它造成伤害时，敌人现形并突袭。
-    /// 伪装期间敌人隐藏模型、压制 AI、压住血条，并**每帧对齐到物品的位置**。</para>
+    /// <para><b>触发</b>：玩家进入 <see cref="TriggerDistance"/> 米、或对它造成伤害时，
+    /// 敌人现形并突袭。伪装期间敌人隐藏模型、压制 AI、压住血条，并**每帧对齐到物品的位置**。</para>
     ///
-    /// <para>⚠ <b>本行为不阻止玩家拾取——玩家会真的拿到那件物品。</b>
-    /// 这不是偷懒，是读源码后的结论：<c>InteractableBase.StartInteract</c> 里
-    /// <c>OnInteractStartEvent</c>（<c>:293</c>）与真正拾取的 <c>OnInteractStart</c>（<c>:297</c>）
-    /// 之间**没有任何重判**，而 Unity 的 <c>Object.Destroy</c> 延迟到帧末、之后 <c>item == null</c>
-    /// 不会立刻为真（游戏自己就留了证据：<c>ItemTreeExtensions.DestroyTree</c> 之外还有一个
-    /// 单独的 <c>DestroyTreeImmediate</c>）。硬拦的后果更糟——<c>:64</c> 的
-    /// <c>PickupItem</c> 仍会成功，走 <c>ItemStatsSystem</c> 的
-    /// <c>ReleaseActiveAgent → Detach → SendToPlayerCharacterInventory</c> 把一个**已排进销毁队列**
-    /// 的物品塞进玩家背包，帧末 GameObject 被销毁 ⇒ 背包里留下点不开的空条目。
-    /// ⇒ 索性把「捡到它」当作**咬钩的报酬**（现拟态也在送：开诱饵箱会拿到 10 件诱饵物品）。</para>
+    /// <para><b>为什么是距离触发而不是「按 E 拾取」</b>（这是本项目踩过一次的选择，别再改回去）：
+    /// 拾取回调 <c>InteractableBase.OnInteractStartEvent</c>（<c>:293</c>）跑在真正拾取的
+    /// <c>OnInteractStart</c>（<c>:297</c>）**之前**，中间没有任何重判。而揭示时要销毁伪装物
+    /// （<see cref="ClearDisguiseItem"/>），<c>Object.Destroy</c> 又延迟到帧末
+    /// （游戏自己留了证据：<c>ItemTreeExtensions.DestroyTree</c> 之外还有一个单独的
+    /// <c>DestroyTreeImmediate</c>）⇒ 同一帧触发就会把一个**已排进销毁队列**的物品送进
+    /// <c>PickupItem</c> → <c>ReleaseActiveAgent → Detach → SendToPlayerCharacterInventory</c>
+    /// ⇒ 玩家背包里留下点不开的空条目。
+    /// 当初的对策是"延迟 1.2 秒跨过那一帧"，但实机表现是**玩家捡完走开几米敌人才现身**。
+    /// 改成距离触发之后这条链整个不存在：现形时物品不在任何人背包里，直接销毁即可，
+    /// **也顺带消掉了"每只拟态白送玩家一件物品"**。</para>
     ///
-    /// <para>⚠ <b>若日后要求「物品必须消失」</b>：唯一干净的口子是 Harmony prefix 打在
-    /// <c>InteractableBase.StartInteract</c>（<c>public bool</c>，<c>:267</c>）上返回 <c>false</c>——
-    /// 那是**唯一能在 <c>:293</c> 之前拦下**的位置。**不要**去打 <c>InteractablePickup.IsInteractable</c>：
-    /// 那会让 <c>:281</c> 的 <c>CheckInteractable()</c> 失败、连 <c>:293</c> 都走不到，
-    /// E 键就完全触发不了伏击了。</para>
+    /// <para>⚠ 若日后又想加回拾取触发：**必须在揭示之前跨过那一帧**，不能在同一帧调
+    /// <see cref="TriggerAmbush"/>。<see cref="ClearDisguiseItem"/> 里
+    /// <c>InInventory == null</c> 那道守卫只保护"已经被玩家拿走"的物品，
+    /// **保护不了"正要去拿"的那一帧**。</para>
     ///
     /// <para>本行为与 <see cref="MimicBehavior"/> 有大量**同源的坑**（血条与 FOW 抢 flag、
     /// 预设整批覆写 AI 字段、协程在这条链路上不恢复……），那些处理是**照搬**过来的——
@@ -44,7 +44,7 @@ namespace EliteEnemies.Affixes.Behaviors
         private const string LogTag = "[EliteEnemies.ItemMimic]";
 
         /// <summary>
-        /// 伪装物的候选物品池（玩家看见就有动机去捡的小件）。
+        /// 伪装物的候选物品池（玩家看见就会把脚步引过去的小件）。
         ///
         /// <para>⚠ 这几个 ID 有没有 **3D 世界模型**，代码里判不了——<c>..\Docs\ItemDatabase原版.xlsx</c>
         /// 只有 ID/名称/数值/标签，**没有模型列**。运行时判据是
@@ -54,17 +54,22 @@ namespace EliteEnemies.Affixes.Behaviors
         /// </summary>
         private static readonly int[] DisguiseItemIds = { 963, 993, 137, 326 };
 
+        /// <summary>
+        /// 玩家进入这个距离（米）就现形。
+        ///
+        /// <para>这个数决定"玩家有多少时间意识到地上那件东西不对劲"，是本行为**唯一的手感旋钮**
+        /// （形状与调法照 <c>MusicianBehavior.TriggerDistance</c> 的先例：调它，别去加别的机制）。</para>
+        ///
+        /// <para><b>取 4m 的考虑</b>：必须**明显大于**交互距离（玩家能按 E 捡起它的范围，
+        /// 量级一两米），否则玩家还够得着物品、拾取那条路就会重新变得可达——而那条路是有坑的
+        /// （见类型注释）。4m 同时也不是"老远就扑"：俯视角下玩家走到 4m 时通常已经看见
+        /// 并朝它走过来了，属于"刚起贪念"的位置。</para>
+        /// </summary>
+        private const float TriggerDistance = 4f;
+
         private Item _item;
         private DuckovItemAgent _agent;
         private InteractablePickup _pickup;
-
-        /// <summary>
-        /// 交互回调的**具名委托**，退订时必须用同一个实例。
-        /// <para>⚠ 不能像 <c>MimicBehavior</c> 那样在 <c>AddListener</c> 里直接写 lambda：
-        /// 那个写法**退订不掉**（方法组每次转换都产生新的委托对象）。
-        /// 拟态不需要退订（它没有会残留到玩家身上的东西），本行为需要。</para>
-        /// </summary>
-        private UnityEngine.Events.UnityAction<CharacterMainControl, InteractableBase> _interactHandler;
 
         private AICharacterController _aiController;
         private CharacterSoundMaker _soundMaker;
@@ -82,17 +87,9 @@ namespace EliteEnemies.Affixes.Behaviors
         private const float ColliderRescanCooldown = 0.5f;
 
         private bool _hasTriggered = false;
-        private bool _isTriggering = false;
 
         /// <summary>位置同步的死区（平方）。物品没动就不写，稳态下每帧只是一次比较。</summary>
         private const float SyncThresholdSqr = 0.001f;
-
-        /// <summary>拾取到伏击之间的延迟（秒，**真实时间**，见 <see cref="OnPlayerInteracted"/>）。</summary>
-        private const float AmbushDelay = 1.2f;
-
-        /// <summary>待触发的伏击（到点后由 <see cref="UpdatePendingAmbush"/> 触发）。</summary>
-        private CharacterMainControl _pendingTarget;
-        private float _ambushDueTime;
 
         private float _cachedSightDist, _cachedHearing, _cachedSightAngle, _cachedTraceDist;
         private bool _cachedCanTalk;
@@ -103,7 +100,6 @@ namespace EliteEnemies.Affixes.Behaviors
             if (character == null) return;
 
             _hasTriggered = false;
-            _isTriggering = false;
 
             // 精英自身的引用一律从框架上下文取（每个敌人只解析一次）。同 MimicBehavior.cs:74-78。
             _aiController = Ctx?.Ai;
@@ -130,14 +126,6 @@ namespace EliteEnemies.Affixes.Behaviors
         {
             if (_hasTriggered || character == null) return;
 
-            UpdatePendingAmbush(character);
-
-            // ⚠ **伏击可能就在上面那句里生效了**（它会把 `_hasTriggered` 置真并揭示敌人）。
-            // 此时若继续往下走，同一帧就会把敌人**重新藏回去、AI 重新压制回去**
-            // ⇒ 表现是"玩家明明捡了，敌人却不现身、也不攻击"。
-            // 开枪那条路没这个问题：`OnDamaged` 在 `OnUpdate` 外面触发，下一帧一进门就被最上面那句挡住。
-            if (_hasTriggered) return;
-
             character.Hide();
             ForceHideVisuals();
 
@@ -156,6 +144,40 @@ namespace EliteEnemies.Affixes.Behaviors
 
             // 位置同步：角色始终站在物品上，玩家才能直接射它提前击杀。
             SyncPositionToItem(character);
+
+            // ⚠ **距离判定刻意放在最后**：它是这里唯一会改变状态的一步（揭示）。
+            //    放在最后 ⇒ 本帧该做的伪装维持工作都已经做完，也就不需要拟态那边
+            //    "UpdatePendingAmbush 之后必须再查一次 _hasTriggered" 那道补丁——
+            //    那个坑（同帧把刚揭示的敌人又藏回去）在这里从结构上就不存在。
+            CheckPlayerProximity(character);
+        }
+
+        /// <summary>
+        /// 玩家进入 <see cref="TriggerDistance"/> 就触发伏击。
+        ///
+        /// <para>形状照搬 <c>MusicianBehavior.OnUpdate</c>（<c>:160-170</c>）——同一件事在本仓库
+        /// 已有先例，别另起炉灶：玩家引用取自 <c>CharacterMainControl.Main</c>（游戏自己也在用的静态，
+        /// 例：<c>StockShop.cs:417</c>），距离用 <c>sqrMagnitude</c> 比较（省一次开方）。</para>
+        ///
+        /// <para><b>为什么不做 <c>Time.timeScale &lt;= 0</c> 的守卫</b>（音乐家那边有）：
+        /// 那个守卫是为"暂停时别继续吹奏"加的，而这里的判据是**纯位置比较**——
+        /// 时间冻结时玩家位置不变，距离自然也不变，不存在"暂停期间误触发"这条路径。
+        /// 加一个不会生效的分支只会是噪音。</para>
+        ///
+        /// <para>成本：每次 3 减 3 乘 1 比较。相比 <see cref="OnUpdate"/> 里每帧已经在做的
+        /// （遍历全部 Renderer、遍历角色全部碰撞体逐个调原生 <c>Physics.IgnoreCollision</c>、
+        /// <c>SetPosition</c>）可以忽略。**唯一要避开的是扫场景**（<c>Physics.OverlapSphere</c> /
+        /// <c>FindObjects*</c>）——那种做法也被 <c>tools/check-affix-behaviors.sh</c> 的门 2 禁止。</para>
+        /// </summary>
+        private void CheckPlayerProximity(CharacterMainControl character)
+        {
+            CharacterMainControl player = CharacterMainControl.Main;
+            if (player == null) return;
+
+            float distSqr = (character.transform.position - player.transform.position).sqrMagnitude;
+            if (distSqr > TriggerDistance * TriggerDistance) return;
+
+            TriggerAmbush(character, player);
         }
 
         /// <summary>
@@ -206,6 +228,9 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <para>⚠ <b>不需要再补一次 <c>MultiSceneCore.MoveToActiveWithScene</c>。</b>拟态那边要补，
         /// 是因为它直接 <c>Instantiate</c> 预制体、绕过了官方建箱路径；<c>Item.Drop</c> 自己就带这一步
         /// （<c>ItemExtensions.cs:107-110</c>）。</para>
+        ///
+        /// <para>⚠ <b>刻意不订阅 <c>OnInteractStartEvent</c></b>：触发是距离式的，
+        /// 4m 远早于交互距离，玩家够得着它之前就已经现形了。理由见类型注释。</para>
         /// </summary>
         private void SpawnDisguiseItem(CharacterMainControl character)
         {
@@ -235,28 +260,10 @@ namespace EliteEnemies.Affixes.Behaviors
 
             ReignoreItemCollision(character);
 
-            // 绑定交互：玩家按 E 捡它的那一瞬间就是伏击点。
-            //
-            // ⚠ 拾取是**一帧内完成**的（`InteractablePickup.OnInteractStart` 里同步调
-            //    `PickupItem` 然后 `StopInteract`，没有 interactTime 阶段），而且
-            //    `OnInteractStartEvent` 早于它——所以我们不需要"进度条到点"之类的处理。
-            if (_pickup != null)
+            if (DebugSwitch.Enabled)
             {
-                _interactHandler = OnPlayerInteracted;
-                _pickup.OnInteractStartEvent.AddListener(_interactHandler);
-
-                if (DebugSwitch.Enabled)
-                {
-                    Debug.Log($"{LogTag} 诊断：伪装物已生成并绑定交互（{character.name}，物品={itemId}）");
-                }
-            }
-            else
-            {
-                // 这一条若出现，"按 E 不触发伏击"就有了直接答案：agent 上根本没有 InteractablePickup。
-                // （只有回退路径 `GameplayDataSettings.Prefabs.PickupAgentPrefab` 才保证带它，
-                //   见 ItemExtensions.cs:29-41；物品自带 "Pickup" agent 时不一定带。）
-                Debug.LogError($"{LogTag} 伪装物 itemID={itemId} 的 agent 上没有 InteractablePickup，" +
-                               "**交互监听挂不上** ⇒ 按 E 永远不会触发伏击（受伤那条路不受影响）");
+                Debug.Log($"{LogTag} 诊断：伪装物已生成（{character.name}，物品={itemId}，" +
+                          $"交互组件={(_pickup != null ? "有" : "无")}）");
             }
         }
 
@@ -266,7 +273,7 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <para>⚠ <b>重挂必须每帧做</b>：Unity 在碰撞体被**重新启用**时会清掉
         /// <c>Physics.IgnoreCollision</c> 的**对**，而角色的碰撞体会被反复启停。
         /// 只挂一次的后果就是拟态那边实测到的"箱子漂移"——这里换成物品同样成立
-        /// （物品虽是非运动学的静态 collider，推不走，但角色的胶囊体会被自己的伪装物**顶住**）。</para>
+        /// （物品是非运动学的静态 collider、推不走，但角色的胶囊体会被自己的伪装物**顶住**）。</para>
         ///
         /// <para>取列表不必每帧：缓存 + 0.5 秒冷却重扫，与 <c>MimicBehavior</c> 同一范式。
         /// 缓存不会漏掉"碰撞体被反复启停"——Unity 清掉的是对，不是组件，引用始终有效；
@@ -339,6 +346,10 @@ namespace EliteEnemies.Affixes.Behaviors
         /// **从玩家背包里拽出来**（<c>Item.cs:797-801</c> → <c>InInventory?.RemoveItem(this)</c>）。
         /// 判据用 <c>InInventory == null</c>（<c>Item.cs:390</c>，public）：在地面的物品不属于任何背包。</para>
         ///
+        /// <para>⚠ 范围触发下这条路**正常不会走到**（4m 远早于交互距离），
+        /// 它防的是"玩家带着远程拾取类模组直接拿走"这类意外路径。守卫留着，但**别指望它
+        /// 能挡住"同一帧内的拾取"**——那件事必须靠触发时机的顺序解决，见类型注释。</para>
+        ///
         /// <para>清理范式是游戏自己的：<c>Detach()</c> 后 <c>DestroyTree()</c>
         /// （<c>ItemTreeExtensions.cs:117-131</c>）。销毁 Item 会连带销毁 agent——
         /// <c>Item.OnDestroy</c>（<c>Item.cs:1118-1124</c>）里会 <c>Detach()</c> +
@@ -349,11 +360,6 @@ namespace EliteEnemies.Affixes.Behaviors
         /// </summary>
         private void ClearDisguiseItem()
         {
-            if (_pickup != null && _interactHandler != null)
-            {
-                _pickup.OnInteractStartEvent.RemoveListener(_interactHandler);
-            }
-
             if (_item != null && !_item.IsBeingDestroyed && _item.InInventory == null)
             {
                 _item.Detach();
@@ -537,44 +543,6 @@ namespace EliteEnemies.Affixes.Behaviors
 
         private void ForceHideVisuals() => SetRenderersEnabled(false);
 
-        /// <summary>
-        /// 玩家按下 E 的那一瞬间（**早于**物品真正归属玩家，见类型注释里那段推演）。
-        ///
-        /// <para>这里只记一个到点时间戳，真正的揭示交给 <see cref="UpdatePendingAmbush"/>。
-        /// ⚠ **刻意不用协程**：拟态实测过——协程体确实执行了、宿主 active 且 enabled、
-        /// 没有任何异常，但它**再也不恢复**。延迟只有 1.2 秒，而 <c>OnUpdate</c> 是
-        /// **确定在跑**的。<see cref="Time.realtimeSinceStartup"/> 是因为按 E 时游戏可能被暂停，
-        /// 用 <c>Time.time</c> 会像 <c>WaitForSeconds</c> 一样被冻住。</para>
-        /// </summary>
-        private void OnPlayerInteracted(CharacterMainControl player, InteractableBase _)
-        {
-            if (DebugSwitch.Enabled)
-            {
-                Debug.Log($"{LogTag} 诊断：玩家拾取了伪装物（_hasTriggered={_hasTriggered} " +
-                          $"_isTriggering={_isTriggering}）");
-            }
-
-            if (_hasTriggered || _isTriggering) return;
-            _isTriggering = true;
-
-            if (player.interactAction != null && player.interactAction.Running)
-                player.interactAction.StopAction();
-
-            _pendingTarget = player;
-            _ambushDueTime = Time.realtimeSinceStartup + AmbushDelay;
-        }
-
-        /// <summary>延迟到点就触发（在 <see cref="OnUpdate"/> 里每帧查一次）。</summary>
-        private void UpdatePendingAmbush(CharacterMainControl character)
-        {
-            if (_pendingTarget == null) return;
-            if (Time.realtimeSinceStartup < _ambushDueTime) return;
-
-            CharacterMainControl target = _pendingTarget;
-            _pendingTarget = null;
-            TriggerAmbush(character, target);
-        }
-
         private void FaceTarget(CharacterMainControl character, CharacterMainControl target)
         {
             if (character == null || target == null) return;
@@ -591,9 +559,9 @@ namespace EliteEnemies.Affixes.Behaviors
         /// <summary>
         /// ⚠ <b>清理必须幂等</b>：本方法会被走到两次——<see cref="OnEliteDeath"/> 里顺带调一次，
         /// 组件销毁时框架还会再调一次（<c>EliteBehaviorComponent.OnDestroy</c>）。
-        /// 幂等的写法是：不做任何创建/实例化；退订可重复调用；销毁用
-        /// <see cref="ClearDisguiseItem"/> 里的三重守卫（引用非空 + <c>IsBeingDestroyed</c> +
-        /// <c>InInventory == null</c>）；引用与状态旗无条件重置，于是第二次进入时每一步都是空操作。
+        /// 幂等的写法是：不做任何创建/实例化；销毁用 <see cref="ClearDisguiseItem"/> 里的
+        /// 三重守卫（引用非空 + <c>IsBeingDestroyed</c> + <c>InInventory == null</c>）；
+        /// 引用与状态旗无条件重置，于是第二次进入时每一步都是空操作。
         /// </summary>
         public override void OnCleanup(CharacterMainControl character)
         {
@@ -605,12 +573,9 @@ namespace EliteEnemies.Affixes.Behaviors
             ClearDisguiseItem();
 
             _hasTriggered = false;
-            _isTriggering = false;
             _isSensorySuppressed = false;
 
             // 与其它行为一致：清理时把引用放掉（实例本就会被丢弃，这里只是不留悬空引用）
-            _pendingTarget = null;
-            _interactHandler = null;
             _aiController = null;
             _soundMaker = null;
             _brain = null;

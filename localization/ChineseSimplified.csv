@@ -200,4 +200,4 @@ EliteEnemies_Affix_Thief_Name,小偷,2.7,AffixNames
 EliteEnemies_Affix_Thief_Description,命中时偷走玩家背包里的一件物品，击杀它会掉落两件,2.7,AffixDescription
 EliteEnemies_Affix_Thief_PopText,这个归我了：<color=#{0}>{1}</color>,2.7,AffixBehavior
 EliteEnemies_Affix_ItemMimic_Name,物品拟态,2.7,AffixNames
-EliteEnemies_Affix_ItemMimic_Description,伪装成地上的一件物品，在玩家拾取它或对它造成伤害时显形突袭,2.7,AffixDescription
+EliteEnemies_Affix_ItemMimic_Description,伪装成地上的一件物品，在玩家靠近或对它造成伤害时显形突袭,2.7,AffixDescription
