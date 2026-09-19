@@ -9,6 +9,26 @@ Temporary feedback group: 1030349064 (bug reports only).
 
 ---
 
+## 👥 Multiplayer (Co-op)
+**This mod supports multiplayer co-op!** Once you play with a co-op mod, elite enemies work for **every player in the session**:
+
+* Clients see the elite's **affix tags** and **health bar colors**, exactly as the host does
+* **Gigantification / Miniaturation / Slime** size changes and **Invisibility** are visible on clients too
+* When an elite hits you, the on-screen prompt appears **above your own head** (Magazine Curse, Sticky, …)
+* Knockback, forced position swap, theft, gun-biting and weapon drops **apply to the real player**
+* Elite loot, split clones and summons (Rooster Boss / Mandarin Duck / Guardian / Revenge) are visible on clients
+
+> ⚠️ **Requirement: both host and client must install this mod, with the same version** (single-player is unaffected).
+
+**Known limitations in co-op** (gameplay still works normally):
+
+* Glow effects (shield flashes, the red pulse before self-destruct, the revenge glow) are host-only
+* The **Phantom**'s hallucination audio and the **Musician**'s kazoo only play on the host
+* The **Time Stop** affix never appears in co-op — time scale is a per-machine global, so it has no correct co-op meaning
+* **Mimic** only disguises as a ground item in co-op (the supply-crate disguise cannot be synced to clients)
+
+---
+
 ## ⚔️ Available Affixes
 
 **53** affixes across five rarity tiers. To stay within Steam's description length limit, only 3 affixes are listed per tier.
@@ -43,6 +63,7 @@ https://steamcommunity.com/workshop/filedetails/discussion/3602009885/6717263883
 ---
 
 ## 🎁 Features
+* 👥 **Multiplayer Co-op Supported** — In co-op, elites work for every player in the session (see the Multiplayer section above)
 * 💀 **Random Elite Spawns** — Enemies can spawn with 1–5 affixes, greatly increasing encounter variety
 * 🎲 **Independent Loot System** — Each affix has its own loot pool without affecting the base game
 * ⚙️ **Highly Configurable** — Disable any affix, adjust probabilities, and customize drop multipliers
