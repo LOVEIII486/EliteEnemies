@@ -45,15 +45,22 @@ namespace EliteEnemies.Affixes.Behaviors
         /// 相对原版音量。走 <c>EventInstance.setVolume</c>（按实例缩放），
         /// 不动 <c>bus:/Master/SFX</c>——那是全游戏音效的总线，碰它会连枪声脚步一起改小。
         ///
-        /// <para><b>为什么远大于 1</b>：原版卡祖笛是玩家**拿在手里**吹的（几乎没有距离衰减），
-        /// 而这个事件的内建音量只有 0.316（≈ -10dB，实测），搬到十几二十米外的敌人身上太轻。
-        /// 实测 <c>setVolume</c> 是线性放大：设 2.5 时读到 0.791 = 2.5 × 0.316。</para>
+        /// <para><b>取值史：<c>0.45 → 1.0 → 2.5 → 2.0 → 1.0</c>，来回拉锯的根因是
+        /// 3D 距离衰减的动态范围太宽。</b>同一次演奏，贴脸时和二十几米外的响度差得很多，
+        /// 而 <c>setVolume</c> 只是一个**常量乘数**，必然顾此失彼：
+        /// 推到远处听得见，近处就吵；压到近处不吵，远处又没了。
+        /// 这四次调整里有三次都是在为前一次的补偿买单。</para>
         ///
-        /// <para>⚠ <b>这个数是按听感定的，不是算出来的</b>：<c>getVolume</c> 的
+        /// <para>现在取 <c>1.0</c>——即原版卡祖笛的音量，也就是玩家自己拿着吹时听到的响度。
+        /// <b>如果之后又觉得远处听不见，正确的杠杆是 <see cref="TriggerDistance"/>
+        /// （把触发距离收小），不是把这个数再推上去</b>：推上去只是把"远处勉强可闻"
+        /// 换回"近处吵得难受"，同一个循环会再来一遍。</para>
+        ///
+        /// <para>⚠ 这个数是**按听感定的，不是算出来的**：<c>getVolume</c> 的
         /// <c>finalvolume</c> 实测**不反映 3D 距离衰减**（8.9m 与 26.0m 读到同一个值），
-        /// 拿不到衰减曲线，只能以耳朵为准。嫌吵调小、嫌轻调大，一处常量。</para>
+        /// 拿不到衰减曲线，所以只能以耳朵为准。</para>
         /// </summary>
-        private const float VolumeScale = 2f;
+        private const float VolumeScale = 1f;
 
         // ═══════════════ 乐句 ═══════════════
 
@@ -116,6 +123,25 @@ namespace EliteEnemies.Affixes.Behaviors
 
         public void OnUpdate(CharacterMainControl character, float deltaTime)
         {
+            // ⚠ **时间被冻结时必须收声**，否则会留下一段停不下来的蜂鸣。
+            //
+            // 本类的音符计时是 `_noteRemaining -= deltaTime`，而这里传进来的 deltaTime 是
+            // `Time.deltaTime`（EliteBehaviorComponent.cs:225）。时间一冻结它就是 0，
+            // 于是音符永远减不完、`OnRefreshed` 也不再被走到——卡祖笛卡在**同一个音高**
+            // 上一直吹。玩家听到的就是蜂鸣。
+            //
+            // 判据用 `Time.timeScale <= 0` 而不是某个具体开关：时间被压到 0 的来源有两处
+            // （ESC 暂停 `GameManager.Paused`、拍照模式 `CameraMode.Active`，
+            //  见 TimeScaleManager.cs:24-30），而这个条件**恰好就是**计时失效的充要条件——
+            // 将来再多一种冻结来源也自动覆盖。
+            //
+            // 注意不能用 `Time.unscaledDeltaTime` 绕过去：那会让卡祖笛在暂停菜单里继续演奏。
+            if (Time.timeScale <= 0f)
+            {
+                StopKazoo();
+                return;
+            }
+
             CharacterMainControl player = CharacterMainControl.Main;
             if (player == null) return;
 
