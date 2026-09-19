@@ -318,7 +318,14 @@ namespace EliteEnemies.Core
         {
             if (!_isReady || preset == null)
             {
-                // ⚠ **失败也要回调**，见方法注释的契约。
+                // ⚠ 这里原先**只回调 null、一个字都不说**——调用方拿不到生成体，
+                //   而日志里没有任何线索（"召唤物没出现"就是这么变成无解的）。
+                //   两种原因都报出来，并且区分开：调用方要查的方向完全不同。
+                Debug.LogError($"{LogTag} 生成失败：{(!_isReady ? "生成助手尚未就绪（IsReady=false）" : string.Empty)}" +
+                               $"{(preset == null ? "预设为空" : string.Empty)}" +
+                               $"（预设={preset?.name ?? "(null)"}）");
+
+                // **失败也要回调**，见方法注释的契约。
                 onSpawned?.Invoke(null);
                 return null;
             }

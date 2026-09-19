@@ -635,8 +635,33 @@ namespace EliteEnemies.Affixes.Behaviors
         {
             if (_item != null && !_item.IsBeingDestroyed && _item.InInventory == null)
             {
-                _item.Detach();
-                _item.DestroyTree();
+                // ⚠️ **联机下必须让"角色拾取"这一步真的发生**（作者 2026-09-19 实测：
+                // 客机上的诱饵不消失、玩家还能把它捡走）。
+                //
+                //   联机模组的掉落物同步**只认拾取这一条路**：
+                //   `CharacterMainControl.PickupItem` 的 Postfix 会调 `Server_HandleLocalPickup`
+                //   → 从掉落注册表注销 + 广播 `ItemDespawnRpc`（`Patch/Item/LootInventoryPatch.cs:427`）。
+                //   我们直接从地面上 `DestroyTree` 它**完全不知情**，客机那份就永远留在原地。
+                //   （箱子形态是同一类问题，见类型注释——只是箱子连"存在"都同步不过去。）
+                //
+                //   这条路**单机下同样成立**（没有联机补丁时就是一次普通拾取），所以不做分支。
+                //   拾起来之后**立刻销毁**，不让它变成拟态随身的战利品——
+                //   本词条刻意避免的就是"每只物品拟态白送玩家一件物品"。
+                var owner = Ctx?.Character;
+                bool pickedUp = owner != null && owner.PickupItem(_item);
+
+                if (!pickedUp)
+                {
+                    // 拾取失败（持有者已死 / 背包不可用）⇒ 回落到直接销毁：
+                    // 单机下仍然正确；联机下客机那份会留在原处——**已知残留**，
+                    // 但比"干脆不销毁"好：至少本机与主机侧是干净的。
+                    _item.Detach();
+                    _item.DestroyTree();
+                }
+                else if (!_item.IsBeingDestroyed)
+                {
+                    _item.DestroyTree();
+                }
             }
 
             _item = null;
