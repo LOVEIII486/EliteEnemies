@@ -129,12 +129,22 @@ namespace EliteEnemies.Coop
     /// <see cref="Kind.EliteVisual"/> 保留，但只承担"后续变化"（史莱姆每帧重算、
     /// 隐身来回切），**首次状态一律由条目携带**。</item>
     ///
+    /// <item><b>v8</b>：新增「玩家弹字」报文（<c>[玩家id][本地化键][兜底][格式参数]</c>）。
+    ///
+    /// 起因是一处**从未接通的通道**：<c>PlayerEffectRelay.PlayerPopTextHandler</c> 定义了、
+    /// <c>TryRelayPlayerPopText</c> 也在调，但<b>全库没有任何一处给它赋值</b>，
+    /// 于是恒不接管 ⇒ 主机把"你的武器掉了"这类提示弹在**客机玩家的复制体**上，
+    /// 真人永远看不到（弹匣诅咒 / 粘性两个词条都中招）。
+    ///
+    /// 它**没有**并进「玩家效果」报文：那条只有一个文本字段，
+    /// 装不下"键 + 兜底"两份（而兜底必须带，理由同 v6）。</item>
+    ///
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 7;
+        public const byte ProtocolVersion = 8;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -182,6 +192,12 @@ namespace EliteEnemies.Coop
 
             /// <summary>主机 → 全体：在某只 AI 头顶弹一行字（<c>AiId</c> + <c>Text</c>）。</summary>
             AiPopText = 7,
+
+            /// <summary>
+            /// 主机 → 全体：在**某个玩家**头顶弹一行字。收到的一方比对自己的网络 id，
+            /// 是给自己才弹（弹在自己的真人角色上）。
+            /// </summary>
+            PlayerPopText = 8,
         }
 
         // ==================== 编码 ====================
@@ -294,6 +310,26 @@ namespace EliteEnemies.Coop
                 writer.Write(scale.y);
                 writer.Write(scale.z);
                 writer.Write(hidden);
+                return Finish(stream, writer);
+            }
+        }
+
+        /// <summary>
+        /// 玩家弹字：<c>[玩家网络 id][本地化键][兜底文本][格式参数]</c>。
+        ///
+        /// <para>与 <see cref="EncodeAiPopText"/> 同形，只是把 <c>aiId</c> 换成玩家 id
+        /// （玩家在网络上是**字符串** id，见 <c>CoopApi.SelfPlayerId</c>）。
+        /// 传键不传译文、兜底一起带，理由见 v6/v8 的版本说明。</para>
+        /// </summary>
+        public static byte[] EncodePlayerPopText(string playerId, string key, string fallback, string arg)
+        {
+            using (var stream = new MemoryStream(160))
+            using (var writer = NewWriter(stream, Kind.PlayerPopText))
+            {
+                writer.Write(playerId ?? string.Empty);
+                writer.Write(key ?? string.Empty);
+                writer.Write(fallback ?? string.Empty);
+                writer.Write(arg ?? string.Empty);
                 return Finish(stream, writer);
             }
         }
@@ -412,6 +448,13 @@ namespace EliteEnemies.Coop
                             result.Text = reader.ReadString();       // 本地化键
                             result.ComboId = reader.ReadString();    // 兜底文本（复用这个字符串字段）
                             result.TextArg = reader.ReadString();    // 格式参数（可为空）
+                            break;
+
+                        case Kind.PlayerPopText:
+                            result.TargetPlayerId = reader.ReadString();   // 玩家的网络 id
+                            result.Text = reader.ReadString();             // 本地化键
+                            result.ComboId = reader.ReadString();          // 兜底文本
+                            result.TextArg = reader.ReadString();          // 格式参数（可为空）
                             break;
 
                         case Kind.Batch:

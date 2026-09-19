@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using EliteEnemies.Affixes;
 using EliteEnemies.Combos;
 using EliteEnemies.Core;
+using EliteEnemies.Modifiers;
 using UnityEngine;
 
 namespace EliteEnemies.Coop
@@ -160,6 +161,23 @@ namespace EliteEnemies.Coop
         /// </summary>
         private const int MaxHostVisualLogged = 50;
 
+        /// <summary>
+        /// 已经修过血量基准的那批精英。
+        /// <b>不是统计用，是幂等判据</b>——那个修法连做两次会把加成反向吃掉一倍
+        /// （见 <c>StatModifiers.TryUnbakeMaxHealthBonus</c>）。
+        /// 与 <see cref="s_hostKnown"/> 同样持有角色引用、同样随停机清空。
+        /// </summary>
+        private static readonly HashSet<CharacterMainControl> s_healthUnbaked =
+            new HashSet<CharacterMainControl>();
+
+        /// <summary>修正过"被算两遍的血量加成"的精英数（摘要里报出来）。</summary>
+        private static int s_hostHealthFixed;
+
+        /// <summary>其中打了日志的条数（上限同 <see cref="MaxHostVisualLogged"/> 的理由）。</summary>
+        private static int s_hostHealthFixLogged;
+
+        private const int MaxHostHealthFixLogged = 20;
+
         private static float s_lastQueryTime = -999f;
         private static float s_lastSummaryTime;
         private static bool s_summarySeeded;
@@ -212,6 +230,7 @@ namespace EliteEnemies.Coop
             s_clientPending.Clear();
             s_clientVisual.Clear();
             s_hostPendingVisual.Clear();
+            s_healthUnbaked.Clear();
 
             // 计数器一并归零：模组停用后重新启用时，统计不该背着上一局的数据。
             s_recvTotal = 0;
@@ -227,6 +246,8 @@ namespace EliteEnemies.Coop
             s_zeroIdWarned = false;
             s_hostVisualSent = 0;
             s_hostVisualLogged = 0;
+            s_hostHealthFixed = 0;
+            s_hostHealthFixLogged = 0;
             s_lastQueryTime = -999f;
         }
 
@@ -287,6 +308,8 @@ namespace EliteEnemies.Coop
             // 非精英是绝大多数——到此为止，不做别的。
             if (!isElite) return;
 
+            FixBakedInHealthBonus(aiId, cmc);
+
             var affixes = marker.Affixes;
 
             if (s_hostKnown.Count >= MaxKnownElites)
@@ -323,6 +346,48 @@ namespace EliteEnemies.Coop
             {
                 // 广播失败通常意味着联机还没起（backend 未装好）。**不静默**。
                 CoopLog.Warn($"[主机] 广播失败 aiId={aiId}——联机可能尚未就绪（已记入全量表，客户端可来问）");
+            }
+        }
+
+        /// <summary>
+        /// 修掉「联机模组把含词条加成的上限当成基准」造成的**加成被算两遍**。
+        ///
+        /// <para>时序正好：联机模组的难度血量加成在
+        /// <c>Patch/Scene/AIPatch.cs:156</c> 的 <c>DifficultyManager.ApplyToAI</c> 里做，
+        /// 而 <see cref="OnHostSawAi"/> 挂在同一条链的 <c>:168</c>（800ms 那一步的末尾）——
+        /// <b>它之后、且只在这一条链上</b>，所以这里是唯一该动手的时机。</para>
+        ///
+        /// <para>为什么只在联机出现、单机一直是对的：那个加成要
+        /// <c>targetMax &gt; nowMax</c> 才会写基准，而人数倍率
+        /// （<c>GetAdditionalPlayerCount</c>）在单人时为 0 ⇒ 系数为 1 ⇒ 不写。
+        /// 机制的完整说明见 <see cref="StatModifiers.TryUnbakeMaxHealthBonus"/>。</para>
+        /// </summary>
+        private static void FixBakedInHealthBonus(int aiId, CharacterMainControl cmc)
+        {
+            // ⚠ **必须自己保证只修一次**：那个修法不幂等（连修两次会把加成反向吃掉一倍）。
+            //   今天 `AiSpawned` 每只 AI 只来一次（游戏侧 `Init` 也只调一次），
+            //   但那是别人的不变量——不押注它。
+            if (s_healthUnbaked.Contains(cmc)) return;
+
+            try
+            {
+                if (!StatModifiers.TryUnbakeMaxHealthBonus(cmc, out float before, out float after)) return;
+
+                s_healthUnbaked.Add(cmc);
+
+                s_hostHealthFixed++;
+                if (s_hostHealthFixLogged < MaxHostHealthFixLogged)
+                {
+                    s_hostHealthFixLogged++;
+                    CoopLog.Info($"[主机] 修正被算了两遍的血量加成 aiId={aiId} " +
+                                 $"基准 {before:0.##} → {after:0.##}" +
+                                 "（联机模组把含词条加成的上限当成了基准）");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 修不了不该拖垮注册/广播这条链——它后面还有词条同步。
+                CoopLog.Warn($"[主机] 修正血量加成失败 aiId={aiId}（该精英的血量上限会偏大）: {ex.Message}");
             }
         }
 
@@ -735,6 +800,11 @@ namespace EliteEnemies.Coop
                     if (!isServer) ApplyAiPopText(message);
                     break;
 
+                case CoopWire.Kind.PlayerPopText:
+                    // 玩家侧的东西归玩家效果那个模块处理（它拿着 id ↔ 玩家的判定）。
+                    if (!isServer) CoopPlayerEffect.OnPlayerPopText(message);
+                    break;
+
                 case CoopWire.Kind.PlayerEffect:
                     // 主机也会收到自己广播的回环——`OnEffect` 里用"是不是本机玩家 id"过滤，
                     // 主机自己那条会被 `IsSelfPlayerId` 挡掉（它走的是本地执行）。
@@ -795,7 +865,8 @@ namespace EliteEnemies.Coop
                          $"已记住视觉={s_clientVisual.Count} " +
                          $"复制体出现时无词条={s_replicaNoAffixYet} " +
                          $"客户端自行掷出精英={s_localEliteDivergence} " +
-                         $"主机上报视觉={s_hostVisualSent}");
+                         $"主机上报视觉={s_hostVisualSent} " +
+                         $"主机修正血量加成={s_hostHealthFixed}");
         }
     }
 }

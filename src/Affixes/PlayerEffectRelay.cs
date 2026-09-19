@@ -40,8 +40,9 @@ namespace EliteEnemies.Affixes
             /// <summary>回报：偷到了什么（见 <c>CoopPlayerEffect.OnEffectResult</c>）。</summary>
             StealResult = 7,
 
-            /// <summary><c>Text</c> = 要弹在**这个玩家**头顶的文本。</summary>
-            PopTextOnPlayer = 8,
+            // ⚠ 这里曾有 `PopTextOnPlayer = 8`，**已删**：它从来没有被当作效果转交过
+            //   （玩家弹字有自己的入口 `PlayerPopTextHandler` 与自己的报文，见 CoopWire v8）。
+            //   留着会让人以为"弹字也是效果的一种"，从而照着它写第二条死通道。
         }
 
         /// <summary>
@@ -73,7 +74,12 @@ namespace EliteEnemies.Affixes
 
         /// <summary>
         /// 在**玩家**头顶弹字的转交。**这一条是"接管"语义**——主机弹在复制体上等于没弹，
-        /// 所以联机下只让客机弹。
+        /// 所以联机下只让客机弹。实现见 <c>Coop\CoopPlayerEffect.TryRelayPlayerPopText</c>。
+        ///
+        /// <para>⚠ 这个口曾经**从未被赋值**（定义与调用都在、唯独没有实现的挂载点），
+        /// 于是整条"玩家弹字过网"的通道空转了很久。**新增转交口时，务必同时在
+        /// <c>CoopPlayerEffect.Install()</c> 里挂上**——只写钩子不挂载，
+        /// 症状是"功能不生效且毫无痕迹"。</para>
         /// </summary>
         public static System.Func<CharacterMainControl, string, string, string, bool> PlayerPopTextHandler { get; set; }
 
@@ -159,11 +165,18 @@ namespace EliteEnemies.Affixes
             handler?.Invoke(ai, scale, hidden);
         }
 
-        /// <summary>在玩家头顶弹字。返回 <c>true</c> = 已转交，**不要**再本地弹。</summary>
-        public static bool TryRelayPlayerPopText(CharacterMainControl victim, string key, string fallback = null)
+        /// <summary>
+        /// 在**玩家**头顶弹字。返回 <c>true</c> = 已转交，**不要**再本地弹。
+        ///
+        /// <para>⚠ <b>传键不传译文</b>（同 <see cref="PopTextOnElite"/>）：这条要发给客机，
+        /// 传渲染好的文本等于把主机那门语言焊死到对方身上。
+        /// 调用方本地要弹时自己 <c>GetText</c> 一次即可。</para>
+        /// </summary>
+        public static bool TryRelayPlayerPopText(CharacterMainControl victim, string key,
+                                                 string fallback = null, string arg = null)
         {
             var handler = PlayerPopTextHandler;
-            return handler != null && handler(victim, key, fallback, null);
+            return handler != null && handler(victim, key, fallback, arg);
         }
 
         /// <summary>把效果转交给受害者那台机器。返回 <c>true</c> = 已接管，**不要**再本地执行。</summary>

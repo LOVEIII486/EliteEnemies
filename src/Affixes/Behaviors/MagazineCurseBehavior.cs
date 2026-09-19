@@ -13,9 +13,11 @@ namespace EliteEnemies.Affixes.Behaviors
         public override string AffixName => "MagazineCurse";
         
         private static readonly float Cooldown = 12.0f;
+
+        /// <summary>弹在**玩家**头顶那条的本地化键。**转交时传键，不传译文**（见 PlayerEffectRelay）。</summary>
+        private const string PlayerPopKey = "EliteEnemies_Affix_MagazineCurse_PopText_2";
+
         private float _lastTriggerTime = -999f;
-        private string PlayerPopLine =>
-            LocalizationManager.GetText("EliteEnemies_Affix_MagazineCurse_PopText_2");
 
         public void OnDamaged(CharacterMainControl character, DamageInfo damageInfo)
         {
@@ -44,8 +46,9 @@ namespace EliteEnemies.Affixes.Behaviors
             PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_MagazineCurse_PopText_1", null);
             // 玩家侧弹字同理：主机弹在复制体上、真人看不到 ⇒ 联机下只让客机弹。
             // 单机 / 主机自己的玩家照样本地弹（`TryRelayPlayerPopText` 返回 false）。
-            if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopLine))
-                player.PopText(PlayerPopLine);
+            // **转交的是键**；本地那份在这里现解析（传译文会把主机那门语言焊死到客机）。
+            if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopKey))
+                player.PopText(LocalizationManager.GetText(PlayerPopKey));
             _lastTriggerTime = Time.time;
         }
 

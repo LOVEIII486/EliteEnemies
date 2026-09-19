@@ -119,6 +119,53 @@ namespace EliteEnemies.Coop
             return s_nextStealToken++;
         }
 
+        /// <summary>
+        /// 转交一次「在玩家头顶弹字」。
+        ///
+        /// <para><b>语义与 <see cref="TryRelay"/> 相同</b>（<c>true</c> = 已接管，调用方不要再本地弹），
+        /// 但走的是**独立报文**——它要带"本地化键 + 兜底"两份文本，而玩家效果报文只有一个文本字段。</para>
+        ///
+        /// <para>⚠ <b>这条通道原先从未接通</b>：<c>PlayerEffectRelay.PlayerPopTextHandler</c>
+        /// 全库没有赋值点，于是 <c>TryRelayPlayerPopText</c> 恒返回 false，
+        /// 主机一律本地弹——弹在客机玩家的**复制体**上，真人看不到（实测确认）。</para>
+        /// </summary>
+        public static bool TryRelayPlayerPopText(CharacterMainControl victim, string key,
+                                                 string fallback = null, string arg = null)
+        {
+            if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;   // 单机 → 本地弹
+            if (victim == null || string.IsNullOrEmpty(key)) return false;
+            if (victim.IsMainCharacter) return false;                        // 主机自己的玩家 → 本地弹
+
+            var playerId = CoopApi.GetPlayerIdFor(victim);
+            if (string.IsNullOrEmpty(playerId))
+            {
+                // 同 TryRelay：拿不到 id 时**既不远程也不本地**（本地弹在复制体上也看不见），
+                // 但要说出来。
+                CoopLog.Warn($"[玩家效果] 拿不到受害者的网络 id，弹字 '{key}' 未生效（既不远程也不本地）");
+                return true;
+            }
+
+            CoopApi.Broadcast(CoopWire.EncodePlayerPopText(playerId, key, fallback, arg));
+            return true;
+        }
+
+        /// <summary>客户端收到「请你在自己头顶弹一行字」——按**本机语言**解析那个键。</summary>
+        public static void OnPlayerPopText(EliteMessage message)
+        {
+            if (!CoopApi.Active) return;
+            if (!CoopApi.IsSelfPlayerId(message.TargetPlayerId)) return;   // 不是给我的
+            if (string.IsNullOrEmpty(message.Text)) return;
+
+            var player = CharacterMainControl.Main;
+            if (player == null) return;
+
+            // `Text` 是键，`ComboId` 被借来装兜底文本，`TextArg` 是格式参数（都见 CoopWire v8）。
+            player.PopText(PlayerEffectRelay.Format(
+                message.Text,
+                string.IsNullOrEmpty(message.ComboId) ? null : message.ComboId,
+                message.TextArg));
+        }
+
         // ==================== 主机侧：收偷窃回报 ====================
 
         public static void OnEffectResult(EliteMessage message)
@@ -230,12 +277,14 @@ namespace EliteEnemies.Coop
         {
             PlayerEffectRelay.Handler = HandleRelayRequest;
             PlayerEffectRelay.StealHandler = TryRelaySteal;
+            PlayerEffectRelay.PlayerPopTextHandler = TryRelayPlayerPopText;
         }
 
         public static void Shutdown()
         {
             PlayerEffectRelay.Handler = null;
             PlayerEffectRelay.StealHandler = null;
+            PlayerEffectRelay.PlayerPopTextHandler = null;
 
             s_pendingSteals.Clear();
             s_nextStealToken = 1;

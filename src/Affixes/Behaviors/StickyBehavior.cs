@@ -12,8 +12,9 @@ namespace EliteEnemies.Affixes.Behaviors
     public class StickyBehavior : AffixBehaviorBase, ICombatAffixBehavior
     {
         public override string AffixName => "Sticky";
-        private string PlayerPopLine =>
-            LocalizationManager.GetText("EliteEnemies_Affix_Sticky_PopText_2");
+
+        /// <summary>弹在**玩家**头顶那条的本地化键。**转交时传键，不传译文**（见 PlayerEffectRelay）。</summary>
+        private const string PlayerPopKey = "EliteEnemies_Affix_Sticky_PopText_2";
 
         private static readonly bool ConsumeWhenNoWeapon = true;
 
@@ -56,8 +57,9 @@ namespace EliteEnemies.Affixes.Behaviors
 
             PlayerEffectRelay.PopTextOnElite(owner, "EliteEnemies_Affix_Sticky_PopText_1", null);
             // 玩家侧弹字同理：主机弹在复制体上、真人看不到 ⇒ 联机下只让客机弹。
-            if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopLine))
-                player.PopText(PlayerPopLine);
+            // **转交的是键**；本地那份在这里现解析。
+            if (!PlayerEffectRelay.TryRelayPlayerPopText(player, PlayerPopKey))
+                player.PopText(LocalizationManager.GetText(PlayerPopKey));
 
             _consumed = true;
         }
