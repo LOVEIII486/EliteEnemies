@@ -9,23 +9,15 @@ Temporary feedback group: 1030349064 (bug reports only).
 
 ---
 
-## 👥 Multiplayer (Co-op)
-**This mod supports multiplayer co-op!** Once you play with a co-op mod, elite enemies work for **every player in the session**:
+## 👥 Multiplayer Support
+**This mod supports multiplayer co-op!** Once you play with a co-op mod, elite enemies work for **every player in the session**, and every detailed setting is controlled by the host.  
+⚠️ **Requirement: both host and client must install this mod, with the same version**.  
+**Known limitations in co-op**:
 
-* Clients see the elite's **affix tags** and **health bar colors**, exactly as the host does
-* **Gigantification / Miniaturation / Slime** size changes and **Invisibility** are visible on clients too
-* When an elite hits you, the on-screen prompt appears **above your own head** (Magazine Curse, Sticky, …)
-* Knockback, forced position swap, theft, gun-biting and weapon drops **apply to the real player**
-* Elite loot, split clones and summons (Rooster Boss / Mandarin Duck / Guardian / Revenge) are visible on clients
-
-> ⚠️ **Requirement: both host and client must install this mod, with the same version** (single-player is unaffected).
-
-**Known limitations in co-op** (gameplay still works normally):
-
-* Glow effects (shield flashes, the red pulse before self-destruct, the revenge glow) are host-only
+* Glow effects (shield flashes, the red pulse before self-destruct, the revenge glow) are currently host-only
 * The **Phantom**'s hallucination audio and the **Musician**'s kazoo only play on the host
-* The **Time Stop** affix never appears in co-op — time scale is a per-machine global, so it has no correct co-op meaning
-* **Mimic** only disguises as a ground item in co-op (the supply-crate disguise cannot be synced to clients)
+* The **Time Stop** affix never appears in co-op
+* **Mimic** only disguises as a ground item in co-op
 
 ---
 
