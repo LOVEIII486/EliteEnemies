@@ -160,6 +160,7 @@ namespace EliteEnemies.Coop
             try
             {
                 CoopPlayers.Shutdown();
+                CoopAffixPolicy.Uninstall();
                 CoopEliteSync.Shutdown();
             }
             catch (Exception ex)
@@ -360,6 +361,7 @@ namespace EliteEnemies.Coop
 
             // 6) 通知上层的业务模块：通道已就绪
             CoopPlayers.Initialize();
+            CoopAffixPolicy.Install();
             CoopEliteSync.Initialize();
         }
 

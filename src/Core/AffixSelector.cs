@@ -172,6 +172,18 @@ namespace EliteEnemies.Core
                 pool.RemoveAll(key => disabled.Contains(key));
             }
 
+            // 3. 过滤**运行期**黑名单——由联机模块按当前模式提供（见 RuntimeDisabledAffixesProvider）。
+            //    与第 2 步是两回事：那份是玩家的偏好，这份是"这个模式下不该出现"。
+            //    单机下提供者为 null、或它返回 null ⇒ 这一步什么都不做。
+            //
+            //    ⚠ 每次现问、不缓存：同一份存档里"在不在联机局"是会变的（见那个属性的注释）。
+            var provider = EliteEnemyCore.RuntimeDisabledAffixesProvider;
+            var runtimeDisabled = provider != null ? provider() : null;
+            if (runtimeDisabled != null && runtimeDisabled.Count > 0)
+            {
+                pool.RemoveAll(key => runtimeDisabled.Contains(key));
+            }
+
             return pool;
         }
 

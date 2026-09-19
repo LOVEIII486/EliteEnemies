@@ -1,4 +1,5 @@
 ﻿using ItemStatsSystem;
+using EliteEnemies.Core;
 using UnityEngine;
 
 namespace EliteEnemies.Affixes.Behaviors
@@ -69,14 +70,18 @@ namespace EliteEnemies.Affixes.Behaviors
                 muzzlePos += Vector3.up * 0.1f;
             }
 
-            // 4. 算基准方向：直接指向玩家
+            // 4. 算基准方向：指向**最近的玩家**
+            //
+            //    ⚠ 原先取 `LevelManager.Instance.MainCharacter`——那是「本机玩家」。
+            //    联机下判定在主机上跑，客机玩家是另一个角色对象 ⇒
+            //    **额外子弹永远飞向主机玩家**，哪怕正在交火的是客机。
+            //    用 FindNearestPlayer 才是"指向正在打的那个人"的合理近似。
             Vector3 baseDirection;
-            var mainPlayer = LevelManager.Instance?.MainCharacter;
+            var targetPlayer = EliteEnemyCore.FindNearestPlayer(character.transform.position, out _);
 
-            if (mainPlayer != null)
+            if (targetPlayer != null)
             {
-                // 获取玩家中心位置
-                Vector3 targetPos = mainPlayer.transform.position + Vector3.up * 1.0f;
+                Vector3 targetPos = targetPlayer.transform.position + Vector3.up * 1.0f;
                 baseDirection = (targetPos - muzzlePos).normalized;
             }
             else

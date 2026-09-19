@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Duckov;
 using Duckov.Scenes;
 using ItemStatsSystem;
@@ -48,11 +48,16 @@ namespace EliteEnemies.Affixes
         /// <summary>
         /// 直接向玩家当前位置发射
         /// </summary>
-        public static void LaunchGrenadeAtPlayer(CharacterMainControl attacker, int itemId, float delay = 1.5f)
+        /// <param name="target">**砸向哪个玩家**。由调用方给出，**不要在这里取
+        /// <c>LevelManager.Instance.MainCharacter</c>**——那是「本机玩家」，
+        /// 而联机下挨打的常常是**客机玩家**（主机上判定），写死 Main 会让手雷
+        /// 永远只砸主机玩家。详见 <c>Docs/Coop/05-integration-gotchas.md</c> §11。</param>
+        public static void LaunchGrenadeAtPlayer(CharacterMainControl attacker, CharacterMainControl target,
+                                                 int itemId, float delay = 1.5f)
         {
-            if (LevelManager.Instance?.MainCharacter == null) return;
-            Vector3 playerPos = LevelManager.Instance.MainCharacter.transform.position;
-            LaunchGrenade(attacker, itemId, playerPos, delay);
+            if (target == null) return;
+
+            LaunchGrenade(attacker, itemId, target.transform.position, delay);
         }
     }
 }

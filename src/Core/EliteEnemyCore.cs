@@ -69,6 +69,24 @@ namespace EliteEnemies.Core
         /// </summary>
         public static Func<CharacterMainControl, bool> RemotePlayerPredicate { get; set; }
 
+        /// <summary>
+        /// **运行期**额外禁用词条的提供者。**默认 <c>null</c> ⇒ 不额外禁用任何词条。**
+        /// 由联机模块按**当前**模式注入——例：会改**全局时间流速**的词条在联机局里禁止出现。
+        ///
+        /// <para>⚠️ <b>刻意用委托而不是缓存成一个静态集合</b>：同一份存档里
+        /// 「<b>在不在联机局</b>」<b>是会变的</b>——玩家可以先单机玩、再进朋友的房、
+        /// 退出来继续单机。缓存下来就会过期，而过期表现为"单机玩家莫名其妙少了几个词条"，
+        /// 不报错、不留日志。这与 <see cref="EliteAuthorityOverride"/> 是同一个取舍。</para>
+        ///
+        /// <para>返回的集合请用 <c>StringComparer.OrdinalIgnoreCase</c> 建：
+        /// 它在**每次选词条**时被查一次，不该退化成线性扫。</para>
+        ///
+        /// <para>⚠ 与玩家自己在设置里关掉的 <c>Config.DisabledAffixes</c> 是**两回事**：
+        /// 那份是玩家的偏好，这份是"**这个模式下不该出现**"。两者都会被排除，
+        /// 但理由与生命周期都不同，**不要合并**。</para>
+        /// </summary>
+        public static Func<ICollection<string>> RuntimeDisabledAffixesProvider { get; set; }
+
         /// <summary>这个角色是不是远端玩家。<b>单机下恒为 <c>false</c>。</b></summary>
         public static bool IsRemotePlayerCharacter(CharacterMainControl cmc)
         {

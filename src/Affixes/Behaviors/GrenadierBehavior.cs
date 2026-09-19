@@ -38,7 +38,8 @@ namespace EliteEnemies.Affixes.Behaviors
 
             int randomItemId = GetRandomGrenadeId();
             
-            GrenadeLauncher.LaunchGrenadeAtPlayer(attacker, randomItemId,1.2f);
+            // 目标是**被打中的那个玩家**（不是 LevelManager.MainCharacter，理由见 GrenadeLauncher）。
+            GrenadeLauncher.LaunchGrenadeAtPlayer(attacker, victim, randomItemId, 1.2f);
             
             _lastHitTime = Time.time;
         }
