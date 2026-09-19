@@ -57,6 +57,12 @@ namespace EliteEnemies.Coop
         /// <summary>逐条记录复制体 id 的上限——够核对重合度就行，不必全程记。</summary>
         private const int MaxReplicaIdsLogged = 50;
 
+        /// <summary>
+        /// 主机逐条记录 **全部** AI 注册的上限（不只精英）。
+        /// 用途是诊断"分裂有没有触发"——分裂克隆是新生成的 AI，会在日志里多出两条。
+        /// </summary>
+        private const int MaxHostRegistrationsLogged = 200;
+
         // ===== 主机侧 =====
         private static readonly Dictionary<int, EliteInfo> s_hostKnown = new Dictionary<int, EliteInfo>();
 
@@ -77,6 +83,8 @@ namespace EliteEnemies.Coop
         private static int s_applied;
         private static int s_localEliteDivergence;  // 客户端自己掷出精英的次数（应为 0）
         private static int s_replicaIdsLogged;
+        private static int s_hostRegLogged;
+        private static bool s_zeroIdWarned;
 
         private static float s_lastQueryTime = -999f;
         private static float s_lastSummaryTime;
@@ -121,6 +129,20 @@ namespace EliteEnemies.Coop
             s_hostKnown.Clear();
             s_clientReplicas.Clear();
             s_clientPending.Clear();
+
+            // 计数器一并归零：模组停用后重新启用时，统计不该背着上一局的数据。
+            s_recvTotal = 0;
+            s_replicaTotal = 0;
+            s_affixBeforeReplica = 0;
+            s_replicaFirst = 0;
+            s_replicaNoAffixYet = 0;
+            s_paired = 0;
+            s_applied = 0;
+            s_localEliteDivergence = 0;
+            s_replicaIdsLogged = 0;
+            s_hostRegLogged = 0;
+            s_zeroIdWarned = false;
+            s_lastQueryTime = -999f;
         }
 
         /// <summary>
@@ -143,12 +165,44 @@ namespace EliteEnemies.Coop
 
         private static void OnHostSawAi(int aiId, CharacterMainControl cmc)
         {
-            // 非精英是绝大多数——静默跳过，连日志都不留（否则每只杂兵都写一行）。
+            // ⚠ **aiId == 0 是哨兵，不是 id。**
+            //   联机模组那侧是这么给的（Patch/Scene/AIPatch.cs:164-167）：
+            //       var id = 0;
+            //       if (CoopSyncDatabase.AI.TryGet(ai, out var entry) && entry != null) id = entry.Id;
+            //       ModApiEvents.RaiseAiSpawned(id, cmc);
+            //   即「这只 AI 不在联机同步库里」——最典型的是**基地场景的 NPC**
+            //   （联机模组刻意不复制 Base 的刷怪器，两端各有一份自己的本地副本）。
+            //
+            //   广播它没有任何意义：客户端永远不会有 id=0 的复制体，那条词条只会
+            //   永远卡在"待配对"里，还会刷日志。**而且两边是不同实体，本来就同步不了。**
+            if (aiId == 0)
+            {
+                if (!s_zeroIdWarned)
+                {
+                    s_zeroIdWarned = true;
+                    CoopLog.Info("[主机] 遇到 aiId=0（不在联机同步库里的 AI，典型是基地 NPC）——" +
+                                 "这类实体两端各有一份本地副本，**无法按 id 关联**，已跳过不再广播");
+                }
+
+                return;
+            }
+
             var marker = cmc.GetComponent<EliteMarker>();
-            if (marker == null) return;
+            bool isElite = marker != null && marker.Affixes != null && marker.Affixes.Count > 0;
+
+            // 记录**全部** AI 注册（不只精英），上限若干——这是"分裂到底有没有触发"的证据：
+            // 分裂克隆是新生成的 AI，会在这里多出两条。数量上限防止刷屏。
+            if (s_hostRegLogged < MaxHostRegistrationsLogged)
+            {
+                s_hostRegLogged++;
+                CoopLog.Info($"[主机] AI 注册 aiId={aiId} 精英={isElite}" +
+                             (isElite ? $" 词条=[{string.Join(",", marker.Affixes)}]" : string.Empty));
+            }
+
+            // 非精英是绝大多数——到此为止，不做别的。
+            if (!isElite) return;
 
             var affixes = marker.Affixes;
-            if (affixes == null || affixes.Count == 0) return;
 
             if (s_hostKnown.Count >= MaxKnownElites)
             {
@@ -218,7 +272,10 @@ namespace EliteEnemies.Coop
                              "——「精英逻辑权威」的闸门没挡住，请检查 EliteAuthorityOverride");
             }
 
-            if (s_clientPending.ContainsKey(aiId)) s_affixBeforeReplica++;
+            // 词条已经在等着了 ⇒ 这一次是"词条先到"的配对。
+            // （原先只在 RecordOnClient 里记 s_paired，于是这条路径配对了也不计数，
+            //   摘要里会出现"配对=0 但已应用标记=29"这种自相矛盾的读数。）
+            if (s_clientPending.ContainsKey(aiId)) { s_affixBeforeReplica++; s_paired++; }
             else s_replicaNoAffixYet++;
 
             if (s_replicaIdsLogged < MaxReplicaIdsLogged)
