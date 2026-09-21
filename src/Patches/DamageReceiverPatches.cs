@@ -97,4 +97,56 @@ namespace EliteEnemies.Patches
             }
         }
     }
+
+    /// <summary>
+    /// 给 <see cref="EliteBehaviorComponent"/> 的"去重标志"划定**生命周期**。
+    ///
+    /// <para><b>为什么需要它</b>：那个标志（<c>_handledByReceiver</c>）的作用是
+    /// "既然 <c>DamageReceiver.Hurt</c> 已经派发过一遍，紧随其后的那遍
+    /// <c>Health.OnHurtEvent</c> 就跳过"。它成立的前提是**两个事件在同一次同步调用链里
+    /// 先后到达**——而 <c>DamageReceiver.Hurt</c> 里那句 <c>health.Hurt</c>
+    /// 可能**提前返回**（<c>invincible</c> / <c>isDead</c> / <c>IsLoading</c>，
+    /// <c>Health.cs:308-320</c>），那时 <c>Health.OnHurtEvent</c> 根本不会发
+    /// ⇒ <b>标志没人消费、就留在 true 上</b>。</para>
+    ///
+    /// <para>后果：**下一次程序化结算**被静默吞掉一次 <c>OnDamaged</c> 派发。
+    /// 而"程序化结算"正是联机模组在主机上结算客机上报伤害的那条路
+    /// （<c>health.Hurt</c> 直调，见 <c>EliteBehaviorComponent</c> 的注释）
+    /// ⇒ 这是一个**只有联机才存在**、且**一个字日志都没有**的行为差异。
+    /// 可复现的组合：精英正处于无敌（守卫护盾 / 不死 2.5 秒）+ 主机玩家又打了一下
+    /// + 客机紧接着打。</para>
+    ///
+    /// <para><b>为什么挂在 Postfix 上是对的</b>：Postfix **保证**跑在整条链之后——
+    /// 包括里面那句 <c>health.Hurt</c>，无论它是正常返回还是提前返回。
+    /// 于是标志的生命周期被精确地压回"这一次 <c>DamageReceiver.Hurt</c> 调用"，
+    /// 与该标志设计时假设的"同一次同步调用链"完全吻合。
+    /// （换 <c>Update</c> 里清也能收窄，但窗口还留着"本帧剩余时间"，不够准。）</para>
+    /// </summary>
+    [HarmonyPatch(typeof(DamageReceiver), nameof(DamageReceiver.Hurt))]
+    internal static class EliteHitDedupeResetPatch
+    {
+        private const string LogTag = "[EliteEnemies.DedupeReset]";
+
+        // ⚠ 补丁体必须有 try/catch：这是**每次受击**都会走的路径，
+        //    异常会顺着游戏自己的伤害链往上冒（与上面那个补丁同一条纪律）。
+        static void Postfix(DamageReceiver __instance)
+        {
+            try
+            {
+                // 用游戏自己的口子拿角色：`health` 是公开字段，
+                // `TryGetCharacter()` 是**缓存**的（同上面那个补丁的取法）。
+                var character = __instance != null && __instance.health != null
+                    ? __instance.health.TryGetCharacter()
+                    : null;
+                if (character == null) return;
+
+                var behaviors = character.GetComponent<EliteBehaviorComponent>();
+                if (behaviors != null) behaviors.ClearReceiverHandledFlag();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{LogTag} 补丁执行失败（已隔离，不影响游戏伤害链）: {ex}");
+            }
+        }
+    }
 }

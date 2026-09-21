@@ -207,6 +207,20 @@ namespace EliteEnemies.Affixes
             DispatchOnDamaged(damageInfo);
         }
 
+        /// <summary>
+        /// 清掉去重标志。**由 <c>DamageReceiver.Hurt</c> 的 Postfix 调用**
+        /// （<c>Patches\DamageReceiverPatches.EliteHitDedupeResetPatch</c>）——
+        /// 那是唯一能"保证跑在整条链之后（含里面那句可能提前返回的 <c>health.Hurt</c>）"
+        /// 的位置。
+        ///
+        /// <para>不清的后果：那两遍事件本应成对到达，但 <c>health.Hurt</c> 可能因
+        /// <c>invincible</c>/<c>isDead</c>/<c>IsLoading</c> 提前返回 ⇒
+        /// <see cref="OnHealthHurt"/> 不会来消费这个标志 ⇒ 它会留在 true 上，
+        /// 把**下一次程序化结算**（联机下客机上报的伤害就是这条路）的
+        /// <c>OnDamaged</c> 静默吞掉一次。只有联机才存在，且不留任何日志。</para>
+        /// </summary>
+        public void ClearReceiverHandledFlag() => _handledByReceiver = false;
+
         private void DispatchOnDamaged(DamageInfo damageInfo)
         {
             if (!_isInitialized || _character == null) return;
