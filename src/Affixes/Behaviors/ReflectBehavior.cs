@@ -15,8 +15,22 @@ namespace EliteEnemies.Affixes.Behaviors
         /// </summary>
         private static readonly HashSet<int> ActiveReflectorIDs = new HashSet<int>();
 
-        /// <summary>该角色实例当前是否处于反射状态（供弹道补丁查询）。</summary>
-        public static bool IsReflecting(int characterInstanceID) => ActiveReflectorIDs.Contains(characterInstanceID);
+        /// <summary>
+        /// 该角色实例当前是否处于反射状态（供弹道补丁查询）。
+        ///
+        /// <para>⚠ <b>联机下这个判定发生在"开枪那台机器"上，而不是主机。</b>
+        /// 子弹由开枪方本地模拟（联机侧只给远端投射物造"假"实例），
+        /// 所以客机射出的子弹是在客机上跑到这里的——而客机的复制体
+        /// <b>没有本行为类</b>（客机只挂 <c>EliteMarker</c>，不跑任何词条行为），
+        /// <see cref="ActiveReflectorIDs"/> 恒空。</para>
+        ///
+        /// <para>⇒ 必须再问一次联机模块（<see cref="EliteStateRelay.ReflectQueryHandler"/>，
+        /// 客机侧按主机广播来的权威状态回答）。<b>单机下那个钩子是 null，恒为 false，
+        /// 于是这里与从前一字不差。</b></para>
+        /// </summary>
+        public static bool IsReflecting(int characterInstanceID)
+            => ActiveReflectorIDs.Contains(characterInstanceID)
+               || EliteStateRelay.QueryReflectState(characterInstanceID);
 
         private int _ownerID;
         private SimpleShieldEffect _visualShield;
@@ -47,7 +61,11 @@ namespace EliteEnemies.Affixes.Behaviors
             _isReflecting = true;
             _timer = 0f;
             ActiveReflectorIDs.Add(_ownerID);
-            
+
+            // 告知联机模块：客机要靠这条状态才能在自己那边把子弹弹开
+            // （判定发生在开枪方，见 IsReflecting 的注释）。单机下没人接管。
+            EliteStateRelay.RelayReflectState(Ctx.Character, true);
+
             // 弹字要自己转交——联机模组把通用的 PopText 补丁注释掉了（见 PlayerEffectRelay）。
             PlayerEffectRelay.PopTextOnElite(Ctx.Character, "EliteEnemies_Affix_Reflect_PopText", null);
             _visualShield.Show();
@@ -60,15 +78,25 @@ namespace EliteEnemies.Affixes.Behaviors
             _isReflecting = false;
             _timer = 0f;
             ActiveReflectorIDs.Remove(_ownerID);
+
+            EliteStateRelay.RelayReflectState(Ctx.Character, false);
+
             _visualShield.Hide();
         }
 
         public override void OnCleanup(CharacterMainControl character)
         {
-            if (_isReflecting) ActiveReflectorIDs.Remove(_ownerID);
-            
+            if (_isReflecting)
+            {
+                ActiveReflectorIDs.Remove(_ownerID);
+
+                // 清理时也要报一次"结束"：精英可能只是被 StripElite（撤销精英化但仍活着），
+                // 那时复制体还在客机上、还停在上一次的"反射中" ⇒ 客机会一直把子弹弹开。
+                EliteStateRelay.RelayReflectState(character, false);
+            }
+
             _visualShield?.Destroy();
-            
+
 
         }
 

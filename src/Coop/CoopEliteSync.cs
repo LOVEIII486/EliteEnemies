@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using EliteEnemies.Affixes;
+using EliteEnemies.Affixes.Behaviors;
 using EliteEnemies.Combos;
 using EliteEnemies.Core;
 using EliteEnemies.Modifiers;
@@ -25,6 +26,17 @@ namespace EliteEnemies.Coop
         /// 「标签看得到、体型看不到」）。放进条目后，全量快照天然带上当前值。</para>
         /// </summary>
         public EliteVisualState Visual;
+
+        /// <summary>
+        /// 这只精英的**最新反射状态**——客机据此在自己那边把射向它的子弹弹开
+        /// （判定发生在开枪方，见 <c>ReflectBehavior.IsReflecting</c> 的注释）。
+        ///
+        /// <para>⚠️ <b>它同样属于"条目"，理由与 <see cref="Visual"/> 一字不差</b>：
+        /// 反射是 <c>4.5s</c> 冷却 + <c>3s</c> 持续的**周期**状态，
+        /// 而 <c>Kind.EliteReflect</c> 那条只是一次性的变化通知——错过就没了。
+        /// 搭在条目上，迟到的客机与"复制体被销毁重建过"的客机都能从全量快照里补到当前值。</para>
+        /// </summary>
+        public bool Reflecting;
 
         /// <summary>
         /// 主机侧：这只精英的**角色对象**。
@@ -114,6 +126,26 @@ namespace EliteEnemies.Coop
         private static readonly Dictionary<int, EliteVisualState> s_clientVisual =
             new Dictionary<int, EliteVisualState>();
 
+        /// <summary>
+        /// 客机：**当前正在反射的精英**（aiId 集合）。
+        ///
+        /// <para>与 <see cref="s_clientVisual"/> 同形、同理：收到后**不消费**，
+        /// 因为复制体可能被销毁重建（联机模组在离开 <c>DeactivationRadius</c> 时
+        /// 把复制体整个销毁），重建后要能重新套上。</para>
+        ///
+        /// <para><b>为什么是集合、而不是 <c>Dictionary&lt;int,bool&gt;</c></b>：
+        /// 主机永远知道答案（没带这个词条的精英就是"不在反射"），
+        /// 所以"没有这条信息"与"不在反射"是同一件事——集合的"在不在里面"
+        /// 正好就是那个语义，不必再存一个恒为 false 的值。</para>
+        /// </summary>
+        private static readonly HashSet<int> s_clientReflecting = new HashSet<int>();
+
+        /// <summary>客机已收到的反射状态条数（摘要里报出来，用于判断"主机发了没/收了没"）。</summary>
+        private static int s_clientReflectRecv;
+
+        /// <summary>主机上报过反射状态的次数。</summary>
+        private static int s_hostReflectSent;
+
         /// <summary>视觉状态表的容量上限（防御性；正常一局远达不到）。超出后不再记录新的。</summary>
         private const int MaxPendingVisual = 512;
 
@@ -151,6 +183,13 @@ namespace EliteEnemies.Coop
 
         /// <summary>其中**打了日志**的条数。逐条记录，但设上限——史莱姆会反复上报。</summary>
         private static int s_hostVisualLogged;
+
+        /// <summary>主机逐条记录「上报反射」的上限。理由同 <see cref="MaxHostVisualLogged"/>：
+        /// 反射每 7.5 秒来回一次，不设上限会把日志刷成流水账（总次数仍由
+        /// <see cref="s_hostReflectSent"/> 在摘要里报出）。</summary>
+        private const int MaxHostReflectLogged = 50;
+
+        private static int s_hostReflectLogged;
 
         /// <summary>
         /// 主机逐条记录「上报视觉」的上限。
@@ -214,6 +253,21 @@ namespace EliteEnemies.Coop
             PlayerEffectRelay.AiPopTextHandler = OnHostElitePopText;
             PlayerEffectRelay.EliteVisualHandler = OnHostEliteVisual;
 
+            // ★ 反射状态：**两个方向各挂一个**，缺任何一半都会静默失效。
+            //
+            //   上报（主机）：行为类在 StartReflect/EndReflect 调它 ⇒ 广播给客机。
+            //   查询（客机）：弹道补丁在每次子弹命中时问它 ⇒ 客机据此把子弹弹开。
+            //
+            //   ⚠ **查询这一半在主机上也要挂**：主机侧 s_clientReplicas 是空的
+            //   （它只在 !IsServer 时被填充），所以恒返回 false、不干扰
+            //   ——主机自己的反射本来就走 ActiveReflectorIDs 那条本地路。
+            //   挂上而不是"只在客机挂"，是为了不引入"角色判断写错就静默失效"的第二种写法。
+            //
+            //   ⚠ 本工程栽过"钩子定义了却从没被赋值"（PlayerPopTextHandler 空转了整整一版，
+            //   见 CoopWire v8 的版本说明）⇒ **新增转交口必须同时在这里挂上**。
+            EliteStateRelay.ReflectStateHandler = OnHostEliteReflect;
+            EliteStateRelay.ReflectQueryHandler = QueryClientReflect;
+
             CoopLog.Info($"[启动] 联机已启动={CoopApi.NetworkStarted} 本端角色=" +
                          $"{(CoopApi.IsServer ? "主机" : "客户端")}；" +
                          $"精英逻辑权威={EliteEnemyCore.IsEliteAuthority}" +
@@ -230,6 +284,8 @@ namespace EliteEnemies.Coop
             EliteEnemyCore.EliteAuthorityOverride = null;
             PlayerEffectRelay.AiPopTextHandler = null;
             PlayerEffectRelay.EliteVisualHandler = null;
+            EliteStateRelay.ReflectStateHandler = null;
+            EliteStateRelay.ReflectQueryHandler = null;
 
             CoopVisualWatch.Uninstall();
             CoopStallWatch.Uninstall();
@@ -239,6 +295,7 @@ namespace EliteEnemies.Coop
             s_clientReplicas.Clear();
             s_clientPending.Clear();
             s_clientVisual.Clear();
+            s_clientReflecting.Clear();
             s_hostPendingVisual.Clear();
             s_healthUnbaked.Clear();
             s_reassertLogged.Clear();
@@ -257,6 +314,9 @@ namespace EliteEnemies.Coop
             s_zeroIdWarned = false;
             s_hostVisualSent = 0;
             s_hostVisualLogged = 0;
+            s_clientReflectRecv = 0;
+            s_hostReflectSent = 0;
+            s_hostReflectLogged = 0;
             s_hostHealthFixed = 0;
             s_hostHealthFixLogged = 0;
             s_lastQueryTime = -999f;
@@ -340,9 +400,23 @@ namespace EliteEnemies.Coop
             // `s_hostPendingVisual`）——并进条目，随词条报文一起发出去。**单独发一条也行**，
             // 但那要多一条报文、还多一个"两条谁先到"的假设，没必要。
             info.Visual = TakeHostPendingVisual(cmc);
+
+            // 反射状态**现问一次当前值**，不走 `s_hostPendingVisual` 那套暂存。
+            //
+            // 为什么不学它：反射的首次上报**必然"还没有 id"**——`ReflectBehavior.OnEliteInitialized`
+            // 把 `_timer` 直接置成 `CooldownTime`，第一次 `OnUpdate` 就满足条件，
+            // 于是**第 1 帧**就 StartReflect；而本方法要等 `AiSpawned`（`Init` 之后 800ms）。
+            // 那样每只带反射的精英开场都会漏掉一条。
+            //
+            // 但反射是**状态**、不是事件：这里现问一次就把"当前"补上了，
+            // 后面那条 StartReflect 也没白丢（`EndReflect` 3 秒后会收尾）。
+            // 为此再建一套并行暂存表，只会多一处会长歪的状态。
+            info.Reflecting = ReflectBehavior.IsReflecting(cmc.GetInstanceID());
+
             s_hostKnown[aiId] = info;
 
-            var payload = CoopWire.EncodeAffix(aiId, info.ComboId, info.Affixes, info.Visual);
+            var payload = CoopWire.EncodeAffix(aiId, info.ComboId, info.Affixes, info.Visual,
+                                               info.Reflecting);
             if (CoopApi.Broadcast(payload))
             {
                 // 计数只在**真的发出去**之后加：这个读数是用来看"主机有没有发"的，
@@ -351,7 +425,8 @@ namespace EliteEnemies.Coop
 
                 CoopLog.Info($"[主机] 广播精英 aiId={aiId} " +
                              $"combo={info.ComboId ?? "-"} 词条=[{string.Join(",", info.Affixes)}]" +
-                             DescribeVisual(info.Visual, prependSpace: true));
+                             DescribeVisual(info.Visual, prependSpace: true) +
+                             (info.Reflecting ? " 反射中" : string.Empty));
             }
             else
             {
@@ -415,6 +490,7 @@ namespace EliteEnemies.Coop
             var combos = new List<string>(s_hostKnown.Count);
             var affixes = new List<List<string>>(s_hostKnown.Count);
             var visuals = new List<EliteVisualState>(s_hostKnown.Count);
+            var reflects = new List<bool>(s_hostKnown.Count);
 
             foreach (var pair in s_hostKnown)
             {
@@ -422,20 +498,24 @@ namespace EliteEnemies.Coop
                 combos.Add(pair.Value.ComboId);
                 affixes.Add(pair.Value.Affixes);
                 visuals.Add(pair.Value.Visual);
+                reflects.Add(pair.Value.Reflecting);
             }
 
             int withVisual = 0;
+            int withReflect = 0;
             for (int i = 0; i < visuals.Count; i++)
             {
                 if (visuals[i].Has) withVisual++;
+                if (reflects[i]) withReflect++;
             }
 
-            var payload = CoopWire.EncodeBatch(ids, combos, affixes, visuals);
+            var payload = CoopWire.EncodeBatch(ids, combos, affixes, visuals, reflects);
             if (CoopApi.Broadcast(payload))
             {
-                // 带上"其中几只有视觉状态"——迟到的客机能不能补到体型，就看这个数字。
+                // 带上"其中几只有视觉状态 / 几只在反射"——
+                // 前者决定迟到的客机能否补到体型，后者决定它能否立刻参与反弹判定。
                 CoopLog.Info($"[主机] 已回应全量请求：{ids.Count} 只精英" +
-                             $"（其中 {withVisual} 只带视觉状态，{payload.Length} 字节）");
+                             $"（其中 {withVisual} 只带视觉状态、{withReflect} 只在反射，{payload.Length} 字节）");
             }
             else
             {
@@ -512,6 +592,86 @@ namespace EliteEnemies.Coop
             return true;
         }
 
+        /// <summary>
+        /// 主机侧：某只精英的**反射状态变了**。由 <c>ReflectBehavior</c> 在
+        /// <c>StartReflect</c> / <c>EndReflect</c> 各调一次。
+        ///
+        /// <para>本机不需要为它做任何事——主机自己的反射走
+        /// <c>ReflectBehavior.ActiveReflectorIDs</c> 那条本地路，这里**只是让客机也判得对**：
+        /// 子弹由开枪方本地模拟，客机射出的子弹是在客机上判"该不该弹开"的。</para>
+        /// </summary>
+        public static bool OnHostEliteReflect(CharacterMainControl ai, bool reflecting)
+        {
+            if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;
+            if (ai == null) return false;
+
+            int aiId = FindHostAiId(ai);
+
+            // 拿不到 id 有两种情形，**都不是错误，也都刻意不暂存**：
+            //   · 这只 AI 还没进同步库——开场第一次 StartReflect 必然如此
+            //     （它在第 1 帧，而 AiSpawned 在 800ms），那条会被 `OnHostSawAi`
+            //     建条目时现问一次补上；
+            //   · 它压根不在同步库里（基地 NPC 之类）⇒ 本来就不需要对谁讲。
+            //
+            // ⚠ 与 `s_hostPendingVisual` 的区别值得记住：体型是**只报一次、丢了就永久丢**
+            // 的状态，所以必须暂存；反射是**周期**状态，漏一条下一个周期就自愈。
+            // 判据是"漏了会不会自愈"，不是"这条消息重不重要"。
+            if (aiId == 0) return false;
+
+            // ⚠ **必须同时写回条目**：全量快照（`AnswerQuery`）发的是表里的值，
+            // 只广播不更新表的话，迟到的客机补到的就是**过期的反射状态**。
+            if (s_hostKnown.TryGetValue(aiId, out var info)) info.Reflecting = reflecting;
+
+            if (!CoopApi.Broadcast(CoopWire.EncodeEliteReflect(aiId, reflecting)))
+            {
+                // 广播失败通常意味着联机还没起（backend 未装好）。**不静默**。
+                CoopLog.Warn($"[主机] 广播反射状态失败 aiId={aiId}（反射={reflecting}）" +
+                             "——联机可能尚未就绪");
+                return true;
+            }
+
+            s_hostReflectSent++;
+
+            if (s_hostReflectLogged < MaxHostReflectLogged)
+            {
+                s_hostReflectLogged++;
+                CoopLog.Info($"[主机] 上报反射 aiId={aiId} 反射={reflecting}");
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 客机侧：这个**角色实例**此刻在不在反射。
+        /// 由弹道补丁在每次子弹命中时经 <c>ReflectBehavior.IsReflecting</c> →
+        /// <c>EliteStateRelay.ReflectQueryHandler</c> 调到这里。
+        ///
+        /// <para><b>用线性反查而不另建反向字典</b>，与主机侧 <see cref="FindHostAiId"/>
+        /// 是同一个取舍、理由也一样：精英表只有几十条，而"再维护一份
+        /// instanceID ↔ aiId 的映射"必然要在复制体销毁重建时同步，
+        /// 漏一处就是"客机偶尔不反弹"这类静默失效。</para>
+        ///
+        /// <para><b>顺带的好处</b>：正因为它每次都是现查，
+        /// "复制体被销毁重建后要重套状态"这件事**根本不存在**——
+        /// 集合按 aiId 存（稳定），复制体按 aiId 现查。少一整类 bug。</para>
+        ///
+        /// <para>主机上 <see cref="s_clientReplicas"/> 是空的（它只在 <c>!IsServer</c> 时填充），
+        /// 所以主机恒返回 false——主机自己的反射走本地集合，不受影响。</para>
+        /// </summary>
+        private static bool QueryClientReflect(int characterInstanceID)
+        {
+            foreach (var pair in s_clientReplicas)
+            {
+                var cmc = pair.Value;
+                if (!cmc) continue;   // 复制体已被销毁（Unity 的受检空）
+                if (cmc.GetInstanceID() != characterInstanceID) continue;
+
+                return s_clientReflecting.Contains(pair.Key);
+            }
+
+            return false;
+        }
+
         /// <summary>主机侧：这只 AI 刚拿到 id，把它之前暂存的视觉状态**取走**（并入条目）。</summary>
         private static EliteVisualState TakeHostPendingVisual(CharacterMainControl ai)
         {
@@ -570,14 +730,19 @@ namespace EliteEnemies.Coop
         }
 
         private static void RecordOnClient(int aiId, string comboId, List<string> affixes,
-                                           EliteVisualState visual, string via, bool quiet = false)
+                                           EliteVisualState visual, bool reflecting,
+                                           string via, bool quiet = false)
         {
             s_recvTotal++;
 
             // 视觉状态可能与词条同到（v7 起首次状态就搭在条目上），也可能随后才到。
             RememberVisual(aiId, visual);
 
-            var info = new EliteInfo { ComboId = comboId, Affixes = affixes, Visual = visual };
+            // 反射状态（v9）同理：搭在条目上一起来，之后的变化走 Kind.EliteReflect。
+            RememberReflect(aiId, reflecting, via);
+
+            var info = new EliteInfo { ComboId = comboId, Affixes = affixes, Visual = visual,
+                                       Reflecting = reflecting };
 
             if (s_clientReplicas.ContainsKey(aiId))
             {
@@ -737,6 +902,30 @@ namespace EliteEnemies.Coop
 
             if (!s_clientVisual.ContainsKey(aiId) && s_clientVisual.Count >= MaxPendingVisual) return;
             s_clientVisual[aiId] = visual;
+        }
+
+        /// <summary>
+        /// 把一条反射状态记进 <see cref="s_clientReflecting"/>。
+        ///
+        /// <para>⚠️ <b>这里不需要"套用到复制体"这一步，也不需要"复制体重建后重套"</b>——
+        /// 与视觉状态不同：视觉要往 <c>transform</c>/渲染器上写，所以必须有个对象可写、
+        /// 且对象重建后要重写一遍；而反射只是<b>一张按 aiId 存的表</b>，
+        /// 判定时（<see cref="QueryClientReflect"/>）现查现用。
+        /// 少这一层"状态搬运"，就少一整类"重建后忘了重套"的静默失效。</para>
+        /// </summary>
+        private static void RememberReflect(int aiId, bool reflecting, string via)
+        {
+            bool changed = reflecting ? s_clientReflecting.Add(aiId) : s_clientReflecting.Remove(aiId);
+            if (!changed) return;
+
+            s_clientReflectRecv++;
+            CoopLog.Info($"[客户端] 反射状态 aiId={aiId} 反射={reflecting}（{via}）");
+        }
+
+        /// <summary>客户端：主机报来一条反射状态的**变化**（<c>Kind.EliteReflect</c>）。</summary>
+        private static void ApplyEliteReflect(EliteMessage message)
+        {
+            RememberReflect(message.AiId, message.Reflecting, "变化");
         }
 
         /// <summary>把已知的视觉状态套到该 aiId 当前的复制体上（没有复制体或没有状态就什么都不做）。</summary>
@@ -911,11 +1100,16 @@ namespace EliteEnemies.Coop
 
                 case CoopWire.Kind.Affix:
                     if (!isServer)
-                        RecordOnClient(message.AiId, message.ComboId, message.Affixes, message.Visual, "单条");
+                        RecordOnClient(message.AiId, message.ComboId, message.Affixes,
+                                       message.Visual, message.Reflecting, "单条");
                     break;
 
                 case CoopWire.Kind.EliteVisual:
                     if (!isServer) ApplyEliteVisual(message);
+                    break;
+
+                case CoopWire.Kind.EliteReflect:
+                    if (!isServer) ApplyEliteReflect(message);
                     break;
 
                 case CoopWire.Kind.AiPopText:
@@ -943,7 +1137,8 @@ namespace EliteEnemies.Coop
                     for (int i = 0; i < message.BatchIds.Count; i++)
                     {
                         RecordOnClient(message.BatchIds[i], message.BatchComboIds[i],
-                                       message.BatchAffixes[i], message.BatchVisuals[i], "全量", quiet: true);
+                                       message.BatchAffixes[i], message.BatchVisuals[i],
+                                       message.BatchReflects[i], "全量", quiet: true);
                     }
                     break;
             }
@@ -985,9 +1180,11 @@ namespace EliteEnemies.Coop
                          $"（词条先到 {s_affixBeforeReplica} / 复制体先到 {s_replicaFirst}） " +
                          $"已应用标记={s_applied} " +
                          $"已记住视觉={s_clientVisual.Count} " +
+                         $"反射中的精英={s_clientReflecting.Count}（收到变更 {s_clientReflectRecv}） " +
                          $"复制体出现时无词条={s_replicaNoAffixYet} " +
                          $"客户端自行掷出精英={s_localEliteDivergence} " +
                          $"主机上报视觉={s_hostVisualSent} " +
+                         $"主机上报反射={s_hostReflectSent} " +
                          $"主机修正血量加成={s_hostHealthFixed}");
         }
     }

@@ -71,8 +71,17 @@ namespace EliteEnemies.Coop
         /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：与 <see cref="BatchIds"/> 一一对应的视觉状态。</summary>
         public readonly List<EliteVisualState> BatchVisuals = new List<EliteVisualState>();
 
+        /// <summary>仅 <see cref="CoopWire.Kind.Batch"/> 用：与 <see cref="BatchIds"/> 一一对应的反射状态（v9）。</summary>
+        public readonly List<bool> BatchReflects = new List<bool>();
+
         /// <summary>词条 / 全量条目带回来的视觉状态（v7）。<c>Has=false</c> = 主机那边也没有。</summary>
         public EliteVisualState Visual;
+
+        /// <summary>
+        /// 词条 / 全量条目 / <see cref="CoopWire.Kind.EliteReflect"/> 带回来的**反射状态**（v9）。
+        /// 没有 <c>Has</c>——理由见 <see cref="ProtocolVersion"/> 的 v9 说明。
+        /// </summary>
+        public bool Reflecting;
     }
 
     /// <summary>
@@ -139,12 +148,45 @@ namespace EliteEnemies.Coop
     /// 它**没有**并进「玩家效果」报文：那条只有一个文本字段，
     /// 装不下"键 + 兜底"两份（而兜底必须带，理由同 v6）。</item>
     ///
+    /// <item><b>v9</b>：新增「精英反射状态」（<c>[aiId][是否在反射]</c>），
+    /// 并把它搭进精英条目（同 v7 的做法）。
+    ///
+    /// <para>起因是【反弹】词条在联机下<b>对客机完全无效</b>，而且失效得很隐蔽：
+    /// 子弹由<b>开枪那台机器</b>本地模拟，所以"这颗子弹该不该被弹开"是
+    /// <b>客机在自己那边判的</b>（<c>ProjectilePatches.ReflectOrHurt</c> 查
+    /// <c>ReflectBehavior.IsReflecting</c>）。可那份额状态只在主机上有——
+    /// 客机的复制体<b>不跑任何词条行为</b>（只挂 <c>EliteMarker</c>），
+    /// 于是 <c>IsReflecting</c> 恒为 false，客机子弹永远正常命中。</para>
+    ///
+    /// <para>⚠ <b>症状会骗人</b>：主机侧那条<b>假投射物</b>（联机模组为客机开火造的，
+    /// <c>Server_HandleFireRequest → SpawnVisualProjectile(isFake: true)</c>）照跑命中判定，
+    /// 所以<b>主机看得到子弹弹开</b>；而它的 <c>ctx.damage</c> 是 0，
+    /// 真正的伤害走客机 <c>Client_ReportAiHealth</c> 上报，<b>完全不经过弹道</b> ⇒
+    /// 观感是"生效了"，实际客机伤害照吃。<b>实测判据是"客机打反射中的精英，精英掉不掉血"，
+    /// 不是"看不看得到弹开"。</b></para>
+    ///
+    /// <para><b>为什么必须搭进条目</b>（而不是只发一条变化报文）：同 v7 的理由——
+    /// 一次性消息错过就没了。反射是 <c>4.5s</c> 冷却 + <c>3s</c> 持续的<b>周期性</b>状态，
+    /// 迟到的客机虽然最迟一个周期（7.5 秒）就能自愈，但中途加入时若正好卡在窗口里，
+    /// 那 3 秒的判定就与主机不一致。搭在条目上则全量快照天然带上当前值。</para>
+    ///
+    /// <para><b>为什么单开一种报文、不并进 <see cref="Kind.EliteVisual"/></b>：
+    /// 它是<b>玩法状态</b>（决定子弹会不会被弹开、伤害归谁），不是外观。
+    /// 藏进一个叫 "Visual" 的通道里，日后有人读到"这只是视觉、跳过无所谓"就会踩坑——
+    /// 本工程在"静默失效"上栽过多次，不值得为省一条报文冒这个险。</para>
+    ///
+    /// <para>⚠ <b>它没有 <c>EliteVisualState</c> 那样的 <c>Has</c> 字段</b>，就是一个 <c>bool</c>：
+    /// 那个 <c>Has</c> 存在的理由是"<c>Vector3.one</c> / <c>false</c> 本身就是合法状态，
+    /// 拿默认值当'没有'就分不开了"。而反射这里主机<b>永远</b>知道答案
+    /// （没带这个词条的精英就是 false），**"没有这条信息"与"不在反射"是同一件事**，
+    /// 多一个 <c>Has</c> 只会多一处可能写错的地方。</para></item>
+    ///
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 8;
+        public const byte ProtocolVersion = 9;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -198,17 +240,27 @@ namespace EliteEnemies.Coop
             /// 是给自己才弹（弹在自己的真人角色上）。
             /// </summary>
             PlayerPopText = 8,
+
+            /// <summary>
+            /// 主机 → 全体：某只精英的**反射状态变了**（<c>[aiId][是否在反射]</c>）。
+            /// 客机据此在自己那边把射向它的子弹弹开——判定发生在开枪方，
+            /// 见 <see cref="ProtocolVersion"/> 的 v9 说明。
+            ///
+            /// <para>⚠ 同 v7：这条只承担**变化**，当前状态搭在词条/全量条目的
+            /// <c>Reflecting</c> 字段上。</para>
+            /// </summary>
+            EliteReflect = 9,
         }
 
         // ==================== 编码 ====================
 
         public static byte[] EncodeAffix(int aiId, string comboId, IReadOnlyList<string> affixes,
-                                         EliteVisualState visual)
+                                         EliteVisualState visual, bool reflecting)
         {
             using (var stream = new MemoryStream(64))
             using (var writer = NewWriter(stream, Kind.Affix))
             {
-                WriteEntry(writer, aiId, comboId, affixes, visual);
+                WriteEntry(writer, aiId, comboId, affixes, visual, reflecting);
                 return Finish(stream, writer);
             }
         }
@@ -222,22 +274,39 @@ namespace EliteEnemies.Coop
             }
         }
 
-        /// <summary>全量快照。四个列表必须等长。</summary>
+        /// <summary>全量快照。**五个列表必须等长**（取最短的那个，见下）。</summary>
         public static byte[] EncodeBatch(IReadOnlyList<int> ids, IReadOnlyList<string> comboIds,
                                          IReadOnlyList<List<string>> affixes,
-                                         IReadOnlyList<EliteVisualState> visuals)
+                                         IReadOnlyList<EliteVisualState> visuals,
+                                         IReadOnlyList<bool> reflects)
         {
             int count = Math.Min(ids?.Count ?? 0,
                         Math.Min(comboIds?.Count ?? 0,
-                        Math.Min(affixes?.Count ?? 0, visuals?.Count ?? 0)));
+                        Math.Min(affixes?.Count ?? 0,
+                        Math.Min(visuals?.Count ?? 0, reflects?.Count ?? 0))));
 
             using (var stream = new MemoryStream(256))
             using (var writer = NewWriter(stream, Kind.Batch))
             {
                 writer.Write(count);
                 for (int i = 0; i < count; i++)
-                    WriteEntry(writer, ids[i], comboIds[i], affixes[i], visuals[i]);
+                    WriteEntry(writer, ids[i], comboIds[i], affixes[i], visuals[i], reflects[i]);
 
+                return Finish(stream, writer);
+            }
+        }
+
+        /// <summary>
+        /// 精英反射状态的**变化**：<c>[aiId][是否在反射]</c>。理由见
+        /// <see cref="ProtocolVersion"/> 的 v9 说明——那是<b>玩法状态</b>，不是外观。
+        /// </summary>
+        public static byte[] EncodeEliteReflect(int aiId, bool reflecting)
+        {
+            using (var stream = new MemoryStream(16))
+            using (var writer = NewWriter(stream, Kind.EliteReflect))
+            {
+                writer.Write(aiId);
+                writer.Write(reflecting);
                 return Finish(stream, writer);
             }
         }
@@ -344,7 +413,8 @@ namespace EliteEnemies.Coop
         }
 
         private static void WriteEntry(BinaryWriter writer, int aiId, string comboId,
-                                       IReadOnlyList<string> affixes, EliteVisualState visual)
+                                       IReadOnlyList<string> affixes, EliteVisualState visual,
+                                       bool reflecting)
         {
             writer.Write(aiId);
             writer.Write(comboId ?? string.Empty);
@@ -355,13 +425,21 @@ namespace EliteEnemies.Coop
                 writer.Write(affixes[i] ?? string.Empty);
 
             // v7：视觉状态搭在条目里。绝大多数精英没有（Has=false ⇒ 只多 1 字节）。
+            //
+            // ⚠ **这里不能再用 `if (!visual.Has) return;` 提前返回**——v9 的反射状态排在它后面，
+            // 提前返回会让那一个字节时有时无，**格式就随数据漂移了**，
+            // 接收方在后面还有条目的 Batch 里会读串位。改成 `if` 块。
             writer.Write(visual.Has);
-            if (!visual.Has) return;
+            if (visual.Has)
+            {
+                writer.Write(visual.Scale.x);
+                writer.Write(visual.Scale.y);
+                writer.Write(visual.Scale.z);
+                writer.Write(visual.Hidden);
+            }
 
-            writer.Write(visual.Scale.x);
-            writer.Write(visual.Scale.y);
-            writer.Write(visual.Scale.z);
-            writer.Write(visual.Hidden);
+            // v9：反射状态。**无条件写一个字节**（没有 Has，理由见 ProtocolVersion 的 v9 说明）。
+            writer.Write(reflecting);
         }
 
         private static byte[] Finish(MemoryStream stream, BinaryWriter writer)
@@ -413,11 +491,13 @@ namespace EliteEnemies.Coop
                     {
                         case Kind.Affix:
                             if (!ReadEntry(reader, out int aiId, out string comboId,
-                                           out var affixes, out var visual, out failure)) return false;
+                                           out var affixes, out var visual, out bool reflecting,
+                                           out failure)) return false;
                             result.AiId = aiId;
                             result.ComboId = comboId;
                             result.Affixes = affixes;
                             result.Visual = visual;
+                            result.Reflecting = reflecting;
                             break;
 
                         case Kind.Query:
@@ -469,12 +549,18 @@ namespace EliteEnemies.Coop
                             {
                                 if (!ReadEntry(reader, out int batchId, out string batchCombo,
                                                out var batchAffixes, out var batchVisual,
-                                               out failure)) return false;
+                                               out bool batchReflecting, out failure)) return false;
                                 result.BatchIds.Add(batchId);
                                 result.BatchComboIds.Add(batchCombo);
                                 result.BatchAffixes.Add(batchAffixes);
                                 result.BatchVisuals.Add(batchVisual);
+                                result.BatchReflects.Add(batchReflecting);
                             }
+                            break;
+
+                        case Kind.EliteReflect:
+                            result.AiId = reader.ReadInt32();
+                            result.Reflecting = reader.ReadBoolean();
                             break;
 
                         default:
@@ -495,12 +581,13 @@ namespace EliteEnemies.Coop
 
         private static bool ReadEntry(BinaryReader reader, out int aiId, out string comboId,
                                       out List<string> affixes, out EliteVisualState visual,
-                                      out string failure)
+                                      out bool reflecting, out string failure)
         {
             aiId = 0;
             comboId = null;
             affixes = null;
             visual = default(EliteVisualState);
+            reflecting = false;
             failure = null;
 
             aiId = reader.ReadInt32();
@@ -532,6 +619,10 @@ namespace EliteEnemies.Coop
                     Hidden = reader.ReadBoolean()
                 };
             }
+
+            // v9：反射状态。**必须与 WriteEntry 对称地无条件读**——
+            // 写成"看 Has 决定读不读"会与写入侧错位，而错位是静默的（读串位、不抛异常）。
+            reflecting = reader.ReadBoolean();
 
             return true;
         }
