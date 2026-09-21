@@ -181,6 +181,15 @@ namespace EliteEnemies.Coop
         /// <summary>主机上报过视觉状态的次数（含首次搭在词条报文上的那条）。摘要里报出来。</summary>
         private static int s_hostVisualSent;
 
+        /// <summary>
+        /// 因为**状态和上次一样**而被挡下的上报次数（见 <c>OnHostEliteVisual</c> 里那道门）。
+        ///
+        /// <para>摘要里专门报出来：它是"有没有人在每帧空转上报"的**唯一可见证据**——
+        /// 挡下的那批本来就一条日志都不会打。这个数很大就说明又有人写出了
+        /// 每帧调 `RelayEliteVisual` 的形状，该去源头拆开而不是靠这道门兜着。</para>
+        /// </summary>
+        private static int s_hostVisualSkipped;
+
         /// <summary>其中**打了日志**的条数。逐条记录，但设上限——史莱姆会反复上报。</summary>
         private static int s_hostVisualLogged;
 
@@ -313,6 +322,7 @@ namespace EliteEnemies.Coop
             s_hostRegLogged = 0;
             s_zeroIdWarned = false;
             s_hostVisualSent = 0;
+            s_hostVisualSkipped = 0;
             s_hostVisualLogged = 0;
             s_clientReflectRecv = 0;
             s_hostReflectSent = 0;
@@ -578,7 +588,27 @@ namespace EliteEnemies.Coop
 
             // ⚠ **同时写回条目**：全量快照（`AnswerQuery`）发的是表里的值，
             // 只广播不更新表的话，迟到的客机补到的就是**过期的体型**。
-            if (s_hostKnown.TryGetValue(aiId, out var info)) info.Visual = state;
+            if (s_hostKnown.TryGetValue(aiId, out var info))
+            {
+                // ★ **状态没变就不发。**
+                //
+                // 这道门是为了堵住一类"调用方每帧都来报一次"的浪费——它真的发生过：
+                // `InvisibilityBehavior.OnUpdate` 曾在非闪烁期**每帧**调 `RelayEliteVisual`
+                // （触发后约 60 条/秒/只），而 `Hide()`/`Show()` 是边沿触发的，
+                // 那种重复调用里**唯一有副作用的只有这次网络广播**。
+                // 那一处已在源头拆开（见 `InvisibilityBehavior` 的注释），
+                // 这里是**第二道防线**：不论将来谁写出同样的调用形状，都不会变成广播洪水。
+                //
+                // ⚠ 用 `Vector3` 的 `==`（Unity 的近似比较，带极小 epsilon）——
+                // 对"同一个值被反复上报"这个判据正是想要的语义。
+                if (info.Visual.Has && info.Visual.Scale == scale && info.Visual.Hidden == hidden)
+                {
+                    s_hostVisualSkipped++;
+                    return true;
+                }
+
+                info.Visual = state;
+            }
 
             CoopApi.Broadcast(CoopWire.EncodeEliteVisual(aiId, scale, hidden));
             s_hostVisualSent++;
@@ -1194,7 +1224,7 @@ namespace EliteEnemies.Coop
                          $"反射中的精英={s_clientReflecting.Count}（收到变更 {s_clientReflectRecv}） " +
                          $"复制体出现时无词条={s_replicaNoAffixYet} " +
                          $"客户端自行掷出精英={s_localEliteDivergence} " +
-                         $"主机上报视觉={s_hostVisualSent} " +
+                         $"主机上报视觉={s_hostVisualSent}（挡下重复 {s_hostVisualSkipped}） " +
                          $"主机上报反射={s_hostReflectSent} " +
                          $"主机修正血量加成={s_hostHealthFixed}");
         }

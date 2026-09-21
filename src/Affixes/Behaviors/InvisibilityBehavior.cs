@@ -163,14 +163,26 @@ namespace EliteEnemies.Affixes.Behaviors
                 ShowRandomMessage(character);
             }
             
-            if (_isVisible)
-            {
-                SetHidden(character, false);
-            }
-            else
-            {
-                SetHidden(character, true);
-            }
+            // ⚠⚠ **这里只做本地压制，绝不能调 `SetHidden`。**
+            //
+            // 这段原先调的是 `SetHidden`——而它是 `RelayEliteVisual` 的唯一出口，
+            // 于是非闪烁期的**每一帧**都往联机广播一条 `EliteVisual`：
+            // 触发后是每约 5 秒一轮的循环，期间约 **60 条/秒/只**，
+            // 每条 20+ 字节、每次还分配一个 `byte[]`。
+            // 日志有上限（`CoopEliteSync.MaxHostVisualLogged`）所以从日志上完全看不出来，
+            // 只有摘要里的 `主机上报视觉=` 会一路涨。
+            //
+            // **为什么这段本来就没必要转交**：`_isVisible` 在非闪烁期**根本不变化**
+            // （它只在首次受击与闪烁分支里被写），真正的翻转早已由那些分支转发过了。
+            // 而 `Hide()`/`Show()` 是**边沿触发**的（`if (!hidden)` 早退，
+            // `CharacterMainControl.cs:2545`）⇒ 每帧重复调用**只是空转**，
+            // 唯一有副作用的恰恰就是那次多余的网络广播。
+            //
+            // **但也不能整段删掉**：它承担"持续压制"——模型可能被别的系统重新启用
+            // （与 `MimicBehavior` 同一理由）。所以拆成两件事：
+            // 本地该压的照压，过网交给真正的状态翻转。
+            if (_isVisible) character.Show();
+            else character.Hide();
         }
 
         private void ShowRandomMessage(CharacterMainControl character)
