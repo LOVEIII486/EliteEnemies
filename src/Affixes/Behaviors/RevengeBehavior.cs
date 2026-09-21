@@ -177,7 +177,20 @@ namespace EliteEnemies.Affixes.Behaviors
         /// （<c>:360-362</c>）。而 <c>DamageInfo</c> 是子弹**命中时游戏自己 new 的**
         /// （<c>Projectile.cs:397</c> 直击 / <c>:199</c> 爆炸），
         /// <c>ProjectileContext</c> 里**没有**对应字段 ⇒ 在我们造 context 的位置
-        /// **没有任何开关可拨**（<c>ignoreDifficulty</c> 全库也无人置真，是个死开关）。</para>
+        /// **够不到那份 DamageInfo**。</para>
+        ///
+        /// <para>⚠️ <b>别把这条理解成"开关是坏的"</b>（这里原先就是这么写的，害人）：
+        /// <c>ignoreDifficulty</c> 的写入点是**一个都没有** ✓，但那指的是
+        /// <b>游戏自己从不拨它</b>（所以原版伤害一律吃倍率），**不是"拨了没用"</b>。
+        /// <c>:360</c> 那一行是**活的**：谁在这份 <c>DamageInfo</c> 上写 <c>true</c>，这一击就跳过倍率。
+        /// 判据是**那份 DamageInfo 由谁 new**：</para>
+        ///
+        /// <list type="bullet">
+        /// <item><b>我们自己 new 的</b>（例如自爆的爆炸）⇒ <b>直接设 <c>ignoreDifficulty = true</c> 即可</b>，
+        /// 不需要反向除法；</item>
+        /// <item><b>游戏在命中时自己 new 的</b>（弹道，就是本词条这种情况）⇒ 我们手上只有
+        /// <c>ProjectileContext</c>，它没有这个字段 ⇒ <b>只能反向除</b>。</item>
+        /// </list>
         ///
         /// <para>所以只能反过来：发射前先除掉它。玩家默认血量只有 <b>44</b>，
         /// 而高难度下这一发是 10×2 + 12×2 = <b>44</b> —— 正好秒杀。
