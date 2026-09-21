@@ -16,7 +16,7 @@
       info.ini 的 version 由构建期从 workshop\info.ini.template 的 @VERSION@ 生成，
       发版时只改这一行，然后 dotnet build 即可。
     -->
-    <Version>2.3.1</Version>
+    <Version>2.3.2</Version>
 
     <Product>Elite Enemies</Product>
     <Company>LOVEIII486</Company>

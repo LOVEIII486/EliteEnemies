@@ -14,7 +14,7 @@ Temporary feedback group: 1030349064 (bug reports only).
 ⚠️ **Requirement: both host and client must install this mod, with the same version**.  
 **Known limitations in co-op**:
 
-* Glow effects (shield flashes, the red pulse before self-destruct, the revenge glow) are currently host-only
+* The **Guardian**'s shield glow is currently host-only (**the Reflect shield, and the Self-Destruct / Revenge warnings, now work in co-op**)
 * The **Phantom**'s hallucination audio and the **Musician**'s kazoo only play on the host
 * The **Time Stop** affix never appears in co-op
 * **Mimic** only disguises as a ground item in co-op
