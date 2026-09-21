@@ -14,7 +14,7 @@ Temporary feedback group: 1030349064 (bug reports only).
 ⚠️ **Requirement: both host and client must install this mod, with the same version**.  
 **Known limitations in co-op**:
 
-* The **Musician**'s kazoo only plays on the host (the co-op mod itself has this sync sealed off — not something this mod can fix)
+* The **Musician**'s kazoo only plays on the host
 * The **Time Stop** affix never appears in co-op
 * **Mimic** only disguises as a ground item in co-op
 
