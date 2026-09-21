@@ -791,7 +791,7 @@ namespace EliteEnemies.Coop
                 var existing = cmc.GetComponent<EliteMarker>();
                 if (existing != null && MarkerMatches(existing, info)) return;   // 已经是这个内容了
 
-                ApplyEliteMarker(cmc, info);
+                ApplyEliteMarker(aiId, cmc, info);
                 s_applied++;
                 CoopLog.Info($"[客户端] 已应用精英标记 aiId={aiId} " +
                              $"combo={info.ComboId ?? "-"} 词条=[{string.Join(",", info.Affixes)}]");
@@ -823,7 +823,7 @@ namespace EliteEnemies.Coop
         /// <para><see cref="EliteMarker.BaseName"/> 由本机现算（<c>ResolveBaseName</c> 只依赖
         /// 本地预设与本地化），**不需要过网**——传渲染好的字符串会把语言焊死。</para>
         /// </summary>
-        private static void ApplyEliteMarker(CharacterMainControl cmc, EliteInfo info)
+        private static void ApplyEliteMarker(int aiId, CharacterMainControl cmc, EliteInfo info)
         {
             var marker = cmc.GetComponent<EliteMarker>();
             if (marker == null) marker = cmc.gameObject.AddComponent<EliteMarker>();
@@ -852,6 +852,12 @@ namespace EliteEnemies.Coop
             // （自爆那条尤其要紧：**零提示就被炸**）。它们都能由客机本地从词条名推出来，
             // 所以不需要任何新报文。挂载幂等（会重复调），且组件跟着复制体的生命周期走。
             CoopEliteWarningVisual.EnsureOn(cmc);
+
+            // 反射状态**按 aiId 存在 s_clientReflecting 里**（不是本地推导——
+            // 护盾必须与主机的 3 秒窗口对齐，理由见 CoopEliteWarningVisual 的类注释），
+            // 所以组件刚建出来时要把当前值补上。**这一步不能省**：
+            // 复制体重建时若正好在反射中，光靠"变化时才推"是补不回来的。
+            CoopEliteWarningVisual.SetReflecting(cmc, s_clientReflecting.Contains(aiId));
         }
 
         private static EliteComboDefinition FindCombo(string comboId)
@@ -920,6 +926,11 @@ namespace EliteEnemies.Coop
 
             s_clientReflectRecv++;
             CoopLog.Info($"[客户端] 反射状态 aiId={aiId} 反射={reflecting}（{via}）");
+
+            // 顺手把护盾画出来。复制体还没到（或组件还没挂）时什么都不做——
+            // 那种情形由 `ApplyEliteMarker` 在挂组件之后补一次当前值，漏不掉。
+            if (s_clientReplicas.TryGetValue(aiId, out var cmc) && cmc)
+                CoopEliteWarningVisual.SetReflecting(cmc, reflecting);
         }
 
         /// <summary>客户端：主机报来一条反射状态的**变化**（<c>Kind.EliteReflect</c>）。</summary>

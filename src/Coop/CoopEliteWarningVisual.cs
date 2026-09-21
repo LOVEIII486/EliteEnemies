@@ -15,10 +15,20 @@ namespace EliteEnemies.Coop
     /// <list type="bullet">
     /// <item>【自爆】<c>SelfDestructBehavior</c> 那条持续红色脉冲没有 ⇒
     /// <b>客机玩家零提示就被炸</b>，这是公平性问题，不只是观感；</item>
-    /// <item>【报复】<c>RevengeBehavior</c> 的青色闪烁没有 ⇒ 看不到"它要还手了"。</item>
+    /// <item>【报复】<c>RevengeBehavior</c> 的青色闪烁没有 ⇒ 看不到"它要还手了"；</item>
+    /// <item>【反弹】<c>ReflectBehavior</c> 的金色护盾没有 ⇒
+    /// <b>看不到"这会儿打它会被弹回来"</b>（见下面那条 ⚠）。</item>
     /// </list>
     ///
-    /// <para><b>为什么不需要新报文</b>：这两条客机**本地就能推出来**，所以
+    /// <para>⚠ <b>【反弹】与前两条的驱动方式根本不同，别照着改</b>：
+    /// 自爆/报复是**纯表现**，客机本地就能推出来、推错也无所谓；
+    /// 而护盾背后是**玩法状态**——它必须与主机那个 <c>3s</c> 反射窗口**逐帧对齐**，
+    /// 否则"看到护盾时打过去没被弹"或反过来会直接误导玩家。
+    /// 所以它<b>不走本地推导，而是由主机广播的权威状态驱动</b>
+    /// （<c>CoopEliteSync</c> 的 <c>s_clientReflecting</c>，协议 v9 起随精英条目过网）。
+    /// 本组件在这里只是"把那份状态画出来"。</para>
+    ///
+    /// <para><b>为什么自爆/报复不需要新报文</b>：这两条客机**本地就能推出来**，所以
     /// 不动 <c>CoopWire</c>、不升 <c>ProtocolVersion</c>：
     /// <list type="bullet">
     /// <item>自爆 —— <see cref="EliteMarker.Affixes"/> 里有没有 <c>"Explosive"</c>（纯本地派生，标记本来就同步了）；</item>
@@ -83,6 +93,16 @@ namespace EliteEnemies.Coop
         /// </summary>
         private const float GlowWriteInterval = 0.05f;
 
+        // ===== 【反弹】金色护盾的参数 =====
+        //
+        // ⚠ **必须与 ReflectBehavior.OnEliteInitialized 里 new SimpleShieldEffect 的实参逐字相同**
+        // （那是主机侧的权威表现，写在行为类的构造调用里、不是命名常量）：
+        //      ReflectBehavior.cs:33-37  new SimpleShieldEffect(character.transform,
+        //                                                      new Color(1f, 0.84f, 0f, 0.35f), 1.3f)
+        //    **改一处必须同时改另一处**，否则客机看到的护盾与主机不是同一个颜色/大小。
+        private static readonly Color ReflectShieldColor = new Color(1f, 0.84f, 0f, 0.35f);
+        private const float ReflectShieldSize = 1.3f;
+
         private CharacterMainControl _character;
         private Health _health;
         private UnityAction<DamageInfo> _hurtHandler;
@@ -111,6 +131,27 @@ namespace EliteEnemies.Coop
 
         /// <summary>是否带自爆词条（每帧要读，所以缓存下来）。</summary>
         private bool _explosive;
+
+        /// <summary>
+        /// 【反弹】金色护盾。**懒创建**——与 <see cref="_pulseGlow"/> 同理：
+        /// <see cref="SimpleShieldEffect"/> 要 <c>CreatePrimitive</c> 造一个胶囊体、
+        /// <c>Shader.Find</c> 造一份运行时材质，不该给每只复制体都付这份成本
+        /// （绝大多数精英不反弹）。
+        ///
+        /// <para>⚠ 它的那份材质**不归 GameObject 所有**（<c>new Material(shader)</c> 造的），
+        /// <c>Destroy</c> 那个胶囊体不会连带销毁它 ⇒ 必须在 <see cref="OnDestroy"/> 里
+        /// 显式 <c>_shield.Destroy()</c>，否则每次重建复制体都漏一份
+        /// （<see cref="SimpleShieldEffect.Destroy"/> 的注释写了这件事）。</para>
+        /// </summary>
+        private SimpleShieldEffect _shield;
+
+        /// <summary>
+        /// 本机当前**显示出来**的反射状态。用来让 <see cref="ApplyReflect"/> 幂等——
+        /// <c>CoopEliteSync</c> 会在"状态变化"与"复制体重建"两处都调它，
+        /// 不记住上次的值就会重复 <c>Show()</c>/<c>Hide()</c>（无害但没必要），
+        /// 更糟的是**重建后会以为当前是 false 而漏掉 Show**。
+        /// </summary>
+        private bool _reflecting;
 
         /// <summary>报复闪烁的剩余时间；<c>&lt;= 0</c> 表示当前没有闪烁在进行。</summary>
         private float _flashRemaining;
@@ -149,6 +190,68 @@ namespace EliteEnemies.Coop
                 // 但**必须出声**——静默 continue 正是本工程一路在清的东西。
                 CoopLog.Warn($"[客机预警] 挂载失败（该复制体不会有报复/自爆的视觉预警）: {ex}");
             }
+        }
+
+        /// <summary>
+        /// 把主机的**反射状态**套到这只复制体上。
+        /// 由 <c>CoopEliteSync</c> 在"状态变了"与"复制体重建了"两处调用。
+        ///
+        /// <para>与 <see cref="EnsureOn"/> 的分工：那个管"组件在不在"，
+        /// 这个管"当前该不该显示护盾"。**状态存在 <c>CoopEliteSync</c> 那边**
+        /// （它是主机广播来的权威状态、不是本地推导，理由见类注释），本组件只负责画出来。</para>
+        ///
+        /// <para>组件还没挂上时**什么都不做**——那是正常时序：
+        /// <c>CoopEliteSync</c> 在 <c>ApplyEliteMarker</c> 里 <c>EnsureOn</c> 之后
+        /// 会立刻补一次当前值，所以漏不掉。</para>
+        /// </summary>
+        public static void SetReflecting(CharacterMainControl cmc, bool reflecting)
+        {
+            if (cmc == null) return;
+
+            try
+            {
+                var visual = cmc.GetComponent<CoopEliteWarningVisual>();
+                if (visual == null) return;
+
+                visual.ApplyReflect(reflecting);
+            }
+            catch (Exception ex)
+            {
+                // 护盾画不出来不该打断调用方那条链（它后面还有别的客户端逻辑）。
+                // 但**必须出声**——静默 continue 正是本工程一路在清的东西。
+                CoopLog.Warn($"[客机预警] 套用反射状态失败（该复制体不会显示护盾）: {ex}");
+            }
+        }
+
+        /// <summary>把反射状态画出来（幂等，可重复调用）。</summary>
+        private void ApplyReflect(bool reflecting)
+        {
+            if (_reflecting == reflecting) return;
+            _reflecting = reflecting;
+
+            if (!reflecting)
+            {
+                _shield?.Hide();
+                return;
+            }
+
+            if (_character == null)
+            {
+                // 理论上到不了（Bind 赋过值），但**不能靠"理论上"**：
+                // 下面要拿它的 transform 当父节点，空引用会直接抛进调用链。
+                // 回滚标志，让下次调用还能重试。
+                CoopLog.Warn("[客机预警] 反射状态已到，但复制体引用为空，本次不显示护盾");
+                _reflecting = false;
+                return;
+            }
+
+            if (_shield == null)
+            {
+                _shield = new SimpleShieldEffect(_character.transform, ReflectShieldColor,
+                                                 ReflectShieldSize);
+            }
+
+            _shield.Show();
         }
 
         /// <summary>把当前复制体的状态重新读一遍。可重复调用。</summary>
@@ -268,6 +371,10 @@ namespace EliteEnemies.Coop
 
             if (_flashRemaining > 0f && _flashGlow != null) UpdateFlash(deltaTime);
             if (_explosive) UpdateExplosivePulse();
+
+            // 护盾要每帧喂，但**没建过就不进**（`SimpleShieldEffect.Update` 自己在
+            // 隐藏时也会早退，所以真正显示期间的成本只是淡入淡出那几步）。
+            if (_shield != null) _shield.Update(deltaTime);
         }
 
         /// <summary>驱动报复的闪烁。衰减由 <c>EliteGlowController</c> 自己算，这里只喂时间与收尾。</summary>
@@ -311,7 +418,7 @@ namespace EliteEnemies.Coop
         }
 
         /// <summary>
-        /// 退订 + 清掉可能还亮着的发光。
+        /// 退订 + 清掉可能还亮着的发光 + 销毁护盾（那份运行时材质）。
         ///
         /// <para>⚠ <b>必须退订</b>：订阅的是**复制体自己**的 <c>Health</c>（不是静态事件），
         /// 但复制体被销毁时 <c>Health</c> 可能比本组件活得久一瞬，留着就是一个指向已销毁对象的委托。</para>
@@ -331,6 +438,19 @@ namespace EliteEnemies.Coop
             catch (Exception ex)
             {
                 CoopLog.Warn($"[客机预警] 收尾清光效失败（复制体正在销毁）: {ex.Message}");
+            }
+
+            // ⚠ **必须单独兜一层**：这一步要销毁一份**运行时材质**（`new Material(shader)` 造的，
+            // 不归那个胶囊体所有）。混在上面那个 try 里的话，上面一抛异常这里就永远不执行
+            // ⇒ 每次复制体重建都漏一份材质，而且是无声的。
+            try
+            {
+                _shield?.Destroy();
+                _shield = null;
+            }
+            catch (Exception ex)
+            {
+                CoopLog.Warn($"[客机预警] 销毁护盾失败（可能漏一份运行时材质）: {ex.Message}");
             }
         }
     }
