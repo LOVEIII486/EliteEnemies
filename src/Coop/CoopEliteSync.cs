@@ -1346,6 +1346,15 @@ namespace EliteEnemies.Coop
                 key,
                 string.IsNullOrEmpty(message.ComboId) ? null : message.ComboId,
                 message.TextArg));
+
+            // 【守护】的护盾发光搭这条浮字的车：主机那边闪光与这条 IMMUNE 是**同一个条件**
+            // 发的（`GuardianBehavior.OnDamaged`），而浮字本来就过网 ⇒ 不必新增报文与协议字段。
+            //
+            // ⚠ 认的是**键**、不是"浮字内容像不像"，而且那个键是 `GuardianBehavior` 上的
+            // 常量（改名会编译报错，不会静默失效）。理由与取舍见 `CoopEliteWarningVisual
+            // .TriggerGuardianFlash` 的注释（尤其是"为什么不在客机本地按受伤事件推导"）。
+            if (string.Equals(key, GuardianBehavior.ImmunePopKey, StringComparison.Ordinal))
+                CoopEliteWarningVisual.TriggerGuardianFlash(cmc);
         }
 
         // ==================== 收包 ====================

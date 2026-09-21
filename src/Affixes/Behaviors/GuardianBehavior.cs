@@ -32,8 +32,24 @@ namespace EliteEnemies.Affixes.Behaviors
         private float _separationTimer = 0f;
         
         private EliteGlowController _glowController;
-        private readonly Color _shieldColor = new Color(1.0f, 0.6f, 0.0f);
-        private const float FlashDuration = 0.25f;
+        // ===== 下面三样**同时是客机侧那份预警的实参**，所以是 internal =====
+        //
+        // 客机在收到下面那个 IMMUNE 浮字时会**放同一下闪光**（见 CoopEliteWarningVisual）。
+        // 与【反弹】护盾那条同一纪律：**改这里必须改那边**——但那边是**引用这三个常量**
+        // 而不是抄一份字面量，所以改名/改值都会编译报错，不会静默漂移。
+
+        /// <summary>护盾被打中时闪的颜色。</summary>
+        internal static readonly Color ShieldFlashColor = new Color(1.0f, 0.6f, 0.0f);
+
+        /// <summary>闪光持续时长（秒）。</summary>
+        internal const float ShieldFlashDuration = 0.25f;
+
+        /// <summary>
+        /// "你打不动它"那条浮字的本地化键。
+        /// <b>联机侧靠它认这条消息</b>（浮字要过网、闪光不必另开报文），
+        /// 所以它不再是一个内联字面量。
+        /// </summary>
+        internal const string ImmunePopKey = "EliteEnemies_Affix_Guardian_ImmunePop";
         
         private float _lastPopTime = -999f;
         private const float PopCooldown = 0.5f;
@@ -192,7 +208,7 @@ namespace EliteEnemies.Affixes.Behaviors
         {
             if (character != _self || !_isInvincible || _isForceBroken) return;
             
-            _glowController?.TriggerFlash(_shieldColor, FlashDuration, 2.0f);
+            _glowController?.TriggerFlash(ShieldFlashColor, ShieldFlashDuration, 2.0f);
             
             _currentHitCount++;
 
@@ -205,7 +221,7 @@ namespace EliteEnemies.Affixes.Behaviors
 
             if (Time.time - _lastPopTime >= PopCooldown)
             {
-                PlayerEffectRelay.PopTextOnElite(character, "EliteEnemies_Affix_Guardian_ImmunePop", "IMMUNE");
+                PlayerEffectRelay.PopTextOnElite(character, ImmunePopKey, "IMMUNE");
                 _lastPopTime = Time.time;
             }
         }

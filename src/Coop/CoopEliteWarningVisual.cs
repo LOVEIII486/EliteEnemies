@@ -1,4 +1,5 @@
 using System;
+using EliteEnemies.Affixes.Behaviors;
 using EliteEnemies.Core;
 using EliteEnemies.Visuals;
 using UnityEngine;
@@ -18,15 +19,24 @@ namespace EliteEnemies.Coop
     /// <item>【报复】<c>RevengeBehavior</c> 的青色闪烁没有 ⇒ 看不到"它要还手了"；</item>
     /// <item>【反弹】<c>ReflectBehavior</c> 的金色护盾没有 ⇒
     /// <b>看不到"这会儿打它会被弹回来"</b>（见下面那条 ⚠）。</item>
+    /// <item>【守护】<c>GuardianBehavior</c> 护盾被打中时的那一下橙色闪光没有 ⇒
+    /// 少一层"打不动"的视觉反馈（信息本身没丢，见下）。</item>
     /// </list>
     ///
-    /// <para>⚠ <b>【反弹】与前两条的驱动方式根本不同，别照着改</b>：
-    /// 自爆/报复是**纯表现**，客机本地就能推出来、推错也无所谓；
-    /// 而护盾背后是**玩法状态**——它必须与主机那个 <c>3s</c> 反射窗口**逐帧对齐**，
-    /// 否则"看到护盾时打过去没被弹"或反过来会直接误导玩家。
-    /// 所以它<b>不走本地推导，而是由主机广播的权威状态驱动</b>
-    /// （<c>CoopEliteSync</c> 的 <c>s_clientReflecting</c>，协议 v9 起随精英条目过网）。
-    /// 本组件在这里只是"把那份状态画出来"。</para>
+    /// <para>⚠ <b>四条各有各的驱动方式，别照着改</b>（这是本组件最容易被改错的地方）：
+    /// <list type="number">
+    /// <item><b>自爆 / 报复</b> —— 客机**本地派生**。纯表现，推错也无所谓。</item>
+    /// <item><b>反弹</b> —— <b>主机权威状态</b>。护盾背后是玩法状态，必须与主机那个
+    /// <c>3s</c> 反射窗口**逐帧对齐**，否则"看到护盾时打过去没被弹"会直接误导玩家；
+    /// 所以它不走本地推导（<c>CoopEliteSync</c> 的 <c>s_clientReflecting</c>，
+    /// 协议 v9 起随精英条目过网），本组件只负责画。</item>
+    /// <item><b>守护</b> —— <b>搭一条已经在过网的报文</b>。主机那边闪光与
+    /// "你打不动它"那条 IMMUNE 浮字是同一个条件发的（<c>GuardianBehavior.OnDamaged</c>），
+    /// 而浮字本来就过网 ⇒ <c>CoopEliteSync</c> 渲染那条浮字时调
+    /// <see cref="TriggerGuardianFlash"/> 即可，协议不动、报文不加。
+    /// ⚠ <b>不要改成"按受伤事件本地推导"</b>：客机拿不到 <c>_isInvincible</c>，
+    /// 那样写会在护盾已经破掉时**照样闪**——"看着像无敌、其实不是"，比"闪得少几下"糟得多。</item>
+    /// </list></para>
     ///
     /// <para><b>为什么自爆/报复不需要新报文</b>：这两条客机**本地就能推出来**，所以
     /// 不动 <c>CoopWire</c>、不升 <c>ProtocolVersion</c>：
@@ -188,7 +198,7 @@ namespace EliteEnemies.Coop
             {
                 // 预警挂不上不该拦住"应用精英标记"这条链（调用点后面还有别的客户端逻辑）。
                 // 但**必须出声**——静默 continue 正是本工程一路在清的东西。
-                CoopLog.Warn($"[客机预警] 挂载失败（该复制体不会有报复/自爆的视觉预警）: {ex}");
+                CoopLog.Warn($"[客机预警] 挂载失败（该复制体不会有报复/自爆/守护的视觉预警）: {ex}");
             }
         }
 
@@ -221,6 +231,59 @@ namespace EliteEnemies.Coop
                 // 但**必须出声**——静默 continue 正是本工程一路在清的东西。
                 CoopLog.Warn($"[客机预警] 套用反射状态失败（该复制体不会显示护盾）: {ex}");
             }
+        }
+
+        /// <summary>
+        /// 客机侧：【守护】的护盾被打中时，放一下与主机**逐字相同**的橙色闪光。
+        ///
+        /// <para><b>为什么不需要新报文</b>：主机那边"闪光"与"你打不动它"那条 IMMUNE 浮字
+        /// 是**同一个条件、同一个方法**里发的（<c>GuardianBehavior.OnDamaged</c>），
+        /// 而浮字**本来就过网**（走 <c>AiPopText</c>）⇒ 客机渲染那条浮字时顺手放同一下闪光即可，
+        /// 协议不动、报文不加、每帧零开销。</para>
+        ///
+        /// <para>⚠ <b>代价：节奏跟着浮字走。</b>主机是**每一下**都闪，
+        /// 而浮字有 <c>0.5</c> 秒冷却（<c>GuardianBehavior.PopCooldown</c>）
+        /// ⇒ 客机最多每 0.5 秒闪一次。这是刻意的取舍：
+        /// 客机拿不到 <c>_isInvincible</c>（主机状态），若改成"本地按受伤事件推导"
+        /// 就会在护盾已经破掉时**照样闪**——那是"看着像无敌、其实不是"，
+        /// 比"闪得少几下"糟得多。"打不动"这条信息由浮字承担，本来就没错。</para>
+        /// </summary>
+        public static void TriggerGuardianFlash(CharacterMainControl cmc)
+        {
+            if (cmc == null) return;
+
+            try
+            {
+                var visual = cmc.GetComponent<CoopEliteWarningVisual>();
+                if (visual == null) return;
+
+                visual.FlashGuardian();
+            }
+            catch (Exception ex)
+            {
+                // 同 SetReflecting：这里跑在"收报文"那条链上，抛出去会连累后面的处理。
+                CoopLog.Warn($"[客机预警] 触发守护闪光失败（本次不出闪光）: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// 放一下守护的闪光。**复用报复那套闪烁机制**（<see cref="_flashGlow"/> + 剩余时间）。
+        ///
+        /// <para>⚠ 这里**刻意不为守护另建一份 <see cref="EliteGlowController"/>**，
+        /// 与自爆/报复那两条"各用一份"的处理不同——判据是**效果之间会不会互相掐死**：
+        /// 自爆的脉冲是<b>每 0.05 秒写一次</b>的持续写入，合成一份会把闪烁掐掉（见
+        /// <see cref="_flashGlow"/> 的注释）；而守护与报复**两条都是短促的一次性闪光**
+        /// （0.25 / 0.5 秒），合成一份的后果只是"同一瞬间两条都想闪时谁后写谁赢"——
+        /// 那与主机侧今天的表现**一样**（主机那两个行为也是各写各的、最后写的赢），
+        /// 而省下的是每只守护精英一次 <c>GetComponentsInChildren&lt;Renderer&gt;</c> 全扫。</para>
+        /// </summary>
+        private void FlashGuardian()
+        {
+            if (_flashGlow == null || _character == null) return;
+
+            _flashGlow.TriggerFlash(GuardianBehavior.ShieldFlashColor,
+                                    GuardianBehavior.ShieldFlashDuration);
+            _flashRemaining = GuardianBehavior.ShieldFlashDuration;
         }
 
         /// <summary>把反射状态画出来（幂等，可重复调用）。</summary>
