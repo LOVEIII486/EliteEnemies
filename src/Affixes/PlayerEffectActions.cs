@@ -1,4 +1,5 @@
 using System.Collections;
+using Duckov.Buffs;
 using ECM2;
 using ItemStatsSystem;
 using UnityEngine;
@@ -181,6 +182,34 @@ namespace EliteEnemies.Affixes
             }
 
             return -1;
+        }
+
+        // ===== 撤销【混沌】施加的那批 debuff =====
+
+        /// <summary>
+        /// 把 <paramref name="debuffs"/> 里被 <paramref name="mask"/> 选中的那几个从玩家身上撤掉。
+        ///
+        /// <para><b>为什么是位掩码而不是 id 列表</b>：两端手上是**同一份数组**
+        /// （<c>ChaosOnHitBehavior.NegativeDebuffs</c>），所以"撤哪几个"只要几个 bit。
+        /// 而联机那条「玩家效果」报文**只带一个 <c>int</c> 参数**——正好装得下，
+        /// 于是不必新开报文体、**也不必升协议版本**（<c>effect</c> 字段本来就是 byte）。</para>
+        ///
+        /// <para>⚠ <b>代价：数组的顺序即协议里的位序。</b>重排那个数组会让客机撤错 buff，
+        /// 而且**不报错、不留日志**——所以那边的注释里写了"不许重排"。</para>
+        /// </summary>
+        public static void RemoveDebuffs(CharacterMainControl player, Buff[] debuffs, int mask)
+        {
+            if (player == null || debuffs == null || mask == 0) return;
+
+            for (int i = 0; i < debuffs.Length; i++)
+            {
+                if ((mask & (1 << i)) == 0) continue;
+
+                var prefab = debuffs[i];
+                if (prefab == null) continue;
+
+                player.RemoveBuff(prefab.ID, false);
+            }
         }
     }
 }

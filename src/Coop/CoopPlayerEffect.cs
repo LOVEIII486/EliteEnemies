@@ -230,6 +230,14 @@ namespace EliteEnemies.Coop
                     PlayerEffectActions.DropCurrentWeapon(player);
                     break;
 
+                case Kind.RemoveDebuffs:
+                    // 撤销【混沌】施加的那批原生 debuff。
+                    // ⚠ 用的是**主机侧同一个数组**（顺序即协议里的位序），
+                    //   所以两边撤的一定是同一批——别在这里另抄一份列表。
+                    PlayerEffectActions.RemoveDebuffs(player, ChaosOnHitBehavior.NegativeDebuffs,
+                                                      message.Ei);
+                    break;
+
                 case Kind.Steal:
                     ExecuteSteal(player, message.Ei);
                     break;

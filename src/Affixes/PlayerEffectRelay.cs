@@ -40,6 +40,22 @@ namespace EliteEnemies.Affixes
             /// <summary>回报：偷到了什么（见 <c>CoopPlayerEffect.OnEffectResult</c>）。</summary>
             StealResult = 7,
 
+            /// <summary>
+            /// 把【混沌】施加过的那批原生 debuff 从玩家身上撤掉。
+            /// <c>i</c> = **位掩码**（第 <c>n</c> 位对应 <c>ChaosOnHitBehavior.NegativeDebuffs[n]</c>）。
+            ///
+            /// <para><b>为什么需要转交</b>：精英临死要撤掉它给玩家挂的那些 debuff，
+            /// 而主机上操作的是**复制体**——撤复制体对真人没用，客机真人会一直背着
+            /// 那 6 个 debuff 跑到自然到期（掉血、掉状态），而主机玩家一死就清干净了。
+            /// 联机模组**没有 `RemoveBuff` 的任何通道**（全仓库 0 处命中），所以只能自己开。</para>
+            ///
+            /// <para>⚠ <b>这一条不需要升 <c>CoopWire.ProtocolVersion</c></b>：
+            /// 「玩家效果」报文的 <c>effect</c> 字段本来就是 <c>byte</c>，
+            /// 多一个枚举值**不改格式**。老版本收到它会在 `default` 分支报一条
+            /// "未知的效果种类"——是**响的**失败，不是静默。</para>
+            /// </summary>
+            RemoveDebuffs = 9,
+
             // ⚠ 这里曾有 `PopTextOnPlayer = 8`，**已删**：它从来没有被当作效果转交过
             //   （玩家弹字有自己的入口 `PlayerPopTextHandler` 与自己的报文，见 CoopWire v8）。
             //   留着会让人以为"弹字也是效果的一种"，从而照着它写第二条死通道。

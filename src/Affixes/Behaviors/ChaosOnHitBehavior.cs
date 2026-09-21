@@ -30,7 +30,13 @@ namespace EliteEnemies.Affixes.Behaviors
             LocalizationManager.GetText("EliteEnemies_Affix_Chaos_PopText_1");
 
         // 预定义的负面 Buff 列表
-        private static readonly Buff[] NegativeDebuffs =
+        //
+        // ⚠⚠ **顺序即联机协议里的位序，不许重排。**
+        //     联机下主机只发一个位掩码（「玩家效果」报文只带一个 int），
+        //     客机按这个数组的下标去撤——重排会让客机撤错 buff，
+        //     而且**不报错、不留日志**（见 PlayerEffectActions.RemoveDebuffs）。
+        //     `internal` 而不是 `private`：客机侧的执行体要用同一份。
+        internal static readonly Buff[] NegativeDebuffs =
         {
             GameplayDataSettings.Buffs.BleedSBuff, // Bleeding
             GameplayDataSettings.Buffs.Poison, // Poison
@@ -43,6 +49,9 @@ namespace EliteEnemies.Affixes.Behaviors
             // TryAdd(GameplayDataSettings.Buffs.Starve);            // Starve
             // TryAdd(GameplayDataSettings.Buffs.Thirsty);           // Thirsty
         };
+
+        /// <summary>上面那一整份的位掩码。**必须声明在数组之后**——静态字段按书写顺序初始化。</summary>
+        private static readonly int AllDebuffsMask = (1 << NegativeDebuffs.Length) - 1;
 
         public void OnAttack(CharacterMainControl attacker, DamageInfo dmg)
         {
@@ -84,13 +93,18 @@ namespace EliteEnemies.Affixes.Behaviors
             {
                 if (!player) continue;   // 可能已经销毁
 
-                foreach (var buffPrefab in NegativeDebuffs)
+                // ★ 联机下**必须转交**：主机上那个只是复制体，撤它对真人没用。
+                //   不转交的话客机真人会一直背着这几个 debuff 跑到自然到期（继续掉血/掉状态），
+                //   而主机玩家一死就清干净 ⇒ 同一只精英、同一个死法，两端体验不同。
+                //   联机模组**没有 RemoveBuff 的任何通道**（全仓库 0 处），所以走我们自己的
+                //   「玩家效果」口，只传一个位掩码（数组顺序即位序，见 NegativeDebuffs 的注释）。
+                if (PlayerEffectRelay.TryRelay(player, PlayerEffectRelay.Kind.RemoveDebuffs,
+                                               i: AllDebuffsMask))
                 {
-                    if (buffPrefab != null)
-                    {
-                        player.RemoveBuff(buffPrefab.ID, false);
-                    }
+                    continue;   // 已交给受害者那台机器执行
                 }
+
+                PlayerEffectActions.RemoveDebuffs(player, NegativeDebuffs, AllDebuffsMask);
             }
 
             _victims.Clear();
