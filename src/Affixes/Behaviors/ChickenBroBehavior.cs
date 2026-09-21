@@ -15,15 +15,20 @@ namespace EliteEnemies.Affixes.Behaviors
         
         // 原本是 nameKey "Cname_Chick"，现对应资源名为 "SpawnPreset_Animal_Jinitaimei"
         private static readonly string ChickenPresetName = "SpawnPreset_Animal_Jinitaimei";
-        
+
+        /// <summary>
+        /// 召唤体显示名的本地化键。**同一个键也要过网**（见 <see cref="EliteSummonRelay"/>）——
+        /// 传键不传译文：客机拿它在<b>自己那门语言</b>下重拼，主机客机语言不同也不会串。
+        /// </summary>
+        private const string ChickenNameKey = "EliteEnemies_Affix_ChickenBro_Summon_Name";
+
         private static readonly int ChickenCount = 2;
         private static readonly float SpawnRadius = 2f;
         private static readonly float ChickenHealthRatio = 0.8f;
         private static readonly float ChickenDamageRatio = 0.8f;
         private static readonly float ChickenSpeedRatio = 1.2f;
-        
-        private string ChickenCustomName =>
-            LocalizationManager.GetText("EliteEnemies_Affix_ChickenBro_Summon_Name");
+
+        private string ChickenCustomName => LocalizationManager.GetText(ChickenNameKey);
 
         private CharacterMainControl _boss;
         private List<CharacterMainControl> _chickens = new List<CharacterMainControl>();
@@ -98,7 +103,16 @@ namespace EliteEnemies.Affixes.Behaviors
                     customKeySuffix: "EE_Chick_NonElite",
                     customDisplayName: ChickenCustomName,
                     onSpawned: (chicken) => {
-                        if (chicken != null) _chickens.Add(chicken);
+                        if (chicken == null) return;
+
+                        _chickens.Add(chicken);
+
+                        // 把"名字怎么拼"交给联机模块（单机下那个钩子是 null ⇒ 什么都没发生）。
+                        // **前缀传 null**：小鸡的名字就是那个键的文本本身，不带召唤者的名字
+                        // ——与上面的 `customDisplayName: ChickenCustomName` 逐字一致。
+                        EliteSummonRelay.RelaySummonName(chicken, ChickenNameKey,
+                                                         ChickenPresetName,
+                                                         prefixPresetResourceName: null);
                     });
             }
         }

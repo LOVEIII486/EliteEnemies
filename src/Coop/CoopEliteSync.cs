@@ -146,6 +146,67 @@ namespace EliteEnemies.Coop
         /// <summary>主机上报过反射状态的次数。</summary>
         private static int s_hostReflectSent;
 
+        // ===== 召唤体显示名（v10） =====
+
+        /// <summary>
+        /// 「名字怎么拼」的三样。两端共用。<b>刻意没有"拼好的名字"</b>——
+        /// 客机要在自己那门语言下重拼（<c>AGENT.md §3.5</c>）。
+        /// </summary>
+        private struct SummonNameRecord
+        {
+            /// <summary>名字的本地化键（或"括号里那一截"的键）。</summary>
+            public string NameKey;
+
+            /// <summary>名字要挂在哪个基预设上（**资源名**）。客机按它本地找同一个预设。</summary>
+            public string BasePresetKey;
+
+            /// <summary>名字前面那一截取自哪个预设的 <c>DisplayName</c>（资源名）。空 = 不带头部。</summary>
+            public string PrefixPresetKey;
+        }
+
+        /// <summary>
+        /// 主机侧：<b>名字已报、但这只召唤体还没进同步库</b>（拿不到 aiId）的那批。
+        ///
+        /// <para>⚠ 理由同 <see cref="s_hostPendingVisual"/>：词条行为在<b>生成完的那一刻</b>
+        /// 就把名字报过来了，而主机侧的 <c>AiSpawned</c> 要等那只 AI 初始化完
+        /// <b>800ms</b> 才来。这里存到拿到 id 为止。</para>
+        ///
+        /// <para>与视觉/反射不同：名字是<b>一次性</b>的（不会变），所以广播出去就删。</para>
+        ///
+        /// <para>⚠ <b>键是角色对象，不是 <c>GetInstanceID()</c></b>——这里刻意不省那一份引用：
+        /// 召唤体若在拿到 aiId 之前就死了（被秒杀），条目会留下。按实例 ID 记的话，
+        /// 那个号会被回收<b>再分给别的对象</b>，于是一只毫不相干的 AI 可能命中这条记录、
+        /// 顶着一个别人的名字被广播出去——<b>不报错</b>。按对象记则不可能误命中
+        /// （新角色是另一个引用），代价只是"死掉的那条要等清理"。
+        /// 这与 <see cref="s_hostPendingVisual"/> 同一取舍。</para>
+        /// </summary>
+        private static readonly Dictionary<CharacterMainControl, SummonNameRecord> s_hostPendingSummonNames =
+            new Dictionary<CharacterMainControl, SummonNameRecord>();
+
+        /// <summary>
+        /// 客机侧：每个召唤体复制体的名字信息（aiId → 三样）。
+        ///
+        /// <para>与 <see cref="s_clientVisual"/> 同形、同理：<b>收到后不消费</b>——
+        /// 复制体被联机模组销毁重建之后要能重新套上（否则"走远再回来名字就没了"）。</para>
+        /// </summary>
+        private static readonly Dictionary<int, SummonNameRecord> s_clientSummonNames =
+            new Dictionary<int, SummonNameRecord>();
+
+        /// <summary>主机待广播的召唤体名字上限（防御性；正常一局远达不到）。超出后不再记录新的。</summary>
+        private const int MaxPendingSummonNames = 256;
+
+        /// <summary>主机逐条记录「上报召唤体名字」的上限。理由同其它 MaxHostXxxLogged。</summary>
+        private const int MaxHostSummonLogged = 50;
+
+        private static int s_hostSummonLogged;
+
+        private static int s_clientSummonLogged;
+
+        /// <summary>主机上报过召唤体名字的次数 / 客机应用过的次数（摘要里报，用于分「没发/没收/没收应用」）。</summary>
+        private static int s_hostSummonSent;
+
+        private static int s_clientSummonApplied;
+
         /// <summary>视觉状态表的容量上限（防御性；正常一局远达不到）。超出后不再记录新的。</summary>
         private const int MaxPendingVisual = 512;
 
@@ -277,6 +338,12 @@ namespace EliteEnemies.Coop
             EliteStateRelay.ReflectStateHandler = OnHostEliteReflect;
             EliteStateRelay.ReflectQueryHandler = QueryClientReflect;
 
+            // ★ 召唤体的显示名：**只挂上报这一半**。客机不跑词条行为（不会有召唤体），
+            //   它的那一半由报文驱动，不需要任何钩子。
+            //   ⚠ 同上面那句注释：新增转交口必须在这里挂上，否则它会像
+            //   `PlayerPopTextHandler` 那样空转整整一版（CoopWire v8 的教训）。
+            EliteSummonRelay.SummonNameHandler = OnHostSummonName;
+
             CoopLog.Info($"[启动] 联机已启动={CoopApi.NetworkStarted} 本端角色=" +
                          $"{(CoopApi.IsServer ? "主机" : "客户端")}；" +
                          $"精英逻辑权威={EliteEnemyCore.IsEliteAuthority}" +
@@ -295,6 +362,7 @@ namespace EliteEnemies.Coop
             PlayerEffectRelay.EliteVisualHandler = null;
             EliteStateRelay.ReflectStateHandler = null;
             EliteStateRelay.ReflectQueryHandler = null;
+            EliteSummonRelay.SummonNameHandler = null;
 
             CoopVisualWatch.Uninstall();
             CoopStallWatch.Uninstall();
@@ -306,6 +374,8 @@ namespace EliteEnemies.Coop
             s_clientVisual.Clear();
             s_clientReflecting.Clear();
             s_hostPendingVisual.Clear();
+            s_hostPendingSummonNames.Clear();
+            s_clientSummonNames.Clear();
             s_healthUnbaked.Clear();
             s_reassertLogged.Clear();
 
@@ -385,6 +455,11 @@ namespace EliteEnemies.Coop
                 CoopLog.Info($"[主机] AI 注册 aiId={aiId} 精英={isElite}" +
                              (isElite ? $" 词条=[{string.Join(",", marker.Affixes)}]" : string.Empty));
             }
+
+            // 召唤体的自定义显示名（v10）。**必须在下面那句早退之前**——
+            // 召唤体（小鸡 / 伴侣）绝大多数**不是**精英，正是会被它挡掉的那一批。
+            // 名字是生成那一刻报过来的，这里才有 aiId。
+            TryBroadcastSummonName(cmc, aiId);
 
             // 非精英是绝大多数——到此为止，不做别的。
             if (!isElite) return;
@@ -550,6 +625,98 @@ namespace EliteEnemies.Coop
             }
 
             return 0;
+        }
+
+        /// <summary>
+        /// 主机侧：本模组刚召唤出一个**带自定义名字**的敌人
+        /// （<see cref="EliteSummonRelay"/> 的口子，由词条行为调用）。
+        ///
+        /// <para><b>这里只记账、不广播</b>：此刻这只召唤体<b>还没有 aiId</b>
+        /// （联机模组的 <c>AiSpawned</c> 要等它初始化完 <b>800ms</b>），
+        /// 广播要等 <see cref="OnHostSawAi"/>——那里<b>手上就有 aiId</b>，
+        /// 不必也没有办法反查（<see cref="FindHostAiId"/> 只认精英，召唤体不在里面）。</para>
+        ///
+        /// <para>返回 <c>false</c> = 没接管（单机 / 联机未启动），调用方据此走原路。</para>
+        /// </summary>
+        public static bool OnHostSummonName(CharacterMainControl summon, string nameKey,
+                                            string basePreset, string prefixPreset)
+        {
+            if (summon == null || string.IsNullOrEmpty(nameKey)) return false;
+            if (!CoopApi.Active || !CoopApi.NetworkStarted) return false;
+
+            if (s_hostPendingSummonNames.Count >= MaxPendingSummonNames)
+            {
+                // 先把"还没等到 aiId 就死了"的那批摘掉（Unity 的假空判定），
+                // 摘完还超上限才整表清空——那时是真的出问题了，报出来。
+                PruneDeadPendingSummonNames();
+
+                if (s_hostPendingSummonNames.Count >= MaxPendingSummonNames)
+                {
+                    CoopLog.Warn($"主机待广播的召唤体名字表超过 {MaxPendingSummonNames}，已清空重来" +
+                                 "（正常情况下不该发生——多半是有召唤体在拿到 aiId 之前就死了）");
+                    s_hostPendingSummonNames.Clear();
+                }
+            }
+
+            s_hostPendingSummonNames[summon] = new SummonNameRecord
+            {
+                NameKey = nameKey,
+                BasePresetKey = basePreset,
+                PrefixPresetKey = prefixPreset
+            };
+
+            return true;
+        }
+
+        /// <summary>
+        /// 主机侧：某只 AI 拿到 aiId 了——如果它是本模组召唤出来的、且带自定义名字，就广播。
+        /// 名字是<b>一次性</b>的（不像视觉/反射会变）⇒ 发完就删。
+        ///
+        /// <para><paramref name="aiId"/> 由调用方（<see cref="OnHostSawAi"/>）直接传进来：
+        /// 那正是它拿到的参数。<b>不要**改成反查</b>——
+        /// <see cref="FindHostAiId"/> 只认 <see cref="s_hostKnown"/> 里的精英。</para>
+        /// </summary>
+        /// <summary>摘掉"还没等到 aiId 就死了"的待广播条目（Unity 的假空判定）。</summary>
+        private static void PruneDeadPendingSummonNames()
+        {
+            if (s_hostPendingSummonNames.Count == 0) return;
+
+            List<CharacterMainControl> dead = null;
+            foreach (var pair in s_hostPendingSummonNames)
+            {
+                if (pair.Key != null) continue;
+                (dead ?? (dead = new List<CharacterMainControl>())).Add(pair.Key);
+            }
+
+            if (dead == null) return;
+            for (int i = 0; i < dead.Count; i++) s_hostPendingSummonNames.Remove(dead[i]);
+        }
+
+        private static void TryBroadcastSummonName(CharacterMainControl cmc, int aiId)
+        {
+            if (s_hostPendingSummonNames.Count == 0) return;
+
+            if (!s_hostPendingSummonNames.TryGetValue(cmc, out var record)) return;
+            s_hostPendingSummonNames.Remove(cmc);
+
+            if (aiId == 0)
+            {
+                // 不在同步库里（例：基地 NPC 那种两端各有一份的）——客机不会有这个复制体，
+                // 广播过去只会卡在"没有对应复制体"上。明说，别静默。
+                CoopLog.Info($"[主机] 召唤体不在同步库里（aiId=0），不广播它的名字：{record.NameKey}");
+                return;
+            }
+
+            CoopApi.Broadcast(CoopWire.EncodeSummonName(aiId, record.NameKey,
+                                                        record.BasePresetKey, record.PrefixPresetKey));
+            s_hostSummonSent++;
+
+            if (s_hostSummonLogged < MaxHostSummonLogged)
+            {
+                s_hostSummonLogged++;
+                CoopLog.Info($"[主机] 上报召唤体名字 aiId={aiId} 键={record.NameKey} " +
+                             $"基预设={record.BasePresetKey} 前缀={record.PrefixPresetKey ?? "-"}");
+            }
         }
 
         /// <summary>
@@ -725,6 +892,60 @@ namespace EliteEnemies.Coop
 
         // ==================== 客户端侧 ====================
 
+        /// <summary>
+        /// 客机侧：收到一个召唤体的「名字怎么拼」。**只记住**，能套就立刻套——
+        /// 复制体可能还没造出来，也可能先造出来（那条由 <see cref="OnClientSawReplica"/> 补套）。
+        /// </summary>
+        private static void RememberSummonName(int aiId, SummonNameRecord record)
+        {
+            if (string.IsNullOrEmpty(record.NameKey))
+            {
+                CoopLog.Warn($"[客户端] 收到没有名字键的召唤体报文 aiId={aiId}，已忽略");
+                return;
+            }
+
+            s_clientSummonNames[aiId] = record;
+
+            if (!s_clientReplicas.TryGetValue(aiId, out var cmc) || !cmc)
+            {
+                CoopLog.Info($"[客户端] 收到召唤体名字 aiId={aiId}（键={record.NameKey}），" +
+                             "复制体尚未就绪，已记住待用");
+                return;
+            }
+
+            ApplySummonNameTo(aiId, cmc, record);
+        }
+
+        /// <summary>
+        /// 客机侧：把名字套到复制体上。**幂等**——复制体被销毁重建时会再进来一次
+        /// （每次都会造一份新副本，旧的那份随旧复制体由 <see cref="EggSpawnHelper"/> 的账本释放）。
+        /// </summary>
+        private static void ApplySummonNameTo(int aiId, CharacterMainControl cmc, SummonNameRecord record)
+        {
+            var helper = EggSpawnHelper.Instance;
+            if (helper == null)
+            {
+                CoopLog.Warn($"[客户端] 召唤体名字没套上：生成助手未就绪（aiId={aiId}）");
+                return;
+            }
+
+            // 具体原因由 `AttachSummonDisplayName` 自己报（基预设找不到 = 两端内容不一致），
+            // 这里只补一句"是哪一只"。
+            if (!helper.AttachSummonDisplayName(cmc, record.BasePresetKey, record.NameKey, record.PrefixPresetKey))
+            {
+                CoopLog.Warn($"[客户端] 召唤体名字套用失败 aiId={aiId} 基预设={record.BasePresetKey}");
+                return;
+            }
+
+            s_clientSummonApplied++;
+
+            if (s_clientSummonLogged < MaxHostSummonLogged)
+            {
+                s_clientSummonLogged++;
+                CoopLog.Info($"[客户端] 已给召唤体套上名字 aiId={aiId} 键={record.NameKey}");
+            }
+        }
+
         private static void OnClientSawReplica(int aiId, CharacterMainControl cmc)
         {
             s_replicaTotal++;
@@ -754,6 +975,11 @@ namespace EliteEnemies.Coop
 
             TryApply(aiId);
             ApplyKnownVisual(aiId, cmc);   // 已知的视觉状态每次都重套一遍（复制体可能刚被重建）
+
+            // 召唤体的名字同理：已知就重套一遍（幂等，复制体可能刚被重建）。
+            if (s_clientSummonNames.TryGetValue(aiId, out var summonName))
+                ApplySummonNameTo(aiId, cmc, summonName);
+
             if (!s_clientPending.ContainsKey(aiId)) RequestFullSnapshot($"复制体 aiId={aiId} 尚无词条");
 
             MaybeLogSummary();
@@ -1153,6 +1379,18 @@ namespace EliteEnemies.Coop
                     if (!isServer) ApplyEliteReflect(message);
                     break;
 
+                case CoopWire.Kind.SummonName:
+                    if (!isServer)
+                    {
+                        RememberSummonName(message.AiId, new SummonNameRecord
+                        {
+                            NameKey = message.Text,
+                            BasePresetKey = message.SummonBasePresetKey,
+                            PrefixPresetKey = message.SummonPrefixPresetKey
+                        });
+                    }
+                    break;
+
                 case CoopWire.Kind.AiPopText:
                     if (!isServer) ApplyAiPopText(message);
                     break;
@@ -1226,6 +1464,8 @@ namespace EliteEnemies.Coop
                          $"客户端自行掷出精英={s_localEliteDivergence} " +
                          $"主机上报视觉={s_hostVisualSent}（挡下重复 {s_hostVisualSkipped}） " +
                          $"主机上报反射={s_hostReflectSent} " +
+                         $"召唤体名字：上报={s_hostSummonSent}（待发 {s_hostPendingSummonNames.Count}）" +
+                         $" / 已收到={s_clientSummonNames.Count} 已套用={s_clientSummonApplied} " +
                          $"主机修正血量加成={s_hostHealthFixed}");
         }
     }

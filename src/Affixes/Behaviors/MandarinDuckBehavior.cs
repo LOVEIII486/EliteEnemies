@@ -30,8 +30,13 @@ namespace EliteEnemies.Affixes.Behaviors
         private float _currentAngle = 0f;
         private bool _hasSpawned = false;
 
-        private string PartnerSuffix =>
-            LocalizationManager.GetText("EliteEnemies_Affix_MandarinDuck_MateSuffix") ?? "Partner";
+        /// <summary>
+        /// 召唤体名字里"括号里那一截"的本地化键。**同一个键也要过网**（见 <see cref="EliteSummonRelay"/>）——
+        /// 传键不传译文，客机才会按它自己那门语言重拼。
+        /// </summary>
+        private const string MateSuffixKey = "EliteEnemies_Affix_MandarinDuck_MateSuffix";
+
+        private string PartnerSuffix => LocalizationManager.GetText(MateSuffixKey) ?? "Partner";
 
         public override void OnEliteInitialized(CharacterMainControl character)
         {
@@ -80,6 +85,23 @@ namespace EliteEnemies.Affixes.Behaviors
             if (clone == null) return;
 
             _partner = clone;
+
+            // 名字过网：主机那句 customDisplayName 是
+            // `{_self.characterPreset.DisplayName} ({PartnerSuffix})`，所以送出去的是
+            // 「后缀键 + 前缀预设的资源名」，让客机在**自己那门语言**下重拼。
+            // `SpawnClone(originalEnemy: _self)` ⇒ 召唤体的基预设就是召唤者的预设，两者同一个资源名。
+            var ownerPreset = _self != null ? _self.characterPreset : null;
+            if (ownerPreset != null)
+            {
+                EliteSummonRelay.RelaySummonName(clone, MateSuffixKey,
+                                                 EliteSummonRelay.PresetKey(ownerPreset),
+                                                 EliteSummonRelay.PresetKey(ownerPreset));
+            }
+            else
+            {
+                Debug.LogError("[EliteEnemies.MandarinDuck] 召唤者没有预设——伴侣的名字无法过网" +
+                               "（客机会只显示基名或没有名字）");
+            }
 
             // 伴侣由本行为每帧摆放（UpdateOrbit 直接写 transform.position），它不能自己走，
             // 否则两套移动互相打架。原先这里是 GetComponent<NavMeshAgent>().enabled = false——

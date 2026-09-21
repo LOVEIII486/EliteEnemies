@@ -71,6 +71,28 @@ namespace EliteEnemies.Core
 
         private readonly List<PendingPreset> _pendingPresets = new List<PendingPreset>();
 
+        // ========== 客机侧：召唤体的显示名 ==========
+
+        /// <summary>
+        /// 客机侧记的一笔"给召唤体复制体套过的显示名"，**只为换语言时重推**。
+        ///
+        /// <para>为什么要重推：名字是走 <c>SetOverrideText</c> 推给游戏本地化器的
+        /// <b>一份文本</b>，而那份文本是按"当时那门语言"拼出来的（后缀与前缀都取自语言）
+        /// ⇒ 不重推的话，玩家切一次语言，客机头顶的召唤体名字会**停在旧语言**上。
+        /// 换语言是低频事件，所以这里不做缓存失效那套，只在版本号变过之后整表重推一遍。</para>
+        /// </summary>
+        private struct LocalDisplayName
+        {
+            public CharacterRandomPreset Preset;
+            public string NameKey;
+            public string PrefixPresetKey;
+        }
+
+        private readonly List<LocalDisplayName> _localDisplayNames = new List<LocalDisplayName>();
+
+        /// <summary>上次重推时 <c>LanguageVersion</c> 的值。初值 -1 ⇒ 第一帧就对齐，不会误重推。</summary>
+        private int _localNameLanguageVersion = -1;
+
         // 账本四件套。存在的意义是**自检**：DumpPresetLedger 断言
         // 「创建 = 随生成体释放 + 立即释放 + 异常孤儿 + 跟踪中」。
         // 没有它的话，四处记账里漏一处，表现只是"少释放了几个副本"，
@@ -135,6 +157,16 @@ namespace EliteEnemies.Core
         /// </summary>
         private void Update()
         {
+            // 换语言就重推一遍召唤体的名字。稳态开销 = 一次 int 比较，与
+            // `LocalizedText` 的失效判据同一取舍。放在早退之前：`_pendingPresets`
+            // 空着的时候也可能有显示名要重推。
+            int langVersion = EliteEnemies.Localization.LocalizationManager.LanguageVersion;
+            if (langVersion != _localNameLanguageVersion)
+            {
+                _localNameLanguageVersion = langVersion;
+                RepushLocalDisplayNames();
+            }
+
             if (_pendingPresets.Count == 0) return;
             ReleaseDeadOwners();
         }
@@ -169,6 +201,13 @@ namespace EliteEnemies.Core
         private void ReleasePreset(CharacterRandomPreset preset, string reason, bool followedOwner)
         {
             if (preset == null) return;
+
+            // 客机侧那份"名字表"也要跟着副本一起退场，否则它会随每只召唤体增长、
+            // 永远不退（而那张表在换语言时会被整表遍历一遍）。
+            for (int i = _localDisplayNames.Count - 1; i >= 0; i--)
+            {
+                if (_localDisplayNames[i].Preset == preset) _localDisplayNames.RemoveAt(i);
+            }
 
             string presetName = preset.name;
             // 撤销忽略登记必须与销毁成对，理由见 EliteEnemyCore.UnregisterIgnoredPreset。
@@ -569,6 +608,50 @@ namespace EliteEnemies.Core
             return modified;
         }
 
+        /// <summary>
+        /// 按**跨机标识**找预设：先比 <c>nameKey</c>、再比资源名 <c>name</c>。
+        ///
+        /// <para>⚠ <b>口径与联机模组自己的 <c>IsPresetMatch</c> 一致</b>
+        /// （<c>AISyncService.cs:3719-3724</c>：<c>nameKey</c> 或 <c>name</c> 相等即算命中），
+        /// 取值口径见 <c>EliteSummonRelay.PresetKey</c>。</para>
+        ///
+        /// <para><b>为什么 nameKey 优先</b>：<c>Instantiate</c> 只会把 <c>name</c> 改成
+        /// <c>"XXX(Clone)"</c>，<c>nameKey</c> 是序列化字段、不受影响 ⇒
+        /// 运行期被克隆过的预设只有 nameKey 还指得回原对象。
+        /// 先扫一遍全部、把 <c>name</c> 的命中留作兜底（而不是立刻返回），
+        /// 是为了让 <c>nameKey</c> 的精确命中优先于某个碰巧同名的克隆。</para>
+        /// </summary>
+        private CharacterRandomPreset FindPresetByKey(string presetKey)
+        {
+            if (string.IsNullOrEmpty(presetKey)) return null;
+
+            try
+            {
+                var allPresets = Resources.FindObjectsOfTypeAll<CharacterRandomPreset>();
+
+                CharacterRandomPreset byName = null;
+                foreach (var preset in allPresets)
+                {
+                    if (preset == null) continue;
+
+                    if (!string.IsNullOrEmpty(preset.nameKey) &&
+                        preset.nameKey.Equals(presetKey, StringComparison.OrdinalIgnoreCase))
+                        return preset;
+
+                    if (byName == null &&
+                        preset.name.Equals(presetKey, StringComparison.OrdinalIgnoreCase))
+                        byName = preset;
+                }
+
+                return byName;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"{LogTag} 按标识查找预设异常: {ex.Message}");
+                return null;
+            }
+        }
+
         private CharacterRandomPreset FindPreset(string resourceName)
         {
             if (string.IsNullOrEmpty(resourceName)) return null;
@@ -590,6 +673,143 @@ namespace EliteEnemies.Core
             }
 
             return null;
+        }
+
+        // ========== 客机侧 API：给召唤体复制体套显示名 ==========
+
+        /// <summary>
+        /// 客机侧：给一个<b>召唤体复制体</b>套上"带自定义名字"的预设副本。
+        ///
+        /// <para><b>背景</b>：名字挂在预设上（<c>showName</c> + <c>nameKey</c> 的覆盖文本），
+        /// 而主机那份副本是<b>运行期</b>造的、客机上不存在这个对象；联机模组按
+        /// <c>CharacterPresetKey</c> 本地精确匹配必然失败，兜底会把<b>本机玩家的预设</b>
+        /// 套到复制体上（<c>AISyncService.cs:3740-3745</c>）
+        /// ⇒ 名字不显示，血条图标也是玩家的（<c>HealthBar.cs:259/:269</c>）。
+        /// 完整链路见 <see cref="Affixes.EliteSummonRelay"/> 的类注释。</para>
+        ///
+        /// <para><b>这里做什么</b>：按传进来的三样在**本机**重建那份副本——
+        /// 基预设按标识本地找，名字按<b>本机语言</b>重拼。
+        /// 刻意不接收渲染好的名字（<c>AGENT.md §3.5</c>：传译文等于把主机那门语言焊死）。</para>
+        ///
+        /// <para>倍率一律 <c>1</c>：这份副本只为名字与图标，<b>不参与任何数值</b>
+        /// （复制体的血量/伤害由联机模组单独同步）。副本里那个 <c>health</c> 字段在创建之后
+        /// 再没人读（唯一读点在 <c>CharacterRandomPreset</c> 自己的创建流程里），
+        /// 所以留着基预设的值是安全的。</para>
+        ///
+        /// <para>副本的寿命走与本文件主机侧<b>同一条</b>路（<see cref="TrackPreset"/> +
+        /// <see cref="ReleaseDeadOwners"/>），不另造一套账。</para>
+        ///
+        /// <para>返回 <c>false</c> = 没套上（基预设找不到）。调用方应当把它报出来——
+        /// 静默失败会让"名字怎么不显示"重新变成无解的。</para>
+        /// </summary>
+        internal bool AttachSummonDisplayName(CharacterMainControl enemy,
+                                              string basePresetKey,
+                                              string nameKey,
+                                              string prefixPresetKey)
+        {
+            if (enemy == null || string.IsNullOrEmpty(nameKey)) return false;
+
+            var basePreset = FindPresetByKey(basePresetKey);
+            if (basePreset == null)
+            {
+                Debug.LogError($"{LogTag} 召唤体显示名：本机找不到基预设 '{basePresetKey}'" +
+                               "——该复制体会继续用当前预设，名字与图标都不对。");
+                return false;
+            }
+
+            string displayName = ComposeSummonDisplayName(nameKey, prefixPresetKey, out bool prefixOk);
+            if (!prefixOk)
+            {
+                Debug.LogError($"{LogTag} 召唤体显示名：本机找不到前缀预设 '{prefixPresetKey}'" +
+                               "——这个名字会缺掉前面那一截。");
+            }
+
+            // ⚠ 后缀必须**由键唯一决定**：`SetOverrideText` 是按 nameKey 记账的，
+            //   后缀撞车 ⇒ 两只名字不同的召唤体共用同一份文本，**后写的赢且不报错**。
+            //   `nameKey` 蕴含词条（鸳鸯伴侣与守护伴侣用的是两个不同的后缀键）、
+            //   基预设蕴含敌人类型 ⇒ 这个组合唯一决定文本。
+            string suffix = $"EE_CoopName_{nameKey}";
+
+            var clone = CreateModifiedPreset(basePreset, 1f, 1f, 1f, suffix, displayName);
+
+            enemy.characterPreset = clone;
+
+            // 与游戏在预设创建流程里的做法对齐（`CharacterRandomPreset.cs:341` 的
+            // `character.Health.showHealthBar = showHealthBar`）——我们是在角色**创建之后**
+            // 才换的预设，那一步不会自己再跑一次。
+            if (enemy.Health != null) enemy.Health.showHealthBar = clone.showHealthBar;
+
+            // 与主机侧一样登记"忽略精英化"：两端都不该让召唤体变成精英。
+            // 与副本的销毁成对（`ReleasePreset` 里调 `UnregisterIgnoredPreset`）。
+            EliteEnemyCore.RegisterIgnoredPreset(clone);
+
+            TrackPreset(clone, enemy);
+            _localDisplayNames.Add(new LocalDisplayName
+            {
+                Preset = clone,
+                NameKey = nameKey,
+                PrefixPresetKey = prefixPresetKey
+            });
+
+            return true;
+        }
+
+        /// <summary>
+        /// 按<b>本机语言</b>把显示名拼出来。
+        /// <paramref name="prefixOk"/> 为假 = 前缀预设没找到（调用方据此报错；
+        /// 返回的仍是不带前缀的可用名字）。
+        /// </summary>
+        private string ComposeSummonDisplayName(string nameKey, string prefixPresetKey,
+                                                out bool prefixOk)
+        {
+            prefixOk = true;
+
+            // `ToPlainText()` 是游戏自己的"键 → 文本"解析（`EliteEnemyCore.ResolveBaseName`
+            // 用的就是同一条），它算上了本模组推进去的 CSV 文本 ⇒ 跟着语言走。
+            string suffix = nameKey.ToPlainText();
+
+            if (string.IsNullOrEmpty(prefixPresetKey)) return suffix;
+
+            var prefixPreset = FindPresetByKey(prefixPresetKey);
+            if (prefixPreset == null)
+            {
+                prefixOk = false;
+                return suffix;
+            }
+
+            // ⚠ 必须与主机侧那句 `$"{_self.characterPreset.DisplayName} ({PartnerSuffix})"`
+            //   逐字同形（MandarinDuckBehavior / GuardianBehavior），否则两端名字不一样。
+            return $"{prefixPreset.DisplayName} ({suffix})";
+        }
+
+        /// <summary>
+        /// 换语言后把已经套过的名字按新语言重拼一遍。
+        ///
+        /// <para>名字是走 <c>SetOverrideText</c> 推给游戏本地化器的**一份文本**，
+        /// 而那份文本是拼的时候那门语言的（后缀与前缀都取自语言）⇒ 不重推的话，
+        /// 玩家切一次语言，客机头顶的召唤体名字会**停在旧语言**上。
+        /// 换语言是低频事件，所以不做逐帧缓存失效，只在版本号变过之后整表过一遍。</para>
+        /// </summary>
+        private void RepushLocalDisplayNames()
+        {
+            if (_localDisplayNames.Count == 0) return;
+
+            // 先摘掉已销毁的副本：复制体死后副本由 `ReleaseDeadOwners` 释放（销毁是帧末），
+            // 这张表不能因此留下悬空引用。
+            for (int i = _localDisplayNames.Count - 1; i >= 0; i--)
+            {
+                if (_localDisplayNames[i].Preset == null) _localDisplayNames.RemoveAt(i);
+            }
+
+            for (int i = 0; i < _localDisplayNames.Count; i++)
+            {
+                var entry = _localDisplayNames[i];
+                string text = ComposeSummonDisplayName(entry.NameKey,
+                                                       entry.PrefixPresetKey, out _);
+                LocalizationManager.SetOverrideText(entry.Preset.nameKey, text);
+            }
+
+            Debug.Log($"{LogTag} 已按新语言重推 {_localDisplayNames.Count} 个召唤体名字");
         }
 
         // ========== 内部辅助 ==========

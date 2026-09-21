@@ -116,7 +116,19 @@ namespace EliteEnemies.Patches
                 {
                     ref var ctx = ref projectile.context;
 
-                    ctx.team = victim.Team;
+                    // ⚠ **取 receiver.Team，不是 victim.Team**（2026-09-21 修）。
+                    //
+                    //   游戏下一帧会拿 `context.team` 去比 `_dmgReceiverTemp.Team`
+                    //   （`Projectile.cs:363`），而那个 `Team` 读的是 **`health.team`**
+                    //   （`DamageReceiver.cs:19-33`）。`victim.Team` 读的是
+                    //   `CharacterMainControl.team` 那个**字段**。两者本该相等
+                    //   （`SetTeam` 同时写两个，`CharacterMainControl.cs:1628-1631`），
+                    //   但那道同队保护正是"子弹反射后不再咬同一只精英"的第二道防线——
+                    //   只要两端有一个字段没同步，它就会**静默失效**，表现是子弹在精英
+                    //   体内反复翻方向。直接取"游戏等下要比对的那个来源"，
+                    //   这道门就**按构造**成立。游戏自家反弹也是这么取的
+                    //   （`Projectile.cs:475` 的 `context.team = component.team`）。
+                    ctx.team = receiver.Team;
                     ctx.fromCharacter = victim;
 
                     // 反向基础向量
@@ -133,9 +145,30 @@ namespace EliteEnemies.Patches
 
                     projectile.velocity = newDirection * ctx.speed;
 
-                    // 重置命中判定
+                    // ⚠ **私有的 `direction` 字段也得写**（2026-09-21 修）：本帧末尾那句
+                    //   `transform.position += direction * _distanceThisFrame`
+                    //   （`Projectile.cs:521`）用的是**它**，而它要到**下一帧**的
+                    //   `direction = velocity.normalized`（`:328`）才会跟着 velocity 走。
+                    //   只写 `ctx.direction`/`transform.forward`/`velocity` 的话，
+                    //   反射当帧会按**旧朝向**把子弹再往敌人身体里推整整一帧
+                    //   （`transform.forward` 被我们改过，`:338` 的
+                    //   `origin = position - forward * 0.1f` 因此也指向体内）。
+                    //   游戏自家反弹就写了这一句（`Projectile.cs:479` `direction = -direction`）。
+                    //   已由 Publicizer 公开，同 `velocity`（见本文件顶部注释）。
+                    projectile.direction = newDirection;
+
+                    // 重置命中判定。
+                    //
+                    // ⚠ **加的是"碰撞体所在的"gameObject，不是角色根物体**（2026-09-21 修）。
+                    //   去重判据是 `damagedObjects.Contains(hits[i].collider.gameObject)`
+                    //   （`Projectile.cs:355`），而 `receiver` 正是从那个碰撞体上取下来的
+                    //   （`:362` `hits[i].collider.GetComponent<DamageReceiver>()`）
+                    //   ⇒ **`receiver.gameObject` 与判据比的是同一个对象，按构造必定命中**。
+                    //   原先加 `victim.gameObject`（角色根）只在"命中盒恰好挂在根物体上"
+                    //   时才碰巧相等，**等于这道去重从来没真正生效过**。
+                    //   游戏自家反弹加的也是碰撞体所在的物体（`Projectile.cs:489`）。
                     projectile.damagedObjects.Clear();
-                    projectile.damagedObjects.Add(victim.gameObject);
+                    projectile.damagedObjects.Add(receiver.gameObject);
 
                     projectile.traveledDistance = 0f;
 

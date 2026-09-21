@@ -53,8 +53,23 @@ namespace EliteEnemies.Coop
         /// <summary>仅「玩家效果」类报文用：第二个整数参数（偷窃回报时是物品的 typeId）。</summary>
         public int Ei2;
 
-        /// <summary>弹字报文用：本地化键（玩家效果报文里也用它装键）。</summary>
+        /// <summary>
+        /// 弹字报文用：本地化键（玩家效果报文里也用它装键）；
+        /// <see cref="CoopWire.Kind.SummonName"/> 用它装**召唤体名字的键**。
+        /// </summary>
         public string Text;
+
+        /// <summary>
+        /// 仅 <see cref="CoopWire.Kind.SummonName"/> 用：名字要挂在哪个**基预设**上
+        /// （<b>资源名</b>，不是 nameKey）。客机按它本地找同一个预设——顺带把血条图标也校回来。
+        /// </summary>
+        public string SummonBasePresetKey;
+
+        /// <summary>
+        /// 仅 <see cref="CoopWire.Kind.SummonName"/> 用：名字<b>前面那一截</b>取自哪个预设的
+        /// <c>DisplayName</c>（资源名）。空 = 名字不带头部（小鸡就是这种）。
+        /// </summary>
+        public string SummonPrefixPresetKey;
 
         /// <summary>弹字报文用：**格式参数**（语言无关的那部分，例：百分比数字）。可为空。</summary>
         public string TextArg;
@@ -181,12 +196,30 @@ namespace EliteEnemies.Coop
     /// （没带这个词条的精英就是 false），**"没有这条信息"与"不在反射"是同一件事**，
     /// 多一个 <c>Has</c> 只会多一处可能写错的地方。</para></item>
     ///
+    /// <item><b>v10</b>：新增「召唤体显示名」报文
+    /// （<c>[aiId][名字的本地化键][基预设标识][前缀预设标识]</c>）。
+    ///
+    /// <para>起因是一处**实测缺陷**：鸡哥的小鸡、鸳鸯与守护的伴侣在客机上**名字不显示**
+    /// （顺带血条图标也错成了本机玩家的）。根因不在"名字没过网"，而在
+    /// <b>名字挂在主机运行期造出来的预设副本上</b>：联机模组过网的
+    /// <c>CharacterPresetKey</c> 是 <c>nameKey ?? name</c>，客机拿它本地<b>精确匹配</b>
+    /// 必然失败，兜底随即把<b>本机玩家的预设</b>套给复制体
+    /// （<c>AISyncService.cs:3740-3745</c>）；而 <c>HealthBar</c> 的名字显示由
+    /// <c>preset.showName</c> 把门、文本取自 <c>preset.DisplayName</c>。
+    /// 完整链路见 <see cref="Affixes.EliteSummonRelay"/> 的类注释。</para>
+    ///
+    /// <para><b>过网的是"怎么拼"，不是拼好的名字</b>（同 v3/v6 的纪律）：
+    /// 键 + 两个预设标识 ⇒ 客机在**自己那门语言**下重拼。传译文会把主机那门语言
+    /// 焊到客机头上。<b>刻意不传"召唤者的 aiId"</b>：前缀只取决于召唤者的**预设**
+    /// （<c>_self.characterPreset.DisplayName</c>），传预设标识就没有
+    /// "主人的 <c>AiSpawned</c> 还没到"那一类时序差异。</para></item>
+    ///
     /// </list>
     /// </summary>
     internal static class CoopWire
     {
         /// <summary>报文格式版本。**改格式就 +1，并在类注释的版本历史里补一条。**</summary>
-        public const byte ProtocolVersion = 9;
+        public const byte ProtocolVersion = 10;
 
         /// <summary>魔数：ASCII "EECP"（EliteEnemies CooP）的小端序。</summary>
         private const uint Magic = 0x50434545;
@@ -250,6 +283,18 @@ namespace EliteEnemies.Coop
             /// <c>Reflecting</c> 字段上。</para>
             /// </summary>
             EliteReflect = 9,
+
+            /// <summary>
+            /// 主机 → 全体：某只**召唤体**（鸡哥的小鸡、鸳鸯/守护的伴侣）的**自定义显示名**。
+            /// 只在<b>生成时</b>发一次，客机据它在本地重建那份带名字的预设副本。
+            ///
+            /// <para>⚠ 收到时复制体可能还没造出来，反之亦然 ⇒ 客机侧要按 aiId <b>记着</b>，
+            /// 两边哪边先到都能补上（与 <see cref="EliteVisual"/> 同一形状）。</para>
+            ///
+            /// <para>标签：<c>[aiId][名字的本地化键][基预设标识][前缀预设标识]</c>，
+            /// 文本字段是<b>键不是译文</b>。理由见 <see cref="ProtocolVersion"/> 的 v10 说明。</para>
+            /// </summary>
+            SummonName = 10,
         }
 
         // ==================== 编码 ====================
@@ -307,6 +352,27 @@ namespace EliteEnemies.Coop
             {
                 writer.Write(aiId);
                 writer.Write(reflecting);
+                return Finish(stream, writer);
+            }
+        }
+
+        /// <summary>
+        /// 召唤体的自定义显示名（v10）：<c>[aiId][名字的本地化键][基预设标识][前缀预设标识]</c>。
+        ///
+        /// <para>⚠ <paramref name="nameKey"/> 是**本地化键**、不是渲染好的名字——
+        /// 客机在自己那门语言下重拼。理由见 <see cref="ProtocolVersion"/> 的 v10 说明。</para>
+        /// </summary>
+        public static byte[] EncodeSummonName(int aiId, string nameKey,
+                                              string basePresetResourceName,
+                                              string prefixPresetResourceName)
+        {
+            using (var stream = new MemoryStream(96))
+            using (var writer = NewWriter(stream, Kind.SummonName))
+            {
+                writer.Write(aiId);
+                writer.Write(nameKey ?? string.Empty);
+                writer.Write(basePresetResourceName ?? string.Empty);
+                writer.Write(prefixPresetResourceName ?? string.Empty);
                 return Finish(stream, writer);
             }
         }
@@ -561,6 +627,13 @@ namespace EliteEnemies.Coop
                         case Kind.EliteReflect:
                             result.AiId = reader.ReadInt32();
                             result.Reflecting = reader.ReadBoolean();
+                            break;
+
+                        case Kind.SummonName:
+                            result.AiId = reader.ReadInt32();
+                            result.Text = reader.ReadString();                // 名字的本地化键
+                            result.SummonBasePresetKey = reader.ReadString();     // 基预设标识
+                            result.SummonPrefixPresetKey = reader.ReadString();   // 前缀预设标识（可空）
                             break;
 
                         default:
