@@ -28,12 +28,7 @@ __pycache__/
 # 工坊 BBCode 等生成物（由 tools\MdToBbcode 产生）
 /artifacts/
 
-# --- Agent / 开发过程文档（不进版本控制） ---
-# 这些是给 AI agent 与本地开发用的工作文档（项目指南、模块审查、重构计划…），
-# **不是模组的一部分**，公开仓库里也不需要它们——README 只放给人看的内容。
-#
-# ⚠ 三个目标**都曾经被跟踪过**：只写进 .gitignore 对已跟踪的文件无效，
-#   必须配一次 `git rm --cached`（保留工作区文件）才真正取消跟踪。
+# --- Agent / 开发过程文档 ---
 /docs/
 /AGENT.md
 /CLAUDE.md
