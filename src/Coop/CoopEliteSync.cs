@@ -680,6 +680,13 @@ namespace EliteEnemies.Coop
                                  "该精英将只显示词条标签而不显示 combo 称号");
                 }
             }
+
+            // 客机侧的**视觉预警**随标记一起挂上：报复的青色闪烁、自爆的红色脉冲。
+            //
+            // 这两条在主机上是词条行为干的，而客机不跑行为 ⇒ 客机玩家看不到任何提示
+            // （自爆那条尤其要紧：**零提示就被炸**）。它们都能由客机本地从词条名推出来，
+            // 所以不需要任何新报文。挂载幂等（会重复调），且组件跟着复制体的生命周期走。
+            CoopEliteWarningVisual.EnsureOn(cmc);
         }
 
         private static EliteComboDefinition FindCombo(string comboId)
